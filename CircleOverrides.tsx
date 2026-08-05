@@ -182,22 +182,30 @@ function getEdgePull(
 ) {
     const bounds = getBoundsForRadius(radius)
     const zone = EDGE_SOFT_ZONE
-    const centerX = x + radius
-    const centerY = y + radius
+    // Clamp before doing any direction math. Callers occasionally pass a
+    // position that's briefly past the boundary (e.g. the small drag
+    // rubber-band overshoot in clampWithEdgeBounce). Without this, the
+    // "push away from the nearest corner" direction below can flip and
+    // point further outward instead of back in, which is what let circles
+    // drift past the frame and shake near corners while being pushed.
+    const x0 = clamp(x, bounds.minX, bounds.maxX)
+    const y0 = clamp(y, bounds.minY, bounds.maxY)
+    const centerX = x0 + radius
+    const centerY = y0 + radius
     const canvasCenterX = CANVAS_WIDTH / 2
     const canvasCenterY = CANVAS_HEIGHT / 2
 
     // Penetration depth into the outer edge threshold
-    const leftDepth = Math.max(0, bounds.minX + zone - x)
-    const rightDepth = Math.max(0, x - (bounds.maxX - zone))
-    const topDepth = Math.max(0, bounds.minY + zone - y)
-    const bottomDepth = Math.max(0, y - (bounds.maxY - zone))
+    const leftDepth = Math.max(0, bounds.minX + zone - x0)
+    const rightDepth = Math.max(0, x0 - (bounds.maxX - zone))
+    const topDepth = Math.max(0, bounds.minY + zone - y0)
+    const bottomDepth = Math.max(0, y0 - (bounds.maxY - zone))
 
     const depthX = Math.max(leftDepth, rightDepth)
     const depthY = Math.max(topDepth, bottomDepth)
     const edgeDepth = Math.max(depthX, depthY)
 
-    const corner = getCornerPush(x, y, radius)
+    const corner = getCornerPush(x0, y0, radius)
     const hasCornerPush = corner.pushX !== 0 || corner.pushY !== 0
 
     if (edgeDepth <= 0 && !hasCornerPush) {
@@ -404,12 +412,22 @@ function resolveCollisions(settledIds: Set<string>) {
 
                 if (a.isDragging) {
                     moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
-                    b.homeX = b.x.get() - nx * bounce
-                    b.homeY = b.y.get() - ny * bounce
+                    const bHome = clampToContainer(
+                        b.x.get() - nx * bounce,
+                        b.y.get() - ny * bounce,
+                        b.radius
+                    )
+                    b.homeX = bHome.x
+                    b.homeY = bHome.y
                 } else if (b.isDragging) {
                     moveCircleBy(a, nx * correction, ny * correction, maxStep)
-                    a.homeX = a.x.get() + nx * bounce
-                    a.homeY = a.y.get() + ny * bounce
+                    const aHome = clampToContainer(
+                        a.x.get() + nx * bounce,
+                        a.y.get() + ny * bounce,
+                        a.radius
+                    )
+                    a.homeX = aHome.x
+                    a.homeY = aHome.y
                 } else {
                     moveCircleBy(
                         a,
@@ -423,10 +441,20 @@ function resolveCollisions(settledIds: Set<string>) {
                         (-ny * correction) / 2,
                         maxStep
                     )
-                    a.homeX = a.x.get() + nx * (bounce * 0.45)
-                    a.homeY = a.y.get() + ny * (bounce * 0.45)
-                    b.homeX = b.x.get() - nx * (bounce * 0.45)
-                    b.homeY = b.y.get() - ny * (bounce * 0.45)
+                    const aHome = clampToContainer(
+                        a.x.get() + nx * (bounce * 0.45),
+                        a.y.get() + ny * (bounce * 0.45),
+                        a.radius
+                    )
+                    const bHome = clampToContainer(
+                        b.x.get() - nx * (bounce * 0.45),
+                        b.y.get() - ny * (bounce * 0.45),
+                        b.radius
+                    )
+                    a.homeX = aHome.x
+                    a.homeY = aHome.y
+                    b.homeX = bHome.x
+                    b.homeY = bHome.y
                 }
             }
         }
@@ -574,25 +602,23 @@ function startLoopIfNeeded() {
                 c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
                 c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
 
+                // Ease toward the home/anchor position only — no continuous
+                // edge/corner pull here. Corner avoidance is resolved once,
+                // at the moment a circle is actually dropped (see
+                // resolveDropPosition in endDrag). Applying it every frame
+                // to every settled circle caused two problems: circles that
+                // were never touched got yanked away from their authored
+                // opening position the instant the entrance animation
+                // finished, and a circle being shoved toward a corner by a
+                // drag nearby would visibly shake as the collision push and
+                // this pull fought each other frame after frame.
                 const currentX = c.x.get()
                 const currentY = c.y.get()
-                const edgeTarget = getEdgePull(
-                    c.anchorHomeX,
-                    c.anchorHomeY,
-                    c.radius
-                )
-                const handoffProgress = clamp(
-                    (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
-                    0,
-                    1
-                )
-                const pullFadeIn = handoffProgress * handoffProgress
-                const settledTargetX =
-                    c.anchorHomeX + edgeTarget.pullX * pullFadeIn
-                const settledTargetY =
-                    c.anchorHomeY + edgeTarget.pullY * pullFadeIn
-                c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
-                c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
+                const nextX = currentX + (c.anchorHomeX - currentX) * HOME_EASE
+                const nextY = currentY + (c.anchorHomeY - currentY) * HOME_EASE
+                const settled = clampToContainer(nextX, nextY, c.radius)
+                c.x.set(settled.x)
+                c.y.set(settled.y)
             }
         })
 
