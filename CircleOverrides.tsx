@@ -101,6 +101,12 @@ const CORNER_PUSH_MAX = 70
 // same push/bounce math — no new mechanics, no feel change.
 const DRAG_COLLISION_ITERATIONS = 10
 
+// Max distance (px) the dragged circle is allowed to advance per sub-step
+// within a single pointermove event before collisions are re-checked (see
+// onPointerMove). Keeps a fast flick from skipping over a neighbor in one
+// jump instead of registering contact with it along the way.
+const DRAG_SUBSTEP_SIZE = 24
+
 function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
 }
@@ -461,6 +467,48 @@ function resolveCollisions(settledIds: Set<string>) {
     }
 }
 
+// resolveCollisions pushes the OTHER circle out of a dragged circle's way,
+// but that push is rate-limited (COLLISION_MAX_STEP etc.) for a soft, fluid
+// feel — it doesn't, by itself, stop the dragged circle from advancing
+// into/through a neighbor faster than the neighbor can clear out. This is a
+// hard backstop: it never lets a currently-dragged circle's own position
+// end up overlapping any other circle beyond the allowed gap, so it can
+// only ever push a neighbor aside, never slide past or through it. The
+// neighbor itself is left to move at its own soft, eased pace — this only
+// clamps the dragged circle's forward progress to match.
+function clampDraggedAgainstOthers() {
+    circles.forEach((active) => {
+        if (!active.isDragging) return
+        circles.forEach((other) => {
+            if (other.id === active.id) return
+            const minDist = active.radius + other.radius + CIRCLE_GAP
+            const ocx = other.x.get() + other.radius
+            const ocy = other.y.get() + other.radius
+            const acx = active.x.get() + active.radius
+            const acy = active.y.get() + active.radius
+            let dx = acx - ocx
+            let dy = acy - ocy
+            let dist = Math.hypot(dx, dy)
+            if (dist >= minDist) return
+            if (dist < 0.001) {
+                const angle = idAngle(active.id) - idAngle(other.id)
+                dx = Math.cos(angle)
+                dy = Math.sin(angle)
+                dist = 0.001
+            }
+            const nx = dx / dist
+            const ny = dy / dist
+            const corrected = clampToContainer(
+                ocx + nx * minDist - active.radius,
+                ocy + ny * minDist - active.radius,
+                active.radius
+            )
+            active.x.set(corrected.x)
+            active.y.set(corrected.y)
+        })
+    })
+}
+
 function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     let centerX = x + radius
     let centerY = y + radius
@@ -623,6 +671,7 @@ function startLoopIfNeeded() {
         })
 
         resolveCollisions(settledIds)
+        clampDraggedAgainstOthers()
 
         if (typeof window !== "undefined") {
             rafId = window.requestAnimationFrame(tick)
@@ -729,12 +778,16 @@ function useDraggableCircle(
             typeof performance !== "undefined" ? performance.now() : Date.now()
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
+        // Target the corner/overlap-safe spot, but don't teleport there —
+        // leave the circle at its actual release point and let the normal
+        // home-easing in tick() carry it smoothly across, so a drop near a
+        // corner reads as a soft bounce back rather than an instant snap.
         c.homeX = resolved.x
         c.homeY = resolved.y
-        c.anchorHomeX = resolved.x
-        c.anchorHomeY = resolved.y
-        c.x.set(resolved.x)
-        c.y.set(resolved.y)
+        c.anchorHomeX = dropped.x
+        c.anchorHomeY = dropped.y
+        c.x.set(dropped.x)
+        c.y.set(dropped.y)
         startTransition(() => setZIndex(baseZIndex(radius)))
     }, [id, radius, x, y])
 
@@ -761,41 +814,78 @@ function useDraggableCircle(
                 if (!active || !active.isDragging) return
                 if (active.pointerId !== moveEvent.pointerId) return
 
-                const nextX =
+                const rawTargetX =
                     active.dragStartX +
                     (moveEvent.clientX - active.dragStartPointerX)
-                const nextY =
+                const rawTargetY =
                     active.dragStartY +
                     (moveEvent.clientY - active.dragStartPointerY)
 
-                const bounced = clampWithEdgeBounce(nextX, nextY, radius)
-                const edgeDuringDrag = getEdgePull(
-                    bounced.x,
-                    bounced.y,
-                    radius,
-                    DRAG_EDGE_RESISTANCE
-                )
-                const draggedWithCorner = clampToContainer(
-                    bounced.x + edgeDuringDrag.pullX,
-                    bounced.y + edgeDuringDrag.pullY,
-                    radius
-                )
+                // Walk the pointer's move in short sub-steps instead of
+                // jumping straight to rawTarget. A single pointermove event
+                // can carry a large delta (a fast flick, or a dropped
+                // frame), and checking collisions only at the final point
+                // would let the dragged circle skip clean over a neighbor
+                // in one step, landing past it. Each sub-step advances a
+                // small fixed increment from the circle's ACTUAL current
+                // (possibly already-blocked) position — not from a fixed
+                // interpolation along the original start->target line. That
+                // distinction matters: once a neighbor holds the circle
+                // back, an interpolation based on the original line keeps
+                // advancing past where the circle actually is, and can
+                // cross the neighbor's center and get corrected out the
+                // wrong (far) side. Stepping from the live position instead
+                // means a blocked circle keeps re-attempting the same small
+                // increment and keeps getting held at the same boundary.
+                const fromX = active.x.get()
+                const fromY = active.y.get()
+                const totalDx = rawTargetX - fromX
+                const totalDy = rawTargetY - fromY
+                const travel = Math.hypot(totalDx, totalDy)
+                const steps = Math.max(1, Math.ceil(travel / DRAG_SUBSTEP_SIZE))
+                const stepDx = totalDx / steps
+                const stepDy = totalDy / steps
 
-                // Move the dragged circle to where the pointer wants it.
-                active.x.set(draggedWithCorner.x)
-                active.y.set(draggedWithCorner.y)
+                let bounced = { x: fromX, y: fromY, reboundX: 0, reboundY: 0 }
+                let edgeDuringDrag = { pullX: 0, pullY: 0 }
 
-                // Immediately resolve pushes against every other circle,
-                // repeatedly, within this single pointer event. This reuses
-                // the exact same push/bounce logic that already lives in
-                // resolveCollisions (the a.isDragging branch moves only the
-                // OTHER circle, with a bounce fed into its homeX/homeY) —
-                // it's just no longer limited to once per animation frame,
-                // so a fast drag can't move further in one step than the
-                // pushed circle is allowed to react.
-                const allIds = new Set(circles.keys())
-                for (let i = 0; i < DRAG_COLLISION_ITERATIONS; i++) {
-                    resolveCollisions(allIds)
+                for (let s = 0; s < steps; s++) {
+                    const stepX = active.x.get() + stepDx
+                    const stepY = active.y.get() + stepDy
+
+                    bounced = clampWithEdgeBounce(stepX, stepY, radius)
+                    edgeDuringDrag = getEdgePull(
+                        bounced.x,
+                        bounced.y,
+                        radius,
+                        DRAG_EDGE_RESISTANCE
+                    )
+                    const draggedWithCorner = clampToContainer(
+                        bounced.x + edgeDuringDrag.pullX,
+                        bounced.y + edgeDuringDrag.pullY,
+                        radius
+                    )
+
+                    // Move the dragged circle to this step's position.
+                    active.x.set(draggedWithCorner.x)
+                    active.y.set(draggedWithCorner.y)
+
+                    // Resolve pushes against every other circle, repeatedly,
+                    // at this step. This reuses the exact same push/bounce
+                    // logic that already lives in resolveCollisions (the
+                    // a.isDragging branch moves only the OTHER circle, with
+                    // a bounce fed into its homeX/homeY). clampDraggedAgainstOthers
+                    // then hard-stops this circle's own position from ending
+                    // up overlapping (or sliding past, to the other side of)
+                    // any neighbor that couldn't get out of the way fast
+                    // enough — the neighbor keeps easing away at its own
+                    // soft pace, this just won't let the dragged circle
+                    // outrun it.
+                    const allIds = new Set(circles.keys())
+                    for (let i = 0; i < DRAG_COLLISION_ITERATIONS; i++) {
+                        resolveCollisions(allIds)
+                        clampDraggedAgainstOthers()
+                    }
                 }
 
                 const reboundedHome = clampToContainer(
