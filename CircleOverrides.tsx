@@ -27,8 +27,6 @@ type CircleState = {
     dragStartX: number
     dragStartY: number
     staggerDelay: number
-    anchorHomeX: number
-    anchorHomeY: number
     hasSettled: boolean
     settledAt: number
 }
@@ -86,7 +84,12 @@ const COLLISION_DEADZONE = 0.6
 const COLLISION_MAX_STEP = 12
 const COLLISION_ENTRY_MAX_STEP = 2.8
 const HOME_EASE = 0.18
-const HOME_ANCHOR_EASE = 0.12
+// Once a settled circle is within this many px of its home target on both
+// axes, stop nudging it entirely. Without this, an idle circle keeps making
+// imperceptible (but nonzero) position writes forever; with it, a circle
+// that nothing is touching goes fully still, matching how the reference
+// app behaves between drags.
+const HOME_SETTLE_EPSILON = 0.05
 const SETTLE_HANDOFF_MS = 180
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
@@ -388,19 +391,22 @@ function resolveCollisions(settledIds: Set<string>) {
     }
 }
 
+// getOtherCenter lets callers resolve against either other circles' live,
+// on-screen positions (dragging/dropping) or their resting home positions
+// (the one-time layout pass below, before anything has flown in yet).
 function separateFromOthers(
     id: string,
     radius: number,
     centerX: number,
-    centerY: number
+    centerY: number,
+    getOtherCenter: (other: CircleState) => { x: number; y: number }
 ) {
     let hasOverlap = false
     for (const other of circles.values()) {
         if (other.id === id) continue
-        const otherCenterX = other.x.get() + other.radius
-        const otherCenterY = other.y.get() + other.radius
-        let dx = centerX - otherCenterX
-        let dy = centerY - otherCenterY
+        const otherCenter = getOtherCenter(other)
+        let dx = centerX - otherCenter.x
+        let dy = centerY - otherCenter.y
         let dist = Math.sqrt(dx * dx + dy * dy)
         const minDist = radius + other.radius + CIRCLE_GAP
         if (dist >= minDist) continue
@@ -420,7 +426,25 @@ function separateFromOthers(
     return { centerX, centerY, hasOverlap }
 }
 
-function resolveDropPosition(id: string, radius: number, x: number, y: number) {
+const liveCenter = (other: CircleState) => ({
+    x: other.x.get() + other.radius,
+    y: other.y.get() + other.radius,
+})
+
+const homeCenter = (other: CircleState) => ({
+    x: other.homeX + other.radius,
+    y: other.homeY + other.radius,
+})
+
+// Shared by resolveDropPosition (against other circles' live positions) and
+// resolveHomePosition (against other circles' resting home positions).
+function resolveConflictFreePosition(
+    id: string,
+    radius: number,
+    x: number,
+    y: number,
+    getOtherCenter: (other: CircleState) => { x: number; y: number }
+) {
     let centerX = x + radius
     let centerY = y + radius
 
@@ -431,7 +455,13 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     // overlap check left to catch it -- that's how dropped circles ended
     // up visibly overlapping.
     for (let i = 0; i < 16; i++) {
-        const separated = separateFromOthers(id, radius, centerX, centerY)
+        const separated = separateFromOthers(
+            id,
+            radius,
+            centerX,
+            centerY,
+            getOtherCenter
+        )
         centerX = separated.centerX
         centerY = separated.centerY
 
@@ -465,9 +495,15 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     // Final guarantee pass: pure separation, no edge/corner pull. This
     // can't undo the corner-avoidance work above (it only pushes circles
     // apart from each other), so it's safe to run last and guarantees the
-    // dropped circle never rests on top of another one.
+    // circle never rests on top of another one.
     for (let i = 0; i < 6; i++) {
-        const separated = separateFromOthers(id, radius, centerX, centerY)
+        const separated = separateFromOthers(
+            id,
+            radius,
+            centerX,
+            centerY,
+            getOtherCenter
+        )
         centerX = separated.centerX
         centerY = separated.centerY
         const clamped = clampToContainer(
@@ -483,10 +519,37 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     return { x: centerX - radius, y: centerY - radius }
 }
 
+function resolveDropPosition(id: string, radius: number, x: number, y: number) {
+    return resolveConflictFreePosition(id, radius, x, y, liveCenter)
+}
+
+// Runs once, before the entrance flight starts: resolves every circle's
+// designer-specified home coordinates against each other (several of them
+// are only 5-10px apart by design) so each circle already has a conflict-
+// and corner-safe landing spot. The entrance then flies each circle
+// straight to that final spot, so it lands exactly on target with nothing
+// left to correct afterward -- no multi-second "settling" drift once
+// nobody is touching the screen.
+function resolveAllHomePositions() {
+    for (const c of circles.values()) {
+        const resolved = resolveConflictFreePosition(
+            c.id,
+            c.radius,
+            c.homeX,
+            c.homeY,
+            homeCenter
+        )
+        c.homeX = resolved.x
+        c.homeY = resolved.y
+    }
+}
+
 function bezier(t: number, p0: number, p1: number, p2: number) {
     const mt = 1 - t
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
+
+let homesResolved = false
 
 function startLoopIfNeeded() {
     if (rafId !== null) return
@@ -494,6 +557,10 @@ function startLoopIfNeeded() {
     const tick = (timestamp: number) => {
         if (entranceStartTime === null) {
             entranceStartTime = timestamp
+        }
+        if (!homesResolved) {
+            resolveAllHomePositions()
+            homesResolved = true
         }
 
         const totalElapsed = timestamp - entranceStartTime
@@ -543,32 +610,24 @@ function startLoopIfNeeded() {
                 if (!c.hasSettled) {
                     c.hasSettled = true
                     c.settledAt = timestamp
-                    c.anchorHomeX = c.homeX
-                    c.anchorHomeY = c.homeY
                 }
 
-                c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
-                c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
-
+                // Home is already conflict- and corner-safe (resolved up
+                // front for the entrance, or by resolveDropPosition /
+                // resolveCollisions when it changes later), so idle
+                // circles just ease straight toward it and then go
+                // perfectly still -- no ambient force is re-applied here.
                 const currentX = c.x.get()
                 const currentY = c.y.get()
-                const edgeTarget = getEdgePull(
-                    c.anchorHomeX,
-                    c.anchorHomeY,
-                    c.radius
-                )
-                const handoffProgress = clamp(
-                    (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
-                    0,
-                    1
-                )
-                const pullFadeIn = handoffProgress * handoffProgress
-                const settledTargetX =
-                    c.anchorHomeX + edgeTarget.pullX * pullFadeIn
-                const settledTargetY =
-                    c.anchorHomeY + edgeTarget.pullY * pullFadeIn
-                c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
-                c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
+                const dx = c.homeX - currentX
+                const dy = c.homeY - currentY
+                if (
+                    Math.abs(dx) > HOME_SETTLE_EPSILON ||
+                    Math.abs(dy) > HOME_SETTLE_EPSILON
+                ) {
+                    c.x.set(currentX + dx * HOME_EASE)
+                    c.y.set(currentY + dy * HOME_EASE)
+                }
             }
         })
 
@@ -626,8 +685,6 @@ function useDraggableCircle(
             dragStartX: origin.x,
             dragStartY: origin.y,
             staggerDelay,
-            anchorHomeX: home.x,
-            anchorHomeY: home.y,
             hasSettled: false,
             settledAt: 0,
         })
@@ -635,6 +692,11 @@ function useDraggableCircle(
         if (wasEmptyBeforeMount) {
             entranceStartTime = null
         }
+        // A circle joining after the initial batch already resolved its
+        // homes (or one leaving mid-session) means that resolution is
+        // stale -- re-run it before the next frame so every circle still
+        // gets a conflict-free landing spot.
+        homesResolved = false
         startLoopIfNeeded()
 
         return () => {
@@ -654,6 +716,7 @@ function useDraggableCircle(
                 }
                 rafId = null
                 entranceStartTime = null
+                homesResolved = false
             }
         }
     }, [
@@ -681,8 +744,6 @@ function useDraggableCircle(
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
         c.homeY = resolved.y
-        c.anchorHomeX = resolved.x
-        c.anchorHomeY = resolved.y
         c.x.set(resolved.x)
         c.y.set(resolved.y)
         startTransition(() => setZIndex(baseZIndex(radius)))
