@@ -59,18 +59,34 @@ const EDGE_OVERSHOOT_MAX = 5 //Increase to allow the circle to compress deeper p
 const EDGE_BOUNCE_PUSH = 15 //Main bounce: Increase for punchier kickback
 const EDGE_PULL_ZONE_SIZE = 46
 const EDGE_PULL_STRENGTH = 0.34 //Increase for stronger force pushing back inward
-const EDGE_PULL_MAX = 24 //Increase cap to allow higher force limits
+// Corner-specific repulsion. This is deliberately wider and stronger than
+// the plain wall pull above: it's measured as true radial distance to each
+// of the 4 canvas corners (not per-axis wall depth), so there is no spot
+// near a corner where the outward force can fade to zero and let a circle
+// rest comfortably.
+const CORNER_ZONE = 110 //Increase to push circles away starting further from each corner
+const CORNER_PULL_MAX = 58 //Increase for a firmer diagonal push out of corners
 const DRAG_EDGE_RESISTANCE = 0.95
 const CIRCLE_GAP = 10
 const COLLISION_ITERATIONS = 4
 const COLLISION_SEPARATION_STRENGTH = 0.9
 const COLLISION_BOUNCE_MULTIPLIER = 0.55
+const COLLISION_REBOUND_PUSH = 14
+// Softer gains used when two circles are settling against each other with
+// neither being actively dragged (e.g. two circles idly resting together,
+// or one pinned in a corner by a neighbor). Full-strength correction in
+// that situation is an over-constrained tug-of-war (wall + wall + neighbor
+// fighting over 2 degrees of freedom) that overshoots every frame and
+// reads as trembling. Drag-involved pushes keep the snappier constants
+// above so direct manipulation still feels responsive.
+const COLLISION_SETTLE_SEPARATION_STRENGTH = 0.5
+const COLLISION_SETTLE_BOUNCE_MULTIPLIER = 0.3
+const COLLISION_SETTLE_REBOUND_PUSH = 7
 const COLLISION_DEADZONE = 0.6
 const COLLISION_MAX_STEP = 12
 const COLLISION_ENTRY_MAX_STEP = 2.8
 const HOME_EASE = 0.18
 const HOME_ANCHOR_EASE = 0.12
-const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
@@ -89,6 +105,15 @@ function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
 }
 
+// Eased 0..1 falloff (zero slope at both ends) so repulsion forces ramp
+// in and out gradually instead of switching on/off abruptly, which is a
+// major source of visible jitter when a force's on/off boundary is crossed
+// repeatedly frame to frame.
+function smoothstep(t: number) {
+    const c = clamp(t, 0, 1)
+    return c * c * (3 - 2 * c)
+}
+
 function getBoundsForRadius(radius: number) {
     const minX = EDGE_INSET
     const minY = EDGE_INSET
@@ -105,7 +130,8 @@ function clampToContainer(x: number, y: number, radius: number) {
     }
 }
 
-// Edge avoidance force: Active ONLY when a circle penetrates the edge zone
+// Edge avoidance force: Active ONLY when a circle penetrates the edge zone,
+// or is within CORNER_ZONE of one of the 4 canvas corners.
 function getEdgePull(
     x: number,
     y: number,
@@ -127,26 +153,41 @@ function getEdgePull(
 
     const depthX = Math.max(leftDepth, rightDepth)
     const depthY = Math.max(topDepth, bottomDepth)
-    const edgeDepth = Math.max(depthX, depthY)
-
-    if (edgeDepth <= 0) {
-        return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
-    }
-
     const blendX = clamp(depthX / zone, 0, 1)
     const blendY = clamp(depthY / zone, 0, 1)
-    const edgeBlend = Math.max(blendX, blendY)
-    const cornerBoost = 1 + Math.min(blendX, blendY) * 0.45
+    const edgeBlend = smoothstep(Math.max(blendX, blendY))
+    const wallAmount = zone * edgeBlend * EDGE_PULL_STRENGTH
+
+    // True radial distance to each corner point (independent of the
+    // per-axis wall zone above), so a circle sitting diagonally near a
+    // corner but just outside the wall zone still gets pushed out.
+    const corners = [
+        { x: bounds.minX, y: bounds.minY },
+        { x: bounds.maxX, y: bounds.minY },
+        { x: bounds.minX, y: bounds.maxY },
+        { x: bounds.maxX, y: bounds.maxY },
+    ]
+    let cornerCloseness = 0
+    for (const corner of corners) {
+        const cdist = Math.hypot(x - corner.x, y - corner.y)
+        if (cdist >= CORNER_ZONE) continue
+        cornerCloseness = Math.max(cornerCloseness, 1 - cdist / CORNER_ZONE)
+    }
+    const cornerAmount =
+        cornerCloseness > 0 ? CORNER_PULL_MAX * smoothstep(cornerCloseness) : 0
+
+    const amount =
+        Math.max(wallAmount, cornerAmount) * strengthMultiplier
+
+    if (amount <= 0.001) {
+        return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
+    }
 
     const towardCenterX = canvasCenterX - centerX
     const towardCenterY = canvasCenterY - centerY
     const len = Math.hypot(towardCenterX, towardCenterY) || 1
     const nx = towardCenterX / len
     const ny = towardCenterY / len
-    const amount = Math.min(
-        EDGE_PULL_MAX,
-        zone * edgeBlend * EDGE_PULL_STRENGTH * cornerBoost * strengthMultiplier
-    )
 
     return {
         isNearEdge: true,
@@ -291,19 +332,26 @@ function resolveCollisions(settledIds: Set<string>) {
                 if (overlap <= COLLISION_DEADZONE) continue
                 const rampA = collisionRamp(a, now)
                 const rampB = collisionRamp(b, now)
-                const pairRamp =
-                    a.isDragging || b.isDragging
-                        ? Math.max(rampA, rampB)
-                        : Math.min(rampA, rampB)
+                const dragInvolved = a.isDragging || b.isDragging
+                const pairRamp = dragInvolved
+                    ? Math.max(rampA, rampB)
+                    : Math.min(rampA, rampB)
                 if (pairRamp <= 0.001) continue
 
-                const correction =
-                    overlap * COLLISION_SEPARATION_STRENGTH * pairRamp
+                const separationStrength = dragInvolved
+                    ? COLLISION_SEPARATION_STRENGTH
+                    : COLLISION_SETTLE_SEPARATION_STRENGTH
+                const bounceMultiplier = dragInvolved
+                    ? COLLISION_BOUNCE_MULTIPLIER
+                    : COLLISION_SETTLE_BOUNCE_MULTIPLIER
+                const reboundCap = dragInvolved
+                    ? COLLISION_REBOUND_PUSH
+                    : COLLISION_SETTLE_REBOUND_PUSH
+
+                const correction = overlap * separationStrength * pairRamp
                 const bounce = Math.min(
-                    COLLISION_REBOUND_PUSH,
-                    correction *
-                        COLLISION_BOUNCE_MULTIPLIER *
-                        (0.5 + pairRamp * 0.5)
+                    reboundCap,
+                    correction * bounceMultiplier * (0.5 + pairRamp * 0.5)
                 )
                 const maxStep =
                     COLLISION_ENTRY_MAX_STEP +
@@ -340,33 +388,53 @@ function resolveCollisions(settledIds: Set<string>) {
     }
 }
 
+function separateFromOthers(
+    id: string,
+    radius: number,
+    centerX: number,
+    centerY: number
+) {
+    let hasOverlap = false
+    for (const other of circles.values()) {
+        if (other.id === id) continue
+        const otherCenterX = other.x.get() + other.radius
+        const otherCenterY = other.y.get() + other.radius
+        let dx = centerX - otherCenterX
+        let dy = centerY - otherCenterY
+        let dist = Math.sqrt(dx * dx + dy * dy)
+        const minDist = radius + other.radius + CIRCLE_GAP
+        if (dist >= minDist) continue
+        if (dist < 0.001) {
+            const angle = idAngle(id) - idAngle(other.id)
+            dx = Math.cos(angle)
+            dy = Math.sin(angle)
+            dist = 0.001
+        }
+        const nx = dx / dist
+        const ny = dy / dist
+        const overlap = minDist - dist
+        centerX += nx * overlap
+        centerY += ny * overlap
+        hasOverlap = true
+    }
+    return { centerX, centerY, hasOverlap }
+}
+
 function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     let centerX = x + radius
     let centerY = y + radius
-    for (let i = 0; i < 12; i++) {
-        let hasOverlap = false
-        for (const other of circles.values()) {
-            if (other.id === id) continue
-            const otherCenterX = other.x.get() + other.radius
-            const otherCenterY = other.y.get() + other.radius
-            let dx = centerX - otherCenterX
-            let dy = centerY - otherCenterY
-            let dist = Math.sqrt(dx * dx + dy * dy)
-            const minDist = radius + other.radius + CIRCLE_GAP
-            if (dist >= minDist) continue
-            if (dist < 0.001) {
-                const angle = idAngle(id) - idAngle(other.id)
-                dx = Math.cos(angle)
-                dy = Math.sin(angle)
-                dist = 0.001
-            }
-            const nx = dx / dist
-            const ny = dy / dist
-            const overlap = minDist - dist
-            centerX += nx * overlap
-            centerY += ny * overlap
-            hasOverlap = true
-        }
+
+    // Resolve overlap and the edge/corner pull together, in the same loop,
+    // re-checking overlap every time either one moves the circle. Doing
+    // these as two separate loops (overlap-only, then edge-only) let the
+    // final edge/corner nudge shove the circle into a neighbor with no
+    // overlap check left to catch it -- that's how dropped circles ended
+    // up visibly overlapping.
+    for (let i = 0; i < 16; i++) {
+        const separated = separateFromOthers(id, radius, centerX, centerY)
+        centerX = separated.centerX
+        centerY = separated.centerY
+
         const clamped = clampToContainer(
             centerX - radius,
             centerY - radius,
@@ -379,36 +447,37 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
             centerX - radius,
             centerY - radius,
             radius,
-            1.1
+            1.15
         )
         if (edgePull.isNearEdge) {
-            const withCorner = clampToContainer(
+            const withPull = clampToContainer(
                 centerX - radius + edgePull.pullX,
                 centerY - radius + edgePull.pullY,
                 radius
             )
-            centerX = withCorner.x + radius
-            centerY = withCorner.y + radius
+            centerX = withPull.x + radius
+            centerY = withPull.y + radius
         }
 
-        if (!hasOverlap) break
+        if (!separated.hasOverlap && !edgePull.isNearEdge) break
     }
 
-    for (let i = 0; i < 4; i++) {
-        const edgePull = getEdgePull(
+    // Final guarantee pass: pure separation, no edge/corner pull. This
+    // can't undo the corner-avoidance work above (it only pushes circles
+    // apart from each other), so it's safe to run last and guarantees the
+    // dropped circle never rests on top of another one.
+    for (let i = 0; i < 6; i++) {
+        const separated = separateFromOthers(id, radius, centerX, centerY)
+        centerX = separated.centerX
+        centerY = separated.centerY
+        const clamped = clampToContainer(
             centerX - radius,
             centerY - radius,
-            radius,
-            1.15
-        )
-        if (!edgePull.isNearEdge) break
-        const withCorner = clampToContainer(
-            centerX - radius + edgePull.pullX,
-            centerY - radius + edgePull.pullY,
             radius
         )
-        centerX = withCorner.x + radius
-        centerY = withCorner.y + radius
+        centerX = clamped.x + radius
+        centerY = clamped.y + radius
+        if (!separated.hasOverlap) break
     }
 
     return { x: centerX - radius, y: centerY - radius }
