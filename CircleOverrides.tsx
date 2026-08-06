@@ -82,6 +82,10 @@ const HOME_EASE = 0.18
 const HOME_ANCHOR_EASE = 0.12
 const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
+// Extra margin (px, beyond plain contact distance) within which a circle
+// counts as blocked/in contact with a neighbor. See isBlockedByNeighbor
+// below.
+const PRESS_MARGIN = 40
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
 // event while dragging. resolveCollisions already pushes the other circle
@@ -492,6 +496,29 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
 
+// True if any other circle — dragging or just resting — is close enough
+// to c to be blocking the direction c's corner/edge pull wants to move
+// it. This isn't limited to an actively-dragged presser: once a drag
+// ends, a circle that got shoved into a corner can still be wedged
+// against a now-stationary neighbor, with nowhere to go. If the pull
+// stayed on regardless, it would ease c toward its target every frame,
+// resolveCollisions would shove it straight back into that neighbor, and
+// it'd retry next frame forever — read as a circle endlessly trying (and
+// failing) to bounce back out. So the pull stays quiet for as long as
+// contact lasts, on either side, and resumes the instant it doesn't.
+function isBlockedByNeighbor(c: CircleState): boolean {
+    const cx = c.x.get() + c.radius
+    const cy = c.y.get() + c.radius
+    for (const other of circles.values()) {
+        if (other.id === c.id) continue
+        const minDist = c.radius + other.radius + CIRCLE_GAP
+        const dx = cx - (other.x.get() + other.radius)
+        const dy = cy - (other.y.get() + other.radius)
+        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
+    }
+    return false
+}
+
 function startLoopIfNeeded() {
     if (rafId !== null) return
 
@@ -565,8 +592,13 @@ function startLoopIfNeeded() {
                 // it keeps softly flowing away from corners/walls for good,
                 // fading the pull in over SETTLE_HANDOFF_MS so the handoff
                 // out of drag/collision motion reads as one continuous
-                // glide rather than a snap.
-                if (c.disturbed) {
+                // glide rather than a snap. While a neighbor (dragging or
+                // just resting) is in contact and blocking that path,
+                // though, the pull stays quiet — resolveCollisions already
+                // has full control of where it's being forced, and
+                // fighting that every frame is what reads as a stuck
+                // circle trying (and failing) to bounce back out.
+                if (c.disturbed && !isBlockedByNeighbor(c)) {
                     const edgeTarget = getEdgePull(
                         c.anchorHomeX,
                         c.anchorHomeY,
