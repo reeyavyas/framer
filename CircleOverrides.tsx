@@ -110,6 +110,12 @@ const CORNER_FORCE_SCALE = 0.5
 // velocity kick (in addition to the immediate positional depenetration),
 // so getting shoved by another circle reads as a bounce, not just a slide.
 const COLLISION_VELOCITY_KICK = 0.6
+// Extra margin (px, beyond the plain contact distance) within which a
+// circle counts as "currently being pressed" by a dragging neighbor — see
+// isBeingPressedByDrag. Wide enough that the corner-force switches off
+// just before contact and back on just after separation, rather than
+// flickering right at the boundary.
+const PRESS_MARGIN = 40
 
 // ------------------------------------------------------------------
 // Corner avoidance
@@ -596,6 +602,28 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
 
+// True if some other, currently-dragged circle is close enough to c to be
+// actively pushing on it right now. Used to suppress c's corner-force for
+// the duration of that contact — otherwise the corner-force (pulling c
+// away from a corner) and resolveCollisions' direct positional push
+// (shoving c toward wherever the dragged circle forces it, which can be
+// straight into that same corner) fight for control of c's position every
+// single frame, which is what reads as trembling. The collision push gets
+// uncontested control while contact lasts; the corner-force picks back up
+// the instant it doesn't.
+function isBeingPressedByDrag(c: CircleState): boolean {
+    const cx = c.x.get() + c.radius
+    const cy = c.y.get() + c.radius
+    for (const other of circles.values()) {
+        if (other.id === c.id || !other.isDragging) continue
+        const minDist = c.radius + other.radius + CIRCLE_GAP
+        const dx = cx - (other.x.get() + other.radius)
+        const dy = cy - (other.y.get() + other.radius)
+        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
+    }
+    return false
+}
+
 function startLoopIfNeeded() {
     if (rafId !== null) return
 
@@ -654,7 +682,7 @@ function startLoopIfNeeded() {
                 let ax = (c.homeX - x) * SPRING_STIFFNESS
                 let ay = (c.homeY - y) * SPRING_STIFFNESS
 
-                if (c.disturbed) {
+                if (c.disturbed && !isBeingPressedByDrag(c)) {
                     const corner = getCornerPush(x, y, c.radius)
                     ax += corner.pushX * CORNER_FORCE_SCALE
                     ay += corner.pushY * CORNER_FORCE_SCALE
