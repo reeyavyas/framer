@@ -31,6 +31,7 @@ type CircleState = {
     anchorHomeY: number
     hasSettled: boolean
     settledAt: number
+    disturbed: boolean
 }
 
 const circles = new Map<string, CircleState>()
@@ -381,10 +382,12 @@ function resolveCollisions(settledIds: Set<string>) {
                     moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
                     b.homeX = b.x.get() - nx * bounce
                     b.homeY = b.y.get() - ny * bounce
+                    b.disturbed = true
                 } else if (b.isDragging) {
                     moveCircleBy(a, nx * correction, ny * correction, maxStep)
                     a.homeX = a.x.get() + nx * bounce
                     a.homeY = a.y.get() + ny * bounce
+                    a.disturbed = true
                 } else {
                     moveCircleBy(
                         a,
@@ -402,6 +405,8 @@ function resolveCollisions(settledIds: Set<string>) {
                     a.homeY = a.y.get() + ny * (bounce * 0.45)
                     b.homeX = b.x.get() - nx * (bounce * 0.45)
                     b.homeY = b.y.get() - ny * (bounce * 0.45)
+                    a.disturbed = true
+                    b.disturbed = true
                 }
             }
         }
@@ -549,15 +554,40 @@ function startLoopIfNeeded() {
                 c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
                 c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
 
-                // No edge/corner pull applied here: a circle at rest should
-                // stay put once it lands, with zero motion until it's
-                // actually dragged or bumped by another circle's drag. Only
-                // homeX/homeY (moved by a collision bounce, if any) is
-                // chased, so an undisturbed circle is fully still.
                 const currentX = c.x.get()
                 const currentY = c.y.get()
-                c.x.set(currentX + (c.anchorHomeX - currentX) * HOME_EASE)
-                c.y.set(currentY + (c.anchorHomeY - currentY) * HOME_EASE)
+
+                // A circle that landed from the opening animation and has
+                // never been touched stays exactly put — no edge/corner
+                // pull, so there's zero motion until it's dragged or bumped
+                // by another circle's drag. Once it HAS been disturbed
+                // (dragged itself, or shoved into a corner by a collision),
+                // it keeps softly flowing away from corners/walls for good,
+                // fading the pull in over SETTLE_HANDOFF_MS so the handoff
+                // out of drag/collision motion reads as one continuous
+                // glide rather than a snap.
+                if (c.disturbed) {
+                    const edgeTarget = getEdgePull(
+                        c.anchorHomeX,
+                        c.anchorHomeY,
+                        c.radius
+                    )
+                    const handoffProgress = clamp(
+                        (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
+                        0,
+                        1
+                    )
+                    const pullFadeIn = handoffProgress * handoffProgress
+                    const settledTargetX =
+                        c.anchorHomeX + edgeTarget.pullX * pullFadeIn
+                    const settledTargetY =
+                        c.anchorHomeY + edgeTarget.pullY * pullFadeIn
+                    c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
+                    c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
+                } else {
+                    c.x.set(currentX + (c.anchorHomeX - currentX) * HOME_EASE)
+                    c.y.set(currentY + (c.anchorHomeY - currentY) * HOME_EASE)
+                }
             }
         })
 
@@ -619,6 +649,7 @@ function useDraggableCircle(
             anchorHomeY: home.y,
             hasSettled: false,
             settledAt: 0,
+            disturbed: false,
         })
 
         if (wasEmptyBeforeMount) {
@@ -687,6 +718,7 @@ function useDraggableCircle(
             }
             event.preventDefault()
             c.isDragging = true
+            c.disturbed = true
             c.pointerId = event.pointerId
             c.dragStartPointerX = event.clientX
             c.dragStartPointerY = event.clientY
