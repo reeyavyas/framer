@@ -61,6 +61,15 @@ const EDGE_PULL_ZONE_SIZE = 46
 const EDGE_PULL_STRENGTH = 0.34 //Increase for stronger force pushing back inward
 const EDGE_PULL_MAX = 24 //Increase cap to allow higher force limits
 const DRAG_EDGE_RESISTANCE = 0.95
+
+// Soft corner avoidance: a gentle, long-range push directly away from
+// whichever canvas corner a circle is nearest to. Ramps in smoothly
+// (smoothstep) starting CORNER_ZONE px out, so it reads as a slow drift
+// rather than a snap, and it's layered additively into getEdgePull so
+// every caller (drag, drop, settle) picks it up for free.
+const CORNER_ZONE = 160 //Increase to start the corner drift further out
+const CORNER_PUSH_MAX = 46 //Increase for a stronger drift away from corners
+
 const CIRCLE_GAP = 10
 const COLLISION_ITERATIONS = 4
 const COLLISION_SEPARATION_STRENGTH = 0.9
@@ -89,6 +98,11 @@ function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
 }
 
+function smoothstep(t: number) {
+    const c = clamp(t, 0, 1)
+    return c * c * (3 - 2 * c)
+}
+
 function getBoundsForRadius(radius: number) {
     const minX = EDGE_INSET
     const minY = EDGE_INSET
@@ -103,6 +117,45 @@ function clampToContainer(x: number, y: number, radius: number) {
         x: clamp(x, bounds.minX, bounds.maxX),
         y: clamp(y, bounds.minY, bounds.maxY),
     }
+}
+
+// Soft push directly away from whichever bounds-corner a circle is
+// nearest to. Distance-based and continuous, so it converges to a stable
+// resting point instead of oscillating, and stays out of the way entirely
+// once a circle drifts CORNER_ZONE px clear of every corner.
+function getCornerPush(x: number, y: number, radius: number) {
+    const bounds = getBoundsForRadius(radius)
+    const corners = [
+        { cx: bounds.minX, cy: bounds.minY },
+        { cx: bounds.maxX, cy: bounds.minY },
+        { cx: bounds.minX, cy: bounds.maxY },
+        { cx: bounds.maxX, cy: bounds.maxY },
+    ]
+
+    let nearestDist = Infinity
+    let nearestCx = corners[0].cx
+    let nearestCy = corners[0].cy
+    for (const corner of corners) {
+        const d = Math.hypot(x - corner.cx, y - corner.cy)
+        if (d < nearestDist) {
+            nearestDist = d
+            nearestCx = corner.cx
+            nearestCy = corner.cy
+        }
+    }
+
+    if (nearestDist >= CORNER_ZONE) {
+        return { isNearCorner: false, pushX: 0, pushY: 0 }
+    }
+
+    const awayX = x - nearestCx
+    const awayY = y - nearestCy
+    const len = Math.hypot(awayX, awayY) || 1
+    const nx = awayX / len
+    const ny = awayY / len
+    const amount = smoothstep(1 - nearestDist / CORNER_ZONE) * CORNER_PUSH_MAX
+
+    return { isNearCorner: true, pushX: nx * amount, pushY: ny * amount }
 }
 
 // Edge avoidance force: Active ONLY when a circle penetrates the edge zone
@@ -129,8 +182,20 @@ function getEdgePull(
     const depthY = Math.max(topDepth, bottomDepth)
     const edgeDepth = Math.max(depthX, depthY)
 
+    const corner = getCornerPush(x, y, radius)
+    const cornerPullX = corner.pushX * strengthMultiplier
+    const cornerPullY = corner.pushY * strengthMultiplier
+
     if (edgeDepth <= 0) {
-        return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
+        if (!corner.isNearCorner) {
+            return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
+        }
+        return {
+            isNearEdge: true,
+            pullX: cornerPullX,
+            pullY: cornerPullY,
+            strength: Math.hypot(cornerPullX, cornerPullY),
+        }
     }
 
     const blendX = clamp(depthX / zone, 0, 1)
@@ -148,11 +213,14 @@ function getEdgePull(
         zone * edgeBlend * EDGE_PULL_STRENGTH * cornerBoost * strengthMultiplier
     )
 
+    const pullX = nx * amount + cornerPullX
+    const pullY = ny * amount + cornerPullY
+
     return {
         isNearEdge: true,
-        pullX: nx * amount,
-        pullY: ny * amount,
-        strength: amount,
+        pullX,
+        pullY,
+        strength: Math.hypot(pullX, pullY),
     }
 }
 
