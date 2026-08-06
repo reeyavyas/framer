@@ -73,11 +73,17 @@ const EDGE_OVERSHOOT_MAX = 5 //Increase to allow the circle to compress deeper p
 const EDGE_BOUNCE_PUSH = 15 //Main bounce: Increase for punchier kickback
 const EDGE_PULL_ZONE_SIZE = 46
 const EDGE_PULL_STRENGTH = 0.34 //Increase for stronger force pushing back inward
-// Corner-specific repulsion used for the live, continuous drag-time feel
-// (soft resistance while a finger is actively pushing a circle toward a
-// corner). It's measured as true radial distance to each of the 4 canvas
-// corners (not per-axis wall depth), so there is no spot near a corner
-// where the outward force can fade to zero.
+// Corner-specific repulsion. Deliberately NOT applied while a circle is
+// actively being dragged, or continuously to circles it pushes along the
+// way -- fighting for corner clearance while everything is still fluidly
+// moving is exactly what produced visible shaking right at the corners.
+// Corners are instead resolved once, cleanly, as a bounce-back when the
+// drag ends (see endDrag / bounceOthersOutOfCorners) and as part of the
+// one-time entrance layout. This constant now only feeds the soft nudge
+// inside resolveConflictFreePosition (used by both of those), where it's
+// measured as true radial distance to each of the 4 canvas corners (not
+// per-axis wall depth) so there's no spot near a corner where the
+// outward force fades to zero.
 const CORNER_ZONE = 110 //Increase to push circles away starting further from each corner
 const CORNER_PULL_MAX = 58 //Increase for a firmer diagonal push out of corners
 // Deterministic (non-force-based) minimum distance every circle must keep
@@ -193,12 +199,19 @@ function clampToContainer(x: number, y: number, radius: number) {
 }
 
 // Edge avoidance force: Active ONLY when a circle penetrates the edge zone,
-// or is within CORNER_ZONE of one of the 4 canvas corners.
+// or (when includeCorner is true) is within CORNER_ZONE of one of the 4
+// canvas corners. includeCorner is false for the live, continuous
+// drag-time call sites -- corner correction there happens once, as a
+// bounce-back on drop, not as an ongoing force while things are still
+// moving. It stays true for the one-time placement passes (entrance
+// layout, drop resolution), which is exactly where corners should be
+// resolved.
 function getEdgePull(
     x: number,
     y: number,
     radius: number,
-    strengthMultiplier: number = 1
+    strengthMultiplier: number = 1,
+    includeCorner: boolean = true
 ) {
     const bounds = getBoundsForRadius(radius)
     const zone = EDGE_SOFT_ZONE
@@ -223,20 +236,23 @@ function getEdgePull(
     // True radial distance to each corner point (independent of the
     // per-axis wall zone above), so a circle sitting diagonally near a
     // corner but just outside the wall zone still gets pushed out.
-    const corners = [
-        { x: bounds.minX, y: bounds.minY },
-        { x: bounds.maxX, y: bounds.minY },
-        { x: bounds.minX, y: bounds.maxY },
-        { x: bounds.maxX, y: bounds.maxY },
-    ]
-    let cornerCloseness = 0
-    for (const corner of corners) {
-        const cdist = Math.hypot(x - corner.x, y - corner.y)
-        if (cdist >= CORNER_ZONE) continue
-        cornerCloseness = Math.max(cornerCloseness, 1 - cdist / CORNER_ZONE)
+    let cornerAmount = 0
+    if (includeCorner) {
+        const corners = [
+            { x: bounds.minX, y: bounds.minY },
+            { x: bounds.maxX, y: bounds.minY },
+            { x: bounds.minX, y: bounds.maxY },
+            { x: bounds.maxX, y: bounds.maxY },
+        ]
+        let cornerCloseness = 0
+        for (const corner of corners) {
+            const cdist = Math.hypot(x - corner.x, y - corner.y)
+            if (cdist >= CORNER_ZONE) continue
+            cornerCloseness = Math.max(cornerCloseness, 1 - cdist / CORNER_ZONE)
+        }
+        cornerAmount =
+            cornerCloseness > 0 ? CORNER_PULL_MAX * smoothstep(cornerCloseness) : 0
     }
-    const cornerAmount =
-        cornerCloseness > 0 ? CORNER_PULL_MAX * smoothstep(cornerCloseness) : 0
 
     const amount =
         Math.max(wallAmount, cornerAmount) * strengthMultiplier
@@ -472,24 +488,22 @@ function resolveCollisions(settledIds: Set<string>) {
                     COLLISION_ENTRY_MAX_STEP +
                     (COLLISION_MAX_STEP - COLLISION_ENTRY_MAX_STEP) * pairRamp
 
+                // Note: no clearCorners here. Corner clearance while
+                // circles are actively being pushed around -- still
+                // fluidly moving, overlap amounts still changing every
+                // iteration -- is exactly what produced visible shaking
+                // right at the corners. Pushed circles are free to end up
+                // near a corner during the drag; bounceOthersOutOfCorners
+                // gives them a single, clean bounce-back once the drag
+                // that pushed them actually ends.
                 if (a.isDragging) {
                     moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
-                    const bHome = clearCorners(
-                        b.x.get() - nx * bounce,
-                        b.y.get() - ny * bounce,
-                        b.radius
-                    )
-                    b.homeX = bHome.x
-                    b.homeY = bHome.y
+                    b.homeX = b.x.get() - nx * bounce
+                    b.homeY = b.y.get() - ny * bounce
                 } else if (b.isDragging) {
                     moveCircleBy(a, nx * correction, ny * correction, maxStep)
-                    const aHome = clearCorners(
-                        a.x.get() + nx * bounce,
-                        a.y.get() + ny * bounce,
-                        a.radius
-                    )
-                    a.homeX = aHome.x
-                    a.homeY = aHome.y
+                    a.homeX = a.x.get() + nx * bounce
+                    a.homeY = a.y.get() + ny * bounce
                 } else {
                     moveCircleBy(
                         a,
@@ -503,20 +517,10 @@ function resolveCollisions(settledIds: Set<string>) {
                         (-ny * correction) / 2,
                         maxStep
                     )
-                    const aHome = clearCorners(
-                        a.x.get() + nx * (bounce * 0.45),
-                        a.y.get() + ny * (bounce * 0.45),
-                        a.radius
-                    )
-                    const bHome = clearCorners(
-                        b.x.get() - nx * (bounce * 0.45),
-                        b.y.get() - ny * (bounce * 0.45),
-                        b.radius
-                    )
-                    a.homeX = aHome.x
-                    a.homeY = aHome.y
-                    b.homeX = bHome.x
-                    b.homeY = bHome.y
+                    a.homeX = a.x.get() + nx * (bounce * 0.45)
+                    a.homeY = a.y.get() + ny * (bounce * 0.45)
+                    b.homeX = b.x.get() - nx * (bounce * 0.45)
+                    b.homeY = b.y.get() - ny * (bounce * 0.45)
                 }
             }
         }
@@ -667,6 +671,43 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     return resolveConflictFreePosition(id, radius, x, y, liveCenter)
 }
 
+// Called once when a drag ends: any OTHER circle that got pushed close
+// enough to a corner during the drag (clearCorners would move it) gets a
+// fresh, conflict-safe home computed for it right now, so it eases into a
+// clean bounce-back away from the corner -- the same "soft glide instead
+// of an instant snap" treatment the dropped circle itself already gets
+// (see the comment in endDrag). This is the ONLY place non-dragged
+// circles get corner-corrected; resolveCollisions deliberately leaves
+// them alone while a drag is still moving them around.
+function bounceOthersOutOfCorners(exceptId: string, now: number) {
+    for (const other of circles.values()) {
+        if (other.id === exceptId || other.isDragging) continue
+        const currentX = other.x.get()
+        const currentY = other.y.get()
+        const cleared = clearCorners(currentX, currentY, other.radius)
+        const needsBounce =
+            Math.abs(cleared.x - currentX) > 0.5 ||
+            Math.abs(cleared.y - currentY) > 0.5
+        if (!needsBounce) continue
+
+        const resolved = resolveDropPosition(
+            other.id,
+            other.radius,
+            currentX,
+            currentY
+        )
+        other.homeX = resolved.x
+        other.homeY = resolved.y
+        // Synced immediately, same reasoning as endDrag: the bounce-back
+        // is one clean ease (position -> smoothHome), not a sluggish
+        // double-ease where smoothHome first has to catch up to home too.
+        other.smoothHomeX = resolved.x
+        other.smoothHomeY = resolved.y
+        other.hasSettled = true
+        other.settledAt = now
+    }
+}
+
 // Runs once, before the entrance flight starts: resolves every circle's
 // designer-specified home coordinates against each other (several of them
 // are only 5-10px apart by design) so each circle already has a conflict-
@@ -723,7 +764,8 @@ function startLoopIfNeeded() {
                     c.x.get(),
                     c.y.get(),
                     c.radius,
-                    DRAG_EDGE_RESISTANCE
+                    DRAG_EDGE_RESISTANCE,
+                    false
                 )
                 if (edgeWhileDragging.isNearEdge) {
                     const nudged = clampToContainer(
@@ -900,8 +942,9 @@ function useDraggableCircle(
         c.isDragging = false
         c.pointerId = null
         c.hasSettled = true
-        c.settledAt =
+        const now =
             typeof performance !== "undefined" ? performance.now() : Date.now()
+        c.settledAt = now
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
@@ -918,6 +961,10 @@ function useDraggableCircle(
         // back toward the safer resting spot -- instead of silently
         // teleporting straight there, which read as the circle just
         // staying put against the corner/wall with no bounce-back at all.
+        //
+        // Any OTHER circle this drag pushed close to a corner along the
+        // way gets the same treatment now too.
+        bounceOthersOutOfCorners(id, now)
         startTransition(() => setZIndex(baseZIndex(radius)))
     }, [id, radius, x, y])
 
@@ -958,7 +1005,8 @@ function useDraggableCircle(
                     bounced.x,
                     bounced.y,
                     radius,
-                    DRAG_EDGE_RESISTANCE
+                    DRAG_EDGE_RESISTANCE,
+                    false
                 )
                 const draggedWithCorner = clampToContainer(
                     bounced.x + edgeDuringDrag.pullX,
