@@ -101,6 +101,10 @@ const HOME_EASE = 0.18
 const HOME_ANCHOR_EASE = 0.12
 const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
+// Extra margin (px, beyond plain contact distance) within which a circle
+// counts as currently being pressed by a dragging neighbor. See
+// isBeingPressedByDrag below.
+const PRESS_MARGIN = 40
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
 // event while dragging. resolveCollisions already pushes the other circle
@@ -522,6 +526,35 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
 
+// True if some other, currently-dragged circle is close enough to c to be
+// actively pushing on it right now. The interleaved relaxation below
+// naturally shares an overlap between two RESTING circles (each gets a
+// fraction of the correction via the existing 50/50 split), but a
+// dragging neighbor isn't subject to that split at all — resolveCollisionPass's
+// a.isDragging branch just moves c directly to wherever the drag forces
+// it, every single call, with no negotiation. If c's own pull step kept
+// trying to escape on top of that, the two would fight every relaxation
+// iteration: c's step nudges it out, the very next correction sweep
+// shoves it right back toward the wall the drag is pressing it into,
+// over and over — which is exactly what reads as trembling. So c's pull
+// stays off for as long as a dragging neighbor is in contact range; it's
+// fine for c to simply sit pinned under the drag meanwhile (z-index
+// already draws the dragged circle on top), and the pull resumes the
+// instant the press ends, whether that's from the neighbor moving away
+// or being dropped.
+function isBeingPressedByDrag(c: CircleState): boolean {
+    const cx = c.x.get() + c.radius
+    const cy = c.y.get() + c.radius
+    for (const other of circles.values()) {
+        if (other.id === c.id || !other.isDragging) continue
+        const minDist = c.radius + other.radius + CIRCLE_GAP
+        const dx = cx - (other.x.get() + other.radius)
+        const dy = cy - (other.y.get() + other.radius)
+        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
+    }
+    return false
+}
+
 // Interleaves the corner/edge "desire" with collision correction inside
 // the SAME iterative pass, instead of computing one big desired move and
 // only afterward, separately, forcing overlaps back out. Each of the
@@ -552,6 +585,7 @@ function relaxSettled(settledIds: Set<string>, timestamp: number) {
         settledIds.forEach((id) => {
             const c = circles.get(id)
             if (!c || c.isDragging || !c.disturbed) return
+            if (isBeingPressedByDrag(c)) return
 
             const pull = getEdgePull(c.x.get(), c.y.get(), c.radius)
             const handoffProgress = clamp(
