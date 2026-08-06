@@ -549,25 +549,15 @@ function startLoopIfNeeded() {
                 c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
                 c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
 
+                // No edge/corner pull applied here: a circle at rest should
+                // stay put once it lands, with zero motion until it's
+                // actually dragged or bumped by another circle's drag. Only
+                // homeX/homeY (moved by a collision bounce, if any) is
+                // chased, so an undisturbed circle is fully still.
                 const currentX = c.x.get()
                 const currentY = c.y.get()
-                const edgeTarget = getEdgePull(
-                    c.anchorHomeX,
-                    c.anchorHomeY,
-                    c.radius
-                )
-                const handoffProgress = clamp(
-                    (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
-                    0,
-                    1
-                )
-                const pullFadeIn = handoffProgress * handoffProgress
-                const settledTargetX =
-                    c.anchorHomeX + edgeTarget.pullX * pullFadeIn
-                const settledTargetY =
-                    c.anchorHomeY + edgeTarget.pullY * pullFadeIn
-                c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
-                c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
+                c.x.set(currentX + (c.anchorHomeX - currentX) * HOME_EASE)
+                c.y.set(currentY + (c.anchorHomeY - currentY) * HOME_EASE)
             }
         })
 
