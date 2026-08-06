@@ -57,13 +57,32 @@ const EDGE_OVERSHOOT_MAX = 5 //Increase to allow the circle to compress deeper p
 const EDGE_BOUNCE_PUSH = 15 //Main bounce: Increase for punchier kickback
 const EDGE_PULL_ZONE_SIZE = 46
 const EDGE_PULL_STRENGTH = 0.34 //Increase for stronger force pushing back inward
-// Corner-specific repulsion. This is deliberately wider and stronger than
-// the plain wall pull above: it's measured as true radial distance to each
-// of the 4 canvas corners (not per-axis wall depth), so there is no spot
-// near a corner where the outward force can fade to zero and let a circle
-// rest comfortably.
+// Corner-specific repulsion used for the live, continuous drag-time feel
+// (soft resistance while a finger is actively pushing a circle toward a
+// corner). It's measured as true radial distance to each of the 4 canvas
+// corners (not per-axis wall depth), so there is no spot near a corner
+// where the outward force can fade to zero.
 const CORNER_ZONE = 110 //Increase to push circles away starting further from each corner
 const CORNER_PULL_MAX = 58 //Increase for a firmer diagonal push out of corners
+// Deterministic (non-force-based) minimum distance every circle must keep
+// from EACH of the two walls that form a corner, once it's actually at
+// rest -- used only by the one-time placement passes (initial layout and
+// drop), not every frame. This is what actually guarantees "never resting
+// in a corner", independent of radius: a soft, capped, iterative force
+// (like CORNER_PULL_MAX above) converges too slowly to clear a corner for
+// a large circle whose designer-specified home sits almost on top of one
+// (e.g. a 200px-radius circle at home (52, 55) against a 24px inset -- the
+// force-based push alone only ever nudged it a few px past the edge of its
+// own near-edge zone). Checking distance from BOTH walls independently
+// (rather than one combined diagonal distance from the corner point)
+// matters: a solver can satisfy "far enough from the corner point" cheaply
+// by retreating along whichever single axis is less obstructed by a
+// neighbor, while leaving the circle just as pinned against the other
+// wall -- which still reads as "stuck in the corner". Scales with radius
+// so bigger circles -- which dominate the corner more -- keep
+// proportionally more distance from it.
+const CORNER_CLEARANCE_BASE = 50 //Increase to keep every circle further from a corner regardless of size
+const CORNER_CLEARANCE_RADIUS_FACTOR = 0.15 //Increase so bigger circles keep proportionally more distance from a corner
 const DRAG_EDGE_RESISTANCE = 0.95
 const CIRCLE_GAP = 10
 const COLLISION_ITERATIONS = 4
@@ -198,6 +217,46 @@ function getEdgePull(
         pullY: ny * amount,
         strength: amount,
     }
+}
+
+// Deterministically guarantees a circle resting at (x, y) keeps at least
+// CORNER_CLEARANCE_BASE + radius * CORNER_CLEARANCE_RADIUS_FACTOR px of
+// distance from EACH of the two walls forming a corner (not just combined
+// diagonal distance from the corner point -- see the constant comment
+// above for why that distinction matters), so it always fully clears the
+// corner in one step regardless of radius or how close its starting point
+// was. Only ever nudges the axis/axes that are actually short, so a
+// circle that's merely near a single wall (not a corner) is left alone.
+function clearCorners(x: number, y: number, radius: number) {
+    const bounds = getBoundsForRadius(radius)
+    const clearance =
+        CORNER_CLEARANCE_BASE + radius * CORNER_CLEARANCE_RADIUS_FACTOR
+
+    let nx = x
+    let ny = y
+    const nearLeft = nx - bounds.minX < clearance
+    const nearRight = bounds.maxX - nx < clearance
+    const nearTop = ny - bounds.minY < clearance
+    const nearBottom = bounds.maxY - ny < clearance
+
+    if (nearLeft && nearTop) {
+        nx = Math.max(nx, bounds.minX + clearance)
+        ny = Math.max(ny, bounds.minY + clearance)
+    }
+    if (nearRight && nearTop) {
+        nx = Math.min(nx, bounds.maxX - clearance)
+        ny = Math.max(ny, bounds.minY + clearance)
+    }
+    if (nearLeft && nearBottom) {
+        nx = Math.max(nx, bounds.minX + clearance)
+        ny = Math.min(ny, bounds.maxY - clearance)
+    }
+    if (nearRight && nearBottom) {
+        nx = Math.min(nx, bounds.maxX - clearance)
+        ny = Math.min(ny, bounds.maxY - clearance)
+    }
+
+    return clampToContainer(nx, ny, radius)
 }
 
 function clampWithEdgeBounce(x: number, y: number, radius: number) {
@@ -448,12 +507,13 @@ function resolveConflictFreePosition(
     let centerX = x + radius
     let centerY = y + radius
 
-    // Resolve overlap and the edge/corner pull together, in the same loop,
-    // re-checking overlap every time either one moves the circle. Doing
-    // these as two separate loops (overlap-only, then edge-only) let the
-    // final edge/corner nudge shove the circle into a neighbor with no
-    // overlap check left to catch it -- that's how dropped circles ended
-    // up visibly overlapping.
+    // Resolve overlap, the soft wall pull, and the hard corner-clearance
+    // guarantee together in the same loop, re-checking overlap every time
+    // any of them moves the circle. Doing these as separate loops let a
+    // later step shove the circle into a neighbor (or back near a corner)
+    // with no overlap check left to catch it -- that's how dropped circles
+    // ended up visibly overlapping, and how circles ended up resting in a
+    // corner despite the (too-weak, for large radii) force-based push.
     for (let i = 0; i < 16; i++) {
         const separated = separateFromOthers(
             id,
@@ -489,7 +549,18 @@ function resolveConflictFreePosition(
             centerY = withPull.y + radius
         }
 
-        if (!separated.hasOverlap && !edgePull.isNearEdge) break
+        const beforeCornerX = centerX - radius
+        const beforeCornerY = centerY - radius
+        const cleared = clearCorners(beforeCornerX, beforeCornerY, radius)
+        centerX = cleared.x + radius
+        centerY = cleared.y + radius
+        const movedByCorner =
+            Math.abs(cleared.x - beforeCornerX) > 0.01 ||
+            Math.abs(cleared.y - beforeCornerY) > 0.01
+
+        if (!separated.hasOverlap && !edgePull.isNearEdge && !movedByCorner) {
+            break
+        }
     }
 
     // Final guarantee pass: pure separation, no edge/corner pull. This
@@ -744,8 +815,13 @@ function useDraggableCircle(
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
         c.homeY = resolved.y
-        c.x.set(resolved.x)
-        c.y.set(resolved.y)
+        // Deliberately NOT snapping c.x/c.y to `resolved` here. Leaving
+        // them where the drag released and only updating the home target
+        // means the settle-easing in the tick loop animates the actual
+        // visible correction -- a soft glide/bounce from the drop point
+        // back toward the safer resting spot -- instead of silently
+        // teleporting straight there, which read as the circle just
+        // staying put against the corner/wall with no bounce-back at all.
         startTransition(() => setZIndex(baseZIndex(radius)))
     }, [id, radius, x, y])
 
