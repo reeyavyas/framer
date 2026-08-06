@@ -86,16 +86,18 @@ const CORNER_CLEARANCE_RADIUS_FACTOR = 0.15 //Increase so bigger circles keep pr
 const DRAG_EDGE_RESISTANCE = 0.95
 const CIRCLE_GAP = 10
 const COLLISION_ITERATIONS = 4
-const COLLISION_SEPARATION_STRENGTH = 0.9
-const COLLISION_BOUNCE_MULTIPLIER = 0.55
-const COLLISION_REBOUND_PUSH = 14
-// Softer gains used when two circles are settling against each other with
-// neither being actively dragged (e.g. two circles idly resting together,
-// or one pinned in a corner by a neighbor). Full-strength correction in
-// that situation is an over-constrained tug-of-war (wall + wall + neighbor
-// fighting over 2 degrees of freedom) that overshoots every frame and
-// reads as trembling. Drag-involved pushes keep the snappier constants
-// above so direct manipulation still feels responsive.
+// One consistent set of collision gains for every pair, whether or not a
+// drag is involved. These used to be split into a snappier "drag" tier and
+// a gentler "settle" tier, but a circle can easily be touched by one pair
+// of each kind in the same frame (e.g. squeezed between an actively-
+// dragged neighbor and a third, uninvolved circle) -- two different
+// correction strengths pulling on the same body every iteration is a
+// tug-of-war that oscillates regardless of how gentle either tier is on
+// its own. Using one gentle-enough-to-never-overshoot strength everywhere
+// removes that mismatch. `pairRamp` (below) still keeps drag-involved
+// pairs responding immediately and settle-only pairs waiting for the
+// post-drop handoff, so responsiveness while actually pushing a circle
+// around is unaffected.
 const COLLISION_SETTLE_SEPARATION_STRENGTH = 0.5
 const COLLISION_SETTLE_BOUNCE_MULTIPLIER = 0.3
 const COLLISION_SETTLE_REBOUND_PUSH = 7
@@ -400,20 +402,15 @@ function resolveCollisions(settledIds: Set<string>) {
                     : Math.min(rampA, rampB)
                 if (pairRamp <= 0.001) continue
 
-                const separationStrength = dragInvolved
-                    ? COLLISION_SEPARATION_STRENGTH
-                    : COLLISION_SETTLE_SEPARATION_STRENGTH
-                const bounceMultiplier = dragInvolved
-                    ? COLLISION_BOUNCE_MULTIPLIER
-                    : COLLISION_SETTLE_BOUNCE_MULTIPLIER
-                const reboundCap = dragInvolved
-                    ? COLLISION_REBOUND_PUSH
-                    : COLLISION_SETTLE_REBOUND_PUSH
-
-                const correction = overlap * separationStrength * pairRamp
+                // Same gains for every pair -- see the constant comment
+                // above for why.
+                const correction =
+                    overlap * COLLISION_SETTLE_SEPARATION_STRENGTH * pairRamp
                 const bounce = Math.min(
-                    reboundCap,
-                    correction * bounceMultiplier * (0.5 + pairRamp * 0.5)
+                    COLLISION_SETTLE_REBOUND_PUSH,
+                    correction *
+                        COLLISION_SETTLE_BOUNCE_MULTIPLIER *
+                        (0.5 + pairRamp * 0.5)
                 )
                 const maxStep =
                     COLLISION_ENTRY_MAX_STEP +
