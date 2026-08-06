@@ -673,12 +673,28 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
 
 // Called once when a drag ends: any OTHER circle that got pushed close
 // enough to a corner during the drag (clearCorners would move it) gets a
-// fresh, conflict-safe home computed for it right now, so it eases into a
-// clean bounce-back away from the corner -- the same "soft glide instead
-// of an instant snap" treatment the dropped circle itself already gets
-// (see the comment in endDrag). This is the ONLY place non-dragged
-// circles get corner-corrected; resolveCollisions deliberately leaves
-// them alone while a drag is still moving them around.
+// fresh corner-safe home right now, so it eases into a clean bounce-back
+// away from the corner -- the same "soft glide instead of an instant
+// snap" treatment the dropped circle itself already gets (see the comment
+// in endDrag). This is the ONLY place non-dragged circles get
+// corner-corrected; resolveCollisions deliberately leaves them alone
+// while a drag is still moving them around.
+//
+// Deliberately uses clearCorners directly -- NOT resolveDropPosition /
+// resolveConflictFreePosition, which would also try to negotiate overlap
+// with every other circle in the same pass. That negotiation is exactly
+// what left some circles under-corrected: a corner escape that also has
+// to satisfy "don't overlap this other circle" can end up blocked or only
+// partially resolved, whether the blocker is another circle stuck in the
+// SAME corner (whose real position hasn't caught up yet -- only its home
+// target has) or a completely unrelated circle sitting in the way of the
+// only available escape route out of a DIFFERENT corner. clearCorners is
+// pure geometry against the canvas walls -- it doesn't look at other
+// circles at all, so nothing can block it and every cornered circle
+// always gets the full, guaranteed escape distance. Any overlap this
+// temporarily reintroduces is cleaned up on its own over the next few
+// frames by the ordinary continuous collision resolution, which no longer
+// touches corners either, so there's nothing left for it to fight over.
 function bounceOthersOutOfCorners(exceptId: string, now: number) {
     for (const other of circles.values()) {
         if (other.id === exceptId || other.isDragging) continue
@@ -690,19 +706,13 @@ function bounceOthersOutOfCorners(exceptId: string, now: number) {
             Math.abs(cleared.y - currentY) > 0.5
         if (!needsBounce) continue
 
-        const resolved = resolveDropPosition(
-            other.id,
-            other.radius,
-            currentX,
-            currentY
-        )
-        other.homeX = resolved.x
-        other.homeY = resolved.y
+        other.homeX = cleared.x
+        other.homeY = cleared.y
         // Synced immediately, same reasoning as endDrag: the bounce-back
         // is one clean ease (position -> smoothHome), not a sluggish
         // double-ease where smoothHome first has to catch up to home too.
-        other.smoothHomeX = resolved.x
-        other.smoothHomeY = resolved.y
+        other.smoothHomeX = cleared.x
+        other.smoothHomeY = cleared.y
         other.hasSettled = true
         other.settledAt = now
     }
