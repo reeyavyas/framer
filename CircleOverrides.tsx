@@ -27,20 +27,8 @@ type CircleState = {
     dragStartX: number
     dragStartY: number
     staggerDelay: number
-    // Velocity (px/frame), driven by springs/impulses once settled. This is
-    // what makes motion actually bounce — a plain "ease toward a target"
-    // position can only ever approach monotonically, it can never overshoot
-    // and spring back the way a real bounce does.
-    vx: number
-    vy: number
-    // The circle's original, designer-authored resting spot. Never changes.
-    // Used to tell "still exactly where it was placed" apart from "has been
-    // dragged or bumped at some point" — corner/edge avoidance only ever
-    // applies to the latter, so a circle authored to sit near a corner (by
-    // design) is left alone until a user actually touches it.
-    originalHomeX: number
-    originalHomeY: number
-    disturbed: boolean
+    anchorHomeX: number
+    anchorHomeY: number
     hasSettled: boolean
     settledAt: number
 }
@@ -80,85 +68,10 @@ const COLLISION_BOUNCE_MULTIPLIER = 0.55
 const COLLISION_DEADZONE = 0.6
 const COLLISION_MAX_STEP = 12
 const COLLISION_ENTRY_MAX_STEP = 2.8
+const HOME_EASE = 0.18
+const HOME_ANCHOR_EASE = 0.12
 const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
-
-// ------------------------------------------------------------------
-// Spring/bounce physics for settled (non-dragging) circles
-// ------------------------------------------------------------------
-// Once a circle is settled, it's driven by an actual velocity + spring
-// integration toward its home spot rather than a plain position-ease.
-// A plain ease can only ever approach its target — it can't overshoot and
-// spring back, so it can never really "bounce."
-//
-// Retuned from an earlier pass that gave multiple visible wobbles per
-// bounce — technically decaying, but with the corner-force's own
-// (nonlinear, saturating) dynamics layered on top of the linear home-pull,
-// it read as trembling rather than a single clean "boing." Verified by
-// simulation against the actual corner-drop scenario (not just the plain
-// spring in isolation, which behaves differently once the corner-force is
-// layered in): this pair gives exactly one overshoot with the velocity's
-// radial direction never reversing a second time, settling in ~0.2s.
-// Also checked for a "dead zone trap" — too low a stiffness combined with
-// VELOCITY_REST_THRESHOLD can let a circle's velocity decay below the
-// rest threshold while it's still a few px short of home, permanently
-// stalling short of the actual target. This pair leaves under ~1.2px of
-// residual error even on a plain (non-corner) bump, which is imperceptible.
-const SPRING_STIFFNESS = 0.09
-const SPRING_DAMPING = 0.54
-// Cap on px/frame so a big impulse (a hard collision, a flung release)
-// can't make a circle's motion feel unbounded.
-const MAX_VELOCITY = 40
-// How much of a wall-contact's velocity bounces back versus getting
-// absorbed. Only matters for a disturbed circle whose spring+corner-force
-// motion actually reaches the hard boundary.
-const WALL_RESTITUTION = 0.4
-// Below this incoming speed (px/frame), a wall contact absorbs the
-// velocity instead of reflecting it. Without a resting-contact threshold
-// like this, a circle held right at a wall (nothing forcing it away, but
-// nothing letting it leave either) can end up reflecting a tiny residual
-// velocity back and forth forever — each reflection is too small to
-// visibly move it, but the buzzing is still visible. This is what a real
-// physics engine calls "resting contact."
-const WALL_BOUNCE_MIN_VELOCITY = 0.6
-// Below this speed (px/frame), a settled circle's velocity is snapped to
-// zero outright rather than left to decay asymptotically. Pure damping
-// (`v *= SPRING_DAMPING`) never actually reaches zero, just gets
-// arbitrarily close — and a circle with nowhere left to go (wedged
-// between another circle and a wall) keeps getting tiny re-pushes each
-// frame that reawaken that residual instead of letting it die out.
-const VELOCITY_REST_THRESHOLD = 0.15
-// Scales getCornerPush's output (see below) into an acceleration for the
-// spring integration, on top of the pull toward home. Only applied to
-// circles that have been disturbed (dragged, or bumped by a collision) —
-// see the `disturbed` field on CircleState.
-const CORNER_FORCE_SCALE = 0.5
-// Fraction of a collision's rebound push that's injected as an actual
-// velocity kick (in addition to the immediate positional depenetration),
-// so getting shoved by another circle reads as a bounce, not just a slide.
-const COLLISION_VELOCITY_KICK = 0.6
-// Extra margin (px, beyond the plain contact distance) within which a
-// circle counts as "currently being pressed" by a dragging neighbor — see
-// isBeingPressedByDrag. Wide enough that the corner-force switches off
-// just before contact and back on just after separation, rather than
-// flickering right at the boundary.
-const PRESS_MARGIN = 40
-
-// ------------------------------------------------------------------
-// Corner avoidance
-// ------------------------------------------------------------------
-// Distance (px, measured from a bounds corner to the circle's clamped
-// top-left position) at which corner avoidance begins nudging the circle
-// away. This is deliberately much larger than EDGE_SOFT_ZONE so the push
-// ramps in gradually well before the circle reaches the corner, instead
-// of a last-instant nudge that only barely clears the wall.
-const CORNER_ZONE = 180
-// Max additional push (px) directly away from the nearest corner, applied
-// smoothly (via smoothstep) as the circle gets closer to that corner.
-// Combined with the existing wall pull this keeps circles resting in the
-// central area instead of tucked into a corner, without adding any snap
-// or jitter since it's a continuous, deterministic function of position.
-const CORNER_PUSH_MAX = 70
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
 // event while dragging. resolveCollisions already pushes the other circle
@@ -170,21 +83,10 @@ const CORNER_PUSH_MAX = 70
 // same resolution multiple times per pointer event lets the pushed circle
 // fully catch up immediately, regardless of drag speed, using the exact
 // same push/bounce math — no new mechanics, no feel change.
-const DRAG_COLLISION_ITERATIONS = 14
-
-// Max distance (px) the dragged circle is allowed to advance per sub-step
-// within a single pointermove event before collisions are re-checked (see
-// onPointerMove). Keeps contact with a neighbor resolving smoothly and
-// continuously rather than in big steppy jumps.
-const DRAG_SUBSTEP_SIZE = 14
+const DRAG_COLLISION_ITERATIONS = 10
 
 function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
-}
-
-function smoothstep(t: number) {
-    const c = clamp(t, 0, 1)
-    return c * c * (3 - 2 * c)
 }
 
 function getBoundsForRadius(radius: number) {
@@ -203,54 +105,7 @@ function clampToContainer(x: number, y: number, radius: number) {
     }
 }
 
-// Extra push away from whichever of the 4 bounds-corners is nearest.
-// Ramps in smoothly starting CORNER_ZONE px away, so it's already gently
-// steering the circle out of the corner long before it could arrive there.
-function getCornerPush(x: number, y: number, radius: number) {
-    const bounds = getBoundsForRadius(radius)
-    const corners = [
-        { cx: bounds.minX, cy: bounds.minY },
-        { cx: bounds.maxX, cy: bounds.minY },
-        { cx: bounds.minX, cy: bounds.maxY },
-        { cx: bounds.maxX, cy: bounds.maxY },
-    ]
-
-    let nearestCx = corners[0].cx
-    let nearestCy = corners[0].cy
-    let nearestDist = Infinity
-    for (const corner of corners) {
-        const d = Math.hypot(x - corner.cx, y - corner.cy)
-        if (d < nearestDist) {
-            nearestDist = d
-            nearestCx = corner.cx
-            nearestCy = corner.cy
-        }
-    }
-
-    if (nearestDist >= CORNER_ZONE) {
-        return { pushX: 0, pushY: 0 }
-    }
-
-    let dirX = x - nearestCx
-    let dirY = y - nearestCy
-    let len = Math.hypot(dirX, dirY)
-    if (len < 0.001) {
-        // Sitting exactly on the corner: push toward canvas center instead.
-        dirX = CANVAS_WIDTH / 2 - (nearestCx + radius)
-        dirY = CANVAS_HEIGHT / 2 - (nearestCy + radius)
-        len = Math.hypot(dirX, dirY) || 1
-    }
-    const nx = dirX / len
-    const ny = dirY / len
-
-    const proximity = smoothstep(1 - nearestDist / CORNER_ZONE)
-    const amount = CORNER_PUSH_MAX * proximity
-
-    return { pushX: nx * amount, pushY: ny * amount }
-}
-
-// Edge avoidance force: Active ONLY when a circle penetrates the edge zone,
-// or is within CORNER_ZONE of one of the 4 corners.
+// Edge avoidance force: Active ONLY when a circle penetrates the edge zone
 function getEdgePull(
     x: number,
     y: number,
@@ -259,78 +114,45 @@ function getEdgePull(
 ) {
     const bounds = getBoundsForRadius(radius)
     const zone = EDGE_SOFT_ZONE
-    // Clamp before doing any direction math. Callers occasionally pass a
-    // position that's briefly past the boundary (e.g. the small drag
-    // rubber-band overshoot in clampWithEdgeBounce). Without this, the
-    // "push away from the nearest corner" direction below can flip and
-    // point further outward instead of back in, which is what let circles
-    // drift past the frame and shake near corners while being pushed.
-    const x0 = clamp(x, bounds.minX, bounds.maxX)
-    const y0 = clamp(y, bounds.minY, bounds.maxY)
-    const centerX = x0 + radius
-    const centerY = y0 + radius
+    const centerX = x + radius
+    const centerY = y + radius
     const canvasCenterX = CANVAS_WIDTH / 2
     const canvasCenterY = CANVAS_HEIGHT / 2
 
     // Penetration depth into the outer edge threshold
-    const leftDepth = Math.max(0, bounds.minX + zone - x0)
-    const rightDepth = Math.max(0, x0 - (bounds.maxX - zone))
-    const topDepth = Math.max(0, bounds.minY + zone - y0)
-    const bottomDepth = Math.max(0, y0 - (bounds.maxY - zone))
+    const leftDepth = Math.max(0, bounds.minX + zone - x)
+    const rightDepth = Math.max(0, x - (bounds.maxX - zone))
+    const topDepth = Math.max(0, bounds.minY + zone - y)
+    const bottomDepth = Math.max(0, y - (bounds.maxY - zone))
 
     const depthX = Math.max(leftDepth, rightDepth)
     const depthY = Math.max(topDepth, bottomDepth)
     const edgeDepth = Math.max(depthX, depthY)
 
-    const corner = getCornerPush(x0, y0, radius)
-    const hasCornerPush = corner.pushX !== 0 || corner.pushY !== 0
-
-    if (edgeDepth <= 0 && !hasCornerPush) {
+    if (edgeDepth <= 0) {
         return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
     }
 
-    let pullX = 0
-    let pullY = 0
-    let strength = 0
+    const blendX = clamp(depthX / zone, 0, 1)
+    const blendY = clamp(depthY / zone, 0, 1)
+    const edgeBlend = Math.max(blendX, blendY)
+    const cornerBoost = 1 + Math.min(blendX, blendY) * 0.45
 
-    if (edgeDepth > 0) {
-        const blendX = clamp(depthX / zone, 0, 1)
-        const blendY = clamp(depthY / zone, 0, 1)
-        const edgeBlend = Math.max(blendX, blendY)
-        const cornerBoost = 1 + Math.min(blendX, blendY) * 0.45
-
-        const towardCenterX = canvasCenterX - centerX
-        const towardCenterY = canvasCenterY - centerY
-        const len = Math.hypot(towardCenterX, towardCenterY) || 1
-        const nx = towardCenterX / len
-        const ny = towardCenterY / len
-        const amount = Math.min(
-            EDGE_PULL_MAX,
-            zone *
-                edgeBlend *
-                EDGE_PULL_STRENGTH *
-                cornerBoost *
-                strengthMultiplier
-        )
-        pullX += nx * amount
-        pullY += ny * amount
-        strength = amount
-    }
-
-    if (hasCornerPush) {
-        pullX += corner.pushX * strengthMultiplier
-        pullY += corner.pushY * strengthMultiplier
-        strength = Math.max(
-            strength,
-            Math.hypot(corner.pushX, corner.pushY) * strengthMultiplier
-        )
-    }
+    const towardCenterX = canvasCenterX - centerX
+    const towardCenterY = canvasCenterY - centerY
+    const len = Math.hypot(towardCenterX, towardCenterY) || 1
+    const nx = towardCenterX / len
+    const ny = towardCenterY / len
+    const amount = Math.min(
+        EDGE_PULL_MAX,
+        zone * edgeBlend * EDGE_PULL_STRENGTH * cornerBoost * strengthMultiplier
+    )
 
     return {
         isNearEdge: true,
-        pullX,
-        pullY,
-        strength,
+        pullX: nx * amount,
+        pullY: ny * amount,
+        strength: amount,
     }
 }
 
@@ -423,28 +245,6 @@ function moveCircleBy(
     c.y.set(next.y)
 }
 
-// Same as moveCircleBy, but returns how much of the intended displacement
-// actually happened (0-1). Used to scale down the velocity kick on a push:
-// if a circle is jammed against a wall with nowhere to go, the container
-// clamp inside moveCircleBy silently absorbs most of the intended
-// movement, and injecting a full-strength kick anyway just hands it
-// energy that has nowhere to express itself as motion — which is exactly
-// what shows up as jitter instead of a bounce.
-function moveCircleByTracked(
-    c: CircleState,
-    dx: number,
-    dy: number,
-    maxStep = Infinity
-): number {
-    const beforeX = c.x.get()
-    const beforeY = c.y.get()
-    moveCircleBy(c, dx, dy, maxStep)
-    const intended = Math.min(Math.hypot(dx, dy), maxStep)
-    if (intended < 0.001) return 1
-    const achieved = Math.hypot(c.x.get() - beforeX, c.y.get() - beforeY)
-    return clamp(achieved / intended, 0, 1)
-}
-
 function collisionRamp(c: CircleState, now: number) {
     if (c.isDragging) return 1
     if (!c.hasSettled) return 0
@@ -510,135 +310,113 @@ function resolveCollisions(settledIds: Set<string>) {
                     (COLLISION_MAX_STEP - COLLISION_ENTRY_MAX_STEP) * pairRamp
 
                 if (a.isDragging) {
-                    const achieved = moveCircleByTracked(
-                        b,
-                        -nx * correction,
-                        -ny * correction,
-                        maxStep
-                    )
-                    const bHome = clampToContainer(
-                        b.x.get() - nx * bounce,
-                        b.y.get() - ny * bounce,
-                        b.radius
-                    )
-                    b.homeX = bHome.x
-                    b.homeY = bHome.y
-                    b.disturbed = true
-                    b.vx = clamp(
-                        b.vx - nx * bounce * COLLISION_VELOCITY_KICK * achieved,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
-                    b.vy = clamp(
-                        b.vy - ny * bounce * COLLISION_VELOCITY_KICK * achieved,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
+                    moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
+                    b.homeX = b.x.get() - nx * bounce
+                    b.homeY = b.y.get() - ny * bounce
                 } else if (b.isDragging) {
-                    const achieved = moveCircleByTracked(
-                        a,
-                        nx * correction,
-                        ny * correction,
-                        maxStep
-                    )
-                    const aHome = clampToContainer(
-                        a.x.get() + nx * bounce,
-                        a.y.get() + ny * bounce,
-                        a.radius
-                    )
-                    a.homeX = aHome.x
-                    a.homeY = aHome.y
-                    a.disturbed = true
-                    a.vx = clamp(
-                        a.vx + nx * bounce * COLLISION_VELOCITY_KICK * achieved,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
-                    a.vy = clamp(
-                        a.vy + ny * bounce * COLLISION_VELOCITY_KICK * achieved,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
+                    moveCircleBy(a, nx * correction, ny * correction, maxStep)
+                    a.homeX = a.x.get() + nx * bounce
+                    a.homeY = a.y.get() + ny * bounce
                 } else {
-                    const achievedA = moveCircleByTracked(
+                    moveCircleBy(
                         a,
                         (nx * correction) / 2,
                         (ny * correction) / 2,
                         maxStep
                     )
-                    const achievedB = moveCircleByTracked(
+                    moveCircleBy(
                         b,
                         (-nx * correction) / 2,
                         (-ny * correction) / 2,
                         maxStep
                     )
-                    const aHome = clampToContainer(
-                        a.x.get() + nx * (bounce * 0.45),
-                        a.y.get() + ny * (bounce * 0.45),
-                        a.radius
-                    )
-                    const bHome = clampToContainer(
-                        b.x.get() - nx * (bounce * 0.45),
-                        b.y.get() - ny * (bounce * 0.45),
-                        b.radius
-                    )
-                    a.homeX = aHome.x
-                    a.homeY = aHome.y
-                    b.homeX = bHome.x
-                    b.homeY = bHome.y
-                    a.disturbed = true
-                    b.disturbed = true
-                    a.vx = clamp(
-                        a.vx + nx * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedA,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
-                    a.vy = clamp(
-                        a.vy + ny * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedA,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
-                    b.vx = clamp(
-                        b.vx - nx * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedB,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
-                    b.vy = clamp(
-                        b.vy - ny * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedB,
-                        -MAX_VELOCITY,
-                        MAX_VELOCITY
-                    )
+                    a.homeX = a.x.get() + nx * (bounce * 0.45)
+                    a.homeY = a.y.get() + ny * (bounce * 0.45)
+                    b.homeX = b.x.get() - nx * (bounce * 0.45)
+                    b.homeY = b.y.get() - ny * (bounce * 0.45)
                 }
             }
         }
     }
 }
 
+function resolveDropPosition(id: string, radius: number, x: number, y: number) {
+    let centerX = x + radius
+    let centerY = y + radius
+    for (let i = 0; i < 12; i++) {
+        let hasOverlap = false
+        for (const other of circles.values()) {
+            if (other.id === id) continue
+            const otherCenterX = other.x.get() + other.radius
+            const otherCenterY = other.y.get() + other.radius
+            let dx = centerX - otherCenterX
+            let dy = centerY - otherCenterY
+            let dist = Math.sqrt(dx * dx + dy * dy)
+            const minDist = radius + other.radius + CIRCLE_GAP
+            if (dist >= minDist) continue
+            if (dist < 0.001) {
+                const angle = idAngle(id) - idAngle(other.id)
+                dx = Math.cos(angle)
+                dy = Math.sin(angle)
+                dist = 0.001
+            }
+            const nx = dx / dist
+            const ny = dy / dist
+            const overlap = minDist - dist
+            centerX += nx * overlap
+            centerY += ny * overlap
+            hasOverlap = true
+        }
+        const clamped = clampToContainer(
+            centerX - radius,
+            centerY - radius,
+            radius
+        )
+        centerX = clamped.x + radius
+        centerY = clamped.y + radius
+
+        const edgePull = getEdgePull(
+            centerX - radius,
+            centerY - radius,
+            radius,
+            1.1
+        )
+        if (edgePull.isNearEdge) {
+            const withCorner = clampToContainer(
+                centerX - radius + edgePull.pullX,
+                centerY - radius + edgePull.pullY,
+                radius
+            )
+            centerX = withCorner.x + radius
+            centerY = withCorner.y + radius
+        }
+
+        if (!hasOverlap) break
+    }
+
+    for (let i = 0; i < 4; i++) {
+        const edgePull = getEdgePull(
+            centerX - radius,
+            centerY - radius,
+            radius,
+            1.15
+        )
+        if (!edgePull.isNearEdge) break
+        const withCorner = clampToContainer(
+            centerX - radius + edgePull.pullX,
+            centerY - radius + edgePull.pullY,
+            radius
+        )
+        centerX = withCorner.x + radius
+        centerY = withCorner.y + radius
+    }
+
+    return { x: centerX - radius, y: centerY - radius }
+}
+
 function bezier(t: number, p0: number, p1: number, p2: number) {
     const mt = 1 - t
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
-}
-
-// True if some other, currently-dragged circle is close enough to c to be
-// actively pushing on it right now. Used to suppress c's corner-force for
-// the duration of that contact — otherwise the corner-force (pulling c
-// away from a corner) and resolveCollisions' direct positional push
-// (shoving c toward wherever the dragged circle forces it, which can be
-// straight into that same corner) fight for control of c's position every
-// single frame, which is what reads as trembling. The collision push gets
-// uncontested control while contact lasts; the corner-force picks back up
-// the instant it doesn't.
-function isBeingPressedByDrag(c: CircleState): boolean {
-    const cx = c.x.get() + c.radius
-    const cy = c.y.get() + c.radius
-    for (const other of circles.values()) {
-        if (other.id === c.id || !other.isDragging) continue
-        const minDist = c.radius + other.radius + CIRCLE_GAP
-        const dx = cx - (other.x.get() + other.radius)
-        const dy = cy - (other.y.get() + other.radius)
-        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
-    }
-    return false
 }
 
 function startLoopIfNeeded() {
@@ -657,6 +435,21 @@ function startLoopIfNeeded() {
 
             if (c.isDragging) {
                 settledIds.add(c.id)
+                const edgeWhileDragging = getEdgePull(
+                    c.x.get(),
+                    c.y.get(),
+                    c.radius,
+                    DRAG_EDGE_RESISTANCE
+                )
+                if (edgeWhileDragging.isNearEdge) {
+                    const nudged = clampToContainer(
+                        c.x.get() + edgeWhileDragging.pullX,
+                        c.y.get() + edgeWhileDragging.pullY,
+                        c.radius
+                    )
+                    c.homeX = nudged.x
+                    c.homeY = nudged.y
+                }
                 return
             }
 
@@ -681,91 +474,32 @@ function startLoopIfNeeded() {
                 if (!c.hasSettled) {
                     c.hasSettled = true
                     c.settledAt = timestamp
-                    c.vx = 0
-                    c.vy = 0
+                    c.anchorHomeX = c.homeX
+                    c.anchorHomeY = c.homeY
                 }
 
-                // Real velocity + spring integration, not a position-ease.
-                // A plain ease can only approach its target — this can
-                // overshoot and spring back, which is what actually reads
-                // as a bounce. The pull toward home and (for a disturbed
-                // circle) the push away from a corner are both just
-                // accelerations that sum into one velocity update, so they
-                // never fight each other positionally the way two separate
-                // "set the position to X" systems did before.
-                const x = c.x.get()
-                const y = c.y.get()
+                c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
+                c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
 
-                let ax = (c.homeX - x) * SPRING_STIFFNESS
-                let ay = (c.homeY - y) * SPRING_STIFFNESS
-
-                if (c.disturbed && !isBeingPressedByDrag(c)) {
-                    const corner = getCornerPush(x, y, c.radius)
-                    ax += corner.pushX * CORNER_FORCE_SCALE
-                    ay += corner.pushY * CORNER_FORCE_SCALE
-                }
-
-                c.vx = clamp(
-                    (c.vx + ax) * SPRING_DAMPING,
-                    -MAX_VELOCITY,
-                    MAX_VELOCITY
+                const currentX = c.x.get()
+                const currentY = c.y.get()
+                const edgeTarget = getEdgePull(
+                    c.anchorHomeX,
+                    c.anchorHomeY,
+                    c.radius
                 )
-                c.vy = clamp(
-                    (c.vy + ay) * SPRING_DAMPING,
-                    -MAX_VELOCITY,
-                    MAX_VELOCITY
+                const handoffProgress = clamp(
+                    (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
+                    0,
+                    1
                 )
-                // Resting-contact deadzone: once velocity decays to a
-                // near-nothing residual, kill it outright instead of
-                // leaving it to asymptotically approach zero forever. Pure
-                // damping never actually reaches zero, and a circle with
-                // nowhere left to go (jammed between a neighbor and a
-                // wall) keeps getting re-pushed by that residual every
-                // frame — this is what stops it settling completely still.
-                if (Math.abs(c.vx) < VELOCITY_REST_THRESHOLD) c.vx = 0
-                if (Math.abs(c.vy) < VELOCITY_REST_THRESHOLD) c.vy = 0
-
-                let nextX = x + c.vx
-                let nextY = y + c.vy
-
-                // Hard wall: reflect velocity so contact reads as an actual
-                // bounce off the edge, not just a stop — but only above a
-                // minimum incoming speed. Without that floor, a circle held
-                // at the wall with no real momentum (nothing forcing it
-                // away, nothing letting it leave) reflects a tiny residual
-                // back and forth forever: each bounce is too small to
-                // visibly move it, but the buzzing is still visible. Below
-                // the floor, the wall just absorbs it — resting contact.
-                const bounds = getBoundsForRadius(c.radius)
-                if (nextX < bounds.minX) {
-                    nextX = bounds.minX
-                    c.vx =
-                        Math.abs(c.vx) > WALL_BOUNCE_MIN_VELOCITY
-                            ? Math.abs(c.vx) * WALL_RESTITUTION
-                            : 0
-                } else if (nextX > bounds.maxX) {
-                    nextX = bounds.maxX
-                    c.vx =
-                        Math.abs(c.vx) > WALL_BOUNCE_MIN_VELOCITY
-                            ? -Math.abs(c.vx) * WALL_RESTITUTION
-                            : 0
-                }
-                if (nextY < bounds.minY) {
-                    nextY = bounds.minY
-                    c.vy =
-                        Math.abs(c.vy) > WALL_BOUNCE_MIN_VELOCITY
-                            ? Math.abs(c.vy) * WALL_RESTITUTION
-                            : 0
-                } else if (nextY > bounds.maxY) {
-                    nextY = bounds.maxY
-                    c.vy =
-                        Math.abs(c.vy) > WALL_BOUNCE_MIN_VELOCITY
-                            ? -Math.abs(c.vy) * WALL_RESTITUTION
-                            : 0
-                }
-
-                c.x.set(nextX)
-                c.y.set(nextY)
+                const pullFadeIn = handoffProgress * handoffProgress
+                const settledTargetX =
+                    c.anchorHomeX + edgeTarget.pullX * pullFadeIn
+                const settledTargetY =
+                    c.anchorHomeY + edgeTarget.pullY * pullFadeIn
+                c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
+                c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
             }
         })
 
@@ -823,11 +557,8 @@ function useDraggableCircle(
             dragStartX: origin.x,
             dragStartY: origin.y,
             staggerDelay,
-            vx: 0,
-            vy: 0,
-            originalHomeX: home.x,
-            originalHomeY: home.y,
-            disturbed: false,
+            anchorHomeX: home.x,
+            anchorHomeY: home.y,
             hasSettled: false,
             settledAt: 0,
         })
@@ -877,20 +608,14 @@ function useDraggableCircle(
         c.hasSettled = true
         c.settledAt =
             typeof performance !== "undefined" ? performance.now() : Date.now()
-        c.disturbed = true
-        // Anchor home to the exact release point and hand off to the
-        // spring/corner-force physics in tick() — no pre-resolved "safe"
-        // position, no teleport. The anti-tunneling clamp during drag
-        // already guarantees this position doesn't overlap anything, and
-        // if it's near a corner the corner-force will carry it out from
-        // here with a real bounce. c.vx/vy are left as whatever the last
-        // pointer move computed, so a release mid-swipe carries that
-        // motion into the bounce instead of dropping dead.
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
-        c.homeX = dropped.x
-        c.homeY = dropped.y
-        c.x.set(dropped.x)
-        c.y.set(dropped.y)
+        const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
+        c.homeX = resolved.x
+        c.homeY = resolved.y
+        c.anchorHomeX = resolved.x
+        c.anchorHomeY = resolved.y
+        c.x.set(resolved.x)
+        c.y.set(resolved.y)
         startTransition(() => setZIndex(baseZIndex(radius)))
     }, [id, radius, x, y])
 
@@ -910,8 +635,6 @@ function useDraggableCircle(
             c.dragStartX = c.x.get()
             c.dragStartY = c.y.get()
             c.hasSettled = false
-            c.vx = 0
-            c.vy = 0
             startTransition(() => setZIndex(DRAG_Z_INDEX))
 
             const onPointerMove = (moveEvent: PointerEvent) => {
@@ -919,99 +642,50 @@ function useDraggableCircle(
                 if (!active || !active.isDragging) return
                 if (active.pointerId !== moveEvent.pointerId) return
 
-                const rawTargetX =
+                const nextX =
                     active.dragStartX +
                     (moveEvent.clientX - active.dragStartPointerX)
-                const rawTargetY =
+                const nextY =
                     active.dragStartY +
                     (moveEvent.clientY - active.dragStartPointerY)
 
-                // Walk the pointer's move in short sub-steps instead of
-                // jumping straight to rawTarget. A single pointermove event
-                // can carry a large delta (a fast flick, or a dropped
-                // frame), and checking collisions only at the final point
-                // would let the dragged circle skip clean over a neighbor
-                // in one step, landing past it. Each sub-step advances a
-                // small fixed increment from the circle's ACTUAL current
-                // (possibly already-blocked) position — not from a fixed
-                // interpolation along the original start->target line. That
-                // distinction matters: once a neighbor holds the circle
-                // back, an interpolation based on the original line keeps
-                // advancing past where the circle actually is, and can
-                // cross the neighbor's center and get corrected out the
-                // wrong (far) side. Stepping from the live position instead
-                // means a blocked circle keeps re-attempting the same small
-                // increment and keeps getting held at the same boundary.
-                const fromX = active.x.get()
-                const fromY = active.y.get()
-                const totalDx = rawTargetX - fromX
-                const totalDy = rawTargetY - fromY
-                const travel = Math.hypot(totalDx, totalDy)
-                const steps = Math.max(1, Math.ceil(travel / DRAG_SUBSTEP_SIZE))
-                const stepDx = totalDx / steps
-                const stepDy = totalDy / steps
+                const bounced = clampWithEdgeBounce(nextX, nextY, radius)
+                const edgeDuringDrag = getEdgePull(
+                    bounced.x,
+                    bounced.y,
+                    radius,
+                    DRAG_EDGE_RESISTANCE
+                )
+                const draggedWithCorner = clampToContainer(
+                    bounced.x + edgeDuringDrag.pullX,
+                    bounced.y + edgeDuringDrag.pullY,
+                    radius
+                )
 
-                for (let s = 0; s < steps; s++) {
-                    const stepX = active.x.get() + stepDx
-                    const stepY = active.y.get() + stepDy
+                // Move the dragged circle to where the pointer wants it.
+                active.x.set(draggedWithCorner.x)
+                active.y.set(draggedWithCorner.y)
 
-                    const bounced = clampWithEdgeBounce(stepX, stepY, radius)
-                    const edgeDuringDrag = getEdgePull(
-                        bounced.x,
-                        bounced.y,
-                        radius,
-                        DRAG_EDGE_RESISTANCE
-                    )
-                    const draggedWithCorner = clampToContainer(
-                        bounced.x + edgeDuringDrag.pullX,
-                        bounced.y + edgeDuringDrag.pullY,
-                        radius
-                    )
-
-                    // Move the dragged circle to this step's position. It
-                    // always goes exactly where the pointer says — nothing
-                    // holds it back, even a neighbor that has nowhere left
-                    // to go (e.g. pinned against a wall). What used to be a
-                    // hard stop here is gone on purpose: a drag that can
-                    // get "blocked" by another circle reads as broken on a
-                    // touchscreen, since the finger and the circle visibly
-                    // decouple. The small (14px) sub-step size is what
-                    // keeps this from reading as tunneling — it can't skip
-                    // over a neighbor's ~250px+ diameter in one step, so a
-                    // sustained push into a stuck neighbor shows as
-                    // visibly sliding into/through it, not an invisible
-                    // teleport past it.
-                    active.x.set(draggedWithCorner.x)
-                    active.y.set(draggedWithCorner.y)
-
-                    // Still push every other circle out of the way,
-                    // repeatedly, at this step — this reuses the exact
-                    // same push/bounce logic in resolveCollisions (the
-                    // a.isDragging branch moves only the OTHER circle).
-                    // Neighbors with room still make way; a neighbor with
-                    // nowhere to go just gets pressed against by the
-                    // dragged circle rather than stopping it.
-                    const allIds = new Set(circles.keys())
-                    for (let i = 0; i < DRAG_COLLISION_ITERATIONS; i++) {
-                        resolveCollisions(allIds)
-                    }
+                // Immediately resolve pushes against every other circle,
+                // repeatedly, within this single pointer event. This reuses
+                // the exact same push/bounce logic that already lives in
+                // resolveCollisions (the a.isDragging branch moves only the
+                // OTHER circle, with a bounce fed into its homeX/homeY) —
+                // it's just no longer limited to once per animation frame,
+                // so a fast drag can't move further in one step than the
+                // pushed circle is allowed to react.
+                const allIds = new Set(circles.keys())
+                for (let i = 0; i < DRAG_COLLISION_ITERATIONS; i++) {
+                    resolveCollisions(allIds)
                 }
 
-                // Track this event's net movement as a velocity estimate.
-                // If the pointer is released mid-swipe, endDrag hands off
-                // to the spring/bounce physics without resetting it, so a
-                // fast release carries its motion into a natural fling
-                // instead of the circle just going dead on release.
-                active.vx = clamp(
-                    active.x.get() - fromX,
-                    -MAX_VELOCITY,
-                    MAX_VELOCITY
+                const reboundedHome = clampToContainer(
+                    active.x.get() + bounced.reboundX + edgeDuringDrag.pullX,
+                    active.y.get() + bounced.reboundY + edgeDuringDrag.pullY,
+                    radius
                 )
-                active.vy = clamp(
-                    active.y.get() - fromY,
-                    -MAX_VELOCITY,
-                    MAX_VELOCITY
-                )
+                active.homeX = reboundedHome.x
+                active.homeY = reboundedHome.y
             }
 
             const onPointerUp = (upEvent: PointerEvent) => {
