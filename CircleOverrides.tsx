@@ -27,8 +27,20 @@ type CircleState = {
     dragStartX: number
     dragStartY: number
     staggerDelay: number
-    anchorHomeX: number
-    anchorHomeY: number
+    // Velocity (px/frame), driven by springs/impulses once settled. This is
+    // what makes motion actually bounce — a plain "ease toward a target"
+    // position can only ever approach monotonically, it can never overshoot
+    // and spring back the way a real bounce does.
+    vx: number
+    vy: number
+    // The circle's original, designer-authored resting spot. Never changes.
+    // Used to tell "still exactly where it was placed" apart from "has been
+    // dragged or bumped at some point" — corner/edge avoidance only ever
+    // applies to the latter, so a circle authored to sit near a corner (by
+    // design) is left alone until a user actually touches it.
+    originalHomeX: number
+    originalHomeY: number
+    disturbed: boolean
     hasSettled: boolean
     settledAt: number
 }
@@ -68,10 +80,36 @@ const COLLISION_BOUNCE_MULTIPLIER = 0.55
 const COLLISION_DEADZONE = 0.6
 const COLLISION_MAX_STEP = 12
 const COLLISION_ENTRY_MAX_STEP = 2.8
-const HOME_EASE = 0.18
-const HOME_ANCHOR_EASE = 0.12
 const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
+
+// ------------------------------------------------------------------
+// Spring/bounce physics for settled (non-dragging) circles
+// ------------------------------------------------------------------
+// Once a circle is settled, it's driven by an actual velocity + spring
+// integration toward its home spot rather than a plain position-ease.
+// A plain ease can only ever approach its target — it can't overshoot and
+// spring back, so it can never really "bounce." Tuned (and verified by
+// simulation) to overshoot visibly once, wobble a couple more times at
+// shrinking amplitude, and settle within roughly a second.
+const SPRING_STIFFNESS = 0.12
+const SPRING_DAMPING = 0.8
+// Cap on px/frame so a big impulse (a hard collision, a flung release)
+// can't make a circle's motion feel unbounded.
+const MAX_VELOCITY = 40
+// How much of a wall-contact's velocity bounces back versus getting
+// absorbed. Only matters for a disturbed circle whose spring+corner-force
+// motion actually reaches the hard boundary.
+const WALL_RESTITUTION = 0.4
+// Scales getCornerPush's output (see below) into an acceleration for the
+// spring integration, on top of the pull toward home. Only applied to
+// circles that have been disturbed (dragged, or bumped by a collision) —
+// see the `disturbed` field on CircleState.
+const CORNER_FORCE_SCALE = 0.5
+// Fraction of a collision's rebound push that's injected as an actual
+// velocity kick (in addition to the immediate positional depenetration),
+// so getting shoved by another circle reads as a bounce, not just a slide.
+const COLLISION_VELOCITY_KICK = 0.6
 
 // ------------------------------------------------------------------
 // Corner avoidance
@@ -425,6 +463,17 @@ function resolveCollisions(settledIds: Set<string>) {
                     )
                     b.homeX = bHome.x
                     b.homeY = bHome.y
+                    b.disturbed = true
+                    b.vx = clamp(
+                        b.vx - nx * bounce * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
+                    b.vy = clamp(
+                        b.vy - ny * bounce * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
                 } else if (b.isDragging) {
                     moveCircleBy(a, nx * correction, ny * correction, maxStep)
                     const aHome = clampToContainer(
@@ -434,6 +483,17 @@ function resolveCollisions(settledIds: Set<string>) {
                     )
                     a.homeX = aHome.x
                     a.homeY = aHome.y
+                    a.disturbed = true
+                    a.vx = clamp(
+                        a.vx + nx * bounce * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
+                    a.vy = clamp(
+                        a.vy + ny * bounce * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
                 } else {
                     moveCircleBy(
                         a,
@@ -461,6 +521,28 @@ function resolveCollisions(settledIds: Set<string>) {
                     a.homeY = aHome.y
                     b.homeX = bHome.x
                     b.homeY = bHome.y
+                    a.disturbed = true
+                    b.disturbed = true
+                    a.vx = clamp(
+                        a.vx + nx * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
+                    a.vy = clamp(
+                        a.vy + ny * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
+                    b.vx = clamp(
+                        b.vx - nx * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
+                    b.vy = clamp(
+                        b.vy - ny * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        -MAX_VELOCITY,
+                        MAX_VELOCITY
+                    )
                 }
             }
         }
@@ -509,80 +591,6 @@ function clampDraggedAgainstOthers() {
     })
 }
 
-function resolveDropPosition(id: string, radius: number, x: number, y: number) {
-    let centerX = x + radius
-    let centerY = y + radius
-    for (let i = 0; i < 12; i++) {
-        let hasOverlap = false
-        for (const other of circles.values()) {
-            if (other.id === id) continue
-            const otherCenterX = other.x.get() + other.radius
-            const otherCenterY = other.y.get() + other.radius
-            let dx = centerX - otherCenterX
-            let dy = centerY - otherCenterY
-            let dist = Math.sqrt(dx * dx + dy * dy)
-            const minDist = radius + other.radius + CIRCLE_GAP
-            if (dist >= minDist) continue
-            if (dist < 0.001) {
-                const angle = idAngle(id) - idAngle(other.id)
-                dx = Math.cos(angle)
-                dy = Math.sin(angle)
-                dist = 0.001
-            }
-            const nx = dx / dist
-            const ny = dy / dist
-            const overlap = minDist - dist
-            centerX += nx * overlap
-            centerY += ny * overlap
-            hasOverlap = true
-        }
-        const clamped = clampToContainer(
-            centerX - radius,
-            centerY - radius,
-            radius
-        )
-        centerX = clamped.x + radius
-        centerY = clamped.y + radius
-
-        const edgePull = getEdgePull(
-            centerX - radius,
-            centerY - radius,
-            radius,
-            1.1
-        )
-        if (edgePull.isNearEdge) {
-            const withCorner = clampToContainer(
-                centerX - radius + edgePull.pullX,
-                centerY - radius + edgePull.pullY,
-                radius
-            )
-            centerX = withCorner.x + radius
-            centerY = withCorner.y + radius
-        }
-
-        if (!hasOverlap) break
-    }
-
-    for (let i = 0; i < 4; i++) {
-        const edgePull = getEdgePull(
-            centerX - radius,
-            centerY - radius,
-            radius,
-            1.15
-        )
-        if (!edgePull.isNearEdge) break
-        const withCorner = clampToContainer(
-            centerX - radius + edgePull.pullX,
-            centerY - radius + edgePull.pullY,
-            radius
-        )
-        centerX = withCorner.x + radius
-        centerY = withCorner.y + radius
-    }
-
-    return { x: centerX - radius, y: centerY - radius }
-}
-
 function bezier(t: number, p0: number, p1: number, p2: number) {
     const mt = 1 - t
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
@@ -604,21 +612,6 @@ function startLoopIfNeeded() {
 
             if (c.isDragging) {
                 settledIds.add(c.id)
-                const edgeWhileDragging = getEdgePull(
-                    c.x.get(),
-                    c.y.get(),
-                    c.radius,
-                    DRAG_EDGE_RESISTANCE
-                )
-                if (edgeWhileDragging.isNearEdge) {
-                    const nudged = clampToContainer(
-                        c.x.get() + edgeWhileDragging.pullX,
-                        c.y.get() + edgeWhileDragging.pullY,
-                        c.radius
-                    )
-                    c.homeX = nudged.x
-                    c.homeY = nudged.y
-                }
                 return
             }
 
@@ -643,30 +636,64 @@ function startLoopIfNeeded() {
                 if (!c.hasSettled) {
                     c.hasSettled = true
                     c.settledAt = timestamp
-                    c.anchorHomeX = c.homeX
-                    c.anchorHomeY = c.homeY
+                    c.vx = 0
+                    c.vy = 0
                 }
 
-                c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
-                c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
+                // Real velocity + spring integration, not a position-ease.
+                // A plain ease can only approach its target — this can
+                // overshoot and spring back, which is what actually reads
+                // as a bounce. The pull toward home and (for a disturbed
+                // circle) the push away from a corner are both just
+                // accelerations that sum into one velocity update, so they
+                // never fight each other positionally the way two separate
+                // "set the position to X" systems did before.
+                const x = c.x.get()
+                const y = c.y.get()
 
-                // Ease toward the home/anchor position only — no continuous
-                // edge/corner pull here. Corner avoidance is resolved once,
-                // at the moment a circle is actually dropped (see
-                // resolveDropPosition in endDrag). Applying it every frame
-                // to every settled circle caused two problems: circles that
-                // were never touched got yanked away from their authored
-                // opening position the instant the entrance animation
-                // finished, and a circle being shoved toward a corner by a
-                // drag nearby would visibly shake as the collision push and
-                // this pull fought each other frame after frame.
-                const currentX = c.x.get()
-                const currentY = c.y.get()
-                const nextX = currentX + (c.anchorHomeX - currentX) * HOME_EASE
-                const nextY = currentY + (c.anchorHomeY - currentY) * HOME_EASE
-                const settled = clampToContainer(nextX, nextY, c.radius)
-                c.x.set(settled.x)
-                c.y.set(settled.y)
+                let ax = (c.homeX - x) * SPRING_STIFFNESS
+                let ay = (c.homeY - y) * SPRING_STIFFNESS
+
+                if (c.disturbed) {
+                    const corner = getCornerPush(x, y, c.radius)
+                    ax += corner.pushX * CORNER_FORCE_SCALE
+                    ay += corner.pushY * CORNER_FORCE_SCALE
+                }
+
+                c.vx = clamp(
+                    (c.vx + ax) * SPRING_DAMPING,
+                    -MAX_VELOCITY,
+                    MAX_VELOCITY
+                )
+                c.vy = clamp(
+                    (c.vy + ay) * SPRING_DAMPING,
+                    -MAX_VELOCITY,
+                    MAX_VELOCITY
+                )
+
+                let nextX = x + c.vx
+                let nextY = y + c.vy
+
+                // Hard wall: reflect velocity so contact reads as an actual
+                // bounce off the edge, not just a stop.
+                const bounds = getBoundsForRadius(c.radius)
+                if (nextX < bounds.minX) {
+                    nextX = bounds.minX
+                    c.vx = Math.abs(c.vx) * WALL_RESTITUTION
+                } else if (nextX > bounds.maxX) {
+                    nextX = bounds.maxX
+                    c.vx = -Math.abs(c.vx) * WALL_RESTITUTION
+                }
+                if (nextY < bounds.minY) {
+                    nextY = bounds.minY
+                    c.vy = Math.abs(c.vy) * WALL_RESTITUTION
+                } else if (nextY > bounds.maxY) {
+                    nextY = bounds.maxY
+                    c.vy = -Math.abs(c.vy) * WALL_RESTITUTION
+                }
+
+                c.x.set(nextX)
+                c.y.set(nextY)
             }
         })
 
@@ -725,8 +752,11 @@ function useDraggableCircle(
             dragStartX: origin.x,
             dragStartY: origin.y,
             staggerDelay,
-            anchorHomeX: home.x,
-            anchorHomeY: home.y,
+            vx: 0,
+            vy: 0,
+            originalHomeX: home.x,
+            originalHomeY: home.y,
+            disturbed: false,
             hasSettled: false,
             settledAt: 0,
         })
@@ -776,16 +806,18 @@ function useDraggableCircle(
         c.hasSettled = true
         c.settledAt =
             typeof performance !== "undefined" ? performance.now() : Date.now()
+        c.disturbed = true
+        // Anchor home to the exact release point and hand off to the
+        // spring/corner-force physics in tick() — no pre-resolved "safe"
+        // position, no teleport. The anti-tunneling clamp during drag
+        // already guarantees this position doesn't overlap anything, and
+        // if it's near a corner the corner-force will carry it out from
+        // here with a real bounce. c.vx/vy are left as whatever the last
+        // pointer move computed, so a release mid-swipe carries that
+        // motion into the bounce instead of dropping dead.
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
-        const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
-        // Target the corner/overlap-safe spot, but don't teleport there —
-        // leave the circle at its actual release point and let the normal
-        // home-easing in tick() carry it smoothly across, so a drop near a
-        // corner reads as a soft bounce back rather than an instant snap.
-        c.homeX = resolved.x
-        c.homeY = resolved.y
-        c.anchorHomeX = dropped.x
-        c.anchorHomeY = dropped.y
+        c.homeX = dropped.x
+        c.homeY = dropped.y
         c.x.set(dropped.x)
         c.y.set(dropped.y)
         startTransition(() => setZIndex(baseZIndex(radius)))
@@ -807,6 +839,8 @@ function useDraggableCircle(
             c.dragStartX = c.x.get()
             c.dragStartY = c.y.get()
             c.hasSettled = false
+            c.vx = 0
+            c.vy = 0
             startTransition(() => setZIndex(DRAG_Z_INDEX))
 
             const onPointerMove = (moveEvent: PointerEvent) => {
@@ -846,15 +880,12 @@ function useDraggableCircle(
                 const stepDx = totalDx / steps
                 const stepDy = totalDy / steps
 
-                let bounced = { x: fromX, y: fromY, reboundX: 0, reboundY: 0 }
-                let edgeDuringDrag = { pullX: 0, pullY: 0 }
-
                 for (let s = 0; s < steps; s++) {
                     const stepX = active.x.get() + stepDx
                     const stepY = active.y.get() + stepDy
 
-                    bounced = clampWithEdgeBounce(stepX, stepY, radius)
-                    edgeDuringDrag = getEdgePull(
+                    const bounced = clampWithEdgeBounce(stepX, stepY, radius)
+                    const edgeDuringDrag = getEdgePull(
                         bounced.x,
                         bounced.y,
                         radius,
@@ -888,13 +919,21 @@ function useDraggableCircle(
                     }
                 }
 
-                const reboundedHome = clampToContainer(
-                    active.x.get() + bounced.reboundX + edgeDuringDrag.pullX,
-                    active.y.get() + bounced.reboundY + edgeDuringDrag.pullY,
-                    radius
+                // Track this event's net movement as a velocity estimate.
+                // If the pointer is released mid-swipe, endDrag hands off
+                // to the spring/bounce physics without resetting it, so a
+                // fast release carries its motion into a natural fling
+                // instead of the circle just going dead on release.
+                active.vx = clamp(
+                    active.x.get() - fromX,
+                    -MAX_VELOCITY,
+                    MAX_VELOCITY
                 )
-                active.homeX = reboundedHome.x
-                active.homeY = reboundedHome.y
+                active.vy = clamp(
+                    active.y.get() - fromY,
+                    -MAX_VELOCITY,
+                    MAX_VELOCITY
+                )
             }
 
             const onPointerUp = (upEvent: PointerEvent) => {
