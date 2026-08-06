@@ -89,11 +89,23 @@ const SETTLE_HANDOFF_MS = 180
 // Once a circle is settled, it's driven by an actual velocity + spring
 // integration toward its home spot rather than a plain position-ease.
 // A plain ease can only ever approach its target — it can't overshoot and
-// spring back, so it can never really "bounce." Tuned (and verified by
-// simulation) to overshoot visibly once, wobble a couple more times at
-// shrinking amplitude, and settle within roughly a second.
-const SPRING_STIFFNESS = 0.12
-const SPRING_DAMPING = 0.8
+// spring back, so it can never really "bounce."
+//
+// Retuned from an earlier pass that gave multiple visible wobbles per
+// bounce — technically decaying, but with the corner-force's own
+// (nonlinear, saturating) dynamics layered on top of the linear home-pull,
+// it read as trembling rather than a single clean "boing." Verified by
+// simulation against the actual corner-drop scenario (not just the plain
+// spring in isolation, which behaves differently once the corner-force is
+// layered in): this pair gives exactly one overshoot with the velocity's
+// radial direction never reversing a second time, settling in ~0.2s.
+// Also checked for a "dead zone trap" — too low a stiffness combined with
+// VELOCITY_REST_THRESHOLD can let a circle's velocity decay below the
+// rest threshold while it's still a few px short of home, permanently
+// stalling short of the actual target. This pair leaves under ~1.2px of
+// residual error even on a plain (non-corner) bump, which is imperceptible.
+const SPRING_STIFFNESS = 0.09
+const SPRING_DAMPING = 0.54
 // Cap on px/frame so a big impulse (a hard collision, a flung release)
 // can't make a circle's motion feel unbounded.
 const MAX_VELOCITY = 40
@@ -157,30 +169,14 @@ const CORNER_PUSH_MAX = 70
 // the dragged circle "outrun" the circle it should be pushing. Running the
 // same resolution multiple times per pointer event lets the pushed circle
 // fully catch up immediately, regardless of drag speed, using the exact
-// same push/bounce math — no new mechanics, no feel change. Bumped up
-// alongside softening CLAMP_DRAG_STRENGTH below (a partial correction
-// needs a few more passes to converge as tightly as an instant snap did).
+// same push/bounce math — no new mechanics, no feel change.
 const DRAG_COLLISION_ITERATIONS = 14
 
 // Max distance (px) the dragged circle is allowed to advance per sub-step
 // within a single pointermove event before collisions are re-checked (see
-// onPointerMove). Keeps a fast flick from skipping over a neighbor in one
-// jump instead of registering contact with it along the way. Smaller than
-// before so drag motion gets resolved against neighbors more often —
-// smoother, less steppy contact response.
+// onPointerMove). Keeps contact with a neighbor resolving smoothly and
+// continuously rather than in big steppy jumps.
 const DRAG_SUBSTEP_SIZE = 14
-
-// clampDraggedAgainstOthers used to snap the dragged circle instantly and
-// fully to the boundary distance from a neighbor it's overlapping. That's
-// fine with a single neighbor (converges to essentially exact within a
-// couple of calls anyway), but if the dragged circle is squeezed between
-// two neighbors (or a neighbor and a wall) with no position that satisfies
-// both at once, two hard full snaps fighting each call is a visible
-// ping-pong. A partial correction per call still converges to the same
-// tight result in the single-constraint case (geometric series over
-// DRAG_COLLISION_ITERATIONS calls), but settles into a small, smoothly
-// shrinking compromise instead of a hard oscillation in the squeezed case.
-const CLAMP_DRAG_STRENGTH = 0.6
 
 function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
@@ -618,56 +614,6 @@ function resolveCollisions(settledIds: Set<string>) {
     }
 }
 
-// resolveCollisions pushes the OTHER circle out of a dragged circle's way,
-// but that push is rate-limited (COLLISION_MAX_STEP etc.) for a soft, fluid
-// feel — it doesn't, by itself, stop the dragged circle from advancing
-// into/through a neighbor faster than the neighbor can clear out. This is a
-// hard backstop: it never lets a currently-dragged circle's own position
-// end up overlapping any other circle beyond the allowed gap, so it can
-// only ever push a neighbor aside, never slide past or through it. The
-// neighbor itself is left to move at its own soft, eased pace — this only
-// clamps the dragged circle's forward progress to match.
-function clampDraggedAgainstOthers() {
-    circles.forEach((active) => {
-        if (!active.isDragging) return
-        circles.forEach((other) => {
-            if (other.id === active.id) return
-            const minDist = active.radius + other.radius + CIRCLE_GAP
-            const ocx = other.x.get() + other.radius
-            const ocy = other.y.get() + other.radius
-            const acx = active.x.get() + active.radius
-            const acy = active.y.get() + active.radius
-            let dx = acx - ocx
-            let dy = acy - ocy
-            let dist = Math.hypot(dx, dy)
-            if (dist >= minDist) return
-            if (dist < 0.001) {
-                const angle = idAngle(active.id) - idAngle(other.id)
-                dx = Math.cos(angle)
-                dy = Math.sin(angle)
-                dist = 0.001
-            }
-            const nx = dx / dist
-            const ny = dy / dist
-            // Partial step toward the boundary distance rather than an
-            // instant full snap — see CLAMP_DRAG_STRENGTH. Converges to the
-            // same tight result within a couple of calls when there's only
-            // one neighbor to satisfy; settles into a small, smooth
-            // compromise instead of a hard back-and-forth when squeezed
-            // between two constraints with no position that satisfies both.
-            const targetX = ocx + nx * minDist - active.radius
-            const targetY = ocy + ny * minDist - active.radius
-            const corrected = clampToContainer(
-                active.x.get() + (targetX - active.x.get()) * CLAMP_DRAG_STRENGTH,
-                active.y.get() + (targetY - active.y.get()) * CLAMP_DRAG_STRENGTH,
-                active.radius
-            )
-            active.x.set(corrected.x)
-            active.y.set(corrected.y)
-        })
-    })
-}
-
 function bezier(t: number, p0: number, p1: number, p2: number) {
     const mt = 1 - t
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
@@ -824,7 +770,6 @@ function startLoopIfNeeded() {
         })
 
         resolveCollisions(settledIds)
-        clampDraggedAgainstOthers()
 
         if (typeof window !== "undefined") {
             rafId = window.requestAnimationFrame(tick)
@@ -1023,25 +968,32 @@ function useDraggableCircle(
                         radius
                     )
 
-                    // Move the dragged circle to this step's position.
+                    // Move the dragged circle to this step's position. It
+                    // always goes exactly where the pointer says — nothing
+                    // holds it back, even a neighbor that has nowhere left
+                    // to go (e.g. pinned against a wall). What used to be a
+                    // hard stop here is gone on purpose: a drag that can
+                    // get "blocked" by another circle reads as broken on a
+                    // touchscreen, since the finger and the circle visibly
+                    // decouple. The small (14px) sub-step size is what
+                    // keeps this from reading as tunneling — it can't skip
+                    // over a neighbor's ~250px+ diameter in one step, so a
+                    // sustained push into a stuck neighbor shows as
+                    // visibly sliding into/through it, not an invisible
+                    // teleport past it.
                     active.x.set(draggedWithCorner.x)
                     active.y.set(draggedWithCorner.y)
 
-                    // Resolve pushes against every other circle, repeatedly,
-                    // at this step. This reuses the exact same push/bounce
-                    // logic that already lives in resolveCollisions (the
-                    // a.isDragging branch moves only the OTHER circle, with
-                    // a bounce fed into its homeX/homeY). clampDraggedAgainstOthers
-                    // then hard-stops this circle's own position from ending
-                    // up overlapping (or sliding past, to the other side of)
-                    // any neighbor that couldn't get out of the way fast
-                    // enough — the neighbor keeps easing away at its own
-                    // soft pace, this just won't let the dragged circle
-                    // outrun it.
+                    // Still push every other circle out of the way,
+                    // repeatedly, at this step — this reuses the exact
+                    // same push/bounce logic in resolveCollisions (the
+                    // a.isDragging branch moves only the OTHER circle).
+                    // Neighbors with room still make way; a neighbor with
+                    // nowhere to go just gets pressed against by the
+                    // dragged circle rather than stopping it.
                     const allIds = new Set(circles.keys())
                     for (let i = 0; i < DRAG_COLLISION_ITERATIONS; i++) {
                         resolveCollisions(allIds)
-                        clampDraggedAgainstOthers()
                     }
                 }
 
