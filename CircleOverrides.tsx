@@ -24,6 +24,13 @@ type CircleState = {
     // strength every time it's rewritten. See HOME_TARGET_SMOOTHING.
     smoothHomeX: number
     smoothHomeY: number
+    // While this circle is being dragged, a damped copy of its own live
+    // x/y -- used as the reference point OTHER circles' collision math
+    // reacts to, so their responses track a smoothed version of the drag
+    // path rather than raw, noisy pointer coordinates. Irrelevant while
+    // not dragging. See collisionRefX/Y and DRAG_POSITION_SMOOTHING.
+    dragSmoothX: number
+    dragSmoothY: number
     originX: number
     originY: number
     x: MotionValue<number>
@@ -128,6 +135,14 @@ const HOME_EASE = 0.18
 // within 2-3 frames at this value -- responsiveness is unaffected;
 // only frame-to-frame noise gets absorbed.
 const HOME_TARGET_SMOOTHING = 0.5
+// How much of the gap between a dragged circle's live position and its
+// dragSmoothX/Y closes each animation frame. Complements
+// HOME_TARGET_SMOOTHING: that one damps a pushed circle's own target
+// updates, this one damps the input those updates are computed FROM in
+// the first place (see collisionRefX/Y). The dragged circle itself always
+// renders at the raw, live pointer position -- only what OTHER circles
+// react to is smoothed.
+const DRAG_POSITION_SMOOTHING = 0.35
 // Once a settled circle is within this many px of its home target on both
 // axes, stop nudging it entirely. Without this, an idle circle keeps making
 // imperceptible (but nonzero) position writes forever; with it, a circle
@@ -380,6 +395,24 @@ function collisionRamp(c: CircleState, now: number) {
     return t * t
 }
 
+// For a circle actively being dragged, use its damped dragSmoothX/Y as the
+// reference point for collision math instead of its raw, live position.
+// The dragged circle itself still renders 1:1 with the pointer (untouched
+// here) -- this only affects how much OTHER circles get pushed by it. Raw
+// pointer input has real frame-to-frame noise (no human hand moves in a
+// perfectly smooth line), and resolveCollisions runs many times between
+// two visible frames (up to 4 inner iterations x 10 calls per pointer-move
+// event); without this, every bit of that noise reaches a pushed
+// neighbor's actual on-screen position at full strength, every time,
+// which is what a persistent tremor looks like on a circle in genuine
+// contact with the dragged one.
+function collisionRefX(c: CircleState) {
+    return c.isDragging ? c.dragSmoothX : c.x.get()
+}
+function collisionRefY(c: CircleState) {
+    return c.isDragging ? c.dragSmoothY : c.y.get()
+}
+
 function resolveCollisions(settledIds: Set<string>) {
     const list = Array.from(circles.values())
     const now =
@@ -395,10 +428,10 @@ function resolveCollisions(settledIds: Set<string>) {
                 if (!settledIds.has(b.id)) continue
                 if (a.isDragging && b.isDragging) continue
 
-                const ax = a.x.get() + a.radius
-                const ay = a.y.get() + a.radius
-                const bx = b.x.get() + b.radius
-                const by = b.y.get() + b.radius
+                const ax = collisionRefX(a) + a.radius
+                const ay = collisionRefY(a) + a.radius
+                const bx = collisionRefX(b) + b.radius
+                const by = collisionRefY(b) + b.radius
 
                 let dx = ax - bx
                 let dy = ay - by
@@ -684,6 +717,8 @@ function startLoopIfNeeded() {
 
             if (c.isDragging) {
                 settledIds.add(c.id)
+                c.dragSmoothX += (c.x.get() - c.dragSmoothX) * DRAG_POSITION_SMOOTHING
+                c.dragSmoothY += (c.y.get() - c.dragSmoothY) * DRAG_POSITION_SMOOTHING
                 const edgeWhileDragging = getEdgePull(
                     c.x.get(),
                     c.y.get(),
@@ -798,6 +833,8 @@ function useDraggableCircle(
             homeY: home.y,
             smoothHomeX: home.x,
             smoothHomeY: home.y,
+            dragSmoothX: origin.x,
+            dragSmoothY: origin.y,
             originX: origin.x,
             originY: origin.y,
             x,
@@ -899,6 +936,8 @@ function useDraggableCircle(
             c.dragStartPointerY = event.clientY
             c.dragStartX = c.x.get()
             c.dragStartY = c.y.get()
+            c.dragSmoothX = c.x.get()
+            c.dragSmoothY = c.y.get()
             c.hasSettled = false
             startTransition(() => setZIndex(DRAG_Z_INDEX))
 
