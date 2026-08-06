@@ -112,6 +112,13 @@ const NUDGE_TRANSMIT_FACTOR = 0.65
 // count as "in the way" and receive a nudge. Higher = only nudge
 // neighbors standing almost directly in the desired path.
 const NUDGE_ALIGNMENT_MIN = 0.15
+// Fraction of a received nudge that permanently migrates the receiving
+// circle's home each frame the nudge is active, on top of the transient
+// target-chasing above. Small and cumulative, so a briefly-blocked
+// neighbor barely moves its true home, but a circle leaned on for a while
+// gradually settles further away rather than snapping straight back the
+// instant the pressure lifts.
+const NUDGE_HOME_BLEND = 0.03
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
 // event while dragging. resolveCollisions already pushes the other circle
@@ -548,6 +555,17 @@ function isBlockedByNeighbor(c: CircleState): boolean {
 // the other circle pushes uselessly against it. This is what lets the
 // escape be shared between both circles rather than resolved by one
 // circle simply giving up (see isBlockedByNeighbor).
+//
+// Critically, this only fires for a source circle that's actually
+// disturbed. Without that gate, any two circles authored close enough
+// together at rest (well within PRESS_MARGIN of each other, which several
+// pairs in this layout are) would nudge each other back and forth forever
+// purely from static proximity — the corner-hugging circle never moves on
+// its own, but its dormant desire to leave the corner would still "leak"
+// onto its neighbor, which drifts out, falls out of range, drifts back,
+// re-enters range, and repeats. Gating on disturbed means an untouched
+// circle exerts zero force on anything, matching the rule that nothing
+// moves until something's actually happened to it.
 function getIncomingNudge(c: CircleState): { nudgeX: number; nudgeY: number } {
     let nudgeX = 0
     let nudgeY = 0
@@ -555,7 +573,7 @@ function getIncomingNudge(c: CircleState): { nudgeX: number; nudgeY: number } {
     const cy = c.y.get() + c.radius
 
     for (const other of circles.values()) {
-        if (other.id === c.id || other.isDragging) continue
+        if (other.id === c.id || other.isDragging || !other.disturbed) continue
         const minDist = c.radius + other.radius + CIRCLE_GAP
         const ox = other.x.get() + other.radius
         const oy = other.y.get() + other.radius
@@ -685,6 +703,16 @@ function startLoopIfNeeded() {
                         (ownPull.pullY + incoming.nudgeY) * pullFadeIn
                     c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
                     c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
+
+                    // Let a sustained "make room" nudge permanently
+                    // migrate this circle's resting spot a little, instead
+                    // of only ever holding position while the nudge is
+                    // active and springing straight back the moment the
+                    // source circle drifts out of range.
+                    if (incomingMag > 0.01) {
+                        c.homeX += incoming.nudgeX * NUDGE_HOME_BLEND
+                        c.homeY += incoming.nudgeY * NUDGE_HOME_BLEND
+                    }
                 } else {
                     c.x.set(currentX + (c.anchorHomeX - currentX) * HOME_EASE)
                     c.y.set(currentY + (c.anchorHomeY - currentY) * HOME_EASE)

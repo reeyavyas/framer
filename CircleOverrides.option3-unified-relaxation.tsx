@@ -4,18 +4,20 @@
 // one big "ease toward a target" step followed by a separate overlap-fix
 // pass — the two are interleaved into the SAME iterative loop, the way a
 // circle-packing/force-relaxation solver works. Each of the four
-// iterations per frame: every disturbed circle takes one small step
-// toward its pull target, then a single overlap-correction sweep runs
-// immediately after. Because the step is small, a circle boxed in by a
-// neighbor only ever creates a small overlap each iteration — and the
-// correction sweep's existing 50/50 split + home-bounce (unchanged from
-// the shipped file) shares that small overlap between both circles
-// instead of fully cancelling it. Over a handful of iterations/frames,
-// the blocking neighbor visibly gets nudged out of the way on its own,
-// with no special "who's blocking whom" bookkeeping required — it falls
-// out of doing the two things together instead of one after the other.
-// resolveCollisionPass is still the single source of truth for overlap,
-// still runs every iteration, so no lasting overlap is ever possible.
+// iterations per frame: every disturbed circle takes a step toward its
+// pull target, then a single overlap-correction sweep runs immediately
+// after. Because the step is full-sized (see the note on stepEase in
+// relaxSettled for why it isn't divided down), a circle boxed in by a
+// neighbor reliably creates enough overlap each iteration to actually
+// trigger a correction — and the correction sweep's existing 50/50 split
+// + home-bounce (unchanged from the shipped file) shares that overlap
+// between both circles instead of fully cancelling it. Over a handful of
+// iterations/frames, the blocking neighbor visibly gets nudged out of the
+// way on its own, with no special "who's blocking whom" bookkeeping
+// required — it falls out of doing the two things together instead of one
+// after the other. resolveCollisionPass is still the single source of
+// truth for overlap, still runs every iteration, so no lasting overlap is
+// ever possible.
 import React, {
     useEffect,
     useState,
@@ -524,14 +526,27 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
 // the SAME iterative pass, instead of computing one big desired move and
 // only afterward, separately, forcing overlaps back out. Each of the
 // COLLISION_ITERATIONS sub-steps: every disturbed, non-dragging settled
-// circle takes one small step toward its pull target, then a single
-// resolveCollisionPass runs immediately. Because the step is small, a
-// circle boxed in by a neighbor only creates a small overlap per
-// sub-step — and the correction's existing 50/50 split + home-bounce
-// naturally shares that between both circles instead of fully
-// cancelling it, so a blocked neighbor gradually gets nudged out of the
-// way over the relaxation instead of staying frozen while the other
-// circle fights a losing battle against it every frame.
+// circle takes a step toward its pull target, then a single
+// resolveCollisionPass runs immediately, so a circle boxed in by a
+// neighbor gets its overlap shared with that neighbor (via the existing
+// 50/50 split + home-bounce) on every sub-step instead of accumulating
+// it all up and fighting a single correction pass once per frame.
+//
+// The step uses the FULL HOME_EASE fraction each sub-step, not
+// HOME_EASE/COLLISION_ITERATIONS. That's deliberate: COLLISION_DEADZONE
+// (0.6px) is tuned for the original one-macro-step-per-frame scale, and a
+// quartered step routinely produced *less* than 0.6px of overlap per
+// sub-step — invisible to resolveCollisionPass, which just ignores
+// anything at or under the deadzone (`overlap <= COLLISION_DEADZONE`).
+// The blocked circle would creep forward by an imperceptible amount, the
+// neighbor would never be notified, and the whole relaxation went numb —
+// which is what read as "no fluidity, corner avoidance absent." Keeping
+// the step full-size means every sub-step reliably clears the deadzone
+// and produces a real, visible correction. This does mean the circle can
+// converge noticeably faster than before (up to 4 meaningful steps per
+// frame instead of 1) — if that reads as too snappy, dial stepEase down
+// gradually (e.g. HOME_EASE * 0.6) rather than dividing by
+// COLLISION_ITERATIONS again, which reintroduces the same numbness.
 function relaxSettled(settledIds: Set<string>, timestamp: number) {
     for (let step = 0; step < COLLISION_ITERATIONS; step++) {
         settledIds.forEach((id) => {
@@ -548,7 +563,7 @@ function relaxSettled(settledIds: Set<string>, timestamp: number) {
             const targetX = c.anchorHomeX + pull.pullX * pullFadeIn
             const targetY = c.anchorHomeY + pull.pullY * pullFadeIn
 
-            const stepEase = HOME_EASE / COLLISION_ITERATIONS
+            const stepEase = HOME_EASE
             const nextX = c.x.get() + (targetX - c.x.get()) * stepEase
             const nextY = c.y.get() + (targetY - c.y.get()) * stepEase
             const clamped = clampToContainer(nextX, nextY, c.radius)
