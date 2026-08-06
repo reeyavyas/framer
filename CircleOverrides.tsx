@@ -15,6 +15,15 @@ type CircleState = {
     radius: number
     homeX: number
     homeY: number
+    // The raw, instantaneous target from collision pushes -- can be
+    // rewritten many times between visible frames (every inner iteration
+    // of every resolveCollisions call, including the up-to-40-per-event
+    // burst during an active drag). smoothHomeX/Y is what position-easing
+    // actually chases, updated (and damped) exactly once per animation
+    // frame, so upstream noise in homeX can't reach the screen at full
+    // strength every time it's rewritten. See HOME_TARGET_SMOOTHING.
+    smoothHomeX: number
+    smoothHomeY: number
     originX: number
     originY: number
     x: MotionValue<number>
@@ -105,6 +114,20 @@ const COLLISION_DEADZONE = 0.6
 const COLLISION_MAX_STEP = 12
 const COLLISION_ENTRY_MAX_STEP = 2.8
 const HOME_EASE = 0.18
+// How much of the gap between a circle's raw push target (homeX/Y) and
+// its followed target (smoothHomeX/Y) closes each ANIMATION FRAME (not
+// each collision-resolution call -- see the CircleState comment). A
+// circle two or three collision-hops away from an actively-dragged one
+// gets its raw target rewritten dozens of times between visible frames;
+// without this damping, any tiny per-rewrite discontinuity (sub-pixel
+// input noise, a corner-clearance snap, a neighbor also mid-correction)
+// reaches the screen at full strength every single time, which reads as
+// a persistent high-frequency tremor even though the circle is
+// nominally just "being pushed". A single large, sustained push (e.g.
+// suddenly overlapping a dragged neighbor by 80px) still fully resolves
+// within 2-3 frames at this value -- responsiveness is unaffected;
+// only frame-to-frame noise gets absorbed.
+const HOME_TARGET_SMOOTHING = 0.5
 // Once a settled circle is within this many px of its home target on both
 // axes, stop nudging it entirely. Without this, an idle circle keeps making
 // imperceptible (but nonzero) position writes forever; with it, a circle
@@ -629,6 +652,8 @@ function resolveAllHomePositions() {
         )
         c.homeX = resolved.x
         c.homeY = resolved.y
+        c.smoothHomeX = resolved.x
+        c.smoothHomeY = resolved.y
     }
 }
 
@@ -705,10 +730,20 @@ function startLoopIfNeeded() {
                 // resolveCollisions when it changes later), so idle
                 // circles just ease straight toward it and then go
                 // perfectly still -- no ambient force is re-applied here.
+                //
+                // homeX/Y itself can be rewritten many times between
+                // frames while a nearby drag is pushing this circle
+                // (indirectly, through one or more neighbors); smoothHomeX/Y
+                // only takes one step toward it per frame, right here, so
+                // that per-rewrite noise is damped before it ever reaches
+                // the position easing below. See HOME_TARGET_SMOOTHING.
+                c.smoothHomeX += (c.homeX - c.smoothHomeX) * HOME_TARGET_SMOOTHING
+                c.smoothHomeY += (c.homeY - c.smoothHomeY) * HOME_TARGET_SMOOTHING
+
                 const currentX = c.x.get()
                 const currentY = c.y.get()
-                const dx = c.homeX - currentX
-                const dy = c.homeY - currentY
+                const dx = c.smoothHomeX - currentX
+                const dy = c.smoothHomeY - currentY
                 if (
                     Math.abs(dx) > HOME_SETTLE_EPSILON ||
                     Math.abs(dy) > HOME_SETTLE_EPSILON
@@ -761,6 +796,8 @@ function useDraggableCircle(
             radius,
             homeX: home.x,
             homeY: home.y,
+            smoothHomeX: home.x,
+            smoothHomeY: home.y,
             originX: origin.x,
             originY: origin.y,
             x,
@@ -832,6 +869,11 @@ function useDraggableCircle(
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
         c.homeY = resolved.y
+        // Sync smoothHomeX/Y immediately (not eased) so the visible
+        // bounce-back is driven by a single easing stage (position ->
+        // smoothHome) rather than a sluggish double-ease.
+        c.smoothHomeX = resolved.x
+        c.smoothHomeY = resolved.y
         // Deliberately NOT snapping c.x/c.y to `resolved` here. Leaving
         // them where the drag released and only updating the home target
         // means the settle-easing in the tick loop animates the actual
