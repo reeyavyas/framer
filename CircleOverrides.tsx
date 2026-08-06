@@ -101,6 +101,21 @@ const MAX_VELOCITY = 40
 // absorbed. Only matters for a disturbed circle whose spring+corner-force
 // motion actually reaches the hard boundary.
 const WALL_RESTITUTION = 0.4
+// Below this incoming speed (px/frame), a wall contact absorbs the
+// velocity instead of reflecting it. Without a resting-contact threshold
+// like this, a circle held right at a wall (nothing forcing it away, but
+// nothing letting it leave either) can end up reflecting a tiny residual
+// velocity back and forth forever — each reflection is too small to
+// visibly move it, but the buzzing is still visible. This is what a real
+// physics engine calls "resting contact."
+const WALL_BOUNCE_MIN_VELOCITY = 0.6
+// Below this speed (px/frame), a settled circle's velocity is snapped to
+// zero outright rather than left to decay asymptotically. Pure damping
+// (`v *= SPRING_DAMPING`) never actually reaches zero, just gets
+// arbitrarily close — and a circle with nowhere left to go (wedged
+// between another circle and a wall) keeps getting tiny re-pushes each
+// frame that reawaken that residual instead of letting it die out.
+const VELOCITY_REST_THRESHOLD = 0.15
 // Scales getCornerPush's output (see below) into an acceleration for the
 // spring integration, on top of the pull toward home. Only applied to
 // circles that have been disturbed (dragged, or bumped by a collision) —
@@ -142,14 +157,30 @@ const CORNER_PUSH_MAX = 70
 // the dragged circle "outrun" the circle it should be pushing. Running the
 // same resolution multiple times per pointer event lets the pushed circle
 // fully catch up immediately, regardless of drag speed, using the exact
-// same push/bounce math — no new mechanics, no feel change.
-const DRAG_COLLISION_ITERATIONS = 10
+// same push/bounce math — no new mechanics, no feel change. Bumped up
+// alongside softening CLAMP_DRAG_STRENGTH below (a partial correction
+// needs a few more passes to converge as tightly as an instant snap did).
+const DRAG_COLLISION_ITERATIONS = 14
 
 // Max distance (px) the dragged circle is allowed to advance per sub-step
 // within a single pointermove event before collisions are re-checked (see
 // onPointerMove). Keeps a fast flick from skipping over a neighbor in one
-// jump instead of registering contact with it along the way.
-const DRAG_SUBSTEP_SIZE = 24
+// jump instead of registering contact with it along the way. Smaller than
+// before so drag motion gets resolved against neighbors more often —
+// smoother, less steppy contact response.
+const DRAG_SUBSTEP_SIZE = 14
+
+// clampDraggedAgainstOthers used to snap the dragged circle instantly and
+// fully to the boundary distance from a neighbor it's overlapping. That's
+// fine with a single neighbor (converges to essentially exact within a
+// couple of calls anyway), but if the dragged circle is squeezed between
+// two neighbors (or a neighbor and a wall) with no position that satisfies
+// both at once, two hard full snaps fighting each call is a visible
+// ping-pong. A partial correction per call still converges to the same
+// tight result in the single-constraint case (geometric series over
+// DRAG_COLLISION_ITERATIONS calls), but settles into a small, smoothly
+// shrinking compromise instead of a hard oscillation in the squeezed case.
+const CLAMP_DRAG_STRENGTH = 0.6
 
 function clamp(val: number, min: number, max: number) {
     return Math.max(min, Math.min(max, val))
@@ -396,6 +427,28 @@ function moveCircleBy(
     c.y.set(next.y)
 }
 
+// Same as moveCircleBy, but returns how much of the intended displacement
+// actually happened (0-1). Used to scale down the velocity kick on a push:
+// if a circle is jammed against a wall with nowhere to go, the container
+// clamp inside moveCircleBy silently absorbs most of the intended
+// movement, and injecting a full-strength kick anyway just hands it
+// energy that has nowhere to express itself as motion — which is exactly
+// what shows up as jitter instead of a bounce.
+function moveCircleByTracked(
+    c: CircleState,
+    dx: number,
+    dy: number,
+    maxStep = Infinity
+): number {
+    const beforeX = c.x.get()
+    const beforeY = c.y.get()
+    moveCircleBy(c, dx, dy, maxStep)
+    const intended = Math.min(Math.hypot(dx, dy), maxStep)
+    if (intended < 0.001) return 1
+    const achieved = Math.hypot(c.x.get() - beforeX, c.y.get() - beforeY)
+    return clamp(achieved / intended, 0, 1)
+}
+
 function collisionRamp(c: CircleState, now: number) {
     if (c.isDragging) return 1
     if (!c.hasSettled) return 0
@@ -461,7 +514,12 @@ function resolveCollisions(settledIds: Set<string>) {
                     (COLLISION_MAX_STEP - COLLISION_ENTRY_MAX_STEP) * pairRamp
 
                 if (a.isDragging) {
-                    moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
+                    const achieved = moveCircleByTracked(
+                        b,
+                        -nx * correction,
+                        -ny * correction,
+                        maxStep
+                    )
                     const bHome = clampToContainer(
                         b.x.get() - nx * bounce,
                         b.y.get() - ny * bounce,
@@ -471,17 +529,22 @@ function resolveCollisions(settledIds: Set<string>) {
                     b.homeY = bHome.y
                     b.disturbed = true
                     b.vx = clamp(
-                        b.vx - nx * bounce * COLLISION_VELOCITY_KICK,
+                        b.vx - nx * bounce * COLLISION_VELOCITY_KICK * achieved,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                     b.vy = clamp(
-                        b.vy - ny * bounce * COLLISION_VELOCITY_KICK,
+                        b.vy - ny * bounce * COLLISION_VELOCITY_KICK * achieved,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                 } else if (b.isDragging) {
-                    moveCircleBy(a, nx * correction, ny * correction, maxStep)
+                    const achieved = moveCircleByTracked(
+                        a,
+                        nx * correction,
+                        ny * correction,
+                        maxStep
+                    )
                     const aHome = clampToContainer(
                         a.x.get() + nx * bounce,
                         a.y.get() + ny * bounce,
@@ -491,23 +554,23 @@ function resolveCollisions(settledIds: Set<string>) {
                     a.homeY = aHome.y
                     a.disturbed = true
                     a.vx = clamp(
-                        a.vx + nx * bounce * COLLISION_VELOCITY_KICK,
+                        a.vx + nx * bounce * COLLISION_VELOCITY_KICK * achieved,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                     a.vy = clamp(
-                        a.vy + ny * bounce * COLLISION_VELOCITY_KICK,
+                        a.vy + ny * bounce * COLLISION_VELOCITY_KICK * achieved,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                 } else {
-                    moveCircleBy(
+                    const achievedA = moveCircleByTracked(
                         a,
                         (nx * correction) / 2,
                         (ny * correction) / 2,
                         maxStep
                     )
-                    moveCircleBy(
+                    const achievedB = moveCircleByTracked(
                         b,
                         (-nx * correction) / 2,
                         (-ny * correction) / 2,
@@ -530,22 +593,22 @@ function resolveCollisions(settledIds: Set<string>) {
                     a.disturbed = true
                     b.disturbed = true
                     a.vx = clamp(
-                        a.vx + nx * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        a.vx + nx * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedA,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                     a.vy = clamp(
-                        a.vy + ny * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        a.vy + ny * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedA,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                     b.vx = clamp(
-                        b.vx - nx * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        b.vx - nx * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedB,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
                     b.vy = clamp(
-                        b.vy - ny * bounce * 0.45 * COLLISION_VELOCITY_KICK,
+                        b.vy - ny * bounce * 0.45 * COLLISION_VELOCITY_KICK * achievedB,
                         -MAX_VELOCITY,
                         MAX_VELOCITY
                     )
@@ -586,9 +649,17 @@ function clampDraggedAgainstOthers() {
             }
             const nx = dx / dist
             const ny = dy / dist
+            // Partial step toward the boundary distance rather than an
+            // instant full snap — see CLAMP_DRAG_STRENGTH. Converges to the
+            // same tight result within a couple of calls when there's only
+            // one neighbor to satisfy; settles into a small, smooth
+            // compromise instead of a hard back-and-forth when squeezed
+            // between two constraints with no position that satisfies both.
+            const targetX = ocx + nx * minDist - active.radius
+            const targetY = ocy + ny * minDist - active.radius
             const corrected = clampToContainer(
-                ocx + nx * minDist - active.radius,
-                ocy + ny * minDist - active.radius,
+                active.x.get() + (targetX - active.x.get()) * CLAMP_DRAG_STRENGTH,
+                active.y.get() + (targetY - active.y.get()) * CLAMP_DRAG_STRENGTH,
                 active.radius
             )
             active.x.set(corrected.x)
@@ -698,26 +769,53 @@ function startLoopIfNeeded() {
                     -MAX_VELOCITY,
                     MAX_VELOCITY
                 )
+                // Resting-contact deadzone: once velocity decays to a
+                // near-nothing residual, kill it outright instead of
+                // leaving it to asymptotically approach zero forever. Pure
+                // damping never actually reaches zero, and a circle with
+                // nowhere left to go (jammed between a neighbor and a
+                // wall) keeps getting re-pushed by that residual every
+                // frame — this is what stops it settling completely still.
+                if (Math.abs(c.vx) < VELOCITY_REST_THRESHOLD) c.vx = 0
+                if (Math.abs(c.vy) < VELOCITY_REST_THRESHOLD) c.vy = 0
 
                 let nextX = x + c.vx
                 let nextY = y + c.vy
 
                 // Hard wall: reflect velocity so contact reads as an actual
-                // bounce off the edge, not just a stop.
+                // bounce off the edge, not just a stop — but only above a
+                // minimum incoming speed. Without that floor, a circle held
+                // at the wall with no real momentum (nothing forcing it
+                // away, nothing letting it leave) reflects a tiny residual
+                // back and forth forever: each bounce is too small to
+                // visibly move it, but the buzzing is still visible. Below
+                // the floor, the wall just absorbs it — resting contact.
                 const bounds = getBoundsForRadius(c.radius)
                 if (nextX < bounds.minX) {
                     nextX = bounds.minX
-                    c.vx = Math.abs(c.vx) * WALL_RESTITUTION
+                    c.vx =
+                        Math.abs(c.vx) > WALL_BOUNCE_MIN_VELOCITY
+                            ? Math.abs(c.vx) * WALL_RESTITUTION
+                            : 0
                 } else if (nextX > bounds.maxX) {
                     nextX = bounds.maxX
-                    c.vx = -Math.abs(c.vx) * WALL_RESTITUTION
+                    c.vx =
+                        Math.abs(c.vx) > WALL_BOUNCE_MIN_VELOCITY
+                            ? -Math.abs(c.vx) * WALL_RESTITUTION
+                            : 0
                 }
                 if (nextY < bounds.minY) {
                     nextY = bounds.minY
-                    c.vy = Math.abs(c.vy) * WALL_RESTITUTION
+                    c.vy =
+                        Math.abs(c.vy) > WALL_BOUNCE_MIN_VELOCITY
+                            ? Math.abs(c.vy) * WALL_RESTITUTION
+                            : 0
                 } else if (nextY > bounds.maxY) {
                     nextY = bounds.maxY
-                    c.vy = -Math.abs(c.vy) * WALL_RESTITUTION
+                    c.vy =
+                        Math.abs(c.vy) > WALL_BOUNCE_MIN_VELOCITY
+                            ? -Math.abs(c.vy) * WALL_RESTITUTION
+                            : 0
                 }
 
                 c.x.set(nextX)
