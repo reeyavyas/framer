@@ -421,12 +421,22 @@ function resolveCollisions(settledIds: Set<string>) {
 
                 if (a.isDragging) {
                     moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
-                    b.homeX = b.x.get() - nx * bounce
-                    b.homeY = b.y.get() - ny * bounce
+                    const bHome = clearCorners(
+                        b.x.get() - nx * bounce,
+                        b.y.get() - ny * bounce,
+                        b.radius
+                    )
+                    b.homeX = bHome.x
+                    b.homeY = bHome.y
                 } else if (b.isDragging) {
                     moveCircleBy(a, nx * correction, ny * correction, maxStep)
-                    a.homeX = a.x.get() + nx * bounce
-                    a.homeY = a.y.get() + ny * bounce
+                    const aHome = clearCorners(
+                        a.x.get() + nx * bounce,
+                        a.y.get() + ny * bounce,
+                        a.radius
+                    )
+                    a.homeX = aHome.x
+                    a.homeY = aHome.y
                 } else {
                     moveCircleBy(
                         a,
@@ -440,10 +450,20 @@ function resolveCollisions(settledIds: Set<string>) {
                         (-ny * correction) / 2,
                         maxStep
                     )
-                    a.homeX = a.x.get() + nx * (bounce * 0.45)
-                    a.homeY = a.y.get() + ny * (bounce * 0.45)
-                    b.homeX = b.x.get() - nx * (bounce * 0.45)
-                    b.homeY = b.y.get() - ny * (bounce * 0.45)
+                    const aHome = clearCorners(
+                        a.x.get() + nx * (bounce * 0.45),
+                        a.y.get() + ny * (bounce * 0.45),
+                        a.radius
+                    )
+                    const bHome = clearCorners(
+                        b.x.get() - nx * (bounce * 0.45),
+                        b.y.get() - ny * (bounce * 0.45),
+                        b.radius
+                    )
+                    a.homeX = aHome.x
+                    a.homeY = aHome.y
+                    b.homeX = bHome.x
+                    b.homeY = bHome.y
                 }
             }
         }
