@@ -526,32 +526,40 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
 
-// True if some other, currently-dragged circle is close enough to c to be
-// actively pushing on it right now. The interleaved relaxation below
-// naturally shares an overlap between two RESTING circles (each gets a
-// fraction of the correction via the existing 50/50 split), but a
-// dragging neighbor isn't subject to that split at all — resolveCollisionPass's
-// a.isDragging branch just moves c directly to wherever the drag forces
-// it, every single call, with no negotiation. If c's own pull step kept
-// trying to escape on top of that, the two would fight every relaxation
-// iteration: c's step nudges it out, the very next correction sweep
-// shoves it right back toward the wall the drag is pressing it into,
-// over and over — which is exactly what reads as trembling. So c's pull
-// stays off for as long as a dragging neighbor is in contact range; it's
-// fine for c to simply sit pinned under the drag meanwhile (z-index
-// already draws the dragged circle on top), and the pull resumes the
-// instant the press ends, whether that's from the neighbor moving away
-// or being dropped.
+// True if c is currently being pressed by a live drag — either directly
+// touching a dragging circle, or touching some OTHER circle that is
+// (chained through however many hops of contact). Direct contact alone
+// isn't enough to catch this: near a corner with several circles
+// clustered together, a drag can press circle B, and B — now genuinely,
+// physically squeezed — nudges into circle C, which was never in contact
+// with the drag itself. If C's own pull stays active, C keeps trying to
+// renegotiate its own space every relaxation iteration, fighting B's
+// reaction to the drag, which shows up as trembling in a circle nowhere
+// near the pointer. So the "pull stays off while pressed" guard has to
+// propagate through the whole contact chain, not just the first link.
+// With only a handful of circles on screen this BFS is trivially cheap.
 function isBeingPressedByDrag(c: CircleState): boolean {
-    const cx = c.x.get() + c.radius
-    const cy = c.y.get() + c.radius
-    for (const other of circles.values()) {
-        if (other.id === c.id || !other.isDragging) continue
-        const minDist = c.radius + other.radius + CIRCLE_GAP
-        const dx = cx - (other.x.get() + other.radius)
-        const dy = cy - (other.y.get() + other.radius)
-        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
+    const visited = new Set<string>([c.id])
+    const queue: CircleState[] = [c]
+
+    while (queue.length > 0) {
+        const current = queue.shift() as CircleState
+        const cx = current.x.get() + current.radius
+        const cy = current.y.get() + current.radius
+
+        for (const other of circles.values()) {
+            if (visited.has(other.id)) continue
+            const minDist = current.radius + other.radius + CIRCLE_GAP
+            const dx = cx - (other.x.get() + other.radius)
+            const dy = cy - (other.y.get() + other.radius)
+            if (Math.hypot(dx, dy) >= minDist + PRESS_MARGIN) continue
+
+            if (other.isDragging) return true
+            visited.add(other.id)
+            queue.push(other)
+        }
     }
+
     return false
 }
 
