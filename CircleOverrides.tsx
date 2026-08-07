@@ -83,8 +83,8 @@ const HOME_ANCHOR_EASE = 0.12
 const COLLISION_REBOUND_PUSH = 14
 const SETTLE_HANDOFF_MS = 180
 // Extra margin (px, beyond plain contact distance) within which a circle
-// counts as blocked/in contact with a neighbor. See isBlockedByNeighbor
-// below.
+// counts as currently being pressed by a dragging neighbor. See
+// isBeingPressedByDrag below.
 const PRESS_MARGIN = 40
 
 // How many times resolveCollisions is re-run within a SINGLE pointer-move
@@ -325,95 +325,106 @@ function collisionRamp(c: CircleState, now: number) {
     return t * t
 }
 
-function resolveCollisions(settledIds: Set<string>) {
+// One full pairwise overlap-correction sweep over every settled circle.
+// This is the single source of truth for "no two circles may overlap" —
+// it's called both from resolveCollisions (which just loops it
+// COLLISION_ITERATIONS times back-to-back, for the drag path that still
+// wants a big batch of correction within one pointer-move) and from
+// relaxSettled below (which interleaves single sweeps with pull steps
+// instead of running them all at once).
+function resolveCollisionPass(settledIds: Set<string>) {
     const list = Array.from(circles.values())
     const now =
         typeof performance !== "undefined" ? performance.now() : Date.now()
 
-    for (let step = 0; step < COLLISION_ITERATIONS; step++) {
-        for (let i = 0; i < list.length; i++) {
-            const a = list[i]
-            if (!settledIds.has(a.id)) continue
+    for (let i = 0; i < list.length; i++) {
+        const a = list[i]
+        if (!settledIds.has(a.id)) continue
 
-            for (let j = i + 1; j < list.length; j++) {
-                const b = list[j]
-                if (!settledIds.has(b.id)) continue
-                if (a.isDragging && b.isDragging) continue
+        for (let j = i + 1; j < list.length; j++) {
+            const b = list[j]
+            if (!settledIds.has(b.id)) continue
+            if (a.isDragging && b.isDragging) continue
 
-                const ax = a.x.get() + a.radius
-                const ay = a.y.get() + a.radius
-                const bx = b.x.get() + b.radius
-                const by = b.y.get() + b.radius
+            const ax = a.x.get() + a.radius
+            const ay = a.y.get() + a.radius
+            const bx = b.x.get() + b.radius
+            const by = b.y.get() + b.radius
 
-                let dx = ax - bx
-                let dy = ay - by
-                let dist = Math.sqrt(dx * dx + dy * dy)
-                const minDist = a.radius + b.radius + CIRCLE_GAP
-                if (dist >= minDist) continue
+            let dx = ax - bx
+            let dy = ay - by
+            let dist = Math.sqrt(dx * dx + dy * dy)
+            const minDist = a.radius + b.radius + CIRCLE_GAP
+            if (dist >= minDist) continue
 
-                if (dist < 0.001) {
-                    const angle = idAngle(a.id) - idAngle(b.id)
-                    dx = Math.cos(angle)
-                    dy = Math.sin(angle)
-                    dist = 0.001
-                }
+            if (dist < 0.001) {
+                const angle = idAngle(a.id) - idAngle(b.id)
+                dx = Math.cos(angle)
+                dy = Math.sin(angle)
+                dist = 0.001
+            }
 
-                const nx = dx / dist
-                const ny = dy / dist
-                const overlap = minDist - dist
-                if (overlap <= COLLISION_DEADZONE) continue
-                const rampA = collisionRamp(a, now)
-                const rampB = collisionRamp(b, now)
-                const pairRamp =
-                    a.isDragging || b.isDragging
-                        ? Math.max(rampA, rampB)
-                        : Math.min(rampA, rampB)
-                if (pairRamp <= 0.001) continue
+            const nx = dx / dist
+            const ny = dy / dist
+            const overlap = minDist - dist
+            if (overlap <= COLLISION_DEADZONE) continue
+            const rampA = collisionRamp(a, now)
+            const rampB = collisionRamp(b, now)
+            const pairRamp =
+                a.isDragging || b.isDragging
+                    ? Math.max(rampA, rampB)
+                    : Math.min(rampA, rampB)
+            if (pairRamp <= 0.001) continue
 
-                const correction =
-                    overlap * COLLISION_SEPARATION_STRENGTH * pairRamp
-                const bounce = Math.min(
-                    COLLISION_REBOUND_PUSH,
-                    correction *
-                        COLLISION_BOUNCE_MULTIPLIER *
-                        (0.5 + pairRamp * 0.5)
+            const correction = overlap * COLLISION_SEPARATION_STRENGTH * pairRamp
+            const bounce = Math.min(
+                COLLISION_REBOUND_PUSH,
+                correction * COLLISION_BOUNCE_MULTIPLIER * (0.5 + pairRamp * 0.5)
+            )
+            const maxStep =
+                COLLISION_ENTRY_MAX_STEP +
+                (COLLISION_MAX_STEP - COLLISION_ENTRY_MAX_STEP) * pairRamp
+
+            if (a.isDragging) {
+                moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
+                b.homeX = b.x.get() - nx * bounce
+                b.homeY = b.y.get() - ny * bounce
+                b.disturbed = true
+            } else if (b.isDragging) {
+                moveCircleBy(a, nx * correction, ny * correction, maxStep)
+                a.homeX = a.x.get() + nx * bounce
+                a.homeY = a.y.get() + ny * bounce
+                a.disturbed = true
+            } else {
+                moveCircleBy(
+                    a,
+                    (nx * correction) / 2,
+                    (ny * correction) / 2,
+                    maxStep
                 )
-                const maxStep =
-                    COLLISION_ENTRY_MAX_STEP +
-                    (COLLISION_MAX_STEP - COLLISION_ENTRY_MAX_STEP) * pairRamp
-
-                if (a.isDragging) {
-                    moveCircleBy(b, -nx * correction, -ny * correction, maxStep)
-                    b.homeX = b.x.get() - nx * bounce
-                    b.homeY = b.y.get() - ny * bounce
-                    b.disturbed = true
-                } else if (b.isDragging) {
-                    moveCircleBy(a, nx * correction, ny * correction, maxStep)
-                    a.homeX = a.x.get() + nx * bounce
-                    a.homeY = a.y.get() + ny * bounce
-                    a.disturbed = true
-                } else {
-                    moveCircleBy(
-                        a,
-                        (nx * correction) / 2,
-                        (ny * correction) / 2,
-                        maxStep
-                    )
-                    moveCircleBy(
-                        b,
-                        (-nx * correction) / 2,
-                        (-ny * correction) / 2,
-                        maxStep
-                    )
-                    a.homeX = a.x.get() + nx * (bounce * 0.45)
-                    a.homeY = a.y.get() + ny * (bounce * 0.45)
-                    b.homeX = b.x.get() - nx * (bounce * 0.45)
-                    b.homeY = b.y.get() - ny * (bounce * 0.45)
-                    a.disturbed = true
-                    b.disturbed = true
-                }
+                moveCircleBy(
+                    b,
+                    (-nx * correction) / 2,
+                    (-ny * correction) / 2,
+                    maxStep
+                )
+                a.homeX = a.x.get() + nx * (bounce * 0.45)
+                a.homeY = a.y.get() + ny * (bounce * 0.45)
+                b.homeX = b.x.get() - nx * (bounce * 0.45)
+                b.homeY = b.y.get() - ny * (bounce * 0.45)
+                a.disturbed = true
+                b.disturbed = true
             }
         }
+    }
+}
+
+// Kept as its own entry point (same signature/behavior as before) because
+// the drag path wants a whole batch of correction resolved within a
+// single pointer-move event, not interleaved with pull steps.
+function resolveCollisions(settledIds: Set<string>) {
+    for (let step = 0; step < COLLISION_ITERATIONS; step++) {
+        resolveCollisionPass(settledIds)
     }
 }
 
@@ -496,27 +507,103 @@ function bezier(t: number, p0: number, p1: number, p2: number) {
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
 }
 
-// True if any other circle — dragging or just resting — is close enough
-// to c to be blocking the direction c's corner/edge pull wants to move
-// it. This isn't limited to an actively-dragged presser: once a drag
-// ends, a circle that got shoved into a corner can still be wedged
-// against a now-stationary neighbor, with nowhere to go. If the pull
-// stayed on regardless, it would ease c toward its target every frame,
-// resolveCollisions would shove it straight back into that neighbor, and
-// it'd retry next frame forever — read as a circle endlessly trying (and
-// failing) to bounce back out. So the pull stays quiet for as long as
-// contact lasts, on either side, and resumes the instant it doesn't.
-function isBlockedByNeighbor(c: CircleState): boolean {
-    const cx = c.x.get() + c.radius
-    const cy = c.y.get() + c.radius
-    for (const other of circles.values()) {
-        if (other.id === c.id) continue
-        const minDist = c.radius + other.radius + CIRCLE_GAP
-        const dx = cx - (other.x.get() + other.radius)
-        const dy = cy - (other.y.get() + other.radius)
-        if (Math.hypot(dx, dy) < minDist + PRESS_MARGIN) return true
+// True if c is currently being pressed by a live drag — either directly
+// touching a dragging circle, or touching some OTHER circle that is
+// (chained through however many hops of contact). Direct contact alone
+// isn't enough to catch this: near a corner with several circles
+// clustered together, a drag can press circle B, and B — now genuinely,
+// physically squeezed — nudges into circle C, which was never in contact
+// with the drag itself. If C's own pull stays active, C keeps trying to
+// renegotiate its own space every relaxation iteration, fighting B's
+// reaction to the drag, which shows up as trembling in a circle nowhere
+// near the pointer. So the "pull stays off while pressed" guard has to
+// propagate through the whole contact chain, not just the first link.
+// With only a handful of circles on screen this BFS is trivially cheap.
+function isBeingPressedByDrag(c: CircleState): boolean {
+    const visited = new Set<string>([c.id])
+    const queue: CircleState[] = [c]
+
+    while (queue.length > 0) {
+        const current = queue.shift() as CircleState
+        const cx = current.x.get() + current.radius
+        const cy = current.y.get() + current.radius
+
+        for (const other of circles.values()) {
+            if (visited.has(other.id)) continue
+            const minDist = current.radius + other.radius + CIRCLE_GAP
+            const dx = cx - (other.x.get() + other.radius)
+            const dy = cy - (other.y.get() + other.radius)
+            if (Math.hypot(dx, dy) >= minDist + PRESS_MARGIN) continue
+
+            if (other.isDragging) return true
+            visited.add(other.id)
+            queue.push(other)
+        }
     }
+
     return false
+}
+
+// Interleaves the corner/edge "desire" with collision correction inside
+// the SAME iterative pass, instead of computing one big desired move and
+// only afterward, separately, forcing overlaps back out. Each of the
+// COLLISION_ITERATIONS sub-steps: every disturbed, non-dragging,
+// not-currently-pressed settled circle takes a step toward its pull
+// target, then a single resolveCollisionPass runs immediately, so a
+// circle boxed in by a neighbor gets its overlap shared with that
+// neighbor (via the existing 50/50 split + home-bounce) on every
+// sub-step instead of accumulating it all up and fighting a single
+// correction pass once per frame.
+//
+// The step uses the FULL HOME_EASE fraction each sub-step, not
+// HOME_EASE/COLLISION_ITERATIONS. That's deliberate: COLLISION_DEADZONE
+// (0.6px) is tuned for a one-macro-step-per-frame scale, and a quartered
+// step routinely produces *less* than 0.6px of overlap per sub-step —
+// invisible to resolveCollisionPass, which just ignores anything at or
+// under the deadzone (`overlap <= COLLISION_DEADZONE`). Keeping the step
+// full-size means every sub-step reliably clears the deadzone and
+// produces a real, visible correction. If this reads as too snappy, dial
+// stepEase down gradually (e.g. HOME_EASE * 0.6) rather than dividing by
+// COLLISION_ITERATIONS, which reintroduces the numbness.
+function relaxSettled(settledIds: Set<string>, timestamp: number) {
+    for (let step = 0; step < COLLISION_ITERATIONS; step++) {
+        settledIds.forEach((id) => {
+            const c = circles.get(id)
+            if (!c || c.isDragging || !c.disturbed) return
+            if (isBeingPressedByDrag(c)) return
+
+            const pull = getEdgePull(c.x.get(), c.y.get(), c.radius)
+            const handoffProgress = clamp(
+                (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
+                0,
+                1
+            )
+            const pullFadeIn = handoffProgress * handoffProgress
+            const targetX = c.anchorHomeX + pull.pullX * pullFadeIn
+            const targetY = c.anchorHomeY + pull.pullY * pullFadeIn
+
+            const stepEase = HOME_EASE
+            const nextX = c.x.get() + (targetX - c.x.get()) * stepEase
+            const nextY = c.y.get() + (targetY - c.y.get()) * stepEase
+            const clamped = clampToContainer(nextX, nextY, c.radius)
+            c.x.set(clamped.x)
+            c.y.set(clamped.y)
+        })
+
+        resolveCollisionPass(settledIds)
+    }
+
+    // Undisturbed circles never chase a pull target of their own, but a
+    // correction sweep above may just have bumped their home — settle
+    // onto that.
+    settledIds.forEach((id) => {
+        const c = circles.get(id)
+        if (!c || c.isDragging || c.disturbed) return
+        const x = c.x.get()
+        const y = c.y.get()
+        c.x.set(x + (c.anchorHomeX - x) * HOME_EASE)
+        c.y.set(y + (c.anchorHomeY - y) * HOME_EASE)
+    })
 }
 
 function startLoopIfNeeded() {
@@ -580,50 +667,14 @@ function startLoopIfNeeded() {
 
                 c.anchorHomeX += (c.homeX - c.anchorHomeX) * HOME_ANCHOR_EASE
                 c.anchorHomeY += (c.homeY - c.anchorHomeY) * HOME_ANCHOR_EASE
-
-                const currentX = c.x.get()
-                const currentY = c.y.get()
-
-                // A circle that landed from the opening animation and has
-                // never been touched stays exactly put — no edge/corner
-                // pull, so there's zero motion until it's dragged or bumped
-                // by another circle's drag. Once it HAS been disturbed
-                // (dragged itself, or shoved into a corner by a collision),
-                // it keeps softly flowing away from corners/walls for good,
-                // fading the pull in over SETTLE_HANDOFF_MS so the handoff
-                // out of drag/collision motion reads as one continuous
-                // glide rather than a snap. While a neighbor (dragging or
-                // just resting) is in contact and blocking that path,
-                // though, the pull stays quiet — resolveCollisions already
-                // has full control of where it's being forced, and
-                // fighting that every frame is what reads as a stuck
-                // circle trying (and failing) to bounce back out.
-                if (c.disturbed && !isBlockedByNeighbor(c)) {
-                    const edgeTarget = getEdgePull(
-                        c.anchorHomeX,
-                        c.anchorHomeY,
-                        c.radius
-                    )
-                    const handoffProgress = clamp(
-                        (timestamp - c.settledAt) / SETTLE_HANDOFF_MS,
-                        0,
-                        1
-                    )
-                    const pullFadeIn = handoffProgress * handoffProgress
-                    const settledTargetX =
-                        c.anchorHomeX + edgeTarget.pullX * pullFadeIn
-                    const settledTargetY =
-                        c.anchorHomeY + edgeTarget.pullY * pullFadeIn
-                    c.x.set(currentX + (settledTargetX - currentX) * HOME_EASE)
-                    c.y.set(currentY + (settledTargetY - currentY) * HOME_EASE)
-                } else {
-                    c.x.set(currentX + (c.anchorHomeX - currentX) * HOME_EASE)
-                    c.y.set(currentY + (c.anchorHomeY - currentY) * HOME_EASE)
-                }
+                // Position itself is resolved below, in relaxSettled,
+                // where the pull toward this target and neighbor-overlap
+                // correction are worked out together instead of one
+                // macro-step followed by a separate fix-up pass.
             }
         })
 
-        resolveCollisions(settledIds)
+        relaxSettled(settledIds, timestamp)
 
         if (typeof window !== "undefined") {
             rafId = window.requestAnimationFrame(tick)
