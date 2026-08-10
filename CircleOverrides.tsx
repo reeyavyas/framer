@@ -31,6 +31,11 @@ type CircleState = {
     anchorHomeY: number
     hasSettled: boolean
     settledAt: number
+    // Timestamp a significant overlap involving this circle first became
+    // continuous, or null if it's currently clear. Used by the stuck-home
+    // watchdog to detect a home-vs-home deadlock (see updateStuckWatchdog)
+    // that ordinary collision correction can't escape on its own.
+    stuckSince: number | null
 }
 
 const circles = new Map<string, CircleState>()
@@ -429,6 +434,112 @@ function resolveDropPosition(id: string, radius: number, x: number, y: number) {
     return { x: centerX - radius, y: centerY - radius }
 }
 
+// How much overlap counts as "significant" for the stuck-home watchdog —
+// deliberately well above COLLISION_DEADZONE so ordinary settling jitter
+// never triggers it.
+const STUCK_OVERLAP_THRESHOLD = 5
+// How long a circle can sit in continuous significant overlap before the
+// watchdog steps in. Long enough that normal collision correction (which
+// resolves in a handful of frames under non-conflicting circumstances)
+// gets its chance first; short enough that a genuine deadlock — two or
+// more circles whose home positions have drifted, through repeated
+// dragging, into a mutually incompatible cluster — doesn't sit visibly
+// broken for long.
+const STUCK_GRACE_MS = 1200
+
+// Same push-apart approach as resolveDropPosition, but resolves a home
+// position against every other circle's home (not their current x/y).
+// resolveDropPosition answers "where can the circle I just dropped land
+// right now"; this answers "where should this circle's resting position
+// be so it no longer conflicts with everyone else's resting position" —
+// which is what actually breaks a home-vs-home deadlock, since nudging
+// current position alone just gets pulled straight back by the home-pull
+// each frame (the trembling this project has fought several times before).
+function resolveStuckHome(id: string, radius: number, x: number, y: number) {
+    let centerX = x + radius
+    let centerY = y + radius
+    for (let i = 0; i < 12; i++) {
+        let hasOverlap = false
+        for (const other of circles.values()) {
+            if (other.id === id) continue
+            const otherCenterX = other.homeX + other.radius
+            const otherCenterY = other.homeY + other.radius
+            let dx = centerX - otherCenterX
+            let dy = centerY - otherCenterY
+            let dist = Math.sqrt(dx * dx + dy * dy)
+            const minDist = radius + other.radius + CIRCLE_GAP
+            if (dist >= minDist) continue
+            if (dist < 0.001) {
+                const angle = idAngle(id) - idAngle(other.id)
+                dx = Math.cos(angle)
+                dy = Math.sin(angle)
+                dist = 0.001
+            }
+            const nx = dx / dist
+            const ny = dy / dist
+            const overlap = minDist - dist
+            centerX += nx * overlap
+            centerY += ny * overlap
+            hasOverlap = true
+        }
+        const clamped = clampToContainer(
+            centerX - radius,
+            centerY - radius,
+            radius
+        )
+        centerX = clamped.x + radius
+        centerY = clamped.y + radius
+        if (!hasOverlap) break
+    }
+    return { x: centerX - radius, y: centerY - radius }
+}
+
+// Runs once per animation frame. Detects any non-dragging circle stuck in
+// continuous significant overlap and, once it's been stuck longer than
+// STUCK_GRACE_MS, relocates its home to a position resolveStuckHome has
+// confirmed is actually clear of every other circle's home. Only the home
+// target changes here — the existing per-frame home-pull easing is what
+// then glides the circle there, so this reads as the same kind of smooth
+// glide-back-out the project already relies on elsewhere, not a teleport.
+function updateStuckWatchdog(now: number) {
+    const list = Array.from(circles.values())
+    const overlapping = new Set<string>()
+
+    for (let i = 0; i < list.length; i++) {
+        const a = list[i]
+        if (a.isDragging) continue
+        for (let j = i + 1; j < list.length; j++) {
+            const b = list[j]
+            if (b.isDragging) continue
+            const ax = a.x.get() + a.radius
+            const ay = a.y.get() + a.radius
+            const bx = b.x.get() + b.radius
+            const by = b.y.get() + b.radius
+            const dist = Math.hypot(ax - bx, ay - by)
+            const minDist = a.radius + b.radius + CIRCLE_GAP
+            if (minDist - dist > STUCK_OVERLAP_THRESHOLD) {
+                overlapping.add(a.id)
+                overlapping.add(b.id)
+            }
+        }
+    }
+
+    for (const c of list) {
+        if (c.isDragging || !overlapping.has(c.id)) {
+            c.stuckSince = null
+            continue
+        }
+        if (c.stuckSince === null) {
+            c.stuckSince = now
+        } else if (now - c.stuckSince > STUCK_GRACE_MS) {
+            const resolved = resolveStuckHome(c.id, c.radius, c.homeX, c.homeY)
+            c.homeX = resolved.x
+            c.homeY = resolved.y
+            c.stuckSince = null
+        }
+    }
+}
+
 function bezier(t: number, p0: number, p1: number, p2: number) {
     const mt = 1 - t
     return mt * mt * p0 + 2 * mt * t * p1 + t * t * p2
@@ -519,6 +630,7 @@ function startLoopIfNeeded() {
         })
 
         resolveCollisions(settledIds)
+        updateStuckWatchdog(timestamp)
 
         if (typeof window !== "undefined") {
             rafId = window.requestAnimationFrame(tick)
@@ -576,6 +688,7 @@ function useDraggableCircle(
             anchorHomeY: home.y,
             hasSettled: false,
             settledAt: 0,
+            stuckSince: null,
         })
 
         if (wasEmptyBeforeMount) {
