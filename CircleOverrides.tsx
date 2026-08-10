@@ -846,6 +846,133 @@ export function UncategorizedCircle(
 }
 
 // ============================================
+// Budget Circles 2 (7 circles, variant 2)
+// ============================================
+// Same useDraggableCircle mechanics and entrance animation as the six
+// above — ids are suffixed "-v2" so they never collide with Budget
+// Circles 1's ids in the shared circles Map (see the id-collision risk
+// discussed when the two-component split was built).
+
+export function AutoCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "auto-v2",
+            125,
+            { x: 71, y: 548 },
+            { x: -240, y: CANVAS_HEIGHT + 240 },
+            0,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function DiningCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "dining-v2",
+            95,
+            { x: 545, y: 208 },
+            { x: -300, y: CANVAS_HEIGHT + 160 },
+            80,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function HealthCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "health-v2",
+            120,
+            { x: 293, y: 159 },
+            { x: -220, y: CANVAS_HEIGHT + 300 },
+            160,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function ShoppingCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "shopping-v2",
+            132.5,
+            { x: 748, y: 532 },
+            { x: -360, y: CANVAS_HEIGHT + 220 },
+            240,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function PersonalCareCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "personalcare-v2",
+            95,
+            { x: 708, y: 339 },
+            { x: -260, y: CANVAS_HEIGHT + 180 },
+            320,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function UncategorizedCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "uncategorized-v2",
+            95,
+            { x: 159, y: 351 },
+            { x: -280, y: CANVAS_HEIGHT + 280 },
+            400,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function BillsCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "bills-v2",
+            200,
+            { x: 332, y: 397 },
+            { x: -320, y: CANVAS_HEIGHT + 340 },
+            480,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+// ============================================
 // Cross-component variant bridge
 // ============================================
 // Framer's own "Trigger" prop (Triggers panel) requires the paid Convert
