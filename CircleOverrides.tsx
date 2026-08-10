@@ -844,3 +844,69 @@ export function UncategorizedCircle(
         )
     )
 }
+
+// ============================================
+// Cross-component variant bridge
+// ============================================
+// Framer's own "Trigger" prop (Triggers panel) requires the paid Convert
+// Add-On to fire an event from one component into another. This is a plain
+// window CustomEvent instead, which isn't scoped to a single component the
+// way a Framer Trigger is, so it works between Budget Circles and the Save
+// button (two separate top-level components) with no add-on needed.
+const BUDGETS_VARIANT_EVENT = "budgets:variant2"
+
+// Apply to the Save button. Fires the bridge event on click, then calls
+// through to whatever onClick/onTap Framer's own interactions already
+// attached (e.g. Close Overlay) so this doesn't replace that behavior.
+export function withBudgetsVariantTrigger(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const handleClick = useCallback(
+            (event: any) => {
+                props.onClick?.(event)
+                props.onTap?.(event)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
+                }
+            },
+            [props]
+        )
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                onClick={handleClick}
+                onTap={handleClick}
+            />
+        )
+    })
+}
+
+// Apply to the Budget Circles component. Listens for the bridge event and
+// forces the component into Variant 2, overriding whatever variant Framer
+// would otherwise render.
+export function withBudgetsVariantListener(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [triggered, setTriggered] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setTriggered(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () =>
+                window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                variant={triggered ? "Variant 2" : props.variant}
+            />
+        )
+    })
+}
