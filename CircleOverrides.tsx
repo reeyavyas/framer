@@ -252,10 +252,13 @@ function collisionRamp(c: CircleState, now: number) {
     return t * t
 }
 
+let lastOverlapDiagLog = 0
+
 function resolveCollisions(settledIds: Set<string>) {
     const list = Array.from(circles.values())
     const now =
         typeof performance !== "undefined" ? performance.now() : Date.now()
+    const diagDue = now - lastOverlapDiagLog > 500
 
     for (let step = 0; step < COLLISION_ITERATIONS; step++) {
         for (let i = 0; i < list.length; i++) {
@@ -295,6 +298,18 @@ function resolveCollisions(settledIds: Set<string>) {
                     a.isDragging || b.isDragging
                         ? Math.max(rampA, rampB)
                         : Math.min(rampA, rampB)
+
+                if (overlap > 5 && diagDue && step === 0) {
+                    lastOverlapDiagLog = now
+                    console.log(
+                        `[overlap-diag] ${a.id} vs ${b.id}: overlap=${overlap.toFixed(
+                            1
+                        )} pairRamp=${pairRamp.toFixed(3)} ` +
+                            `a(settled=${a.hasSettled},drag=${a.isDragging},home=${a.homeX.toFixed(0)},${a.homeY.toFixed(0)},anchor=${a.anchorHomeX.toFixed(0)},${a.anchorHomeY.toFixed(0)}) ` +
+                            `b(settled=${b.hasSettled},drag=${b.isDragging},home=${b.homeX.toFixed(0)},${b.homeY.toFixed(0)},anchor=${b.anchorHomeX.toFixed(0)},${b.anchorHomeY.toFixed(0)})`
+                    )
+                }
+
                 if (pairRamp <= 0.001) continue
 
                 const correction =
