@@ -934,6 +934,8 @@ export function withBudgetsVariantListener(
             "[budgets-bridge] rendering with variant =",
             triggered ? "Variant 2" : props.variant
         )
+        console.log("[budgets-bridge] all incoming props:", Object.keys(props))
+        console.log("[budgets-bridge] full props object:", props)
 
         return (
             <Component
