@@ -862,15 +862,37 @@ export function withBudgetsVariantTrigger(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
+        const fire = useCallback(
+            (event: any, source: string) => {
+                console.log(`[budgets-bridge] ${source} fired on trigger`)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
+                    console.log("[budgets-bridge] dispatched", BUDGETS_VARIANT_EVENT)
+                }
+            },
+            []
+        )
+
         const handleClick = useCallback(
             (event: any) => {
                 props.onClick?.(event)
-                props.onTap?.(event)
-                if (typeof window !== "undefined") {
-                    window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
-                }
+                fire(event, "onClick")
             },
-            [props]
+            [props, fire]
+        )
+        const handleTap = useCallback(
+            (event: any, info: any) => {
+                props.onTap?.(event, info)
+                fire(event, "onTap")
+            },
+            [props, fire]
+        )
+        const handlePointerDown = useCallback(
+            (event: any) => {
+                props.onPointerDown?.(event)
+                fire(event, "onPointerDown")
+            },
+            [props, fire]
         )
 
         return (
@@ -878,7 +900,8 @@ export function withBudgetsVariantTrigger(
                 {...props}
                 ref={ref}
                 onClick={handleClick}
-                onTap={handleClick}
+                onTap={handleTap}
+                onPointerDown={handlePointerDown}
             />
         )
     })
@@ -895,11 +918,22 @@ export function withBudgetsVariantListener(
 
         useEffect(() => {
             if (typeof window === "undefined") return
-            const handler = () => setTriggered(true)
+            console.log("[budgets-bridge] listener mounted, waiting for", BUDGETS_VARIANT_EVENT)
+            const handler = () => {
+                console.log("[budgets-bridge] listener received event, setting Variant 2")
+                setTriggered(true)
+            }
             window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
-            return () =>
+            return () => {
+                console.log("[budgets-bridge] listener unmounted")
                 window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+            }
         }, [])
+
+        console.log(
+            "[budgets-bridge] rendering with variant =",
+            triggered ? "Variant 2" : props.variant
+        )
 
         return (
             <Component
