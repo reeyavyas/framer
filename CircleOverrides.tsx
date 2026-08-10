@@ -907,42 +907,53 @@ export function withBudgetsVariantTrigger(
     })
 }
 
-// Apply to the Budget Circles component. Listens for the bridge event and
-// forces the component into Variant 2, overriding whatever variant Framer
-// would otherwise render.
-export function withBudgetsVariantListener(
+// Framer's canvas Variants aren't controllable via props from outside (a
+// wrapped component's active variant is decided internally, before any
+// prop we inject ever reaches it — confirmed by watching data-framer-name
+// stay "Variant 1" even after forcing a variant prop). Plain, non-Variant
+// components don't have that problem: mounting/unmounting is an ordinary
+// React prop-driven behavior, so this splits the old single Variant-based
+// "Budget Circles" into two independent components and controls which one
+// is mounted directly, instead of trying to flip an internal Variant.
+
+// Apply to Budget Circles 1 (the current 6-circle layout, built as its own
+// plain component, no Variant feature). Unmounts itself once the bridge
+// event fires.
+export function withBudgetsCircles1Visibility(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const [triggered, setTriggered] = useState(false)
+        const [hidden, setHidden] = useState(false)
 
         useEffect(() => {
             if (typeof window === "undefined") return
-            console.log("[budgets-bridge] listener mounted, waiting for", BUDGETS_VARIANT_EVENT)
-            const handler = () => {
-                console.log("[budgets-bridge] listener received event, setting Variant 2")
-                setTriggered(true)
-            }
+            const handler = () => setHidden(true)
             window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
-            return () => {
-                console.log("[budgets-bridge] listener unmounted")
-                window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
-            }
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
         }, [])
 
-        console.log(
-            "[budgets-bridge] rendering with variant =",
-            triggered ? "Variant 2" : props.variant
-        )
-        console.log("[budgets-bridge] all incoming props:", Object.keys(props))
-        console.log("[budgets-bridge] full props object:", props)
+        if (hidden) return null
+        return <Component {...props} ref={ref} />
+    })
+}
 
-        return (
-            <Component
-                {...props}
-                ref={ref}
-                variant={triggered ? "Variant 2" : props.variant}
-            />
-        )
+// Apply to Budget Circles 2 (the 7-circle layout including Bills &
+// Utilities, also its own plain component). Stays unmounted until the
+// bridge event fires, then mounts.
+export function withBudgetsCircles2Visibility(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [visible, setVisible] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setVisible(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
+
+        if (!visible) return null
+        return <Component {...props} ref={ref} />
     })
 }
