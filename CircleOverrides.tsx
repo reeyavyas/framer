@@ -602,7 +602,7 @@ function useDraggableCircle(
 
     const endDrag = useCallback(() => {
         const c = circles.get(id)
-        if (!c) return
+        if (!c || !c.isDragging) return
         c.isDragging = false
         c.pointerId = null
         c.hasSettled = true
@@ -636,6 +636,24 @@ function useDraggableCircle(
             c.dragStartY = c.y.get()
             c.hasSettled = false
             startTransition(() => setZIndex(DRAG_Z_INDEX))
+
+            // Pointer capture guarantees this element keeps receiving move/up
+            // events for this pointerId even if the cursor ends up outside
+            // its bounds (or outside the viewport, e.g. a fast drag in a
+            // zoomed-out preview). Without it, a pointerup that lands
+            // somewhere our window listener doesn't see leaves isDragging
+            // true and hasSettled false forever, which silently disables
+            // collision correction for this circle (and anything it
+            // touches) — a stuck-open drag, not a tuning problem.
+            const captureTarget = event.currentTarget as Element & {
+                setPointerCapture?: (id: number) => void
+            }
+            try {
+                captureTarget.setPointerCapture?.(event.pointerId)
+            } catch {
+                // Capture isn't available/allowed here; the window
+                // listeners below still cover the normal case.
+            }
 
             const onPointerMove = (moveEvent: PointerEvent) => {
                 const active = circles.get(id)
@@ -701,11 +719,25 @@ function useDraggableCircle(
                 endDrag()
             }
 
+            // Guaranteed fallback: fires whenever pointer capture is
+            // released, for any reason (normal pointerup, cancellation, or
+            // the browser forcibly releasing it) — even if the pointerup
+            // itself never reaches the window listener above. This is what
+            // actually prevents a circle from getting stuck mid-drag.
+            const onLostPointerCapture = () => {
+                cleanup()
+                endDrag()
+            }
+
             const cleanup = () => {
                 if (typeof window === "undefined") return
                 window.removeEventListener("pointermove", onPointerMove)
                 window.removeEventListener("pointerup", onPointerUp)
                 window.removeEventListener("pointercancel", onPointerUp)
+                captureTarget.removeEventListener?.(
+                    "lostpointercapture",
+                    onLostPointerCapture
+                )
                 if (removeListenersRef.current === cleanup) {
                     removeListenersRef.current = null
                 }
@@ -715,6 +747,10 @@ function useDraggableCircle(
                 window.addEventListener("pointermove", onPointerMove)
                 window.addEventListener("pointerup", onPointerUp)
                 window.addEventListener("pointercancel", onPointerUp)
+                captureTarget.addEventListener?.(
+                    "lostpointercapture",
+                    onLostPointerCapture
+                )
                 removeListenersRef.current = cleanup
             }
 
