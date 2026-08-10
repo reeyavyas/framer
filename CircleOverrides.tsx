@@ -496,11 +496,19 @@ function resolveStuckHome(id: string, radius: number, x: number, y: number) {
 
 // Runs once per animation frame. Detects any non-dragging circle stuck in
 // continuous significant overlap and, once it's been stuck longer than
-// STUCK_GRACE_MS, relocates its home to a position resolveStuckHome has
-// confirmed is actually clear of every other circle's home. Only the home
-// target changes here — the existing per-frame home-pull easing is what
-// then glides the circle there, so this reads as the same kind of smooth
-// glide-back-out the project already relies on elsewhere, not a teleport.
+// STUCK_GRACE_MS, relocates it to a position resolveStuckHome has
+// confirmed is actually clear of every other circle's home.
+//
+// This snaps the circle's actual position immediately (not just the home
+// target) and deliberately does not go through the gradual home-pull
+// easing. A gradual approach doesn't work here: resolveCollisions writes
+// to homeX/homeY on every single frame for as long as the circle's actual
+// on-screen position is still overlapping, which it still would be for
+// a second or more while a gradual glide caught up — so a one-time
+// target-only fix gets overwritten by that ongoing per-frame nudge before
+// it can take hold. This is a deadlock-recovery path, not normal
+// operation, so a firm, immediate correction is the right tradeoff over
+// smoothness here.
 function updateStuckWatchdog(now: number) {
     const list = Array.from(circles.values())
     const overlapping = new Set<string>()
@@ -526,15 +534,26 @@ function updateStuckWatchdog(now: number) {
 
     for (const c of list) {
         if (c.isDragging || !overlapping.has(c.id)) {
+            if (c.stuckSince !== null) {
+                console.log(`[stuck-watchdog] ${c.id} cleared before grace period`)
+            }
             c.stuckSince = null
             continue
         }
         if (c.stuckSince === null) {
             c.stuckSince = now
+            console.log(`[stuck-watchdog] ${c.id} entered overlap, starting timer`)
         } else if (now - c.stuckSince > STUCK_GRACE_MS) {
             const resolved = resolveStuckHome(c.id, c.radius, c.homeX, c.homeY)
+            console.log(
+                `[stuck-watchdog] ${c.id} FIRING: home ${c.homeX.toFixed(0)},${c.homeY.toFixed(0)} -> ${resolved.x.toFixed(0)},${resolved.y.toFixed(0)}`
+            )
             c.homeX = resolved.x
             c.homeY = resolved.y
+            c.anchorHomeX = resolved.x
+            c.anchorHomeY = resolved.y
+            c.x.set(resolved.x)
+            c.y.set(resolved.y)
             c.stuckSince = null
         }
     }
