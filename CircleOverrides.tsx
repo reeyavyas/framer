@@ -1084,3 +1084,75 @@ export function withBudgetsCircles2Visibility(
         return <Component {...props} ref={ref} />
     })
 }
+
+// How long the toast stays fully visible before it starts fading.
+const TOAST_VISIBLE_MS = 3000
+// How long the fade-out itself takes.
+const TOAST_FADE_MS = 400
+
+// Apply to the success toast/banner (whatever visually shows "Bills &
+// Utilities budget created successfully" — build that content in Framer,
+// this only drives when it appears and fades). Listens for the same
+// bridge event that mounts Budget Circles 2, so it shows up at the same
+// moment that set becomes visible, holds for TOAST_VISIBLE_MS, fades over
+// TOAST_FADE_MS, then unmounts.
+export function withBudgetsSuccessToast(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [mounted, setMounted] = useState(false)
+        const [opacity, setOpacity] = useState(0)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            let hideTimer: ReturnType<typeof setTimeout> | null = null
+            let unmountTimer: ReturnType<typeof setTimeout> | null = null
+            let fadeInFrame: number | null = null
+
+            const clearTimers = () => {
+                if (hideTimer) clearTimeout(hideTimer)
+                if (unmountTimer) clearTimeout(unmountTimer)
+                if (fadeInFrame !== null) cancelAnimationFrame(fadeInFrame)
+            }
+
+            const handler = () => {
+                clearTimers()
+                setMounted(true)
+                setOpacity(0)
+                // Mount at opacity 0 first, then flip to 1 on the next
+                // frame so the fade-in actually transitions instead of
+                // popping straight to visible.
+                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+
+                hideTimer = setTimeout(() => {
+                    setOpacity(0)
+                    unmountTimer = setTimeout(
+                        () => setMounted(false),
+                        TOAST_FADE_MS
+                    )
+                }, TOAST_VISIBLE_MS)
+            }
+
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => {
+                window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+                clearTimers()
+            }
+        }, [])
+
+        if (!mounted) return null
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                style={{
+                    ...props.style,
+                    opacity,
+                    transition: `opacity ${TOAST_FADE_MS}ms ease`,
+                    pointerEvents: "none",
+                }}
+            />
+        )
+    })
+}
