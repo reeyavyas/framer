@@ -1089,13 +1089,18 @@ export function withBudgetsCircles2Visibility(
 const TOAST_VISIBLE_MS = 3000
 // How long the fade-out itself takes.
 const TOAST_FADE_MS = 400
+// Fired by the toast's own "x" button (see withToastDismissButton) to
+// dismiss it early, skipping the rest of TOAST_VISIBLE_MS.
+const TOAST_DISMISS_EVENT = "budgets:toastDismiss"
 
 // Apply to the success toast/banner (whatever visually shows "Bills &
 // Utilities budget created successfully" — build that content in Framer,
 // this only drives when it appears and fades). Listens for the same
 // bridge event that mounts Budget Circles 2, so it shows up at the same
 // moment that set becomes visible, holds for TOAST_VISIBLE_MS, fades over
-// TOAST_FADE_MS, then unmounts.
+// TOAST_FADE_MS, then unmounts — or dismisses immediately if the "x"
+// button (see withToastDismissButton, below) fires TOAST_DISMISS_EVENT
+// first.
 export function withBudgetsSuccessToast(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -1115,7 +1120,13 @@ export function withBudgetsSuccessToast(
                 if (fadeInFrame !== null) cancelAnimationFrame(fadeInFrame)
             }
 
-            const handler = () => {
+            const startFadeOut = () => {
+                clearTimers()
+                setOpacity(0)
+                unmountTimer = setTimeout(() => setMounted(false), TOAST_FADE_MS)
+            }
+
+            const showHandler = () => {
                 clearTimers()
                 setMounted(true)
                 setOpacity(0)
@@ -1123,19 +1134,16 @@ export function withBudgetsSuccessToast(
                 // frame so the fade-in actually transitions instead of
                 // popping straight to visible.
                 fadeInFrame = requestAnimationFrame(() => setOpacity(1))
-
-                hideTimer = setTimeout(() => {
-                    setOpacity(0)
-                    unmountTimer = setTimeout(
-                        () => setMounted(false),
-                        TOAST_FADE_MS
-                    )
-                }, TOAST_VISIBLE_MS)
+                hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
             }
 
-            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            const dismissHandler = () => startFadeOut()
+
+            window.addEventListener(BUDGETS_VARIANT_EVENT, showHandler)
+            window.addEventListener(TOAST_DISMISS_EVENT, dismissHandler)
             return () => {
-                window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+                window.removeEventListener(BUDGETS_VARIANT_EVENT, showHandler)
+                window.removeEventListener(TOAST_DISMISS_EVENT, dismissHandler)
                 clearTimers()
             }
         }, [])
@@ -1150,8 +1158,44 @@ export function withBudgetsSuccessToast(
                     ...props.style,
                     opacity,
                     transition: `opacity ${TOAST_FADE_MS}ms ease`,
-                    pointerEvents: "none",
                 }}
+            />
+        )
+    })
+}
+
+// Apply to the toast's "x" button layer. Dispatches TOAST_DISMISS_EVENT
+// on click/tap, which withBudgetsSuccessToast picks up to fade out and
+// unmount immediately instead of waiting out the rest of its timer.
+export function withToastDismissButton(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const dismiss = useCallback(
+            (event: any) => {
+                props.onClick?.(event)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
+            },
+            [props]
+        )
+        const dismissTap = useCallback(
+            (event: any, info: any) => {
+                props.onTap?.(event, info)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
+            },
+            [props]
+        )
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                onClick={dismiss}
+                onTap={dismissTap}
             />
         )
     })
