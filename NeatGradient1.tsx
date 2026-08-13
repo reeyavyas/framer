@@ -5,6 +5,29 @@ import { useEffect, useRef } from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { NeatGradient } from "https://esm.sh/@firecms/neat@1.0.2"
 
+// Framer's Color control emits "rgba(r, g, b, a)" once a swatch has been
+// touched in the picker, not just hex. NeatGradient's own color parsing only
+// understands "#rrggbb" and silently falls back to black on anything else,
+// which is why edited colors were rendering black. Normalize to hex first.
+function toHex(input: string): string {
+    if (!input) return "#000000"
+    if (input[0] === "#") {
+        let hex = input.slice(1)
+        if (hex.length === 3) {
+            hex = hex.split("").map((ch) => ch + ch).join("")
+        }
+        return "#" + hex.slice(0, 6).padEnd(6, "0")
+    }
+    const match = input.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i)
+    if (match) {
+        const [r, g, b] = match
+            .slice(1, 4)
+            .map((v) => Math.max(0, Math.min(255, Math.round(parseFloat(v)))))
+        return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")
+    }
+    return input
+}
+
 function buildNeatConfig(props: any) {
     const {
         colors = [],
@@ -29,7 +52,7 @@ function buildNeatConfig(props: any) {
 
     return {
         colors: colors.map((c: any) => ({
-            color: c.color,
+            color: toHex(c.color),
             enabled: c.enabled,
             influence: c.influence,
         })),
@@ -56,7 +79,7 @@ function buildNeatConfig(props: any) {
         wireframe: light.wireframe,
         flatShading: light.flatShading,
 
-        backgroundColor: background.color,
+        backgroundColor: toHex(background.color),
         backgroundAlpha: background.alpha,
 
         grainScale: grain.scale,
@@ -86,7 +109,7 @@ function buildNeatConfig(props: any) {
         textureColorBlending: texture.colorBlending,
         textureSeed: texture.seed,
         textureEase: texture.ease,
-        proceduralBackgroundColor: texture.backgroundColor,
+        proceduralBackgroundColor: toHex(texture.backgroundColor),
         textureShapeTriangles: texture.shapeTriangles,
         textureShapeCircles: texture.shapeCircles,
         textureShapeBars: texture.shapeBars,
@@ -102,7 +125,7 @@ function buildNeatConfig(props: any) {
         fresnelEnabled: fresnel.enabled,
         fresnelPower: fresnel.power,
         fresnelIntensity: fresnel.intensity,
-        fresnelColor: fresnel.color,
+        fresnelColor: toHex(fresnel.color),
 
         iridescenceEnabled: iridescence.enabled,
         iridescenceIntensity: iridescence.intensity,
@@ -152,7 +175,7 @@ function buildNeatConfig(props: any) {
     }
 }
 
-export default function NeatGradientBackground(props: any) {
+export default function NeatGradient1(props: any) {
     const { style, ...rest } = props
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const gradientRef = useRef<InstanceType<typeof NeatGradient> | null>(null)
@@ -189,7 +212,7 @@ export default function NeatGradientBackground(props: any) {
     )
 }
 
-addPropertyControls(NeatGradientBackground, {
+addPropertyControls(NeatGradient1, {
     colors: {
         type: ControlType.Array,
         title: "Colors",
