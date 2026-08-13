@@ -147,7 +147,12 @@ const DEFAULT_CONFIG = {
 function buildNeatConfig(props: any) {
     const d = DEFAULT_CONFIG
     const {
-        colors,
+        color1,
+        color2,
+        color3,
+        color4,
+        color5,
+        color6,
         movement = {},
         secondaryWave = {},
         light = {},
@@ -167,14 +172,18 @@ function buildNeatConfig(props: any) {
         advanced = {},
     } = props ?? {}
 
-    const colorList = Array.isArray(colors) && colors.length ? colors : d.colors
+    const colorSlots = [color1, color2, color3, color4, color5, color6]
 
     return {
-        colors: colorList.map((c: any) => ({
-            color: toHex(c.color ?? "#000000"),
-            enabled: c.enabled ?? true,
-            influence: c.influence ?? 1,
-        })),
+        colors: colorSlots.map((c: any, i: number) => {
+            const slot = c ?? {}
+            const fallback = d.colors[i]
+            return {
+                color: toHex(slot.color ?? fallback.color),
+                enabled: slot.enabled ?? fallback.enabled,
+                influence: slot.influence ?? fallback.influence,
+            }
+        }),
 
         speed: movement.speed ?? d.speed,
         horizontalPressure: movement.horizontalPressure ?? d.horizontalPressure,
@@ -331,34 +340,36 @@ export default function NeatGradient1(props: any) {
     )
 }
 
-addPropertyControls(NeatGradient1, {
-    colors: {
-        type: ControlType.Array,
-        title: "Colors",
-        maxCount: 6,
-        control: {
-            type: ControlType.Object,
-            controls: {
-                color: { type: ControlType.Color, defaultValue: "#169592" },
-                enabled: { type: ControlType.Boolean, defaultValue: true },
-                influence: {
-                    type: ControlType.Number,
-                    defaultValue: 1,
-                    min: 0,
-                    max: 2,
-                    step: 0.05,
-                },
+// Six fixed slots instead of an Array control. NeatGradient caps out at 6
+// colors anyway, and — unlike an Array, whose items all share one control
+// schema — each of these carries its own defaultValue, so "reset to
+// default" on any single slot restores that slot's own original color
+// instead of every slot collapsing onto one shared default.
+function colorSlotControl(title: string, defaultColor: string) {
+    return {
+        type: ControlType.Object,
+        title,
+        controls: {
+            color: { type: ControlType.Color, defaultValue: defaultColor },
+            enabled: { type: ControlType.Boolean, defaultValue: true },
+            influence: {
+                type: ControlType.Number,
+                defaultValue: 1,
+                min: 0,
+                max: 2,
+                step: 0.05,
             },
         },
-        defaultValue: [
-            { color: "#169592", enabled: true, influence: 1 },
-            { color: "#06BFBC", enabled: true, influence: 1 },
-            { color: "#00615E", enabled: true, influence: 1 },
-            { color: "#059390", enabled: true, influence: 1 },
-            { color: "#BCE2D7", enabled: true, influence: 1 },
-            { color: "#06605E", enabled: true, influence: 1 },
-        ],
-    },
+    }
+}
+
+addPropertyControls(NeatGradient1, {
+    color1: colorSlotControl("Color 1", "#169592"),
+    color2: colorSlotControl("Color 2", "#06BFBC"),
+    color3: colorSlotControl("Color 3", "#00615E"),
+    color4: colorSlotControl("Color 4", "#059390"),
+    color5: colorSlotControl("Color 5", "#BCE2D7"),
+    color6: colorSlotControl("Color 6", "#06605E"),
 
     movement: {
         type: ControlType.Object,
