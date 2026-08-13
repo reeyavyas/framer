@@ -1,9 +1,9 @@
-// Requires the "@firecms/neat" package. When you paste this file into Framer,
-// Framer detects the unresolved import and shows an "Install" prompt — accept
-// it (or add the package manually from the Assets panel, see chat for steps).
+// Imported straight from a CDN as an ES module, so Framer needs no npm
+// install step at all — if that ever breaks, swap for the bare specifier
+// "@firecms/neat" and install it via Framer's package manager instead.
 import { useEffect, useRef } from "react"
 import { addPropertyControls, ControlType } from "framer"
-import { NeatGradient } from "@firecms/neat"
+import { NeatGradient } from "https://esm.sh/@firecms/neat@1.0.2"
 
 function buildNeatConfig(props: any) {
     const {
