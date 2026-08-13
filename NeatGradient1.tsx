@@ -468,4 +468,4 @@ addPropertyControls(NeatGradient1, {
             licenseKey: { type: ControlType.String, defaultValue: "", placeholder: "NEAT-..." },
         },
     },
-})
+});
