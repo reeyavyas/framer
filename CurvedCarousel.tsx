@@ -2,9 +2,9 @@
 // Standalone Framer Code Component. Drop your Flip Card component instances
 // into the "Cards" property (Array of Component Instance) — each instance
 // keeps its own text/image/link overrides and native Framer interactions
-// untouched. Built for a 1080x1920 portrait kiosk: one centered card with
-// the neighboring cards peeking in from each edge, phone-style swipe/drag,
-// tap-to-center on side cards, and looping left/right arrows.
+// untouched. Cards sit in a shallow, non-overlapping fan/arc (2D tilt + a
+// bit of vertical droop, no 3D perspective), phone-style swipe/drag, and a
+// centered arrow row below the cards.
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -46,10 +46,13 @@ function falloff(absOffset: number) {
 }
 
 // Movement (px) below which a release counts as a tap rather than a drag.
-const TAP_DISTANCE_PX = 10
+// Touchscreens jitter more than a mouse, so this needs real slack — too
+// tight and a plain tap on the centered card gets misread as a micro-drag,
+// which both eats the tap's click and plays a pointless snap-back "shift".
+const TAP_DISTANCE_PX = 20
 const FLICK_VELOCITY_PX_S = 500
-// Fraction of one card's spacing you must drag past before a release snaps
-// to the next/prev card instead of springing back to the current one.
+// Fraction of one card-to-card spacing you must drag past before a release
+// snaps to the next/prev card instead of springing back to the current one.
 const SNAP_THRESHOLD = 0.3
 
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 32 }
@@ -70,7 +73,8 @@ function CarouselCard({
     cardHeight,
     spacing,
     sideScale,
-    sideRotationDeg,
+    fanRotationDeg,
+    curveDepth,
     sideOpacity,
     onTapSide,
     element,
@@ -82,7 +86,8 @@ function CarouselCard({
     cardHeight: number
     spacing: number
     sideScale: number
-    sideRotationDeg: number
+    fanRotationDeg: number
+    curveDepth: number
     sideOpacity: number
     onTapSide: (index: number) => void
     element: React.ReactNode
@@ -92,13 +97,16 @@ function CarouselCard({
     const offset = useTransform(pos, (p) => wrapDelta(index - p, count))
 
     const x = useTransform(offset, (o) => o * spacing)
+    const y = useTransform(offset, (o) => curveDepth * falloff(Math.abs(o)))
     const scale = useTransform(offset, (o) => {
         const t = falloff(Math.abs(o))
         return 1 + (sideScale - 1) * t
     })
-    const rotateY = useTransform(offset, (o) => {
+    // In-plane tilt only (no 3D perspective) — a flat fan, like a spread
+    // hand of cards, so there's no foreshortening or backface weirdness.
+    const rotateZ = useTransform(offset, (o) => {
         const t = falloff(Math.abs(o))
-        return -Math.sign(o) * sideRotationDeg * t
+        return Math.sign(o) * fanRotationDeg * t
     })
     const opacity = useTransform(offset, (o) => {
         const abs = Math.abs(o)
@@ -132,11 +140,11 @@ function CarouselCard({
                 width: cardWidth,
                 height: cardHeight,
                 x,
+                y,
                 scale,
-                rotateY,
+                rotateZ,
                 opacity,
                 zIndex,
-                transformStyle: "preserve-3d",
                 pointerEvents: isCentered ? "auto" : "none",
             }}
         >
@@ -165,7 +173,7 @@ function CarouselCard({
 }
 
 // ------------------------------------------------------------------
-// Arrow button
+// Arrow button — a plain flex child; the parent row handles positioning.
 // ------------------------------------------------------------------
 
 function ArrowButton({
@@ -185,10 +193,6 @@ function ArrowButton({
         <div
             onClick={onClick}
             style={{
-                position: "absolute",
-                top: "50%",
-                [direction === "left" ? "left" : "right"]: 12,
-                transform: "translateY(-50%)",
                 width: size,
                 height: size,
                 borderRadius: "50%",
@@ -197,9 +201,9 @@ function ArrowButton({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                zIndex: 200,
                 userSelect: "none",
                 touchAction: "none",
+                flexShrink: 0,
             }}
         >
             <svg
@@ -231,13 +235,16 @@ export interface CurvedCarouselProps {
     cards: React.ReactNode[]
     cardWidth: number
     cardHeight: number
-    spacing: number
+    cardGap: number
     sideScale: number
-    sideRotationDeg: number
+    fanRotationDeg: number
+    curveDepth: number
     sideOpacity: number
     dragEnabled: boolean
     showArrows: boolean
     arrowSize: number
+    arrowGap: number
+    arrowBottomOffset: number
     arrowColor: string
     arrowBackground: string
     style?: React.CSSProperties
@@ -248,19 +255,36 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         cards = [],
         cardWidth,
         cardHeight,
-        spacing,
+        cardGap,
         sideScale,
-        sideRotationDeg,
+        fanRotationDeg,
+        curveDepth,
         sideOpacity,
         dragEnabled,
         showArrows,
         arrowSize,
+        arrowGap,
+        arrowBottomOffset,
         arrowColor,
         arrowBackground,
         style,
     } = props
 
     const count = cards.length
+
+    // Center-to-center distance between adjacent cards, derived (not
+    // hand-picked) so a side card's near edge can never overlap the center
+    // card. A tilted rectangle's bounding box is wider than its unrotated
+    // one (its diagonal swings out), so the "half-width" used here has to
+    // be the true rotated bounding half-width, not just cardWidth*sideScale
+    // — otherwise the fan tilt alone can eat tens of px of the intended gap.
+    const fanRad = (fanRotationDeg * Math.PI) / 180
+    const sideBoundingHalfWidth =
+        (cardWidth * sideScale * Math.abs(Math.cos(fanRad)) +
+            cardHeight * sideScale * Math.abs(Math.sin(fanRad))) /
+        2
+    const spacing = cardWidth / 2 + sideBoundingHalfWidth + cardGap
+
     // The single source of truth for layout: a continuous "which index is
     // centered" value. Drag moves it directly; snapping/arrows animate it.
     const pos = useMotionValue(0)
@@ -426,7 +450,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 overflowX: "hidden",
                 overflowY: "visible",
                 touchAction: dragEnabled ? "pan-y" : "auto",
-                perspective: 1400,
                 ...style,
             }}
         >
@@ -440,7 +463,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     cardHeight={cardHeight}
                     spacing={spacing}
                     sideScale={sideScale}
-                    sideRotationDeg={sideRotationDeg}
+                    fanRotationDeg={fanRotationDeg}
+                    curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
                     onTapSide={onTapSide}
                     element={element}
@@ -448,7 +472,19 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
             ))}
 
             {showArrows && count > 1 && (
-                <>
+                <div
+                    style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: arrowBottomOffset,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: arrowGap,
+                        zIndex: 200,
+                    }}
+                >
                     <ArrowButton
                         direction="left"
                         onClick={() => step(-1)}
@@ -463,7 +499,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                         color={arrowColor}
                         background={arrowBackground}
                     />
-                </>
+                </div>
             )}
         </div>
     )
@@ -473,13 +509,16 @@ CurvedCarousel.defaultProps = {
     cards: [],
     cardWidth: 734,
     cardHeight: 1050,
-    spacing: 620,
+    cardGap: 20,
     sideScale: 0.82,
-    sideRotationDeg: 20,
-    sideOpacity: 0.55,
+    fanRotationDeg: 8,
+    curveDepth: 36,
+    sideOpacity: 1,
     dragEnabled: true,
     showArrows: true,
     arrowSize: 56,
+    arrowGap: 24,
+    arrowBottomOffset: 24,
     arrowColor: "#FFFFFF",
     arrowBackground: "rgba(0,0,0,0.35)",
 }
@@ -509,14 +548,14 @@ addPropertyControls(CurvedCarousel, {
         defaultValue: 1050,
         description: "Resting height. The card can grow taller mid-flip — vertical overflow isn't clipped, only horizontal.",
     },
-    spacing: {
+    cardGap: {
         type: ControlType.Number,
-        title: "Side Spacing",
-        min: 0,
-        max: 1080,
+        title: "Card Gap",
+        min: -100,
+        max: 400,
         step: 1,
-        defaultValue: 620,
-        description: "Distance from center to a side card. Lower = more peek.",
+        defaultValue: 20,
+        description: "Guaranteed empty space between the center card's edge and a side card's near edge. Lower = more peek, but never overlaps.",
     },
     sideScale: {
         type: ControlType.Number,
@@ -526,13 +565,23 @@ addPropertyControls(CurvedCarousel, {
         step: 0.01,
         defaultValue: 0.82,
     },
-    sideRotationDeg: {
+    fanRotationDeg: {
         type: ControlType.Number,
-        title: "Side Rotation",
+        title: "Fan Tilt",
         min: 0,
-        max: 60,
+        max: 45,
         step: 1,
-        defaultValue: 20,
+        defaultValue: 8,
+        description: "Flat, in-plane tilt for side cards — like a spread hand of cards, not a 3D turn.",
+    },
+    curveDepth: {
+        type: ControlType.Number,
+        title: "Arc Depth",
+        min: 0,
+        max: 200,
+        step: 1,
+        defaultValue: 36,
+        description: "How far side cards drop below center, for the shallow arc.",
     },
     sideOpacity: {
         type: ControlType.Number,
@@ -540,7 +589,7 @@ addPropertyControls(CurvedCarousel, {
         min: 0,
         max: 1,
         step: 0.01,
-        defaultValue: 0.55,
+        defaultValue: 1,
     },
     dragEnabled: {
         type: ControlType.Boolean,
@@ -559,6 +608,25 @@ addPropertyControls(CurvedCarousel, {
         max: 160,
         step: 1,
         defaultValue: 56,
+        hidden: (props) => !props.showArrows,
+    },
+    arrowGap: {
+        type: ControlType.Number,
+        title: "Arrow Gap",
+        min: 0,
+        max: 200,
+        step: 1,
+        defaultValue: 24,
+        hidden: (props) => !props.showArrows,
+    },
+    arrowBottomOffset: {
+        type: ControlType.Number,
+        title: "Arrow Bottom",
+        min: 0,
+        max: 400,
+        step: 1,
+        defaultValue: 24,
+        description: "Distance from the bottom of the frame. Make sure the frame is tall enough to fit the cards plus this row beneath them.",
         hidden: (props) => !props.showArrows,
     },
     arrowColor: {
