@@ -82,6 +82,7 @@ function CarouselCard({
     tiltDeg,
     curveDepth,
     sideOpacity,
+    isSettled,
     onTapSide,
     element,
 }: {
@@ -95,6 +96,7 @@ function CarouselCard({
     tiltDeg: number
     curveDepth: number
     sideOpacity: number
+    isSettled: boolean
     onTapSide: (index: number) => void
     element: React.ReactNode
 }) {
@@ -145,7 +147,16 @@ function CarouselCard({
                 rotateZ,
                 opacity,
                 zIndex,
-                pointerEvents: isCentered ? "auto" : "none",
+                // Only the truly at-rest centered card is interactive.
+                // Gating on isCentered alone isn't enough: every normal
+                // swipe carries a card transiently through (or near) the
+                // center position on its way elsewhere, and a native click
+                // synthesized at just the wrong instant during that transit
+                // could land on the flip card underneath and trigger its
+                // own tap-to-flip — leaving a card stuck flipped off to the
+                // side that nobody meant to tap. isSettled is only true
+                // when nothing is dragging or animating.
+                pointerEvents: isCentered && isSettled ? "auto" : "none",
                 // Any transform on an ancestor (the tilt above) makes it a
                 // 3D-flattening boundary by default, collapsing descendant
                 // 3D transforms into a flat plane. The flip card's own
@@ -323,11 +334,17 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         return unsub
     }, [pos, count])
 
+    // True only when nothing is dragging or animating — gates which card
+    // (if any) is allowed real pointer-events, so a native click can never
+    // land on a card while it's mid-transit through the center position.
+    const [isSettled, setIsSettled] = useState(true)
+
     const goTo = useCallback(
         (targetIndex: number) => {
             if (count <= 1) return
             const target = mod(targetIndex, count)
             const delta = wrapDelta(target - pos.get(), count)
+            setIsSettled(false)
             animate(pos, pos.get() + delta, {
                 ...SPRING,
                 onComplete: () => {
@@ -335,6 +352,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     // every card's wrapped offset, so this causes no visual
                     // change. Just keeps the float bounded over long uptime.
                     pos.set(mod(pos.get(), count))
+                    setIsSettled(true)
                 },
             })
         },
@@ -392,6 +410,21 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         moved: false,
     })
     const suppressClickRef = useRef(false)
+    const suppressClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    // Arms the suppressor for a short window instead of indefinitely. A
+    // dangling "eat the next click, whenever that is" flag is dangerous:
+    // if no click happens to follow the drag immediately (e.g. the browser
+    // doesn't synthesize one right away on some touch stacks), the flag
+    // would sit armed and silently swallow a completely unrelated later
+    // click — like a deliberate tap on a card's back-face button.
+    const armClickSuppression = useCallback(() => {
+        suppressClickRef.current = true
+        if (suppressClickTimerRef.current) clearTimeout(suppressClickTimerRef.current)
+        suppressClickTimerRef.current = setTimeout(() => {
+            suppressClickRef.current = false
+        }, 400)
+    }, [])
 
     useEffect(() => {
         // Capture-phase click suppressor: after a real drag, swallow the
@@ -402,10 +435,17 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 e.preventDefault()
                 e.stopPropagation()
                 suppressClickRef.current = false
+                if (suppressClickTimerRef.current) {
+                    clearTimeout(suppressClickTimerRef.current)
+                    suppressClickTimerRef.current = null
+                }
             }
         }
         window.addEventListener("click", onClickCapture, true)
-        return () => window.removeEventListener("click", onClickCapture, true)
+        return () => {
+            window.removeEventListener("click", onClickCapture, true)
+            if (suppressClickTimerRef.current) clearTimeout(suppressClickTimerRef.current)
+        }
     }, [])
 
     const endDrag = useCallback(() => {
@@ -452,6 +492,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     // scroll/tap normally on a mostly-horizontal carousel.
                     if (Math.abs(dy) > Math.abs(dx) * 1.2) return
                     s.moved = true
+                    setIsSettled(false)
                 }
 
                 const now = performance.now()
@@ -467,7 +508,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 if (upEvent.pointerId !== s.pointerId) return
                 cleanup()
                 if (s.moved) {
-                    suppressClickRef.current = true
+                    armClickSuppression()
                     endDrag()
                 }
             }
@@ -482,7 +523,16 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
             window.addEventListener("pointerup", onUp)
             window.addEventListener("pointercancel", onUp)
         },
-        [count, dragEnabled, endDrag, markInteraction, pos, spacing, tapDistancePx]
+        [
+            armClickSuppression,
+            count,
+            dragEnabled,
+            endDrag,
+            markInteraction,
+            pos,
+            spacing,
+            tapDistancePx,
+        ]
     )
 
     const onTapSide = useCallback(
@@ -524,6 +574,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     tiltDeg={tiltDeg}
                     curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
+                    isSettled={isSettled}
                     onTapSide={onTapSide}
                     element={element}
                 />
