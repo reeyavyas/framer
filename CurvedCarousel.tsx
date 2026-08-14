@@ -146,9 +146,24 @@ function CarouselCard({
                 opacity,
                 zIndex,
                 pointerEvents: isCentered ? "auto" : "none",
+                // Any transform on an ancestor (the tilt above) makes it a
+                // 3D-flattening boundary by default, collapsing descendant
+                // 3D transforms into a flat plane. The flip card's own
+                // rotateY flip (backface-visibility based) depends on real
+                // 3D depth to hit-test its back face correctly — without
+                // this, its back-face buttons stop receiving clicks even
+                // though the flip still renders.
+                transformStyle: "preserve-3d",
             }}
         >
-            <div style={{ width: "100%", height: "100%", position: "relative" }}>
+            <div
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    position: "relative",
+                    transformStyle: "preserve-3d",
+                }}
+            >
                 {element}
                 {!isCentered && (
                     <div
