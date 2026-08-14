@@ -448,6 +448,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         }
     }, [])
 
+    // Returns whether a real navigation happened, so the caller knows
+    // whether to arm click suppression at all.
     const endDrag = useCallback(() => {
         const s = dragState.current
         // pos DECREASES as the finger drags right (revealing the previous
@@ -463,7 +465,21 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
             stepDelta = dragged < 0 ? -1 : 1
         }
 
+        if (stepDelta === 0) {
+            // Not a real navigation — this was tap jitter that happened to
+            // cross the drag deadzone, not an intentional swipe. Snap back
+            // instantly (the drift is always tiny here, so this is
+            // imperceptible) and restore settled state immediately, with
+            // no animation and no click suppression — otherwise a jittery
+            // tap on a button would eat its own click via the exact
+            // machinery meant to protect against real drags.
+            pos.set(Math.round(s.startPos))
+            setIsSettled(true)
+            return false
+        }
+
         goTo(Math.round(s.startPos) + stepDelta)
+        return true
     }, [goTo, pos])
 
     const onPointerDown = useCallback(
@@ -508,8 +524,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 if (upEvent.pointerId !== s.pointerId) return
                 cleanup()
                 if (s.moved) {
-                    armClickSuppression()
-                    endDrag()
+                    const navigated = endDrag()
+                    if (navigated) armClickSuppression()
                 }
             }
 
