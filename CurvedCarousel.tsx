@@ -2,9 +2,11 @@
 // Standalone Framer Code Component. Drop your Flip Card component instances
 // into the "Cards" property (Array of Component Instance) — each instance
 // keeps its own text/image/link overrides and native Framer interactions
-// untouched. Cards sit in a shallow, non-overlapping fan/arc (2D tilt + a
-// bit of vertical droop, no 3D perspective), phone-style swipe/drag, and a
-// centered arrow row below the cards.
+// untouched. Cards are all the same size, arranged in a shallow non-
+// overlapping fan/arc (2D tilt + a bit of vertical droop, no 3D
+// perspective, no scale-down), phone-style swipe/drag, optional autoplay
+// that stops the moment the carousel is touched, and a centered arrow row
+// below the cards.
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -45,11 +47,6 @@ function falloff(absOffset: number) {
     return clamp(absOffset, 0, 1)
 }
 
-// Movement (px) below which a release counts as a tap rather than a drag.
-// Touchscreens jitter more than a mouse, so this needs real slack — too
-// tight and a plain tap on the centered card gets misread as a micro-drag,
-// which both eats the tap's click and plays a pointless snap-back "shift".
-const TAP_DISTANCE_PX = 20
 const FLICK_VELOCITY_PX_S = 500
 // Fraction of one card-to-card spacing you must drag past before a release
 // snaps to the next/prev card instead of springing back to the current one.
@@ -58,11 +55,13 @@ const SNAP_THRESHOLD = 0.3
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 32 }
 
 // ------------------------------------------------------------------
-// Single card. Position/scale/rotation/opacity are derived entirely from
-// `pos` — the single continuous motion value representing "which index is
+// Single card. Position/rotation/opacity are derived entirely from `pos`
+// — the single continuous motion value representing "which index is
 // currently centered" — so there's only ever one source of truth for
 // layout. Nothing here is reset or reconciled against React state, which
-// avoids any one-frame flash when a drag/snap completes.
+// avoids any one-frame flash when a drag/snap completes. All cards render
+// at the same size (no scale-down) — only tilt, a slight vertical droop,
+// and opacity change with distance from center.
 // ------------------------------------------------------------------
 
 function CarouselCard({
@@ -72,7 +71,6 @@ function CarouselCard({
     cardWidth,
     cardHeight,
     spacing,
-    sideScale,
     fanRotationDeg,
     curveDepth,
     sideOpacity,
@@ -85,7 +83,6 @@ function CarouselCard({
     cardWidth: number
     cardHeight: number
     spacing: number
-    sideScale: number
     fanRotationDeg: number
     curveDepth: number
     sideOpacity: number
@@ -98,10 +95,6 @@ function CarouselCard({
 
     const x = useTransform(offset, (o) => o * spacing)
     const y = useTransform(offset, (o) => curveDepth * falloff(Math.abs(o)))
-    const scale = useTransform(offset, (o) => {
-        const t = falloff(Math.abs(o))
-        return 1 + (sideScale - 1) * t
-    })
     // In-plane tilt only (no 3D perspective) — a flat fan, like a spread
     // hand of cards, so there's no foreshortening or backface weirdness.
     const rotateZ = useTransform(offset, (o) => {
@@ -141,7 +134,6 @@ function CarouselCard({
                 height: cardHeight,
                 x,
                 y,
-                scale,
                 rotateZ,
                 opacity,
                 zIndex,
@@ -236,17 +228,19 @@ export interface CurvedCarouselProps {
     cardWidth: number
     cardHeight: number
     cardGap: number
-    sideScale: number
     fanRotationDeg: number
     curveDepth: number
     sideOpacity: number
     dragEnabled: boolean
+    tapDistancePx: number
     showArrows: boolean
     arrowSize: number
     arrowGap: number
-    arrowBottomOffset: number
+    cardToArrowGap: number
     arrowColor: string
     arrowBackground: string
+    autoplayEnabled: boolean
+    autoplayIntervalSeconds: number
     style?: React.CSSProperties
 }
 
@@ -256,17 +250,19 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         cardWidth,
         cardHeight,
         cardGap,
-        sideScale,
         fanRotationDeg,
         curveDepth,
         sideOpacity,
         dragEnabled,
+        tapDistancePx,
         showArrows,
         arrowSize,
         arrowGap,
-        arrowBottomOffset,
+        cardToArrowGap,
         arrowColor,
         arrowBackground,
+        autoplayEnabled,
+        autoplayIntervalSeconds,
         style,
     } = props
 
@@ -274,14 +270,15 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
 
     // Center-to-center distance between adjacent cards, derived (not
     // hand-picked) so a side card's near edge can never overlap the center
-    // card. A tilted rectangle's bounding box is wider than its unrotated
-    // one (its diagonal swings out), so the "half-width" used here has to
-    // be the true rotated bounding half-width, not just cardWidth*sideScale
-    // — otherwise the fan tilt alone can eat tens of px of the intended gap.
+    // card. Cards no longer scale down, but they do tilt, and a tilted
+    // rectangle's bounding box is wider than its unrotated one (its
+    // diagonal swings out) — so the "half-width" used here has to be the
+    // true rotated bounding half-width, or the fan tilt alone could eat
+    // into the intended gap.
     const fanRad = (fanRotationDeg * Math.PI) / 180
     const sideBoundingHalfWidth =
-        (cardWidth * sideScale * Math.abs(Math.cos(fanRad)) +
-            cardHeight * sideScale * Math.abs(Math.sin(fanRad))) /
+        (cardWidth * Math.abs(Math.cos(fanRad)) +
+            cardHeight * Math.abs(Math.sin(fanRad))) /
         2
     const spacing = cardWidth / 2 + sideBoundingHalfWidth + cardGap
 
@@ -326,6 +323,37 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         },
         [centerIndexState, goTo]
     )
+
+    // ---------------- Autoplay: stops the instant the carousel is
+    // touched (any pointerdown, an arrow tap, or a side-card tap), then
+    // resumes automatically once that same interval has passed with no
+    // further touches — so the kiosk keeps cycling when idle without
+    // ever fighting a user who's actively interacting. ----------------
+
+    const lastInteractionRef = useRef<number>(Date.now())
+    const markInteraction = useCallback(() => {
+        lastInteractionRef.current = Date.now()
+    }, [])
+
+    useEffect(() => {
+        if (!autoplayEnabled || count <= 1) return
+        const intervalMs = Math.max(1, autoplayIntervalSeconds) * 1000
+        let timer: ReturnType<typeof setTimeout>
+
+        const tick = () => {
+            const elapsed = Date.now() - lastInteractionRef.current
+            if (elapsed >= intervalMs) {
+                lastInteractionRef.current = Date.now()
+                step(1)
+                timer = setTimeout(tick, intervalMs)
+            } else {
+                timer = setTimeout(tick, intervalMs - elapsed)
+            }
+        }
+
+        timer = setTimeout(tick, intervalMs)
+        return () => clearTimeout(timer)
+    }, [autoplayEnabled, autoplayIntervalSeconds, count, step])
 
     // ---------------- Drag / swipe (raw pointer events, phone-style) ----------------
 
@@ -376,6 +404,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent) => {
+            markInteraction()
             if (!dragEnabled || count <= 1) return
             const s = dragState.current
             s.pointerId = e.pointerId
@@ -393,7 +422,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 const dy = moveEvent.clientY - s.startY
 
                 if (!s.moved) {
-                    if (Math.abs(dx) < TAP_DISTANCE_PX && Math.abs(dy) < TAP_DISTANCE_PX)
+                    if (Math.abs(dx) < tapDistancePx && Math.abs(dy) < tapDistancePx)
                         return
                     // Ignore mostly-vertical gestures so the kiosk can still
                     // scroll/tap normally on a mostly-horizontal carousel.
@@ -429,14 +458,15 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
             window.addEventListener("pointerup", onUp)
             window.addEventListener("pointercancel", onUp)
         },
-        [count, dragEnabled, endDrag, pos, spacing]
+        [count, dragEnabled, endDrag, markInteraction, pos, spacing, tapDistancePx]
     )
 
     const onTapSide = useCallback(
         (index: number) => {
+            markInteraction()
             goTo(index)
         },
-        [goTo]
+        [goTo, markInteraction]
     )
 
     return (
@@ -462,7 +492,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     cardWidth={cardWidth}
                     cardHeight={cardHeight}
                     spacing={spacing}
-                    sideScale={sideScale}
                     fanRotationDeg={fanRotationDeg}
                     curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
@@ -477,7 +506,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                         position: "absolute",
                         left: 0,
                         right: 0,
-                        bottom: arrowBottomOffset,
+                        top: `calc(50% + ${cardHeight / 2 + cardToArrowGap}px)`,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
@@ -487,14 +516,20 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 >
                     <ArrowButton
                         direction="left"
-                        onClick={() => step(-1)}
+                        onClick={() => {
+                            markInteraction()
+                            step(-1)
+                        }}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
                     />
                     <ArrowButton
                         direction="right"
-                        onClick={() => step(1)}
+                        onClick={() => {
+                            markInteraction()
+                            step(1)
+                        }}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
@@ -510,17 +545,19 @@ CurvedCarousel.defaultProps = {
     cardWidth: 734,
     cardHeight: 1050,
     cardGap: 20,
-    sideScale: 0.82,
     fanRotationDeg: 8,
     curveDepth: 36,
     sideOpacity: 1,
     dragEnabled: true,
+    tapDistancePx: 28,
     showArrows: true,
     arrowSize: 56,
     arrowGap: 24,
-    arrowBottomOffset: 24,
+    cardToArrowGap: 40,
     arrowColor: "#FFFFFF",
     arrowBackground: "rgba(0,0,0,0.35)",
+    autoplayEnabled: false,
+    autoplayIntervalSeconds: 5,
 }
 
 addPropertyControls(CurvedCarousel, {
@@ -555,15 +592,7 @@ addPropertyControls(CurvedCarousel, {
         max: 400,
         step: 1,
         defaultValue: 20,
-        description: "Guaranteed empty space between the center card's edge and a side card's near edge. Lower = more peek, but never overlaps.",
-    },
-    sideScale: {
-        type: ControlType.Number,
-        title: "Side Scale",
-        min: 0.3,
-        max: 1,
-        step: 0.01,
-        defaultValue: 0.82,
+        description: "Guaranteed empty space between the center card's edge and a side card's near edge. Lower = more peek, but never overlaps — all cards are the same size.",
     },
     fanRotationDeg: {
         type: ControlType.Number,
@@ -572,7 +601,7 @@ addPropertyControls(CurvedCarousel, {
         max: 45,
         step: 1,
         defaultValue: 8,
-        description: "Flat, in-plane tilt for side cards — like a spread hand of cards, not a 3D turn.",
+        description: "Flat, in-plane tilt for side cards — like a spread hand of cards, not a 3D turn or a size change.",
     },
     curveDepth: {
         type: ControlType.Number,
@@ -595,6 +624,15 @@ addPropertyControls(CurvedCarousel, {
         type: ControlType.Boolean,
         title: "Drag/Swipe",
         defaultValue: true,
+    },
+    tapDistancePx: {
+        type: ControlType.Number,
+        title: "Tap Deadzone",
+        min: 5,
+        max: 80,
+        step: 1,
+        defaultValue: 28,
+        description: "How far a touch must move before it counts as a drag instead of a tap. Raise this if tapping the center card still causes a small shift/wobble on your hardware.",
     },
     showArrows: {
         type: ControlType.Boolean,
@@ -619,14 +657,14 @@ addPropertyControls(CurvedCarousel, {
         defaultValue: 24,
         hidden: (props) => !props.showArrows,
     },
-    arrowBottomOffset: {
+    cardToArrowGap: {
         type: ControlType.Number,
-        title: "Arrow Bottom",
-        min: 0,
-        max: 400,
+        title: "Card-Arrow Gap",
+        min: -200,
+        max: 600,
         step: 1,
-        defaultValue: 24,
-        description: "Distance from the bottom of the frame. Make sure the frame is tall enough to fit the cards plus this row beneath them.",
+        defaultValue: 40,
+        description: "Vertical space between the bottom of the (centered) card and the top of the arrow row.",
         hidden: (props) => !props.showArrows,
     },
     arrowColor: {
@@ -640,5 +678,20 @@ addPropertyControls(CurvedCarousel, {
         title: "Arrow BG",
         defaultValue: "rgba(0,0,0,0.35)",
         hidden: (props) => !props.showArrows,
+    },
+    autoplayEnabled: {
+        type: ControlType.Boolean,
+        title: "Autoplay",
+        defaultValue: false,
+    },
+    autoplayIntervalSeconds: {
+        type: ControlType.Number,
+        title: "Autoplay Secs",
+        min: 1,
+        max: 60,
+        step: 1,
+        defaultValue: 5,
+        description: "Cycle interval, and also how long the carousel waits after the last touch before autoplay resumes.",
+        hidden: (props) => !props.autoplayEnabled,
     },
 })
