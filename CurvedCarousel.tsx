@@ -2,11 +2,12 @@
 // Standalone Framer Code Component. Drop your Flip Card component instances
 // into the "Cards" property (Array of Component Instance) — each instance
 // keeps its own text/image/link overrides and native Framer interactions
-// untouched. Cards are all the same size, arranged in a shallow non-
-// overlapping fan/arc (2D tilt + a bit of vertical droop, no 3D
-// perspective, no scale-down), phone-style swipe/drag, optional autoplay
-// that stops the moment the carousel is touched, and a centered arrow row
-// below the cards.
+// untouched. Matches the Apple Invites-style reference: all cards render
+// at identical size with no rotation or vertical offset, sitting immediately
+// adjacent to each other — the side cards' "peek" comes purely from being
+// cropped by the frame edges, not from scaling/tilting/fading them. Plus
+// phone-style swipe/drag, optional autoplay that stops the moment the
+// carousel is touched, and a centered arrow row below the cards.
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -55,13 +56,13 @@ const SNAP_THRESHOLD = 0.3
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 32 }
 
 // ------------------------------------------------------------------
-// Single card. Position/rotation/opacity are derived entirely from `pos`
-// — the single continuous motion value representing "which index is
-// currently centered" — so there's only ever one source of truth for
-// layout. Nothing here is reset or reconciled against React state, which
-// avoids any one-frame flash when a drag/snap completes. All cards render
-// at the same size (no scale-down) — only tilt, a slight vertical droop,
-// and opacity change with distance from center.
+// Single card. Position/opacity are derived entirely from `pos` — the
+// single continuous motion value representing "which index is currently
+// centered" — so there's only ever one source of truth for layout.
+// Nothing here is reset or reconciled against React state, which avoids
+// any one-frame flash when a drag/snap completes. Every card is the same
+// size with no rotation/vertical offset — a side card's "peek" comes only
+// from sitting outside the frame's clipped bounds.
 // ------------------------------------------------------------------
 
 function CarouselCard({
@@ -71,8 +72,6 @@ function CarouselCard({
     cardWidth,
     cardHeight,
     spacing,
-    fanRotationDeg,
-    curveDepth,
     sideOpacity,
     onTapSide,
     element,
@@ -83,8 +82,6 @@ function CarouselCard({
     cardWidth: number
     cardHeight: number
     spacing: number
-    fanRotationDeg: number
-    curveDepth: number
     sideOpacity: number
     onTapSide: (index: number) => void
     element: React.ReactNode
@@ -94,13 +91,6 @@ function CarouselCard({
     const offset = useTransform(pos, (p) => wrapDelta(index - p, count))
 
     const x = useTransform(offset, (o) => o * spacing)
-    const y = useTransform(offset, (o) => curveDepth * falloff(Math.abs(o)))
-    // In-plane tilt only (no 3D perspective) — a flat fan, like a spread
-    // hand of cards, so there's no foreshortening or backface weirdness.
-    const rotateZ = useTransform(offset, (o) => {
-        const t = falloff(Math.abs(o))
-        return Math.sign(o) * fanRotationDeg * t
-    })
     const opacity = useTransform(offset, (o) => {
         const abs = Math.abs(o)
         if (abs >= 1.6) return 0
@@ -133,8 +123,6 @@ function CarouselCard({
                 width: cardWidth,
                 height: cardHeight,
                 x,
-                y,
-                rotateZ,
                 opacity,
                 zIndex,
                 pointerEvents: isCentered ? "auto" : "none",
@@ -228,8 +216,6 @@ export interface CurvedCarouselProps {
     cardWidth: number
     cardHeight: number
     cardGap: number
-    fanRotationDeg: number
-    curveDepth: number
     sideOpacity: number
     dragEnabled: boolean
     tapDistancePx: number
@@ -250,8 +236,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         cardWidth,
         cardHeight,
         cardGap,
-        fanRotationDeg,
-        curveDepth,
         sideOpacity,
         dragEnabled,
         tapDistancePx,
@@ -268,19 +252,10 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
 
     const count = cards.length
 
-    // Center-to-center distance between adjacent cards, derived (not
-    // hand-picked) so a side card's near edge can never overlap the center
-    // card. Cards no longer scale down, but they do tilt, and a tilted
-    // rectangle's bounding box is wider than its unrotated one (its
-    // diagonal swings out) — so the "half-width" used here has to be the
-    // true rotated bounding half-width, or the fan tilt alone could eat
-    // into the intended gap.
-    const fanRad = (fanRotationDeg * Math.PI) / 180
-    const sideBoundingHalfWidth =
-        (cardWidth * Math.abs(Math.cos(fanRad)) +
-            cardHeight * Math.abs(Math.sin(fanRad))) /
-        2
-    const spacing = cardWidth / 2 + sideBoundingHalfWidth + cardGap
+    // Center-to-center distance between adjacent cards. Since every card is
+    // the same width with no rotation, this is just the width plus however
+    // much daylight (or overlap, if negative) you want between them.
+    const spacing = cardWidth + cardGap
 
     // The single source of truth for layout: a continuous "which index is
     // centered" value. Drag moves it directly; snapping/arrows animate it.
@@ -492,8 +467,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     cardWidth={cardWidth}
                     cardHeight={cardHeight}
                     spacing={spacing}
-                    fanRotationDeg={fanRotationDeg}
-                    curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
                     onTapSide={onTapSide}
                     element={element}
@@ -544,9 +517,7 @@ CurvedCarousel.defaultProps = {
     cards: [],
     cardWidth: 734,
     cardHeight: 1050,
-    cardGap: 20,
-    fanRotationDeg: 8,
-    curveDepth: 36,
+    cardGap: 8,
     sideOpacity: 1,
     dragEnabled: true,
     tapDistancePx: 28,
@@ -588,29 +559,11 @@ addPropertyControls(CurvedCarousel, {
     cardGap: {
         type: ControlType.Number,
         title: "Card Gap",
-        min: -100,
+        min: -400,
         max: 400,
         step: 1,
-        defaultValue: 20,
-        description: "Guaranteed empty space between the center card's edge and a side card's near edge. Lower = more peek, but never overlaps — all cards are the same size.",
-    },
-    fanRotationDeg: {
-        type: ControlType.Number,
-        title: "Fan Tilt",
-        min: 0,
-        max: 45,
-        step: 1,
         defaultValue: 8,
-        description: "Flat, in-plane tilt for side cards — like a spread hand of cards, not a 3D turn or a size change.",
-    },
-    curveDepth: {
-        type: ControlType.Number,
-        title: "Arc Depth",
-        min: 0,
-        max: 200,
-        step: 1,
-        defaultValue: 36,
-        description: "How far side cards drop below center, for the shallow arc.",
+        description: "Space between adjacent cards (all cards are the same size, side-by-side). Negative values overlap them.",
     },
     sideOpacity: {
         type: ControlType.Number,
