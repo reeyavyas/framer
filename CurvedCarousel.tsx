@@ -2,12 +2,18 @@
 // Standalone Framer Code Component. Drop your Flip Card component instances
 // into the "Cards" property (Array of Component Instance) — each instance
 // keeps its own text/image/link overrides and native Framer interactions
-// untouched. Matches the Apple Invites-style reference: all cards render
-// at identical size with no rotation or vertical offset, sitting immediately
-// adjacent to each other — the side cards' "peek" comes purely from being
-// cropped by the frame edges, not from scaling/tilting/fading them. Plus
-// phone-style swipe/drag, optional autoplay that stops the moment the
-// carousel is touched, and a centered arrow row below the cards.
+// untouched. Cards are identical size with a slight tilt/droop toward the
+// edges, sitting immediately adjacent to each other. The whole stack
+// (cards, then a gap, then the arrow row) is anchored from the top of the
+// frame — not vertically centered — so its position is predictable and the
+// frame only needs to be as tall as the stack actually is. Horizontal
+// clipping is done with clip-path (not overflow) specifically so it can
+// clip left/right while leaving vertical completely unclipped — the two
+// overflow-x/overflow-y CSS properties can't do that independently once
+// one of them isn't "visible", the other silently downgrades from
+// "visible" to "auto" and both clips *and* shows a scrollbar. Plus
+// phone-style swipe/drag and optional autoplay that stops the moment the
+// carousel is touched.
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import {
@@ -61,8 +67,8 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 32 }
 // centered" — so there's only ever one source of truth for layout.
 // Nothing here is reset or reconciled against React state, which avoids
 // any one-frame flash when a drag/snap completes. Every card is the same
-// size with no rotation/vertical offset — a side card's "peek" comes only
-// from sitting outside the frame's clipped bounds.
+// size — only a slight in-plane tilt, a small vertical droop, and opacity
+// change with distance from center.
 // ------------------------------------------------------------------
 
 function CarouselCard({
@@ -71,7 +77,10 @@ function CarouselCard({
     pos,
     cardWidth,
     cardHeight,
+    topOffset,
     spacing,
+    tiltDeg,
+    curveDepth,
     sideOpacity,
     onTapSide,
     element,
@@ -81,7 +90,10 @@ function CarouselCard({
     pos: MotionValue<number>
     cardWidth: number
     cardHeight: number
+    topOffset: number
     spacing: number
+    tiltDeg: number
+    curveDepth: number
     sideOpacity: number
     onTapSide: (index: number) => void
     element: React.ReactNode
@@ -91,6 +103,13 @@ function CarouselCard({
     const offset = useTransform(pos, (p) => wrapDelta(index - p, count))
 
     const x = useTransform(offset, (o) => o * spacing)
+    const y = useTransform(offset, (o) => curveDepth * falloff(Math.abs(o)))
+    // In-plane tilt only (no 3D perspective) — a slight fan, not a size
+    // change or a 3D turn.
+    const rotateZ = useTransform(offset, (o) => {
+        const t = falloff(Math.abs(o))
+        return Math.sign(o) * tiltDeg * t
+    })
     const opacity = useTransform(offset, (o) => {
         const abs = Math.abs(o)
         if (abs >= 1.6) return 0
@@ -117,12 +136,13 @@ function CarouselCard({
             style={{
                 position: "absolute",
                 left: "50%",
-                top: "50%",
+                top: topOffset,
                 marginLeft: -cardWidth / 2,
-                marginTop: -cardHeight / 2,
                 width: cardWidth,
                 height: cardHeight,
                 x,
+                y,
+                rotateZ,
                 opacity,
                 zIndex,
                 pointerEvents: isCentered ? "auto" : "none",
@@ -215,7 +235,10 @@ export interface CurvedCarouselProps {
     cards: React.ReactNode[]
     cardWidth: number
     cardHeight: number
+    topOffset: number
     cardGap: number
+    tiltDeg: number
+    curveDepth: number
     sideOpacity: number
     dragEnabled: boolean
     tapDistancePx: number
@@ -235,7 +258,10 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         cards = [],
         cardWidth,
         cardHeight,
+        topOffset,
         cardGap,
+        tiltDeg,
+        curveDepth,
         sideOpacity,
         dragEnabled,
         tapDistancePx,
@@ -252,10 +278,18 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
 
     const count = cards.length
 
-    // Center-to-center distance between adjacent cards. Since every card is
-    // the same width with no rotation, this is just the width plus however
-    // much daylight (or overlap, if negative) you want between them.
-    const spacing = cardWidth + cardGap
+    // Center-to-center distance between adjacent cards, derived (not
+    // hand-picked) so a side card's near edge can never overlap the center
+    // card. A tilted rectangle's bounding box is wider than its unrotated
+    // one (its diagonal swings out), so the "half-width" used here has to
+    // be the true rotated bounding half-width — otherwise the tilt alone
+    // can eat into the intended gap.
+    const tiltRad = (tiltDeg * Math.PI) / 180
+    const sideBoundingHalfWidth =
+        (cardWidth * Math.abs(Math.cos(tiltRad)) +
+            cardHeight * Math.abs(Math.sin(tiltRad))) /
+        2
+    const spacing = cardWidth / 2 + sideBoundingHalfWidth + cardGap
 
     // The single source of truth for layout: a continuous "which index is
     // centered" value. Drag moves it directly; snapping/arrows animate it.
@@ -452,8 +486,12 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 position: "relative",
                 width: "100%",
                 height: "100%",
-                overflowX: "hidden",
-                overflowY: "visible",
+                // Clip left/right at this element's own edges while leaving
+                // top/bottom effectively unbounded (huge negative inset), so
+                // a mid-flip card that grows taller is never cropped. See
+                // the file-header comment for why this isn't overflowX/Y.
+                clipPath: "inset(-100vh 0px -100vh 0px)",
+                WebkitClipPath: "inset(-100vh 0px -100vh 0px)",
                 touchAction: dragEnabled ? "pan-y" : "auto",
                 ...style,
             }}
@@ -466,7 +504,10 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     pos={pos}
                     cardWidth={cardWidth}
                     cardHeight={cardHeight}
+                    topOffset={topOffset}
                     spacing={spacing}
+                    tiltDeg={tiltDeg}
+                    curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
                     onTapSide={onTapSide}
                     element={element}
@@ -479,7 +520,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                         position: "absolute",
                         left: 0,
                         right: 0,
-                        top: `calc(50% + ${cardHeight / 2 + cardToArrowGap}px)`,
+                        top: topOffset + cardHeight + cardToArrowGap,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
@@ -517,7 +558,10 @@ CurvedCarousel.defaultProps = {
     cards: [],
     cardWidth: 734,
     cardHeight: 1050,
+    topOffset: 0,
     cardGap: 8,
+    tiltDeg: 4,
+    curveDepth: 14,
     sideOpacity: 1,
     dragEnabled: true,
     tapDistancePx: 28,
@@ -554,7 +598,16 @@ addPropertyControls(CurvedCarousel, {
         max: 1920,
         step: 1,
         defaultValue: 1050,
-        description: "Resting height. The card can grow taller mid-flip — vertical overflow isn't clipped, only horizontal.",
+        description: "Resting height. The card can grow taller mid-flip — vertical is never clipped, only horizontal.",
+    },
+    topOffset: {
+        type: ControlType.Number,
+        title: "Top Offset",
+        min: 0,
+        max: 800,
+        step: 1,
+        defaultValue: 0,
+        description: "Distance from the top of the frame to the top of the cards. The frame just needs to be at least Top Offset + Card Height + Card-Arrow Gap + Arrow Size tall.",
     },
     cardGap: {
         type: ControlType.Number,
@@ -564,6 +617,24 @@ addPropertyControls(CurvedCarousel, {
         step: 1,
         defaultValue: 8,
         description: "Space between adjacent cards (all cards are the same size, side-by-side). Negative values overlap them.",
+    },
+    tiltDeg: {
+        type: ControlType.Number,
+        title: "Tilt",
+        min: 0,
+        max: 30,
+        step: 0.5,
+        defaultValue: 4,
+        description: "Slight in-plane tilt for side cards — flat, not a 3D turn or a size change.",
+    },
+    curveDepth: {
+        type: ControlType.Number,
+        title: "Arc Depth",
+        min: 0,
+        max: 150,
+        step: 1,
+        defaultValue: 14,
+        description: "How far side cards drop below center, for a slight arc.",
     },
     sideOpacity: {
         type: ControlType.Number,
