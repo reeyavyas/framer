@@ -6,14 +6,7 @@
 // the neighboring cards peeking in from each edge, phone-style swipe/drag,
 // tap-to-center on side cards, and looping left/right arrows.
 
-import React, {
-    useState,
-    useRef,
-    useEffect,
-    useCallback,
-    cloneElement,
-    isValidElement,
-} from "react"
+import React, { useState, useRef, useEffect, useCallback } from "react"
 import {
     motion,
     useMotionValue,
@@ -79,10 +72,7 @@ function CarouselCard({
     sideScale,
     sideRotationDeg,
     sideOpacity,
-    forcedVariant,
-    frontVariantProp,
     onTapSide,
-    onInteract,
     element,
 }: {
     index: number
@@ -94,10 +84,7 @@ function CarouselCard({
     sideScale: number
     sideRotationDeg: number
     sideOpacity: number
-    forcedVariant: string | null
-    frontVariantProp: string
     onTapSide: (index: number) => void
-    onInteract: () => void
     element: React.ReactNode
 }) {
     // Continuous, wrapped offset: 0 = centered, -1 = one card left, +1 = one
@@ -133,13 +120,6 @@ function CarouselCard({
         return unsub
     }, [offset])
 
-    const child =
-        forcedVariant && isValidElement(element)
-            ? cloneElement(element as React.ReactElement<any>, {
-                  [frontVariantProp]: forcedVariant,
-              })
-            : element
-
     return (
         <motion.div
             data-carousel-card={index}
@@ -159,10 +139,9 @@ function CarouselCard({
                 transformStyle: "preserve-3d",
                 pointerEvents: isCentered ? "auto" : "none",
             }}
-            onPointerDown={onInteract}
         >
             <div style={{ width: "100%", height: "100%", position: "relative" }}>
-                {child}
+                {element}
                 {!isCentered && (
                     <div
                         data-carousel-card={index}
@@ -261,10 +240,6 @@ export interface CurvedCarouselProps {
     arrowSize: number
     arrowColor: string
     arrowBackground: string
-    autoRevertEnabled: boolean
-    autoRevertSeconds: number
-    frontVariantProp: string
-    frontVariantValue: string
     style?: React.CSSProperties
 }
 
@@ -282,10 +257,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         arrowSize,
         arrowColor,
         arrowBackground,
-        autoRevertEnabled,
-        autoRevertSeconds,
-        frontVariantProp,
-        frontVariantValue,
         style,
     } = props
 
@@ -295,8 +266,9 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
     const pos = useMotionValue(0)
     const containerRef = useRef<HTMLDivElement | null>(null)
 
-    // Lightweight, debounced-to-integer view of `pos`, used only for side
-    // effects (idle timer bookkeeping) — never fed back into card layout.
+    // Lightweight, debounced-to-integer view of `pos`. Only used so arrow
+    // taps know which index they're stepping from — never fed back into
+    // card layout, so it can't desync the animation.
     const [centerIndexState, setCenterIndexState] = useState(0)
     useEffect(() => {
         const unsub = pos.on("change", (p) => {
@@ -305,59 +277,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         })
         return unsub
     }, [pos, count])
-
-    // index -> forced variant value (only set for one render pulse)
-    const [forcedVariants, setForcedVariants] = useState<Record<number, string>>({})
-
-    const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const revertClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const lastCenterRef = useRef(centerIndexState)
-
-    const revertCard = useCallback(
-        (index: number) => {
-            if (!autoRevertEnabled || index < 0 || index >= count) return
-            setForcedVariants((prev) => ({ ...prev, [index]: frontVariantValue }))
-            if (revertClearTimer.current) clearTimeout(revertClearTimer.current)
-            // Release the override on the next tick so the card's own
-            // internal tap-driven variant control resumes normally.
-            revertClearTimer.current = setTimeout(() => {
-                setForcedVariants((prev) => {
-                    const next = { ...prev }
-                    delete next[index]
-                    return next
-                })
-            }, 50)
-        },
-        [autoRevertEnabled, count, frontVariantValue]
-    )
-
-    const scheduleIdleRevert = useCallback(
-        (index: number) => {
-            if (!autoRevertEnabled) return
-            if (idleTimer.current) clearTimeout(idleTimer.current)
-            idleTimer.current = setTimeout(() => {
-                revertCard(index)
-            }, Math.max(1, autoRevertSeconds) * 1000)
-        },
-        [autoRevertEnabled, autoRevertSeconds, revertCard]
-    )
-
-    // Reset the idle timer whenever the centered card changes, and force
-    // whichever card just lost focus back to its front face immediately.
-    useEffect(() => {
-        if (lastCenterRef.current !== centerIndexState) {
-            revertCard(lastCenterRef.current)
-            lastCenterRef.current = centerIndexState
-        }
-        scheduleIdleRevert(centerIndexState)
-        return () => {
-            if (idleTimer.current) clearTimeout(idleTimer.current)
-        }
-    }, [centerIndexState, scheduleIdleRevert, revertCard])
-
-    const onInteract = useCallback(() => {
-        scheduleIdleRevert(centerIndexState)
-    }, [centerIndexState, scheduleIdleRevert])
 
     const goTo = useCallback(
         (targetIndex: number) => {
@@ -472,7 +391,6 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 cleanup()
                 if (s.moved) {
                     suppressClickRef.current = true
-                    onInteract()
                     endDrag()
                 }
             }
@@ -487,15 +405,14 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
             window.addEventListener("pointerup", onUp)
             window.addEventListener("pointercancel", onUp)
         },
-        [count, dragEnabled, endDrag, onInteract, pos, spacing]
+        [count, dragEnabled, endDrag, pos, spacing]
     )
 
     const onTapSide = useCallback(
         (index: number) => {
-            onInteract()
             goTo(index)
         },
-        [goTo, onInteract]
+        [goTo]
     )
 
     return (
@@ -506,7 +423,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 position: "relative",
                 width: "100%",
                 height: "100%",
-                overflow: "hidden",
+                overflowX: "hidden",
+                overflowY: "visible",
                 touchAction: dragEnabled ? "pan-y" : "auto",
                 perspective: 1400,
                 ...style,
@@ -524,10 +442,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     sideScale={sideScale}
                     sideRotationDeg={sideRotationDeg}
                     sideOpacity={sideOpacity}
-                    forcedVariant={forcedVariants[index] ?? null}
-                    frontVariantProp={frontVariantProp}
                     onTapSide={onTapSide}
-                    onInteract={onInteract}
                     element={element}
                 />
             ))}
@@ -536,20 +451,14 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 <>
                     <ArrowButton
                         direction="left"
-                        onClick={() => {
-                            onInteract()
-                            step(-1)
-                        }}
+                        onClick={() => step(-1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
                     />
                     <ArrowButton
                         direction="right"
-                        onClick={() => {
-                            onInteract()
-                            step(1)
-                        }}
+                        onClick={() => step(1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
@@ -562,9 +471,9 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
 
 CurvedCarousel.defaultProps = {
     cards: [],
-    cardWidth: 640,
-    cardHeight: 900,
-    spacing: 560,
+    cardWidth: 734,
+    cardHeight: 1050,
+    spacing: 620,
     sideScale: 0.82,
     sideRotationDeg: 20,
     sideOpacity: 0.55,
@@ -573,10 +482,6 @@ CurvedCarousel.defaultProps = {
     arrowSize: 56,
     arrowColor: "#FFFFFF",
     arrowBackground: "rgba(0,0,0,0.35)",
-    autoRevertEnabled: true,
-    autoRevertSeconds: 6,
-    frontVariantProp: "variant",
-    frontVariantValue: "Front",
 }
 
 addPropertyControls(CurvedCarousel, {
@@ -593,7 +498,7 @@ addPropertyControls(CurvedCarousel, {
         min: 100,
         max: 1080,
         step: 1,
-        defaultValue: 640,
+        defaultValue: 734,
     },
     cardHeight: {
         type: ControlType.Number,
@@ -601,7 +506,8 @@ addPropertyControls(CurvedCarousel, {
         min: 100,
         max: 1920,
         step: 1,
-        defaultValue: 900,
+        defaultValue: 1050,
+        description: "Resting height. The card can grow taller mid-flip — vertical overflow isn't clipped, only horizontal.",
     },
     spacing: {
         type: ControlType.Number,
@@ -609,7 +515,7 @@ addPropertyControls(CurvedCarousel, {
         min: 0,
         max: 1080,
         step: 1,
-        defaultValue: 560,
+        defaultValue: 620,
         description: "Distance from center to a side card. Lower = more peek.",
     },
     sideScale: {
@@ -666,33 +572,5 @@ addPropertyControls(CurvedCarousel, {
         title: "Arrow BG",
         defaultValue: "rgba(0,0,0,0.35)",
         hidden: (props) => !props.showArrows,
-    },
-    autoRevertEnabled: {
-        type: ControlType.Boolean,
-        title: "Auto Flip-Back",
-        defaultValue: true,
-    },
-    autoRevertSeconds: {
-        type: ControlType.Number,
-        title: "Idle Seconds",
-        min: 1,
-        max: 120,
-        step: 1,
-        defaultValue: 6,
-        hidden: (props) => !props.autoRevertEnabled,
-    },
-    frontVariantProp: {
-        type: ControlType.String,
-        title: "Variant Prop",
-        defaultValue: "variant",
-        description: "The prop name your Flip Card uses for its Variant control.",
-        hidden: (props) => !props.autoRevertEnabled,
-    },
-    frontVariantValue: {
-        type: ControlType.String,
-        title: "Front Variant",
-        defaultValue: "Front",
-        description: "Exact Variant name for the un-flipped face.",
-        hidden: (props) => !props.autoRevertEnabled,
     },
 })
