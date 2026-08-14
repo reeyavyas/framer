@@ -15,7 +15,14 @@
 // phone-style swipe/drag and optional autoplay that stops the moment the
 // carousel is touched.
 
-import React, { useState, useRef, useEffect, useCallback } from "react"
+import React, {
+    useState,
+    useRef,
+    useEffect,
+    useCallback,
+    cloneElement,
+    isValidElement,
+} from "react"
 import {
     motion,
     useMotionValue,
@@ -83,6 +90,8 @@ function CarouselCard({
     curveDepth,
     sideOpacity,
     isSettled,
+    frontVariantProp,
+    frontVariantValue,
     onTapSide,
     element,
 }: {
@@ -97,6 +106,8 @@ function CarouselCard({
     curveDepth: number
     sideOpacity: number
     isSettled: boolean
+    frontVariantProp: string
+    frontVariantValue: string
     onTapSide: (index: number) => void
     element: React.ReactNode
 }) {
@@ -131,6 +142,21 @@ function CarouselCard({
         })
         return unsub
     }, [offset])
+
+    // Whatever caused a card to end up flipped while off-center — this
+    // guarantees it can't stay that way. Non-centered cards can't be
+    // reached by a real tap anyway (pointer-events is "none" and the
+    // overlay below only calls onTapSide), so continuously forcing Front
+    // here is safe: nothing else is trying to control this card's variant
+    // while it isn't centered. The moment it becomes centered again, the
+    // override drops and its own internal tap-driven variant control
+    // resumes untouched.
+    const child =
+        !isCentered && isValidElement(element)
+            ? cloneElement(element as React.ReactElement<any>, {
+                  [frontVariantProp]: frontVariantValue,
+              })
+            : element
 
     return (
         <motion.div
@@ -175,7 +201,7 @@ function CarouselCard({
                     transformStyle: "preserve-3d",
                 }}
             >
-                {element}
+                {child}
                 {!isCentered && (
                     <div
                         data-carousel-card={index}
@@ -268,6 +294,8 @@ export interface CurvedCarouselProps {
     sideOpacity: number
     dragEnabled: boolean
     tapDistancePx: number
+    frontVariantProp: string
+    frontVariantValue: string
     showArrows: boolean
     arrowSize: number
     arrowGap: number
@@ -291,6 +319,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         sideOpacity,
         dragEnabled,
         tapDistancePx,
+        frontVariantProp,
+        frontVariantValue,
         showArrows,
         arrowSize,
         arrowGap,
@@ -591,6 +621,8 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                     curveDepth={curveDepth}
                     sideOpacity={sideOpacity}
                     isSettled={isSettled}
+                    frontVariantProp={frontVariantProp}
+                    frontVariantValue={frontVariantValue}
                     onTapSide={onTapSide}
                     element={element}
                 />
@@ -647,6 +679,8 @@ CurvedCarousel.defaultProps = {
     sideOpacity: 1,
     dragEnabled: true,
     tapDistancePx: 28,
+    frontVariantProp: "variant",
+    frontVariantValue: "Front",
     showArrows: true,
     arrowSize: 56,
     arrowGap: 24,
@@ -739,6 +773,18 @@ addPropertyControls(CurvedCarousel, {
         step: 1,
         defaultValue: 28,
         description: "How far a touch must move before it counts as a drag instead of a tap. Raise this if tapping the center card still causes a small shift/wobble on your hardware.",
+    },
+    frontVariantProp: {
+        type: ControlType.String,
+        title: "Variant Prop",
+        defaultValue: "variant",
+        description: "The prop name your Flip Card uses for its Variant control. Any card that isn't centered is forced to this variant, so it can never be left showing flipped off to the side.",
+    },
+    frontVariantValue: {
+        type: ControlType.String,
+        title: "Front Variant",
+        defaultValue: "Front",
+        description: "Exact Variant name for the un-flipped face.",
     },
     showArrows: {
         type: ControlType.Boolean,
