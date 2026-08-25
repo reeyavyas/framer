@@ -973,7 +973,7 @@ addPropertyControls(CurvedCarouselV2, {
         max: 5,
         step: 0.05,
         defaultValue: 0.2,
-        description: "Seconds before the entrance starts.",
+        description: "Seconds before the entrance starts. The whole carousel stays invisible until this elapses — set it to match (or slightly exceed) another on-screen animation, e.g. a welcome message, so the carousel appears after it finishes. This is a fixed number tuned by eye, not a live link to that other layer.",
         hidden: (props) => !props.entranceEnabled,
     },
     entranceDuration: {
