@@ -141,20 +141,40 @@ function CarouselCard({
         return unsub
     }, [offset])
 
-    // Whatever caused a card to end up flipped while off-center — this
-    // guarantees it can't stay that way. Non-centered cards can't be
-    // reached by a real tap anyway (pointer-events is "none" and the
-    // overlay below only calls onTapSide), so continuously forcing Front
-    // here is safe: nothing else is trying to control this card's variant
-    // while it isn't centered. The moment it becomes centered again, the
-    // override drops and its own internal tap-driven variant control
-    // resumes untouched.
-    const child =
-        !isCentered && isValidElement(element)
-            ? cloneElement(element as React.ReactElement<any>, {
-                  [frontVariantProp]: frontVariantValue,
-              })
-            : element
+    // Bumped exactly once whenever a card transitions from centered to
+    // not-centered. Many Framer variant components only read an incoming
+    // Variant prop as their INITIAL state on mount, then manage variant
+    // changes internally afterward — so simply passing a fresh Front value
+    // to an already-mounted, already-flipped instance can be silently
+    // ignored. Forcing a remount right at that transition (via `key`) makes
+    // the component re-initialize from scratch with Front as its true
+    // starting value, instead of trying to talk an existing instance out of
+    // whatever it's already decided to show.
+    const [resetKey, setResetKey] = useState(0)
+    const wasCenteredRef = useRef(isCentered)
+    useEffect(() => {
+        if (wasCenteredRef.current && !isCentered) {
+            setResetKey((k) => k + 1)
+        }
+        wasCenteredRef.current = isCentered
+    }, [isCentered])
+
+    // Non-centered cards can't be reached by a real tap anyway
+    // (pointer-events is "none" and the overlay below only calls
+    // onTapSide), so continuously forcing Front here is safe: nothing else
+    // is trying to control this card's variant while it isn't centered.
+    // The moment it becomes centered again, the override drops and its own
+    // internal tap-driven variant control resumes untouched. `key` stays
+    // the same across the centered/not-centered toggle itself — only the
+    // deliberate bump above forces a fresh mount, right when it's needed.
+    const child = isValidElement(element)
+        ? cloneElement(
+              element as React.ReactElement<any>,
+              !isCentered
+                  ? { key: resetKey, [frontVariantProp]: frontVariantValue }
+                  : { key: resetKey }
+          )
+        : element
 
     return (
         <motion.div
@@ -609,8 +629,22 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 // makes wider frames show more peeking cards automatically:
                 // there's simply more room before hitting this fade zone,
                 // with no breakpoint/container-width logic needed.
+                //
+                // mask-image, unlike the clip-path trick above, sizes
+                // itself to the element's own box in BOTH directions by
+                // default — so without an explicit oversized mask-size, it
+                // would silently clip a mid-flip card that grows taller
+                // than the box, the same bug the clip-path was written to
+                // avoid. Give it a much taller canvas than the box, centered
+                // on it, so it only ever constrains horizontally.
                 maskImage: `linear-gradient(to right, transparent 0, black ${edgeFadeWidth}px, black calc(100% - ${edgeFadeWidth}px), transparent 100%)`,
                 WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${edgeFadeWidth}px, black calc(100% - ${edgeFadeWidth}px), transparent 100%)`,
+                maskSize: "100% 300vh",
+                WebkitMaskSize: "100% 300vh",
+                maskPosition: "center",
+                WebkitMaskPosition: "center",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
                 touchAction: dragEnabled ? "pan-y" : "auto",
                 ...style,
             }}
