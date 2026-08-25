@@ -123,15 +123,13 @@ function CarouselCard({
         const t = falloff(Math.abs(o))
         return Math.sign(o) * tiltDeg * t
     })
-    const opacity = useTransform(offset, (o) => {
-        const abs = Math.abs(o)
-        if (abs >= 1.6) return 0
-        const t = falloff(abs)
-        const base = 1 + (sideOpacity - 1) * t
-        // fade the rest of the way out once a card is more than one slot away
-        if (abs <= 1) return base
-        return base * clamp(1 - (abs - 1) / 0.6, 0, 1)
-    })
+    // Flat dimming once a card is off-center — deliberately NOT fading
+    // further to zero past the immediate neighbor. However many cards end
+    // up visibly peeking in is left entirely to the container's actual
+    // width (clip-path hard edge + the mask-image soft edge fade below);
+    // that's what makes a wider frame naturally show more cards with no
+    // breakpoint-detection logic needed here at all.
+    const opacity = useTransform(offset, (o) => 1 + (sideOpacity - 1) * falloff(Math.abs(o)))
     const zIndex = useTransform(offset, (o) => Math.round(100 - Math.abs(o) * 10))
     const [isCentered, setIsCentered] = useState(() => Math.abs(offset.get()) < 0.05)
 
@@ -292,6 +290,7 @@ export interface CurvedCarouselProps {
     tiltDeg: number
     curveDepth: number
     sideOpacity: number
+    edgeFadeWidth: number
     dragEnabled: boolean
     tapDistancePx: number
     frontVariantProp: string
@@ -317,6 +316,7 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
         tiltDeg,
         curveDepth,
         sideOpacity,
+        edgeFadeWidth,
         dragEnabled,
         tapDistancePx,
         frontVariantProp,
@@ -603,6 +603,14 @@ export default function CurvedCarousel(props: CurvedCarouselProps) {
                 // the file-header comment for why this isn't overflowX/Y.
                 clipPath: "inset(-100vh 0px -100vh 0px)",
                 WebkitClipPath: "inset(-100vh 0px -100vh 0px)",
+                // Soft edge fade layered on top of the hard clip above.
+                // This — combined with side cards no longer being forced to
+                // zero opacity past the immediate neighbor — is also what
+                // makes wider frames show more peeking cards automatically:
+                // there's simply more room before hitting this fade zone,
+                // with no breakpoint/container-width logic needed.
+                maskImage: `linear-gradient(to right, transparent 0, black ${edgeFadeWidth}px, black calc(100% - ${edgeFadeWidth}px), transparent 100%)`,
+                WebkitMaskImage: `linear-gradient(to right, transparent 0, black ${edgeFadeWidth}px, black calc(100% - ${edgeFadeWidth}px), transparent 100%)`,
                 touchAction: dragEnabled ? "pan-y" : "auto",
                 ...style,
             }}
@@ -676,7 +684,8 @@ CurvedCarousel.defaultProps = {
     cardGap: 8,
     tiltDeg: 4,
     curveDepth: 0,
-    sideOpacity: 1,
+    sideOpacity: 0.5,
+    edgeFadeWidth: 120,
     dragEnabled: true,
     tapDistancePx: 28,
     frontVariantProp: "variant",
@@ -758,7 +767,17 @@ addPropertyControls(CurvedCarousel, {
         min: 0,
         max: 1,
         step: 0.01,
-        defaultValue: 1,
+        defaultValue: 0.5,
+        description: "Flat opacity for every off-center card, regardless of how far away it is.",
+    },
+    edgeFadeWidth: {
+        type: ControlType.Number,
+        title: "Edge Fade",
+        min: 0,
+        max: 400,
+        step: 1,
+        defaultValue: 120,
+        description: "Gradient mask width at the left/right edges of the frame. Cards fade to transparent as they approach the edge, instead of a hard cut. Set to 0 to disable.",
     },
     dragEnabled: {
         type: ControlType.Boolean,
