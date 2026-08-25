@@ -204,32 +204,36 @@ function CarouselCard({
         return unsub
     }, [offset])
 
-    // True only once this card has actually come to rest off-center — not
-    // just "currently not centered", which is true for almost the entire
-    // duration of any drag (isCentered drops the instant a card starts
-    // moving away from dead-center, long before it's actually settled
-    // anywhere). Gating on isSettled too means this only flips on once the
-    // whole carousel has finished animating, so the reset below fires
-    // after the card has landed off to the side, not mid-drag.
-    const offCenterSettled = isSettled && !isCentered
-
-    // Bumped exactly once whenever a card transitions into "settled
-    // off-center". Many Framer variant components only read an incoming
-    // Variant prop as their INITIAL state on mount, then manage variant
-    // changes internally afterward — so simply passing a fresh Front value
-    // to an already-mounted, already-flipped instance can be silently
-    // ignored. Forcing a remount right at that transition (via `key`) makes
-    // the component re-initialize from scratch with Front as its true
-    // starting value, instead of trying to talk an existing instance out of
+    // Bumped exactly once whenever a card transitions from centered to
+    // not-centered — immediately, not gated on the whole carousel having
+    // settled. Gating on "settled off-center" (isSettled && !isCentered)
+    // sounds more correct but isn't reliable: swipe away from a flipped
+    // card and back again fast enough, and isSettled can stay false the
+    // entire time that card was off-center — it never gets a single
+    // instant where it registers as "settled off-center", so the reset
+    // never fires at all, and the card lands back in the center still
+    // showing whatever it showed before. Triggering directly off isCentered
+    // is driven purely by position, not by whether some animation happened
+    // to finish, so it can't be skipped by fast/chained swiping — the
+    // tradeoff is the reset can occasionally be visible mid-swipe instead
+    // of only once a card is at rest off to the side.
+    //
+    // Many Framer variant components only read an incoming Variant prop as
+    // their INITIAL state on mount, then manage variant changes internally
+    // afterward — so simply passing a fresh Front value to an
+    // already-mounted, already-flipped instance can be silently ignored.
+    // Forcing a remount right at this transition (via `key`) makes the
+    // component re-initialize from scratch with Front as its true starting
+    // value, instead of trying to talk an existing instance out of
     // whatever it's already decided to show.
     const [resetKey, setResetKey] = useState(0)
-    const wasOffCenterSettledRef = useRef(offCenterSettled)
+    const wasCenteredRef = useRef(isCentered)
     useEffect(() => {
-        if (!wasOffCenterSettledRef.current && offCenterSettled) {
+        if (wasCenteredRef.current && !isCentered) {
             setResetKey((k) => k + 1)
         }
-        wasOffCenterSettledRef.current = offCenterSettled
-    }, [offCenterSettled])
+        wasCenteredRef.current = isCentered
+    }, [isCentered])
 
     // Non-centered cards can't be reached by a real tap anyway
     // (pointer-events is "none" and the overlay below only calls
