@@ -92,6 +92,13 @@ function CarouselCard({
     isSettled,
     frontVariantProp,
     frontVariantValue,
+    entranceEnabled,
+    entranceDelay,
+    entranceDuration,
+    entranceStagger,
+    entranceDistanceY,
+    entranceScale,
+    entranceEase,
     onTapSide,
     element,
 }: {
@@ -108,6 +115,13 @@ function CarouselCard({
     isSettled: boolean
     frontVariantProp: string
     frontVariantValue: string
+    entranceEnabled: boolean
+    entranceDelay: number
+    entranceDuration: number
+    entranceStagger: number
+    entranceDistanceY: number
+    entranceScale: number
+    entranceEase: string
     onTapSide: (index: number) => void
     element: React.ReactNode
 }) {
@@ -115,13 +129,55 @@ function CarouselCard({
     // card right.
     const offset = useTransform(pos, (p) => wrapDelta(index - p, count))
 
+    // Opening animation: 0 = this card's entrance start state, 1 = its
+    // normal resting state. Staggered by this card's distance from center
+    // in the INITIAL layout (pos starts at 0, so that's just this card's
+    // index wrapped) so the center card leads and the fan opens outward.
+    // Re-runs whenever the entrance controls themselves change — so tuning
+    // delay/duration/etc. in the property panel replays it for instant
+    // feedback — but on a real (published) mount those props are stable,
+    // so it plays exactly once, on arrival.
+    const entranceT = useMotionValue(entranceEnabled ? 0 : 1)
+    useEffect(() => {
+        if (!entranceEnabled) {
+            entranceT.set(1)
+            return
+        }
+        entranceT.set(0)
+        const initialAbsOffset = Math.abs(wrapDelta(index, count))
+        const delayMs = (entranceDelay + initialAbsOffset * entranceStagger) * 1000
+        const timer = setTimeout(() => {
+            animate(entranceT, 1, {
+                duration: entranceDuration,
+                ease: entranceEase as any,
+            })
+        }, delayMs)
+        return () => clearTimeout(timer)
+    }, [
+        entranceEnabled,
+        entranceDelay,
+        entranceDuration,
+        entranceStagger,
+        entranceEase,
+        index,
+        count,
+        entranceT,
+    ])
+
     const x = useTransform(offset, (o) => o * spacing)
-    const y = useTransform(offset, (o) => curveDepth * falloff(Math.abs(o)))
+    const y = useTransform([offset, entranceT], (latest) => {
+        const [o, t] = latest as number[]
+        const target = curveDepth * falloff(Math.abs(o))
+        const start = target + entranceDistanceY
+        return start + (target - start) * t
+    })
     // In-plane tilt only (no 3D perspective) — a slight fan, not a size
-    // change or a 3D turn.
-    const rotateZ = useTransform(offset, (o) => {
-        const t = falloff(Math.abs(o))
-        return Math.sign(o) * tiltDeg * t
+    // change or a 3D turn. Starts flat and rotates into its tilt as part
+    // of the entrance, rather than starting pre-tilted.
+    const rotateZ = useTransform([offset, entranceT], (latest) => {
+        const [o, t] = latest as number[]
+        const target = Math.sign(o) * tiltDeg * falloff(Math.abs(o))
+        return target * t
     })
     // Flat dimming once a card is off-center — deliberately NOT fading
     // further to zero past the immediate neighbor. However many cards end
@@ -129,7 +185,14 @@ function CarouselCard({
     // width (clip-path hard edge + the mask-image soft edge fade below);
     // that's what makes a wider frame naturally show more cards with no
     // breakpoint-detection logic needed here at all.
-    const opacity = useTransform(offset, (o) => 1 + (sideOpacity - 1) * falloff(Math.abs(o)))
+    const opacity = useTransform([offset, entranceT], (latest) => {
+        const [o, t] = latest as number[]
+        const target = 1 + (sideOpacity - 1) * falloff(Math.abs(o))
+        return target * t
+    })
+    // Only meaningful during the entrance — settles at 1 (no permanent
+    // shrink) once entranceT reaches 1, same as every other resting value.
+    const scale = useTransform(entranceT, (t) => entranceScale + (1 - entranceScale) * t)
     const zIndex = useTransform(offset, (o) => Math.round(100 - Math.abs(o) * 10))
     const [isCentered, setIsCentered] = useState(() => Math.abs(offset.get()) < 0.05)
 
@@ -198,6 +261,7 @@ function CarouselCard({
                 x,
                 y,
                 rotateZ,
+                scale,
                 opacity,
                 zIndex,
                 // Only the truly at-rest centered card is interactive.
@@ -324,6 +388,13 @@ export interface CurvedCarouselV2Props {
     tapDistancePx: number
     frontVariantProp: string
     frontVariantValue: string
+    entranceEnabled: boolean
+    entranceDelay: number
+    entranceDuration: number
+    entranceStagger: number
+    entranceDistanceY: number
+    entranceScale: number
+    entranceEase: string
     showArrows: boolean
     arrowSize: number
     arrowGap: number
@@ -350,6 +421,13 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         tapDistancePx,
         frontVariantProp,
         frontVariantValue,
+        entranceEnabled,
+        entranceDelay,
+        entranceDuration,
+        entranceStagger,
+        entranceDistanceY,
+        entranceScale,
+        entranceEase,
         showArrows,
         arrowSize,
         arrowGap,
@@ -392,6 +470,25 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         })
         return unsub
     }, [pos, count])
+
+    // Arrows fade in on the same schedule as the center card (no extra
+    // stagger — they're not part of the fan), so the controls arrive
+    // together with the card that's actually usable first.
+    const arrowEntranceT = useMotionValue(entranceEnabled ? 0 : 1)
+    useEffect(() => {
+        if (!entranceEnabled) {
+            arrowEntranceT.set(1)
+            return
+        }
+        arrowEntranceT.set(0)
+        const timer = setTimeout(() => {
+            animate(arrowEntranceT, 1, {
+                duration: entranceDuration,
+                ease: entranceEase as any,
+            })
+        }, entranceDelay * 1000)
+        return () => clearTimeout(timer)
+    }, [entranceEnabled, entranceDelay, entranceDuration, entranceEase, arrowEntranceT])
 
     // True only when nothing is dragging or animating — gates which card
     // (if any) is allowed real pointer-events, so a native click can never
@@ -674,13 +771,20 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                     isSettled={isSettled}
                     frontVariantProp={frontVariantProp}
                     frontVariantValue={frontVariantValue}
+                    entranceEnabled={entranceEnabled}
+                    entranceDelay={entranceDelay}
+                    entranceDuration={entranceDuration}
+                    entranceStagger={entranceStagger}
+                    entranceDistanceY={entranceDistanceY}
+                    entranceScale={entranceScale}
+                    entranceEase={entranceEase}
                     onTapSide={onTapSide}
                     element={element}
                 />
             ))}
 
             {showArrows && count > 1 && (
-                <div
+                <motion.div
                     style={{
                         position: "absolute",
                         left: 0,
@@ -691,6 +795,7 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                         alignItems: "center",
                         gap: arrowGap,
                         zIndex: 200,
+                        opacity: arrowEntranceT,
                     }}
                 >
                     <ArrowButton
@@ -713,7 +818,7 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                         color={arrowColor}
                         background={arrowBackground}
                     />
-                </div>
+                </motion.div>
             )}
         </div>
     )
@@ -733,6 +838,13 @@ CurvedCarouselV2.defaultProps = {
     tapDistancePx: 28,
     frontVariantProp: "variant",
     frontVariantValue: "Front",
+    entranceEnabled: true,
+    entranceDelay: 0.2,
+    entranceDuration: 0.6,
+    entranceStagger: 0.08,
+    entranceDistanceY: 60,
+    entranceScale: 0.85,
+    entranceEase: "easeOut",
     showArrows: true,
     arrowSize: 56,
     arrowGap: 24,
@@ -847,6 +959,70 @@ addPropertyControls(CurvedCarouselV2, {
         title: "Front Variant",
         defaultValue: "Front",
         description: "Exact Variant name for the un-flipped face.",
+    },
+    entranceEnabled: {
+        type: ControlType.Boolean,
+        title: "Entrance",
+        defaultValue: true,
+        description: "Cards rise, fade, and scale into place on load, fanning outward from the center. Turn off for no opening animation.",
+    },
+    entranceDelay: {
+        type: ControlType.Number,
+        title: "Entrance Delay",
+        min: 0,
+        max: 5,
+        step: 0.05,
+        defaultValue: 0.2,
+        description: "Seconds before the entrance starts.",
+        hidden: (props) => !props.entranceEnabled,
+    },
+    entranceDuration: {
+        type: ControlType.Number,
+        title: "Entrance Duration",
+        min: 0.05,
+        max: 3,
+        step: 0.05,
+        defaultValue: 0.6,
+        description: "How long each card's own entrance takes.",
+        hidden: (props) => !props.entranceEnabled,
+    },
+    entranceStagger: {
+        type: ControlType.Number,
+        title: "Entrance Stagger",
+        min: 0,
+        max: 0.5,
+        step: 0.01,
+        defaultValue: 0.08,
+        description: "Extra delay per card-distance from center, so the center card leads and the fan opens outward. 0 = every card starts together.",
+        hidden: (props) => !props.entranceEnabled,
+    },
+    entranceDistanceY: {
+        type: ControlType.Number,
+        title: "Entrance Rise",
+        min: 0,
+        max: 400,
+        step: 1,
+        defaultValue: 60,
+        description: "How far below their resting spot cards start, sliding up into place.",
+        hidden: (props) => !props.entranceEnabled,
+    },
+    entranceScale: {
+        type: ControlType.Number,
+        title: "Entrance Scale",
+        min: 0.3,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.85,
+        description: "Starting scale cards grow from (1 = no scale change).",
+        hidden: (props) => !props.entranceEnabled,
+    },
+    entranceEase: {
+        type: ControlType.Enum,
+        title: "Entrance Ease",
+        options: ["easeOut", "easeInOut", "backOut", "circOut", "linear"],
+        optionTitles: ["Ease Out", "Ease In Out", "Back Out (overshoot)", "Circ Out", "Linear"],
+        defaultValue: "easeOut",
+        hidden: (props) => !props.entranceEnabled,
     },
     showArrows: {
         type: ControlType.Boolean,
