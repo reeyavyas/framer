@@ -495,13 +495,33 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
     // land on a card while it's mid-transit through the center position.
     const [isSettled, setIsSettled] = useState(true)
 
+    // Tracks whichever animation currently owns `pos`. Swiping faster than
+    // a settle spring can finish means a new goTo (or a fresh drag) can
+    // start while the PREVIOUS settle animation is technically still
+    // running — and if that old animation is never explicitly stopped, its
+    // onComplete can still fire later, at an unpredictable moment, since
+    // nothing here was capturing/cancelling it. onComplete is exactly what
+    // marks a card "settled off-center" and triggers its reset-to-Front —
+    // so an orphaned, late-firing onComplete meant a card could pass
+    // through its off-center dwell without ever actually getting reset,
+    // then still show Back whenever it later cycled back to center.
+    // Explicitly stopping the previous animation (stop, not letting it
+    // complete) guarantees at most one animation ever drives `pos`, so
+    // onComplete only ever fires for a genuinely finished settle.
+    const activeAnimRef = useRef<{ stop: () => void } | null>(null)
+    const stopActiveAnim = useCallback(() => {
+        activeAnimRef.current?.stop()
+        activeAnimRef.current = null
+    }, [])
+
     const goTo = useCallback(
         (targetIndex: number) => {
             if (count <= 1) return
+            stopActiveAnim()
             const target = mod(targetIndex, count)
             const delta = wrapDelta(target - pos.get(), count)
             setIsSettled(false)
-            animate(pos, pos.get() + delta, {
+            activeAnimRef.current = animate(pos, pos.get() + delta, {
                 ...SPRING,
                 onComplete: () => {
                     // Fold back into [0, count) — numerically identical for
@@ -509,10 +529,11 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                     // change. Just keeps the float bounded over long uptime.
                     pos.set(mod(pos.get(), count))
                     setIsSettled(true)
+                    activeAnimRef.current = null
                 },
             })
         },
-        [count, pos]
+        [count, pos, stopActiveAnim]
     )
 
     const step = useCallback(
@@ -665,6 +686,11 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                     if (Math.abs(dy) > Math.abs(dx) * 1.2) return
                     s.moved = true
                     setIsSettled(false)
+                    // Cancel any settle animation still finishing from a
+                    // previous swipe, so this drag has sole control of
+                    // `pos` and that old animation's onComplete can't fire
+                    // later at a stale, unpredictable moment.
+                    stopActiveAnim()
                 }
 
                 const now = performance.now()
@@ -703,6 +729,7 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
             markInteraction,
             pos,
             spacing,
+            stopActiveAnim,
             tapDistancePx,
         ]
     )
