@@ -180,16 +180,11 @@ function CarouselCard({
         entranceT,
     ])
 
-    const x = useTransform(offset, (o) => o * spacing)
-    const y = useTransform([offset, entranceT], (latest) => {
-        const [o, t] = latest as number[]
-        const target = curveDepth * falloff(Math.abs(o))
-        const start = target + entranceDistanceY
-        return start + (target - start) * t
-    })
     // In-plane tilt only (no 3D perspective) — a slight fan, not a size
     // change or a 3D turn. Starts flat and rotates into its tilt as part
-    // of the entrance, rather than starting pre-tilted.
+    // of the entrance, rather than starting pre-tilted. Computed ahead of
+    // x/y below because x/y need this same angle to correct for the pivot
+    // shift (see comment there).
     const rotateZ = useTransform([offset, entranceT], (latest) => {
         const [o, t] = latest as number[]
         const target = Math.sign(o) * tiltDeg * falloff(Math.abs(o))
@@ -202,13 +197,45 @@ function CarouselCard({
     // far from its pivot up or down noticeably (roughly halfWidth *
     // sin(tilt)), so that visible sliver drifted vertically even though
     // the card itself wasn't moving — the far-out cards looked like they
-    // sat at a different height than their near neighbors. Pivoting at the
-    // inner edge instead means tilting swings the (barely visible, mostly
-    // clipped) OUTER edge, leaving the part that's actually on screen
-    // sitting still.
-    const transformOrigin = useTransform(offset, (o) =>
-        o < 0 ? "right center" : o > 0 ? "left center" : "center center"
-    )
+    // sat at a different height than their near neighbors.
+    //
+    // A `transform-origin` MotionValue<string> was tried first, but Framer
+    // Motion doesn't route arbitrary style keys through its per-frame
+    // MotionValue render loop the way it does the special transform
+    // properties (x/y/rotate/scale/etc) — it only applied on whatever
+    // render happened to be triggered by React, not on every animation
+    // frame, so visually it did nothing. Baking the same pivot shift
+    // directly into x/y sidesteps that entirely, since x/y are already
+    // proven to update every frame.
+    //
+    // Equivalent effect worked out algebraically: rotating a point by θ
+    // around a pivot (px, py) instead of the origin adds a constant offset
+    // of (px*(1-cosθ) + py*sinθ, -px*sinθ + py*(1-cosθ)) to that point's
+    // rotated position. Pivoting at the inner edge means the pivot is at
+    // (+halfWidth, 0) for left-side cards (o<0, so the desired pivot is to
+    // the card's own right) and (-halfWidth, 0) for right-side cards
+    // (o>0, pivot to the card's own left); py=0 throughout, so this
+    // reduces to extra_dx = px*(1-cosθ), extra_dy = -px*sinθ. Both are
+    // exactly 0 at o=0 (θ=0 there via falloff(0)=0), so there's no
+    // discontinuity as a card crosses center.
+    const halfWidth = cardWidth / 2
+    const x = useTransform([offset, rotateZ], (latest) => {
+        const [o, deg] = latest as number[]
+        const px = o < 0 ? halfWidth : o > 0 ? -halfWidth : 0
+        const theta = (deg * Math.PI) / 180
+        const extraDx = px * (1 - Math.cos(theta))
+        return o * spacing + extraDx
+    })
+    const y = useTransform([offset, entranceT, rotateZ], (latest) => {
+        const [o, t, deg] = latest as number[]
+        const target = curveDepth * falloff(Math.abs(o))
+        const start = target + entranceDistanceY
+        const eased = start + (target - start) * t
+        const px = o < 0 ? halfWidth : o > 0 ? -halfWidth : 0
+        const theta = (deg * Math.PI) / 180
+        const extraDy = -px * Math.sin(theta)
+        return eased + extraDy
+    })
     // Flat dimming once a card is off-center — deliberately NOT fading
     // further to zero past the immediate neighbor. However many cards end
     // up visibly peeking in is left entirely to the container's actual
@@ -295,7 +322,6 @@ function CarouselCard({
                 x,
                 y,
                 rotateZ,
-                transformOrigin,
                 scale,
                 opacity,
                 zIndex,
