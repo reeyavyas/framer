@@ -483,18 +483,6 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
     const pos = useMotionValue(0)
     const containerRef = useRef<HTMLDivElement | null>(null)
 
-    // Lightweight, debounced-to-integer view of `pos`. Only used so arrow
-    // taps know which index they're stepping from — never fed back into
-    // card layout, so it can't desync the animation.
-    const [centerIndexState, setCenterIndexState] = useState(0)
-    useEffect(() => {
-        const unsub = pos.on("change", (p) => {
-            const rounded = mod(Math.round(p), count)
-            setCenterIndexState((prev) => (prev === rounded ? prev : rounded))
-        })
-        return unsub
-    }, [pos, count])
-
     // Arrows fade in on the same schedule as the center card (no extra
     // stagger — they're not part of the fan), so the controls arrive
     // together with the card that's actually usable first.
@@ -538,11 +526,26 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         activeAnimRef.current = null
     }, [])
 
+    // The index goTo is currently driving `pos` toward — updated the
+    // instant goTo is called, as a plain ref mutation, not derived from
+    // `pos` crossing some rounding threshold. That distinction matters for
+    // rapid arrow clicks specifically: reading "current card" from
+    // position-derived React state means every click faster than that
+    // state can update (which requires an animation to actually progress
+    // partway, not just requesting one) sees the SAME stale value and
+    // targets the SAME single card ahead — so several fast clicks netted
+    // only one card of progress instead of compounding, which read as the
+    // carousel refusing to advance / snapping back. Tracking the intended
+    // target directly means each click chains onto the PREVIOUS click's
+    // target rather than repeating it, however fast they arrive.
+    const targetIndexRef = useRef(0)
+
     const goTo = useCallback(
         (targetIndex: number) => {
             if (count <= 1) return
             stopActiveAnim()
             const target = mod(targetIndex, count)
+            targetIndexRef.current = target
             const delta = wrapDelta(target - pos.get(), count)
             setIsSettled(false)
             activeAnimRef.current = animate(pos, pos.get() + delta, {
@@ -562,9 +565,9 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
 
     const step = useCallback(
         (dir: 1 | -1) => {
-            goTo(centerIndexState + dir)
+            goTo(targetIndexRef.current + dir)
         },
-        [centerIndexState, goTo]
+        [goTo]
     )
 
     // ---------------- Autoplay: stops the instant the carousel is
