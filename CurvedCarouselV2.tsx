@@ -145,6 +145,19 @@ function CarouselCard({
     // card right.
     const offset = useTransform(pos, (p) => wrapDelta(index - p, count))
 
+    // falloff() ramps 0->1 over exactly one card-slot, then holds flat.
+    // Used directly, that means every card beyond the immediate neighbor —
+    // which, for any count above 3, is most of them — collapses onto the
+    // exact same tilt/drop/opacity as that neighbor: no visible difference
+    // between the 2nd, 3rd, 4th... card out, which reads as a set of
+    // parallel cards rather than a curve. Dividing the offset by the
+    // farthest slot actually in play before handing it to falloff() spreads
+    // that same 0->1 ramp across every card that exists on a side, so the
+    // outermost card is the only one that ever hits the max — everything
+    // between center and it steps outward continuously, the way an actual
+    // arc/fan does.
+    const maxOffset = Math.max(1, Math.floor(count / 2))
+
     // Opening animation: 0 = this card's entrance start state, 1 = its
     // normal resting state. Staggered by this card's distance from center
     // in the INITIAL layout (pos starts at 0, so that's just this card's
@@ -187,7 +200,7 @@ function CarouselCard({
     // shift (see comment there).
     const rotateZ = useTransform([offset, entranceT], (latest) => {
         const [o, t] = latest as number[]
-        const target = Math.sign(o) * tiltDeg * falloff(Math.abs(o))
+        const target = Math.sign(o) * tiltDeg * falloff(Math.abs(o) / maxOffset)
         return target * t
     })
     // Rotation defaults to pivoting around the card's own center — fine
@@ -228,7 +241,7 @@ function CarouselCard({
     })
     const y = useTransform([offset, entranceT, rotateZ], (latest) => {
         const [o, t, deg] = latest as number[]
-        const target = curveDepth * falloff(Math.abs(o))
+        const target = curveDepth * falloff(Math.abs(o) / maxOffset)
         const start = target + entranceDistanceY
         const eased = start + (target - start) * t
         const px = o < 0 ? halfWidth : o > 0 ? -halfWidth : 0
