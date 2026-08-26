@@ -195,6 +195,20 @@ function CarouselCard({
         const target = Math.sign(o) * tiltDeg * falloff(Math.abs(o))
         return target * t
     })
+    // Rotation defaults to pivoting around the card's own center — fine
+    // for a card you see most of, but a card near the edge only shows a
+    // thin sliver at its INNER edge (the side facing the carousel center),
+    // and that edge sits far from the center pivot. Tilting swings a point
+    // far from its pivot up or down noticeably (roughly halfWidth *
+    // sin(tilt)), so that visible sliver drifted vertically even though
+    // the card itself wasn't moving — the far-out cards looked like they
+    // sat at a different height than their near neighbors. Pivoting at the
+    // inner edge instead means tilting swings the (barely visible, mostly
+    // clipped) OUTER edge, leaving the part that's actually on screen
+    // sitting still.
+    const transformOrigin = useTransform(offset, (o) =>
+        o < 0 ? "right center" : o > 0 ? "left center" : "center center"
+    )
     // Flat dimming once a card is off-center — deliberately NOT fading
     // further to zero past the immediate neighbor. However many cards end
     // up visibly peeking in is left entirely to the container's actual
@@ -281,6 +295,7 @@ function CarouselCard({
                 x,
                 y,
                 rotateZ,
+                transformOrigin,
                 scale,
                 opacity,
                 zIndex,
