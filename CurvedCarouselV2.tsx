@@ -61,6 +61,22 @@ function falloff(absOffset: number) {
     return clamp(absOffset, 0, 1)
 }
 
+// Below `freeZone` (in card-units), a drag tracks the finger exactly 1:1 —
+// same as before. Beyond it, only `resistance` of the extra movement
+// actually counts, so a long/fast drag can't carry `pos` far past what a
+// release would ever honor (navigation is always capped to one card per
+// gesture). Without this, a big drag overshoots and then has to spring
+// backward on release to land just one card past the start — which reads
+// as the carousel "forcing you back". Flicks are untouched: velocity is
+// measured from raw pointer movement, not this resisted position.
+function applyDragResistance(delta: number, freeZone: number, resistance: number) {
+    const sign = Math.sign(delta)
+    const abs = Math.abs(delta)
+    if (abs <= freeZone) return delta
+    const excess = abs - freeZone
+    return sign * (freeZone + excess * resistance)
+}
+
 const FLICK_VELOCITY_PX_S = 500
 // Fraction of one card-to-card spacing you must drag past before a release
 // snaps to the next/prev card instead of springing back to the current one.
@@ -390,6 +406,8 @@ export interface CurvedCarouselV2Props {
     edgeFadeWidth: number
     dragEnabled: boolean
     tapDistancePx: number
+    dragFreeZone: number
+    dragResistance: number
     frontVariantProp: string
     frontVariantValue: string
     entranceEnabled: boolean
@@ -423,6 +441,8 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         edgeFadeWidth,
         dragEnabled,
         tapDistancePx,
+        dragFreeZone,
+        dragResistance,
         frontVariantProp,
         frontVariantValue,
         entranceEnabled,
@@ -703,7 +723,8 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                 s.lastX = moveEvent.clientX
                 s.lastT = now
 
-                pos.set(s.startPos - dx / spacing)
+                const rawDelta = -dx / spacing
+                pos.set(s.startPos + applyDragResistance(rawDelta, dragFreeZone, dragResistance))
             }
 
             const onUp = (upEvent: PointerEvent) => {
@@ -729,6 +750,8 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
             armClickSuppression,
             count,
             dragEnabled,
+            dragFreeZone,
+            dragResistance,
             endDrag,
             markInteraction,
             pos,
@@ -867,6 +890,8 @@ CurvedCarouselV2.defaultProps = {
     edgeFadeWidth: 120,
     dragEnabled: true,
     tapDistancePx: 28,
+    dragFreeZone: 0.6,
+    dragResistance: 0.35,
     frontVariantProp: "variant",
     frontVariantValue: "Front",
     entranceEnabled: true,
@@ -978,6 +1003,24 @@ addPropertyControls(CurvedCarouselV2, {
         step: 1,
         defaultValue: 28,
         description: "How far a touch must move before it counts as a drag instead of a tap. Raise this if tapping the center card still causes a small shift/wobble on your hardware.",
+    },
+    dragFreeZone: {
+        type: ControlType.Number,
+        title: "Drag Free Zone",
+        min: 0.1,
+        max: 1.5,
+        step: 0.05,
+        defaultValue: 0.6,
+        description: "How far (in card-widths) a drag tracks your finger exactly. Beyond this, Drag Resistance kicks in — keeps this at least a bit above the ~0.3 needed to commit to the next card.",
+    },
+    dragResistance: {
+        type: ControlType.Number,
+        title: "Drag Resistance",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: 0.35,
+        description: "How much of the extra drag counts once past the Free Zone. Lower = stickier, more resistant to fast/long drags. 1 = no resistance at all. Prevents a long drag from overshooting several cards and then snapping back on release, since navigation is always capped to one card per gesture. Flicks aren't affected — those are based on speed, not distance.",
     },
     frontVariantProp: {
         type: ControlType.String,
