@@ -13,19 +13,19 @@ import { RenderTarget } from "framer"
  * elements only compete on z-index within a shared stacking context --
  * see SpotlightOverlay.tsx for the long version of that explanation).
  *
- * Why this instead of OverlayPortal.tsx: OverlayPortal takes content
- * via a ControlType.ComponentInstance "Content" property, which
- * re-instantiates whatever's assigned to it -- and Framer does not
- * carry a Stack's own layout CSS or live child-positioning logic
- * through that mechanism, only generic per-component-type rules
- * (confirmed via devtools: a portaled Stack had zero Framer-authored
- * layout CSS of its own, and an auto-width text child inside it got
+ * Why a Code Override rather than a Code Component with a "Content"
+ * slot: a ControlType.ComponentInstance property re-instantiates
+ * whatever's assigned to it, and Framer does not carry a Stack's own
+ * layout CSS or live child-positioning logic through that mechanism --
+ * only generic per-component-type rules (confirmed via devtools: a
+ * Stack re-instantiated that way had zero Framer-authored layout CSS
+ * of its own, and an auto-width text child inside it got
  * `position: absolute` with a `transform: none` that never resolved to
- * anything useful). A Code Override never goes through
- * ControlType.ComponentInstance -- it wraps the SAME component
- * instance Framer already renders for this exact layer on this exact
- * page, so its own live layout, CSS and children render exactly as
- * authored. Only the DOM location and outer position change.
+ * anything useful). A Code Override never re-instantiates anything --
+ * it wraps the SAME component instance Framer already renders for this
+ * exact layer on this exact page, so its own live layout, CSS and
+ * children render exactly as authored. Only the DOM location and outer
+ * position change.
  *
  * Usage:
  *  1. Select any Frame/Stack on canvas (e.g. a "Click here" + arrow
