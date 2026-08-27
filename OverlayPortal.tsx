@@ -17,7 +17,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * normal Framer layer that stays in its natural place in the page can
  * never out-rank a portaled element by raising its z-index in the
  * canvas panel — there's no shared context for that comparison to
- * happen in. That's why nothing you add "on top" in Framer shows above
+ * happen in. That's why nothing added "on top" in Framer shows above
  * SpotlightOverlay: it isn't actually competing on z-index, it's just
  * rendering underneath the entire portaled subtree.
  *
@@ -26,10 +26,21 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * buttons in that same body-level stacking context — where z-index
  * comparisons work normally again.
  *
- * How to use it:
- *  1. Build your overlay content as a normal Frame/Stack on the canvas
- *     (bullets row, arrow + "Click here" text, success card — whatever
- *     you like, fully native).
+ * How this maps onto the three tutorial overlays:
+ *  - Progress bullets: set "Auto-hide after" to how long they should
+ *    stay up. Leave "Navigate when hidden" off — they just fade away.
+ *  - "Nice work!" card: set "Auto-hide after" to match your native
+ *    animation's length, turn on "Navigate when hidden", and set
+ *    "Navigate to" — no click needed, it fades out and moves on.
+ *  - "Click here!" + arrow instructions: leave "Auto-hide after" at 0
+ *    so it stays up indefinitely. It's a visual hint only — the actual
+ *    click-to-navigate happens on the real element underneath (or on
+ *    FocusGuide's own Link, if you're using FocusGuide in its "auto"
+ *    pointer-events mode). This component doesn't need a link for that
+ *    case; just toggle its "Visible" prop off once the step advances.
+ *
+ * Usage:
+ *  1. Build your overlay content as a normal Frame/Stack on the canvas.
  *  2. Drop this component on the canvas, size + position it exactly
  *     where you want that content to sit (same mental model as sizing
  *     FocusGuide to match a target).
@@ -47,26 +58,80 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *   FocusGuide / your real UI    normal flow
  */
 
+const FADE_MS = 450
+
+// Framer's Link control can hand back a plain string (typed URL) or an
+// object (internal page reference), depending on what was picked.
+// Normalize either shape into a usable href.
+function resolveLink(link: any): string | undefined {
+    if (!link) return undefined
+    if (typeof link === "string") return link
+    return link.href || link.path || link.url || undefined
+}
+
 interface Props {
     children?: React.ReactNode
     visible: boolean
     layerOrder: number
     interactive: boolean
+    autoHideSeconds: number
+    navigateOnHide: boolean
+    navigateLink?: any
     style?: React.CSSProperties
 }
 
 export default function OverlayPortal(props: Props) {
-    const { children, visible, layerOrder, interactive, style } = props
+    const {
+        children,
+        visible,
+        layerOrder,
+        interactive,
+        autoHideSeconds,
+        navigateOnHide,
+        navigateLink,
+        style,
+    } = props
 
     const ref = React.useRef<HTMLDivElement>(null)
+    const navRef = React.useRef<HTMLAnchorElement>(null)
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [mounted, setMounted] = React.useState(false)
+    // dismissed: the auto-hide timer has fired, layer is fading out.
+    // gone: fade finished, stop rendering (and measuring) the portal.
+    const [dismissed, setDismissed] = React.useState(false)
+    const [gone, setGone] = React.useState(false)
 
     React.useEffect(() => setMounted(true), [])
 
+    // Arm/reset whenever this layer is (re)shown, e.g. the tutorial
+    // advances to the step that uses it.
     React.useEffect(() => {
-        if (isCanvas || !visible) return
+        if (!visible) {
+            setDismissed(false)
+            setGone(false)
+            return
+        }
+        if (!autoHideSeconds) return
+        const t = setTimeout(() => setDismissed(true), autoHideSeconds * 1000)
+        return () => clearTimeout(t)
+    }, [visible, autoHideSeconds])
+
+    // Once the fade-out finishes: stop rendering, and if configured,
+    // navigate — with no click required.
+    React.useEffect(() => {
+        if (!dismissed) return
+        const t = setTimeout(() => {
+            setGone(true)
+            if (navigateOnHide) navRef.current?.click()
+        }, FADE_MS)
+        return () => clearTimeout(t)
+    }, [dismissed, navigateOnHide])
+
+    const shown = visible && !gone
+
+    React.useEffect(() => {
+        if (isCanvas || !shown) return
         function measure() {
             if (ref.current) setRect(ref.current.getBoundingClientRect())
         }
@@ -79,10 +144,12 @@ export default function OverlayPortal(props: Props) {
             window.removeEventListener("scroll", measure, true)
             window.clearInterval(id)
         }
-    }, [isCanvas, visible])
+    }, [isCanvas, shown])
+
+    const resolvedNavigateLink = resolveLink(navigateLink)
 
     const portalContent =
-        visible && rect ? (
+        shown && rect ? (
             <div
                 data-focus-overlay="true"
                 style={{
@@ -92,10 +159,20 @@ export default function OverlayPortal(props: Props) {
                     width: rect.width,
                     height: rect.height,
                     zIndex: 96000 + layerOrder,
-                    pointerEvents: interactive ? "auto" : "none",
+                    pointerEvents: interactive && !dismissed ? "auto" : "none",
+                    opacity: dismissed ? 0 : 1,
+                    transition: `opacity ${FADE_MS}ms ease`,
                 }}
             >
                 {children}
+                {navigateOnHide && resolvedNavigateLink && (
+                    <a
+                        ref={navRef}
+                        href={resolvedNavigateLink}
+                        style={{ display: "none" }}
+                        aria-hidden="true"
+                    />
+                )}
             </div>
         ) : null
 
@@ -113,6 +190,8 @@ OverlayPortal.defaultProps = {
     visible: true,
     layerOrder: 0,
     interactive: false,
+    autoHideSeconds: 0,
+    navigateOnHide: false,
 }
 
 addPropertyControls(OverlayPortal, {
@@ -141,5 +220,26 @@ addPropertyControls(OverlayPortal, {
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
+    },
+    autoHideSeconds: {
+        type: ControlType.Number,
+        title: "Auto-hide after (sec)",
+        min: 0,
+        max: 60,
+        step: 0.5,
+        defaultValue: 0,
+    },
+    navigateOnHide: {
+        type: ControlType.Boolean,
+        title: "Navigate when hidden",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.autoHideSeconds,
+    },
+    navigateLink: {
+        type: ControlType.Link,
+        title: "Navigate to",
+        hidden: (props) => !props.autoHideSeconds || !props.navigateOnHide,
     },
 })
