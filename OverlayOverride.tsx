@@ -27,12 +27,23 @@ import { RenderTarget } from "framer"
  * children render exactly as authored. Only the DOM location and outer
  * position change.
  *
+ * Why every override below is its own literal `export function NAME
+ * (Component) { return (props) => ... }` rather than one factory
+ * called four times: Framer's Override dropdown finds overrides by
+ * statically scanning the file for that exact exported-function shape.
+ * `export const X = someFactory(config)` produces a value with the
+ * right shape once it *runs*, but Framer isn't executing the file to
+ * find out -- it's pattern-matching the source, and a const assigned
+ * from a call expression doesn't match. All four below share the same
+ * logic via useOverlayPortal (an internal hook, not itself exported)
+ * so nothing is duplicated; only the config literal differs.
+ *
  * Usage:
  *  1. Select any Frame/Stack on canvas (e.g. a "Click here" + arrow
  *     Stack).
  *  2. In the right panel, under Code, set "Override" to one of the
- *     named exports below (or add your own at the bottom of this
- *     file -- copy a line and adjust the numbers).
+ *     named exports below (or add your own at the bottom -- copy one
+ *     export block and adjust the config numbers).
  *  3. Position/size the layer on canvas exactly where you want it to
  *     appear on the page; that's also where it renders once portaled.
  *
@@ -64,143 +75,155 @@ interface OverlayOverrideConfig {
     interactive: boolean
 }
 
-function withOverlayPortal(config: OverlayOverrideConfig) {
-    const {
-        zIndex,
-        layerOrder,
-        appearDelaySeconds,
-        autoHideSeconds,
-        interactive,
-    } = config
+// Shared logic behind every override below. Not itself exported --
+// only the literal `export function` declarations further down are,
+// since those are what Framer's Override dropdown is scanning for.
+function useOverlayPortal(
+    Component: React.ComponentType<any>,
+    props: any,
+    config: OverlayOverrideConfig
+): React.ReactElement {
+    const { zIndex, layerOrder, appearDelaySeconds, autoHideSeconds, interactive } =
+        config
 
-    return function overlayPortalOverride(
-        Component: React.ComponentType<any>
-    ): React.ComponentType<any> {
-        return function OverlayPortalOverride(props: any) {
-            const isCanvas = RenderTarget.current() === RenderTarget.canvas
-            const placeholderRef = React.useRef<HTMLDivElement>(null)
+    const isCanvas = RenderTarget.current() === RenderTarget.canvas
+    const placeholderRef = React.useRef<HTMLDivElement>(null)
 
-            const [mounted, setMounted] = React.useState(false)
-            const [rect, setRect] = React.useState<DOMRect | null>(null)
-            const [revealed, setRevealed] = React.useState(!appearDelaySeconds)
-            const [dismissed, setDismissed] = React.useState(false)
+    const [mounted, setMounted] = React.useState(false)
+    const [rect, setRect] = React.useState<DOMRect | null>(null)
+    const [revealed, setRevealed] = React.useState(!appearDelaySeconds)
+    const [dismissed, setDismissed] = React.useState(false)
 
-            React.useEffect(() => setMounted(true), [])
+    React.useEffect(() => setMounted(true), [])
 
-            React.useEffect(() => {
-                if (!appearDelaySeconds) return
-                const t = setTimeout(
-                    () => setRevealed(true),
-                    appearDelaySeconds * 1000
-                )
-                return () => clearTimeout(t)
-            }, [])
+    React.useEffect(() => {
+        if (!appearDelaySeconds) return
+        const t = setTimeout(() => setRevealed(true), appearDelaySeconds * 1000)
+        return () => clearTimeout(t)
+    }, [appearDelaySeconds])
 
-            React.useEffect(() => {
-                if (!revealed || !autoHideSeconds) return
-                const t = setTimeout(
-                    () => setDismissed(true),
-                    autoHideSeconds * 1000
-                )
-                return () => clearTimeout(t)
-            }, [revealed])
+    React.useEffect(() => {
+        if (!revealed || !autoHideSeconds) return
+        const t = setTimeout(() => setDismissed(true), autoHideSeconds * 1000)
+        return () => clearTimeout(t)
+    }, [revealed, autoHideSeconds])
 
-            // Track this layer's real on-screen position via a plain,
-            // invisible placeholder left in its original spot (styled
-            // identically via the same `style` Framer already computed
-            // for it), rather than measuring the portaled Component
-            // itself -- a plain div needs no extra mount and never
-            // risks mounting Component twice.
-            React.useEffect(() => {
-                if (isCanvas) return
-                function measure() {
-                    if (placeholderRef.current) {
-                        setRect(placeholderRef.current.getBoundingClientRect())
-                    }
-                }
-                measure()
-                window.addEventListener("resize", measure)
-                window.addEventListener("scroll", measure, true)
-                const id = window.setInterval(measure, 300)
-                return () => {
-                    window.removeEventListener("resize", measure)
-                    window.removeEventListener("scroll", measure, true)
-                    window.clearInterval(id)
-                }
-            }, [isCanvas])
-
-            if (isCanvas) {
-                return <Component {...props} />
+    // Track this layer's real on-screen position via a plain, invisible
+    // placeholder left in its original spot (styled identically via the
+    // same `style` Framer already computed for it), rather than
+    // measuring the portaled Component itself -- a plain div needs no
+    // extra mount and never risks mounting Component twice.
+    React.useEffect(() => {
+        if (isCanvas) return
+        function measure() {
+            if (placeholderRef.current) {
+                setRect(placeholderRef.current.getBoundingClientRect())
             }
-
-            const shown = revealed && !dismissed
-            const style: React.CSSProperties = props.style || {}
-
-            return (
-                <>
-                    <div
-                        ref={placeholderRef}
-                        aria-hidden="true"
-                        style={{ ...style, visibility: "hidden" }}
-                    />
-                    {mounted &&
-                        rect &&
-                        ReactDOM.createPortal(
-                            <div
-                                style={{
-                                    position: "fixed",
-                                    top: rect.top,
-                                    left: rect.left,
-                                    zIndex: zIndex + layerOrder,
-                                    opacity: shown ? 1 : 0,
-                                    pointerEvents:
-                                        interactive && shown ? "auto" : "none",
-                                    transition: "opacity 0.3s ease",
-                                }}
-                            >
-                                <Component
-                                    {...props}
-                                    style={{ ...style, position: "relative" }}
-                                />
-                            </div>,
-                            document.body
-                        )}
-                </>
-            )
         }
+        measure()
+        window.addEventListener("resize", measure)
+        window.addEventListener("scroll", measure, true)
+        const id = window.setInterval(measure, 300)
+        return () => {
+            window.removeEventListener("resize", measure)
+            window.removeEventListener("scroll", measure, true)
+            window.clearInterval(id)
+        }
+    }, [isCanvas])
+
+    if (isCanvas) {
+        return <Component {...props} />
     }
+
+    const shown = revealed && !dismissed
+    const style: React.CSSProperties = props.style || {}
+
+    return (
+        <>
+            <div
+                ref={placeholderRef}
+                aria-hidden="true"
+                style={{ ...style, visibility: "hidden" }}
+            />
+            {mounted &&
+                rect &&
+                ReactDOM.createPortal(
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: rect.top,
+                            left: rect.left,
+                            zIndex: zIndex + layerOrder,
+                            opacity: shown ? 1 : 0,
+                            pointerEvents: interactive && shown ? "auto" : "none",
+                            transition: "opacity 0.3s ease",
+                        }}
+                    >
+                        <Component {...props} style={{ ...style, position: "relative" }} />
+                    </div>,
+                    document.body
+                )}
+        </>
+    )
 }
 
 // Ready-to-use overrides -- pick one from the "Override" dropdown on
-// any layer, or copy a line below and adjust the numbers for your own.
-export const Overlay = withOverlayPortal({
-    zIndex: 96000,
-    layerOrder: 0,
-    appearDelaySeconds: 0,
-    autoHideSeconds: 0,
-    interactive: false,
-})
+// any layer, or copy a block below and adjust the config numbers for
+// your own. Keep each one a literal `export function` like these --
+// see the file-level comment above for why.
 
-export const OverlayInteractive = withOverlayPortal({
-    zIndex: 96000,
-    layerOrder: 0,
-    appearDelaySeconds: 0,
-    autoHideSeconds: 0,
-    interactive: true,
-})
+export function Overlay(
+    Component: React.ComponentType<any>
+): React.ComponentType<any> {
+    return function OverlayOverride(props: any) {
+        return useOverlayPortal(Component, props, {
+            zIndex: 96000,
+            layerOrder: 0,
+            appearDelaySeconds: 0,
+            autoHideSeconds: 0,
+            interactive: false,
+        })
+    }
+}
 
-export const OverlayDelayed = withOverlayPortal({
-    zIndex: 96000,
-    layerOrder: 0,
-    appearDelaySeconds: 2,
-    autoHideSeconds: 0,
-    interactive: false,
-})
+export function OverlayInteractive(
+    Component: React.ComponentType<any>
+): React.ComponentType<any> {
+    return function OverlayInteractiveOverride(props: any) {
+        return useOverlayPortal(Component, props, {
+            zIndex: 96000,
+            layerOrder: 0,
+            appearDelaySeconds: 0,
+            autoHideSeconds: 0,
+            interactive: true,
+        })
+    }
+}
 
-export const OverlayAutoHide = withOverlayPortal({
-    zIndex: 96000,
-    layerOrder: 0,
-    appearDelaySeconds: 0,
-    autoHideSeconds: 5,
-    interactive: false,
-})
+export function OverlayDelayed(
+    Component: React.ComponentType<any>
+): React.ComponentType<any> {
+    return function OverlayDelayedOverride(props: any) {
+        return useOverlayPortal(Component, props, {
+            zIndex: 96000,
+            layerOrder: 0,
+            appearDelaySeconds: 2,
+            autoHideSeconds: 0,
+            interactive: false,
+        })
+    }
+}
+
+export function OverlayAutoHide(
+    Component: React.ComponentType<any>
+): React.ComponentType<any> {
+    return function OverlayAutoHideOverride(props: any) {
+        return useOverlayPortal(Component, props, {
+            zIndex: 96000,
+            layerOrder: 0,
+            appearDelaySeconds: 0,
+            autoHideSeconds: 5,
+            interactive: false,
+        })
+    }
+}
