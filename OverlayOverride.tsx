@@ -174,7 +174,26 @@ function useOverlayPortal(
                             {...props}
                             style={{
                                 ...style,
+                                // Reset every positioning property Framer
+                                // set for this layer's ORIGINAL parent --
+                                // e.g. `top: 50%` + `transform:
+                                // translateY(-50%)` to center it there.
+                                // Those percentages/offsets mean something
+                                // different once `position` is no longer
+                                // absolute-against-that-parent, and the
+                                // wrapper above already handles all real
+                                // positioning now. Without this reset the
+                                // stale values still apply, just wrongly
+                                // (e.g. a centering `top:50%` resolving to
+                                // 0 while its counter-transform still
+                                // pulls the content up -- glued to the
+                                // top instead of centered).
                                 position: "relative",
+                                top: 0,
+                                left: 0,
+                                right: undefined,
+                                bottom: undefined,
+                                transform: "none",
                                 width: "100%",
                                 height: "100%",
                             }}
