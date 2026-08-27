@@ -28,16 +28,22 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *
  * How this maps onto the three tutorial overlays:
  *  - Progress bullets: set "Auto-hide after" to how long they should
- *    stay up. Leave "Navigate when hidden" off — they just fade away.
+ *    stay up, and pick whatever "Hide animation" + "Hide duration"
+ *    reads right for a small chip. Leave "Navigate when hidden" off —
+ *    they just play the exit animation and disappear.
  *  - "Nice work!" card: set "Auto-hide after" to match your native
- *    animation's length, turn on "Navigate when hidden", and set
- *    "Navigate to" — no click needed, it fades out and moves on.
+ *    animation's length, turn on "Navigate when hidden", set
+ *    "Navigate to", and pick its own "Hide animation" + "Hide
+ *    duration" (a full-screen card usually wants a slower, more
+ *    deliberate exit than a small chip). It plays that exit and then
+ *    navigates — no click needed.
  *  - "Click here!" + arrow instructions: leave "Auto-hide after" at 0
- *    so it stays up indefinitely. It's a visual hint only — the actual
- *    click-to-navigate happens on the real element underneath (or on
+ *    so it stays up indefinitely — "Hide animation"/"Hide duration"
+ *    don't apply. It's a visual hint only — the actual click-to-
+ *    navigate happens on the real element underneath (or on
  *    FocusGuide's own Link, if you're using FocusGuide in its "auto"
- *    pointer-events mode). This component doesn't need a link for that
- *    case; just toggle its "Visible" prop off once the step advances.
+ *    pointer-events mode). Just toggle this component's "Visible" prop
+ *    off once the step advances.
  *
  * Usage:
  *  1. Build your overlay content as a normal Frame/Stack on the canvas.
@@ -58,7 +64,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *   FocusGuide / your real UI    normal flow
  */
 
-const FADE_MS = 450
+type HideAnimation = "fade" | "fadeSlideUp" | "fadeSlideDown" | "scaleOut"
 
 // Framer's Link control can hand back a plain string (typed URL) or an
 // object (internal page reference), depending on what was picked.
@@ -69,12 +75,28 @@ function resolveLink(link: any): string | undefined {
     return link.href || link.path || link.url || undefined
 }
 
+function hideTransform(anim: HideAnimation, dismissed: boolean): string | undefined {
+    if (!dismissed) return undefined
+    switch (anim) {
+        case "fadeSlideUp":
+            return "translateY(-24px)"
+        case "fadeSlideDown":
+            return "translateY(24px)"
+        case "scaleOut":
+            return "scale(0.85)"
+        default:
+            return undefined
+    }
+}
+
 interface Props {
     children?: React.ReactNode
     visible: boolean
     layerOrder: number
     interactive: boolean
     autoHideSeconds: number
+    hideAnimation: HideAnimation
+    hideAnimationSeconds: number
     navigateOnHide: boolean
     navigateLink?: any
     style?: React.CSSProperties
@@ -87,6 +109,8 @@ export default function OverlayPortal(props: Props) {
         layerOrder,
         interactive,
         autoHideSeconds,
+        hideAnimation,
+        hideAnimationSeconds,
         navigateOnHide,
         navigateLink,
         style,
@@ -97,8 +121,9 @@ export default function OverlayPortal(props: Props) {
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [mounted, setMounted] = React.useState(false)
-    // dismissed: the auto-hide timer has fired, layer is fading out.
-    // gone: fade finished, stop rendering (and measuring) the portal.
+    // dismissed: the auto-hide timer has fired, layer is playing its
+    // exit animation. gone: exit animation finished, stop rendering
+    // (and measuring) the portal.
     const [dismissed, setDismissed] = React.useState(false)
     const [gone, setGone] = React.useState(false)
 
@@ -117,16 +142,16 @@ export default function OverlayPortal(props: Props) {
         return () => clearTimeout(t)
     }, [visible, autoHideSeconds])
 
-    // Once the fade-out finishes: stop rendering, and if configured,
-    // navigate — with no click required.
+    // Once the exit animation finishes: stop rendering, and if
+    // configured, navigate — with no click required.
     React.useEffect(() => {
         if (!dismissed) return
         const t = setTimeout(() => {
             setGone(true)
             if (navigateOnHide) navRef.current?.click()
-        }, FADE_MS)
+        }, Math.max(hideAnimationSeconds, 0) * 1000)
         return () => clearTimeout(t)
-    }, [dismissed, navigateOnHide])
+    }, [dismissed, navigateOnHide, hideAnimationSeconds])
 
     const shown = visible && !gone
 
@@ -161,7 +186,8 @@ export default function OverlayPortal(props: Props) {
                     zIndex: 96000 + layerOrder,
                     pointerEvents: interactive && !dismissed ? "auto" : "none",
                     opacity: dismissed ? 0 : 1,
-                    transition: `opacity ${FADE_MS}ms ease`,
+                    transform: hideTransform(hideAnimation, dismissed),
+                    transition: `opacity ${hideAnimationSeconds}s ease, transform ${hideAnimationSeconds}s ease`,
                 }}
             >
                 {children}
@@ -191,6 +217,8 @@ OverlayPortal.defaultProps = {
     layerOrder: 0,
     interactive: false,
     autoHideSeconds: 0,
+    hideAnimation: "fade",
+    hideAnimationSeconds: 0.45,
     navigateOnHide: false,
 }
 
@@ -228,6 +256,23 @@ addPropertyControls(OverlayPortal, {
         max: 60,
         step: 0.5,
         defaultValue: 0,
+    },
+    hideAnimation: {
+        type: ControlType.Enum,
+        title: "Hide animation",
+        options: ["fade", "fadeSlideUp", "fadeSlideDown", "scaleOut"],
+        optionTitles: ["Fade", "Fade + rise", "Fade + sink", "Scale out"],
+        defaultValue: "fade",
+        hidden: (props) => !props.autoHideSeconds,
+    },
+    hideAnimationSeconds: {
+        type: ControlType.Number,
+        title: "Hide duration (sec)",
+        min: 0.1,
+        max: 3,
+        step: 0.05,
+        defaultValue: 0.45,
+        hidden: (props) => !props.autoHideSeconds,
     },
     navigateOnHide: {
         type: ControlType.Boolean,
