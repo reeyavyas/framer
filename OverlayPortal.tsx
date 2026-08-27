@@ -117,9 +117,14 @@ export default function OverlayPortal(props: Props) {
     } = props
 
     const ref = React.useRef<HTMLDivElement>(null)
+    const contentRef = React.useRef<HTMLDivElement>(null)
     const navRef = React.useRef<HTMLAnchorElement>(null)
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const [rect, setRect] = React.useState<DOMRect | null>(null)
+    const [contentSize, setContentSize] = React.useState<{
+        width: number
+        height: number
+    } | null>(null)
     const [mounted, setMounted] = React.useState(false)
     // dismissed: the auto-hide timer has fired, layer is playing its
     // exit animation. gone: exit animation finished, stop rendering
@@ -171,6 +176,28 @@ export default function OverlayPortal(props: Props) {
         }
     }, [isCanvas, shown])
 
+    // `children` renders exactly once, live, inside the portal below —
+    // never duplicated. Framer's Stack/layout components share internal
+    // layout + animation state; mounting a second copy elsewhere (e.g.
+    // a hidden one for sizing purposes) makes the two fight over it,
+    // which breaks things like Stack gap/alignment. Instead, watch the
+    // one real copy's rendered size with a ResizeObserver and mirror it
+    // onto a plain, contentless spacer back in the wrapper. That keeps
+    // the wrapper's own footprint accurate — which matters for
+    // "Fit"-sized layers anchored from the bottom/right, where the
+    // resolved top/left depends on height/width — without ever mounting
+    // `children` twice.
+    React.useEffect(() => {
+        if (isCanvas || !shown || !contentRef.current) return
+        const el = contentRef.current
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect
+            setContentSize({ width, height })
+        })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [isCanvas, shown])
+
     const resolvedNavigateLink = resolveLink(navigateLink)
 
     const portalContent =
@@ -181,8 +208,6 @@ export default function OverlayPortal(props: Props) {
                     position: "fixed",
                     top: rect.top,
                     left: rect.left,
-                    width: rect.width,
-                    height: rect.height,
                     zIndex: 96000 + layerOrder,
                     pointerEvents: interactive && !dismissed ? "auto" : "none",
                     opacity: dismissed ? 0 : 1,
@@ -190,7 +215,9 @@ export default function OverlayPortal(props: Props) {
                     transition: `opacity ${hideAnimationSeconds}s ease, transform ${hideAnimationSeconds}s ease`,
                 }}
             >
-                {children}
+                <div ref={contentRef} style={{ display: "inline-block" }}>
+                    {children}
+                </div>
                 {navigateOnHide && resolvedNavigateLink && (
                     <a
                         ref={navRef}
@@ -204,21 +231,16 @@ export default function OverlayPortal(props: Props) {
 
     return (
         <div ref={ref} style={{ ...style, pointerEvents: "none" }}>
-            {isCanvas ? (
-                children
-            ) : (
-                // Off canvas, the visible/interactive copy of `children`
-                // lives entirely inside the portal below — but this
-                // wrapper div is what we measure for the portal's
-                // position + size. If it were left empty, a "Fit"-sized
-                // layer would collapse to 0x0 (nothing here to size
-                // around), and that zero-size rect would then be handed
-                // to the portal too. Keep a real, hidden copy here so
-                // sizing stays accurate; it never paints or receives
-                // clicks.
-                <div style={{ visibility: "hidden" }} aria-hidden="true">
-                    {children}
-                </div>
+            {isCanvas && children}
+            {!isCanvas && contentSize && (
+                <div
+                    aria-hidden="true"
+                    style={{
+                        width: contentSize.width,
+                        height: contentSize.height,
+                        visibility: "hidden",
+                    }}
+                />
             )}
             {mounted &&
                 !isCanvas &&
