@@ -416,7 +416,6 @@ addPropertyControls(SpotlightOverlay, {
         type: ControlType.Number,
         title: "Delay (sec)",
         min: 0,
-        max: 30,
         step: 0.5,
         defaultValue: 2,
         hidden: (props) => props.appearTrigger !== "delay",

@@ -94,6 +94,7 @@ interface Props {
     visible: boolean
     layerOrder: number
     interactive: boolean
+    appearDelaySeconds: number
     autoHideSeconds: number
     hideAnimation: HideAnimation
     hideAnimationSeconds: number
@@ -108,6 +109,7 @@ export default function OverlayPortal(props: Props) {
         visible,
         layerOrder,
         interactive,
+        appearDelaySeconds,
         autoHideSeconds,
         hideAnimation,
         hideAnimationSeconds,
@@ -126,9 +128,11 @@ export default function OverlayPortal(props: Props) {
         height: number
     } | null>(null)
     const [mounted, setMounted] = React.useState(false)
-    // dismissed: the auto-hide timer has fired, layer is playing its
-    // exit animation. gone: exit animation finished, stop rendering
-    // (and measuring) the portal.
+    // revealed: the appear delay (if any) has elapsed since `visible`
+    // turned on. dismissed: the auto-hide timer has fired, layer is
+    // playing its exit animation. gone: exit animation finished, stop
+    // rendering (and measuring) the portal.
+    const [revealed, setRevealed] = React.useState(false)
     const [dismissed, setDismissed] = React.useState(false)
     const [gone, setGone] = React.useState(false)
 
@@ -138,14 +142,31 @@ export default function OverlayPortal(props: Props) {
     // advances to the step that uses it.
     React.useEffect(() => {
         if (!visible) {
+            setRevealed(false)
             setDismissed(false)
             setGone(false)
             return
         }
+        if (!appearDelaySeconds) {
+            setRevealed(true)
+            return
+        }
+        setRevealed(false)
+        const t = setTimeout(
+            () => setRevealed(true),
+            appearDelaySeconds * 1000
+        )
+        return () => clearTimeout(t)
+    }, [visible, appearDelaySeconds])
+
+    // Auto-hide counts from when the layer actually becomes visible
+    // (i.e. after the appear delay), not from when `visible` was set.
+    React.useEffect(() => {
+        if (!revealed) return
         if (!autoHideSeconds) return
         const t = setTimeout(() => setDismissed(true), autoHideSeconds * 1000)
         return () => clearTimeout(t)
-    }, [visible, autoHideSeconds])
+    }, [revealed, autoHideSeconds])
 
     // Once the exit animation finishes: stop rendering, and if
     // configured, navigate — with no click required.
@@ -158,7 +179,7 @@ export default function OverlayPortal(props: Props) {
         return () => clearTimeout(t)
     }, [dismissed, navigateOnHide, hideAnimationSeconds])
 
-    const shown = visible && !gone
+    const shown = visible && revealed && !gone
 
     React.useEffect(() => {
         if (isCanvas || !shown) return
@@ -264,6 +285,7 @@ OverlayPortal.defaultProps = {
     visible: true,
     layerOrder: 0,
     interactive: false,
+    appearDelaySeconds: 0,
     autoHideSeconds: 0,
     hideAnimation: "fade",
     hideAnimationSeconds: 0.45,
@@ -281,6 +303,13 @@ addPropertyControls(OverlayPortal, {
         defaultValue: true,
         enabledTitle: "Show",
         disabledTitle: "Hide",
+    },
+    appearDelaySeconds: {
+        type: ControlType.Number,
+        title: "Show delay (sec)",
+        min: 0,
+        step: 0.5,
+        defaultValue: 0,
     },
     layerOrder: {
         type: ControlType.Number,
