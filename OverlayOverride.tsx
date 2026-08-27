@@ -153,13 +153,32 @@ function useOverlayPortal(
                             position: "fixed",
                             top: rect.top,
                             left: rect.left,
+                            // Without an explicit width/height here, any
+                            // percentage-based sizing on Component (e.g.
+                            // a layer set to "Fill" relative to its
+                            // original parent) resolves against this
+                            // fixed-position wrapper's own indeterminate
+                            // size instead -- which CSS treats as auto,
+                            // collapsing it. Pin the wrapper to the same
+                            // real size the placeholder just measured in
+                            // the layer's original context.
+                            width: rect.width,
+                            height: rect.height,
                             zIndex: zIndex + layerOrder,
                             opacity: shown ? 1 : 0,
                             pointerEvents: interactive && shown ? "auto" : "none",
                             transition: "opacity 0.3s ease",
                         }}
                     >
-                        <Component {...props} style={{ ...style, position: "relative" }} />
+                        <Component
+                            {...props}
+                            style={{
+                                ...style,
+                                position: "relative",
+                                width: "100%",
+                                height: "100%",
+                            }}
+                        />
                     </div>,
                     document.body
                 )}
