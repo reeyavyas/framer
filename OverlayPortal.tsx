@@ -221,6 +221,31 @@ export default function OverlayPortal(props: Props) {
 
     const resolvedNavigateLink = resolveLink(navigateLink)
 
+    // Framer's ControlType.ComponentInstance stretches the assigned
+    // layer to width:100%/height:100% of wherever it's rendered,
+    // overriding whatever Fixed/Fit sizing the source layer itself has
+    // — that stretch is what makes a slot like this fill a frame when
+    // you drag-resize it on canvas. Inside the portal there's no such
+    // frame to fill (the wrapper below is deliberately sized to *match*
+    // the content, not the other way around), so that 100% resolves
+    // against an indefinite (max-content) ancestor — a circular case
+    // browsers fall back on inconsistently, squeezing the Stack to an
+    // arbitrary size instead of its real intrinsic one. Strip the
+    // injected width/height here so the Stack reports its own natural
+    // size, which is what the shrink-to-fit wrapper needs to measure
+    // correctly. Canvas keeps the stretch as-is, since resizing this
+    // layer's frame to visually resize its assigned content is the
+    // whole point of WYSIWYG editing there.
+    const portaledChildren = React.isValidElement(children)
+        ? React.cloneElement(children as React.ReactElement, {
+              style: {
+                  ...(children as React.ReactElement).props?.style,
+                  width: "auto",
+                  height: "auto",
+              },
+          })
+        : children
+
     const portalContent =
         shown && rect ? (
             <div
@@ -248,7 +273,7 @@ export default function OverlayPortal(props: Props) {
                 }}
             >
                 <div ref={contentRef} style={{ display: "inline-block" }}>
-                    {children}
+                    {portaledChildren}
                 </div>
                 {navigateOnHide && resolvedNavigateLink && (
                     <a
