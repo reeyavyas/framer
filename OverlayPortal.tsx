@@ -37,6 +37,26 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *     that content's top-left corner to land (its own size doesn't
  *     matter -- the portal sizes itself to the content).
  *  3. Assign your Frame to the "Content" property below.
+ *  4. If that content is a Stack whose children stop lining up once
+ *     portaled (see "Content layout" below), set it to Row or Column
+ *     to restore the arrangement.
+ *
+ * Why "Content layout" exists: Framer gives every RichTextContainer
+ * (auto-width text layer) `position: absolute` unconditionally, then a
+ * live Stack corrects each child's position with a computed
+ * `transform`. `ControlType.ComponentInstance` -- how this component
+ * receives arbitrary canvas content -- preserves the first part but not
+ * the second: the assigned Stack's own layout CSS and live positioning
+ * logic don't come along for the ride, only the global per-component
+ * rules like the forced `position: absolute`. An auto-width text child
+ * of a portaled Stack ends up out of flow with nothing telling it where
+ * to go, landing wherever it would've fallen in document flow -- which
+ * is usually right on top of its siblings. "Content layout" undoes that
+ * forced absolute positioning on the affected direct children and lays
+ * the root out as a real flex row/column instead. It defaults to
+ * "None" (untouched) since not everything portaled here is a Stack, and
+ * some content deliberately layers children via Stack + absolute
+ * positioning -- forcing flex on it would break that on purpose.
  *
  * On canvas your content renders inline as normal so you can design it
  * WYSIWYG. In Preview/Publish it's portaled to <body>, pinned with
@@ -123,6 +143,9 @@ function measureContentBounds(container: HTMLElement): ContentSize | null {
     return { width, height }
 }
 
+type ContentLayout = "none" | "row" | "column"
+type ContentAlign = "flex-start" | "center" | "flex-end"
+
 interface Props {
     children?: React.ReactNode
     visible: boolean
@@ -134,6 +157,9 @@ interface Props {
     hideAnimationSeconds: number
     navigateOnHide: boolean
     navigateLink?: any
+    contentLayout: ContentLayout
+    contentGap: number
+    contentAlign: ContentAlign
     style?: React.CSSProperties
 }
 
@@ -149,6 +175,9 @@ export default function OverlayPortal(props: Props) {
         hideAnimationSeconds,
         navigateOnHide,
         navigateLink,
+        contentLayout,
+        contentGap,
+        contentAlign,
         style,
     } = props
 
@@ -240,6 +269,49 @@ export default function OverlayPortal(props: Props) {
             window.clearInterval(id)
         }
     }, [isCanvas, shown])
+
+    // Undo Framer's forced `position: absolute` on any direct child of
+    // the portaled root that was only ever relying on document flow for
+    // its placement (no explicit top/left/right/bottom -- just the
+    // static-position fallback), then lay the root out as a real flex
+    // row/column. See the file-level comment on "Content layout" for
+    // why this is necessary and why it's opt-in rather than automatic.
+    // Runs before the measurement effect below so that effect measures
+    // the corrected layout, not the broken one.
+    React.useEffect(() => {
+        if (isCanvas || !shown || contentLayout === "none") return
+        const root = contentRef.current?.firstElementChild as HTMLElement | null
+        if (!root) return
+
+        root.style.setProperty("display", "flex", "important")
+        root.style.setProperty("flex-direction", contentLayout, "important")
+        root.style.setProperty("align-items", contentAlign, "important")
+        root.style.setProperty("gap", `${contentGap}px`, "important")
+
+        const restored: HTMLElement[] = []
+        for (const child of Array.from(root.children)) {
+            if (!(child instanceof HTMLElement)) continue
+            const cs = window.getComputedStyle(child)
+            if (
+                cs.position === "absolute" &&
+                cs.top === "auto" &&
+                cs.left === "auto" &&
+                cs.right === "auto" &&
+                cs.bottom === "auto"
+            ) {
+                child.style.setProperty("position", "static", "important")
+                restored.push(child)
+            }
+        }
+
+        return () => {
+            root.style.removeProperty("display")
+            root.style.removeProperty("flex-direction")
+            root.style.removeProperty("align-items")
+            root.style.removeProperty("gap")
+            for (const child of restored) child.style.removeProperty("position")
+        }
+    }, [isCanvas, shown, contentLayout, contentAlign, contentGap])
 
     // Measure the true rendered extent of `children`, given PROBE_WIDTH
     // of unambiguous room to mount into (see the file-level comment).
@@ -390,12 +462,38 @@ OverlayPortal.defaultProps = {
     hideAnimation: "fade",
     hideAnimationSeconds: 0.45,
     navigateOnHide: false,
+    contentLayout: "none",
+    contentGap: 0,
+    contentAlign: "center",
 }
 
 addPropertyControls(OverlayPortal, {
     children: {
         type: ControlType.ComponentInstance,
         title: "Content",
+    },
+    contentLayout: {
+        type: ControlType.Enum,
+        title: "Content layout",
+        options: ["none", "row", "column"],
+        optionTitles: ["None", "Row", "Column"],
+        defaultValue: "none",
+    },
+    contentGap: {
+        type: ControlType.Number,
+        title: "Content gap",
+        min: 0,
+        step: 1,
+        defaultValue: 0,
+        hidden: (props) => props.contentLayout === "none",
+    },
+    contentAlign: {
+        type: ControlType.Enum,
+        title: "Content align",
+        options: ["flex-start", "center", "flex-end"],
+        optionTitles: ["Start", "Center", "End"],
+        defaultValue: "center",
+        hidden: (props) => props.contentLayout === "none",
     },
     visible: {
         type: ControlType.Boolean,
