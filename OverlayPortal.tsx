@@ -208,6 +208,17 @@ export default function OverlayPortal(props: Props) {
                     position: "fixed",
                     top: rect.top,
                     left: rect.left,
+                    // Without an explicit width, a fixed-position box
+                    // with `left` set but no `right` is sized by
+                    // "shrink-to-fit," which caps it at whatever
+                    // viewport space remains right of `left` — not its
+                    // content's actual preferred width. That silently
+                    // squeezes/wraps content that's wider than the
+                    // remaining space. max-content sizes to the
+                    // content's true intrinsic width regardless of
+                    // available viewport space, matching how it's
+                    // sized in normal (non-portaled) flow on canvas.
+                    width: "max-content",
                     zIndex: 96000 + layerOrder,
                     pointerEvents: interactive && !dismissed ? "auto" : "none",
                     opacity: dismissed ? 0 : 1,
