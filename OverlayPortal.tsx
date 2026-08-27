@@ -89,6 +89,44 @@ function hideTransform(anim: HideAnimation, dismissed: boolean): string | undefi
     }
 }
 
+// A generous, unambiguous width to give Framer's Stack to mount into
+// before we ever measure it -- see the long comment above its use.
+const PROBE_WIDTH = 4000
+
+// Framer's Stack doesn't lay its children out with static CSS (there's
+// no Framer-authored rule on the Stack root at all -- devtools confirms
+// its own display: block comes from the browser's default stylesheet,
+// not Framer). It computes each child's position/size in JS at mount
+// time instead, which is why the "Click here" text child comes out
+// position: absolute with a literal baked-in pixel width rather than
+// anything CSS-driven. That measurement isn't repeated later, so
+// whatever width its ancestor chain happened to report at that first
+// mount is what sticks -- permanently -- no matter what CSS is applied
+// to ancestors afterward. Reading the true rendered extent afterward
+// also can't just use the Stack's own box: its children may be
+// absolutely positioned outside it. Union the bounding boxes of every
+// descendant instead, which is correct regardless of how any given
+// child is positioned.
+function measureContentBounds(container: HTMLElement): {
+    width: number
+    height: number
+} {
+    const containerRect = container.getBoundingClientRect()
+    let maxRight = containerRect.left
+    let maxBottom = containerRect.top
+    const nodes = container.querySelectorAll<HTMLElement>("*")
+    for (const el of Array.from(nodes)) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 && r.height === 0) continue
+        if (r.right > maxRight) maxRight = r.right
+        if (r.bottom > maxBottom) maxBottom = r.bottom
+    }
+    return {
+        width: Math.ceil(maxRight - containerRect.left),
+        height: Math.ceil(maxBottom - containerRect.top),
+    }
+}
+
 interface Props {
     children?: React.ReactNode
     visible: boolean
@@ -123,6 +161,9 @@ export default function OverlayPortal(props: Props) {
     const navRef = React.useRef<HTMLAnchorElement>(null)
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const [rect, setRect] = React.useState<DOMRect | null>(null)
+    // The true rendered extent of `children`, measured only after it's
+    // had PROBE_WIDTH of unambiguous room to mount into -- see
+    // measureContentBounds and PROBE_WIDTH above.
     const [contentSize, setContentSize] = React.useState<{
         width: number
         height: number
@@ -181,6 +222,12 @@ export default function OverlayPortal(props: Props) {
 
     const shown = visible && revealed && !gone
 
+    // Reset so each fresh appearance re-probes at PROBE_WIDTH rather
+    // than reusing a stale measurement from a previous show/hide cycle.
+    React.useEffect(() => {
+        if (!shown) setContentSize(null)
+    }, [shown])
+
     React.useEffect(() => {
         if (isCanvas || !shown) return
         function measure() {
@@ -201,37 +248,34 @@ export default function OverlayPortal(props: Props) {
     // never duplicated. Framer's Stack/layout components share internal
     // layout + animation state; mounting a second copy elsewhere (e.g.
     // a hidden one for sizing purposes) makes the two fight over it,
-    // which breaks things like Stack gap/alignment. Instead, watch the
-    // one real copy's rendered size with a ResizeObserver and mirror it
-    // onto a plain, contentless spacer back in the wrapper. That keeps
-    // the wrapper's own footprint accurate — which matters for
-    // "Fit"-sized layers anchored from the bottom/right, where the
-    // resolved top/left depends on height/width — without ever mounting
-    // `children` twice.
+    // which breaks things like Stack gap/alignment. Instead we give this
+    // one real copy PROBE_WIDTH of unambiguous room on the wrapper it
+    // actually mounts into, then measure its true rendered extent once
+    // Framer's own mount-time layout pass has run -- see the comment on
+    // measureContentBounds for why that room has to be there *before*
+    // mount, not applied as a fix afterward. The measured size then
+    // pins the visible wrapper's own width (replacing PROBE_WIDTH) and
+    // sizes a plain, contentless spacer left back in the original layer
+    // position -- which matters for "Fit"-sized layers anchored from
+    // the bottom/right, where the resolved top/left depends on
+    // height/width -- all without ever mounting `children` twice.
     React.useEffect(() => {
         if (isCanvas || !shown || !contentRef.current) return
         const el = contentRef.current
-        const observer = new ResizeObserver(([entry]) => {
-            const { width, height } = entry.contentRect
-            setContentSize({ width, height })
-        })
+        function measure() {
+            if (!contentRef.current) return
+            setContentSize(measureContentBounds(contentRef.current))
+        }
+        const raf = requestAnimationFrame(measure)
+        const observer = new ResizeObserver(measure)
         observer.observe(el)
-        return () => observer.disconnect()
+        return () => {
+            cancelAnimationFrame(raf)
+            observer.disconnect()
+        }
     }, [isCanvas, shown])
 
     const resolvedNavigateLink = resolveLink(navigateLink)
-
-    // Diagnostic step: every attempt so far has intercepted and rewritten
-    // whatever style Framer injects onto the assigned element's root
-    // before either of us ever saw the original, unmodified values. None
-    // of those rewrites have fixed the squeeze, and framer-16pcap0's
-    // display: block (rather than the flex a Stack should be) suggests
-    // the rewrites may be breaking something Framer's own Stack CSS
-    // depends on, rather than fixing a plain shrink-to-fit problem.
-    // Rendering `children` completely unmodified here so the actual
-    // injected style attribute can be read directly off the published
-    // DOM -- that's the missing ground truth before guessing further.
-    const portaledChildren = children
 
     const portalContent =
         shown && rect ? (
@@ -241,26 +285,26 @@ export default function OverlayPortal(props: Props) {
                     position: "fixed",
                     top: rect.top,
                     left: rect.left,
-                    // Without an explicit width, a fixed-position box
-                    // with `left` set but no `right` is sized by
-                    // "shrink-to-fit," which caps it at whatever
-                    // viewport space remains right of `left` — not its
-                    // content's actual preferred width. That silently
-                    // squeezes/wraps content that's wider than the
-                    // remaining space. max-content sizes to the
-                    // content's true intrinsic width regardless of
-                    // available viewport space, matching how it's
-                    // sized in normal (non-portaled) flow on canvas.
-                    width: "max-content",
+                    // Pinned to the true measured width once we have
+                    // one; PROBE_WIDTH until then, so Framer's Stack
+                    // mounts with generous, unambiguous room instead of
+                    // whatever this wrapper would otherwise shrink-wrap
+                    // to. Never visible during the PROBE_WIDTH phase
+                    // (see opacity below) — this is a same-mount
+                    // measuring pass, not a flash of an oversized box.
+                    width: contentSize ? contentSize.width : PROBE_WIDTH,
                     zIndex: 96000 + layerOrder,
-                    pointerEvents: interactive && !dismissed ? "auto" : "none",
-                    opacity: dismissed ? 0 : 1,
+                    pointerEvents:
+                        interactive && !dismissed && contentSize
+                            ? "auto"
+                            : "none",
+                    opacity: contentSize && !dismissed ? 1 : 0,
                     transform: hideTransform(hideAnimation, dismissed),
                     transition: `opacity ${hideAnimationSeconds}s ease, transform ${hideAnimationSeconds}s ease`,
                 }}
             >
                 <div ref={contentRef} style={{ display: "inline-block" }}>
-                    {portaledChildren}
+                    {children}
                 </div>
                 {navigateOnHide && resolvedNavigateLink && (
                     <a
