@@ -330,7 +330,6 @@ addPropertyControls(OverlayPortal, {
         type: ControlType.Number,
         title: "Auto-hide after (sec)",
         min: 0,
-        max: 60,
         step: 0.5,
         defaultValue: 0,
     },
