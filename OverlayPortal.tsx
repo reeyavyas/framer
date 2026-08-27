@@ -237,11 +237,21 @@ export default function OverlayPortal(props: Props) {
     // own `position: fixed` div, the same indefinite max-content
     // ancestor this is trying to avoid. Strip the whole injected
     // layout side (position/inset/width/height), not just width and
-    // height, so the Stack falls back to static, natural flow and
-    // reports its real intrinsic size. Canvas keeps the original
-    // stretch-to-fill behavior, since resizing this layer's frame to
-    // visually resize its assigned content is the whole point of
-    // WYSIWYG editing there.
+    // height, so the Stack falls back to static, natural flow.
+    //
+    // That's still not enough on its own, though: Framer's Stack root
+    // renders as display: block, and a block box's `width: auto` in
+    // normal flow doesn't shrink-wrap to its content -- by spec it
+    // fills its containing block's width. (`height: auto` looks fine
+    // because height on a block box genuinely is content-based; only
+    // width fills the parent.) So plain "auto" just inherits whatever
+    // width the ancestor chain offers, which bottoms out at whatever's
+    // left over in that shrink-to-fit chain -- the same squeeze as
+    // before. "fit-content" forces shrink-to-fit sizing regardless of
+    // display: block, which is what actually makes it hug its own
+    // content. Canvas keeps the original stretch-to-fill behavior,
+    // since resizing this layer's frame to visually resize its
+    // assigned content is the whole point of WYSIWYG editing there.
     const portaledChildren = React.isValidElement(children)
         ? (() => {
               const el = children as React.ReactElement
@@ -260,7 +270,7 @@ export default function OverlayPortal(props: Props) {
                   style: {
                       ...restStyle,
                       position: "relative",
-                      width: "auto",
+                      width: "fit-content",
                       height: "auto",
                   },
               })
