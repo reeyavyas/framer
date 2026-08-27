@@ -270,7 +270,7 @@ export default function OverlayPortal(props: Props) {
     const portalContent =
         shown && rect ? (
             <div
-                data-focus-overlay="true"
+                data-overlay-portal="true"
                 style={{
                     position: "fixed",
                     top: rect.top,

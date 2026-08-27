@@ -97,7 +97,7 @@ function buildHolePath(rect: DOMRect, shape: HoleShape, cornerRadius: number) {
 function findScrollableAt(x: number, y: number): HTMLElement | Window {
     const stack = (document.elementsFromPoint(x, y) || []) as HTMLElement[]
     for (const hit of stack) {
-        if (hit.closest("[data-focus-overlay]")) continue
+        if (hit.closest("[data-focus-overlay], [data-overlay-portal]")) continue
         let node: HTMLElement | null = hit
         while (node && node !== document.body) {
             const style = window.getComputedStyle(node)
