@@ -204,7 +204,22 @@ export default function OverlayPortal(props: Props) {
 
     return (
         <div ref={ref} style={{ ...style, pointerEvents: "none" }}>
-            {isCanvas && children}
+            {isCanvas ? (
+                children
+            ) : (
+                // Off canvas, the visible/interactive copy of `children`
+                // lives entirely inside the portal below — but this
+                // wrapper div is what we measure for the portal's
+                // position + size. If it were left empty, a "Fit"-sized
+                // layer would collapse to 0x0 (nothing here to size
+                // around), and that zero-size rect would then be handed
+                // to the portal too. Keep a real, hidden copy here so
+                // sizing stays accurate; it never paints or receives
+                // clicks.
+                <div style={{ visibility: "hidden" }} aria-hidden="true">
+                    {children}
+                </div>
+            )}
             {mounted &&
                 !isCanvas &&
                 ReactDOM.createPortal(portalContent, document.body)}
