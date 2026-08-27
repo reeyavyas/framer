@@ -39,7 +39,11 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *  3. Assign your Frame to the "Content" property below.
  *  4. If that content is a Stack whose children stop lining up once
  *     portaled (see "Content layout" below), set it to Row or Column
- *     to restore the arrangement.
+ *     to restore the arrangement. If a Stack *nested inside* that
+ *     content has the same problem, add an entry for it under "Nested
+ *     layouts" using its layer name (the name shown in the layers
+ *     panel, e.g. "Arrow row") rather than Content layout, which only
+ *     reaches the top-level assigned root's direct children.
  *
  * Why "Content layout" exists: Framer gives every RichTextContainer
  * (auto-width text layer) `position: absolute` unconditionally, then a
@@ -56,7 +60,11 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * the root out as a real flex row/column instead. It defaults to
  * "None" (untouched) since not everything portaled here is a Stack, and
  * some content deliberately layers children via Stack + absolute
- * positioning -- forcing flex on it would break that on purpose.
+ * positioning -- forcing flex on it would break that on purpose. The
+ * same fix, addressed by layer name instead of "it's the root," is
+ * available for Stacks nested arbitrarily deep inside the assigned
+ * content via "Nested layouts" -- add one entry per nested Stack that
+ * needs it.
  *
  * On canvas your content renders inline as normal so you can design it
  * WYSIWYG. In Preview/Publish it's portaled to <body>, pinned with
@@ -146,6 +154,66 @@ function measureContentBounds(container: HTMLElement): ContentSize | null {
 type ContentLayout = "none" | "row" | "column"
 type ContentAlign = "flex-start" | "center" | "flex-end"
 
+interface NestedContentLayout {
+    layerName: string
+    layout: "row" | "column"
+    gap: number
+    align: ContentAlign
+}
+
+// Un-force Framer's `position: absolute` on any direct child of `root`
+// that was only ever relying on document flow for its placement (no
+// explicit top/left/right/bottom -- just the static-position fallback),
+// then lay `root` out as a real flex row/column. See the file-level
+// comment on "Content layout" for why. Returns a cleanup that restores
+// everything this touched.
+function applyStackLayout(
+    root: HTMLElement,
+    direction: "row" | "column",
+    align: ContentAlign,
+    gap: number
+): () => void {
+    root.style.setProperty("display", "flex", "important")
+    root.style.setProperty("flex-direction", direction, "important")
+    root.style.setProperty("align-items", align, "important")
+    root.style.setProperty("gap", `${gap}px`, "important")
+
+    const restored: HTMLElement[] = []
+    for (const child of Array.from(root.children)) {
+        if (!(child instanceof HTMLElement)) continue
+        const cs = window.getComputedStyle(child)
+        if (
+            cs.position === "absolute" &&
+            cs.top === "auto" &&
+            cs.left === "auto" &&
+            cs.right === "auto" &&
+            cs.bottom === "auto"
+        ) {
+            child.style.setProperty("position", "static", "important")
+            restored.push(child)
+        }
+    }
+
+    return () => {
+        root.style.removeProperty("display")
+        root.style.removeProperty("flex-direction")
+        root.style.removeProperty("align-items")
+        root.style.removeProperty("gap")
+        for (const child of restored) child.style.removeProperty("position")
+    }
+}
+
+// Layer names aren't guaranteed unique, and we want the first match in
+// document order without building a selector string out of arbitrary
+// user text (layer names can contain quotes/backslashes).
+function findByLayerName(container: HTMLElement, name: string): HTMLElement | null {
+    const nodes = container.querySelectorAll<HTMLElement>("[data-framer-name]")
+    for (const el of Array.from(nodes)) {
+        if (el.getAttribute("data-framer-name") === name) return el
+    }
+    return null
+}
+
 interface Props {
     children?: React.ReactNode
     visible: boolean
@@ -160,6 +228,7 @@ interface Props {
     contentLayout: ContentLayout
     contentGap: number
     contentAlign: ContentAlign
+    nestedContentLayouts: NestedContentLayout[]
     style?: React.CSSProperties
 }
 
@@ -178,6 +247,7 @@ export default function OverlayPortal(props: Props) {
         contentLayout,
         contentGap,
         contentAlign,
+        nestedContentLayouts,
         style,
     } = props
 
@@ -270,48 +340,45 @@ export default function OverlayPortal(props: Props) {
         }
     }, [isCanvas, shown])
 
-    // Undo Framer's forced `position: absolute` on any direct child of
-    // the portaled root that was only ever relying on document flow for
-    // its placement (no explicit top/left/right/bottom -- just the
-    // static-position fallback), then lay the root out as a real flex
-    // row/column. See the file-level comment on "Content layout" for
-    // why this is necessary and why it's opt-in rather than automatic.
-    // Runs before the measurement effect below so that effect measures
-    // the corrected layout, not the broken one.
+    // Apply "Content layout" to the portaled root and "Nested layouts"
+    // to any named descendant Stack that needs the same treatment. See
+    // applyStackLayout and the file-level comment on "Content layout"
+    // for why this is necessary and why it's opt-in rather than
+    // automatic. Runs before the measurement effect below so that
+    // effect measures the corrected layout, not the broken one.
     React.useEffect(() => {
-        if (isCanvas || !shown || contentLayout === "none") return
+        if (isCanvas || !shown) return
         const root = contentRef.current?.firstElementChild as HTMLElement | null
         if (!root) return
 
-        root.style.setProperty("display", "flex", "important")
-        root.style.setProperty("flex-direction", contentLayout, "important")
-        root.style.setProperty("align-items", contentAlign, "important")
-        root.style.setProperty("gap", `${contentGap}px`, "important")
+        const cleanups: Array<() => void> = []
 
-        const restored: HTMLElement[] = []
-        for (const child of Array.from(root.children)) {
-            if (!(child instanceof HTMLElement)) continue
-            const cs = window.getComputedStyle(child)
-            if (
-                cs.position === "absolute" &&
-                cs.top === "auto" &&
-                cs.left === "auto" &&
-                cs.right === "auto" &&
-                cs.bottom === "auto"
-            ) {
-                child.style.setProperty("position", "static", "important")
-                restored.push(child)
-            }
+        if (contentLayout !== "none") {
+            cleanups.push(
+                applyStackLayout(root, contentLayout, contentAlign, contentGap)
+            )
+        }
+
+        for (const nested of nestedContentLayouts) {
+            if (!nested.layerName) continue
+            const target = findByLayerName(root, nested.layerName)
+            if (!target) continue
+            cleanups.push(
+                applyStackLayout(target, nested.layout, nested.align, nested.gap)
+            )
         }
 
         return () => {
-            root.style.removeProperty("display")
-            root.style.removeProperty("flex-direction")
-            root.style.removeProperty("align-items")
-            root.style.removeProperty("gap")
-            for (const child of restored) child.style.removeProperty("position")
+            for (const cleanup of cleanups) cleanup()
         }
-    }, [isCanvas, shown, contentLayout, contentAlign, contentGap])
+    }, [
+        isCanvas,
+        shown,
+        contentLayout,
+        contentAlign,
+        contentGap,
+        nestedContentLayouts,
+    ])
 
     // Measure the true rendered extent of `children`, given PROBE_WIDTH
     // of unambiguous room to mount into (see the file-level comment).
@@ -465,6 +532,7 @@ OverlayPortal.defaultProps = {
     contentLayout: "none",
     contentGap: 0,
     contentAlign: "center",
+    nestedContentLayouts: [],
 }
 
 addPropertyControls(OverlayPortal, {
@@ -494,6 +562,43 @@ addPropertyControls(OverlayPortal, {
         optionTitles: ["Start", "Center", "End"],
         defaultValue: "center",
         hidden: (props) => props.contentLayout === "none",
+    },
+    nestedContentLayouts: {
+        type: ControlType.Array,
+        title: "Nested layouts",
+        control: {
+            type: ControlType.Object,
+            controls: {
+                layerName: {
+                    type: ControlType.String,
+                    title: "Layer name",
+                    defaultValue: "",
+                    placeholder: "e.g. Arrow row",
+                },
+                layout: {
+                    type: ControlType.Enum,
+                    title: "Layout",
+                    options: ["row", "column"],
+                    optionTitles: ["Row", "Column"],
+                    defaultValue: "row",
+                },
+                gap: {
+                    type: ControlType.Number,
+                    title: "Gap",
+                    min: 0,
+                    step: 1,
+                    defaultValue: 0,
+                },
+                align: {
+                    type: ControlType.Enum,
+                    title: "Align",
+                    options: ["flex-start", "center", "flex-end"],
+                    optionTitles: ["Start", "Center", "End"],
+                    defaultValue: "center",
+                },
+            },
+        },
+        defaultValue: [],
     },
     visible: {
         type: ControlType.Boolean,
