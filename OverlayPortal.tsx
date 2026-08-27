@@ -222,28 +222,49 @@ export default function OverlayPortal(props: Props) {
     const resolvedNavigateLink = resolveLink(navigateLink)
 
     // Framer's ControlType.ComponentInstance stretches the assigned
-    // layer to width:100%/height:100% of wherever it's rendered,
-    // overriding whatever Fixed/Fit sizing the source layer itself has
-    // — that stretch is what makes a slot like this fill a frame when
-    // you drag-resize it on canvas. Inside the portal there's no such
-    // frame to fill (the wrapper below is deliberately sized to *match*
-    // the content, not the other way around), so that 100% resolves
-    // against an indefinite (max-content) ancestor — a circular case
-    // browsers fall back on inconsistently, squeezing the Stack to an
-    // arbitrary size instead of its real intrinsic one. Strip the
-    // injected width/height here so the Stack reports its own natural
-    // size, which is what the shrink-to-fit wrapper needs to measure
-    // correctly. Canvas keeps the stretch as-is, since resizing this
-    // layer's frame to visually resize its assigned content is the
-    // whole point of WYSIWYG editing there.
+    // layer to fill wherever it's rendered, overriding whatever
+    // Fixed/Fit sizing the source layer itself has -- that's what
+    // makes a slot like this fill a frame when you drag-resize it on
+    // canvas. It does this by injecting *both* explicit width/height
+    // AND position: "absolute" with left/top/right/bottom (an inset)
+    // onto the assigned element's style. Overriding width/height alone
+    // (the previous attempt) does nothing here: with both `left` and
+    // `right` still set from that injected style, the element stays
+    // stretched between them regardless of what `width` says, and
+    // `position: absolute` makes it look for the nearest positioned
+    // ancestor to size against -- which, since the immediate wrapper
+    // below is `position: static`, means it escapes to the portal's
+    // own `position: fixed` div, the same indefinite max-content
+    // ancestor this is trying to avoid. Strip the whole injected
+    // layout side (position/inset/width/height), not just width and
+    // height, so the Stack falls back to static, natural flow and
+    // reports its real intrinsic size. Canvas keeps the original
+    // stretch-to-fill behavior, since resizing this layer's frame to
+    // visually resize its assigned content is the whole point of
+    // WYSIWYG editing there.
     const portaledChildren = React.isValidElement(children)
-        ? React.cloneElement(children as React.ReactElement, {
-              style: {
-                  ...(children as React.ReactElement).props?.style,
-                  width: "auto",
-                  height: "auto",
-              },
-          })
+        ? (() => {
+              const el = children as React.ReactElement
+              const {
+                  position,
+                  top,
+                  left,
+                  right,
+                  bottom,
+                  inset,
+                  width,
+                  height,
+                  ...restStyle
+              } = (el.props?.style || {}) as React.CSSProperties
+              return React.cloneElement(el, {
+                  style: {
+                      ...restStyle,
+                      position: "relative",
+                      width: "auto",
+                      height: "auto",
+                  },
+              })
+          })()
         : children
 
     const portalContent =
