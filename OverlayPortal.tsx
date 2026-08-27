@@ -221,61 +221,17 @@ export default function OverlayPortal(props: Props) {
 
     const resolvedNavigateLink = resolveLink(navigateLink)
 
-    // Framer's ControlType.ComponentInstance stretches the assigned
-    // layer to fill wherever it's rendered, overriding whatever
-    // Fixed/Fit sizing the source layer itself has -- that's what
-    // makes a slot like this fill a frame when you drag-resize it on
-    // canvas. It does this by injecting *both* explicit width/height
-    // AND position: "absolute" with left/top/right/bottom (an inset)
-    // onto the assigned element's style. Overriding width/height alone
-    // (the previous attempt) does nothing here: with both `left` and
-    // `right` still set from that injected style, the element stays
-    // stretched between them regardless of what `width` says, and
-    // `position: absolute` makes it look for the nearest positioned
-    // ancestor to size against -- which, since the immediate wrapper
-    // below is `position: static`, means it escapes to the portal's
-    // own `position: fixed` div, the same indefinite max-content
-    // ancestor this is trying to avoid. Strip the whole injected
-    // layout side (position/inset/width/height), not just width and
-    // height, so the Stack falls back to static, natural flow.
-    //
-    // That's still not enough on its own, though: Framer's Stack root
-    // renders as display: block, and a block box's `width: auto` in
-    // normal flow doesn't shrink-wrap to its content -- by spec it
-    // fills its containing block's width. (`height: auto` looks fine
-    // because height on a block box genuinely is content-based; only
-    // width fills the parent.) So plain "auto" just inherits whatever
-    // width the ancestor chain offers, which bottoms out at whatever's
-    // left over in that shrink-to-fit chain -- the same squeeze as
-    // before. "fit-content" forces shrink-to-fit sizing regardless of
-    // display: block, which is what actually makes it hug its own
-    // content. Canvas keeps the original stretch-to-fill behavior,
-    // since resizing this layer's frame to visually resize its
-    // assigned content is the whole point of WYSIWYG editing there.
-    const portaledChildren = React.isValidElement(children)
-        ? (() => {
-              const el = children as React.ReactElement
-              const {
-                  position,
-                  top,
-                  left,
-                  right,
-                  bottom,
-                  inset,
-                  width,
-                  height,
-                  ...restStyle
-              } = (el.props?.style || {}) as React.CSSProperties
-              return React.cloneElement(el, {
-                  style: {
-                      ...restStyle,
-                      position: "relative",
-                      width: "fit-content",
-                      height: "auto",
-                  },
-              })
-          })()
-        : children
+    // Diagnostic step: every attempt so far has intercepted and rewritten
+    // whatever style Framer injects onto the assigned element's root
+    // before either of us ever saw the original, unmodified values. None
+    // of those rewrites have fixed the squeeze, and framer-16pcap0's
+    // display: block (rather than the flex a Stack should be) suggests
+    // the rewrites may be breaking something Framer's own Stack CSS
+    // depends on, rather than fixing a plain shrink-to-fit problem.
+    // Rendering `children` completely unmodified here so the actual
+    // injected style attribute can be read directly off the published
+    // DOM -- that's the missing ground truth before guessing further.
+    const portaledChildren = children
 
     const portalContent =
         shown && rect ? (
