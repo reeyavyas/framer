@@ -23,12 +23,18 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *  - A page with SEVERAL steps gets several TutorialOverlay instances
  *    dropped on it — one per step — sharing a `pageGroup` string. Give
  *    each instance a `stepNumber` (1, 2, 3, …); only the current step
- *    shows itself, and `clickAdvancesStep` / `nextStepAfterSeconds`
- *    hands off to the next stepNumber in that same group. A page with
- *    only one step just leaves `pageGroup` blank — it behaves exactly
- *    as a single always-on overlay, no coordination needed. Pick a
- *    `pageGroup` string that's unique to that one page (e.g. its page
- *    name) so unrelated pages never cross-talk.
+ *    shows itself, and one of three triggers hands off to the next
+ *    stepNumber in that same group: `clickAdvancesStep` (tap the real
+ *    target), `nextStepAfterSeconds` (a timer, no tap needed), or
+ *    `scrollAdvancesStep` + `scrollThresholdPercent` (for a beat like
+ *    "scroll down to see more" that has no tap target at all — point
+ *    `scrollContainerTarget` at the real scrollable element, tagged
+ *    the same way as any other target, or leave it blank to watch the
+ *    whole page). A page with only one step just leaves `pageGroup`
+ *    blank — it behaves exactly as a single always-on overlay, no
+ *    coordination needed. Pick a `pageGroup` string that's unique to
+ *    that one page (e.g. its page name) so unrelated pages never
+ *    cross-talk.
  *
  * This component never manages a cross-PAGE sequence itself — only the
  * optional same-page step handoff described above.
@@ -67,6 +73,9 @@ interface Props {
     stepNumber: number // 1-based position within pageGroup
     clickAdvancesStep: boolean // tapping the real target hands off to stepNumber + 1
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
+    scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
+    scrollThresholdPercent: number // 0-100, how far down before it counts as "scrolled"
+    scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
 
     cardTitle: string
     cardBody: string
@@ -222,6 +231,9 @@ export default function TutorialOverlay(props: Props) {
         stepNumber,
         clickAdvancesStep,
         nextStepAfterSeconds,
+        scrollAdvancesStep,
+        scrollThresholdPercent,
+        scrollContainerTarget,
         cardTitle,
         cardBody,
         cardAnchorX,
@@ -355,6 +367,42 @@ export default function TutorialOverlay(props: Props) {
         window.addEventListener("pointerdown", onPointerDown, true)
         return () => window.removeEventListener("pointerdown", onPointerDown, true)
     }, [active, isMyTurn, clickAdvancesStep, advanceStep])
+
+    // Scroll-driven hand-off — for a beat like "scroll down to see your
+    // other accounts" that has no tap target at all. Listens on the real
+    // scrollable container (tag it the same way as any other target, via
+    // TutorialTargets.tsx) or the whole page if scrollContainerTarget is
+    // blank, and hands off once the user has scrolled past the threshold.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !scrollAdvancesStep) return
+        const container = scrollContainerTarget
+            ? document.querySelector(`[data-tutorial-target="${scrollContainerTarget}"]`)
+            : null
+        const el: HTMLElement | Window = container instanceof HTMLElement ? container : window
+        function checkScroll() {
+            let percent: number
+            if (el === window) {
+                const doc = document.documentElement
+                const max = doc.scrollHeight - doc.clientHeight
+                percent = max > 0 ? (window.scrollY / max) * 100 : 100
+            } else {
+                const node = el as HTMLElement
+                const max = node.scrollHeight - node.clientHeight
+                percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+            }
+            if (percent >= scrollThresholdPercent) advanceStep()
+        }
+        checkScroll()
+        el.addEventListener("scroll", checkScroll, { passive: true })
+        return () => el.removeEventListener("scroll", checkScroll)
+    }, [
+        active,
+        isMyTurn,
+        scrollAdvancesStep,
+        scrollContainerTarget,
+        scrollThresholdPercent,
+        advanceStep,
+    ])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
@@ -634,6 +682,9 @@ TutorialOverlay.defaultProps = {
     stepNumber: 1,
     clickAdvancesStep: false,
     nextStepAfterSeconds: 0,
+    scrollAdvancesStep: false,
+    scrollThresholdPercent: 50,
+    scrollContainerTarget: "",
     cardTitle: "Let's disable your debit card",
     cardBody: "Tap on More",
     cardAnchorX: "center",
@@ -715,6 +766,30 @@ addPropertyControls(TutorialOverlay, {
         step: 0.5,
         defaultValue: 0,
         hidden: (props) => !props.pageGroup,
+    },
+    scrollAdvancesStep: {
+        type: ControlType.Boolean,
+        title: "Scroll advances step",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
+    },
+    scrollThresholdPercent: {
+        type: ControlType.Number,
+        title: "Scroll threshold %",
+        min: 0,
+        max: 100,
+        step: 5,
+        defaultValue: 50,
+        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+    },
+    scrollContainerTarget: {
+        type: ControlType.String,
+        title: "Scroll container ID",
+        defaultValue: "",
+        placeholder: "blank = whole page",
+        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
     },
     cardTitle: {
         type: ControlType.String,
