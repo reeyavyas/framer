@@ -678,16 +678,28 @@ export default function TutorialOverlay(props: Props) {
                     `}</style>
                     <svg viewBox="0 0 100 100" width="100%" height="100%">
                         <defs>
+                            {/* Open chevron, not a filled triangle — drawn with
+                                strokeWidth="1" in marker-unit space, which
+                                (markerUnits defaults to strokeWidth) means it
+                                renders at exactly the same stroke thickness as
+                                the line itself, not a heavier solid shape. */}
                             <marker
                                 id={arrowMarkerId}
                                 viewBox="0 0 10 10"
-                                refX="6"
+                                refX="8"
                                 refY="5"
                                 markerWidth="6"
                                 markerHeight="6"
                                 orient="auto"
                             >
-                                <path d="M0,0 L10,5 L0,10 Z" fill={arrowColor} />
+                                <path
+                                    d="M2,1 L8,5 L2,9"
+                                    fill="none"
+                                    stroke={arrowColor}
+                                    strokeWidth="1"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
                             </marker>
                         </defs>
                         {arrowVariant === "bounce" ? (
