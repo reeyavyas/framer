@@ -9,7 +9,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * ONE component, reused by dropping an instance on every page that
  * needs a tutorial beat — configured entirely from the property panel,
  * no code editing per page. Each instance is exactly one hole, one
- * instruction card, one optional arrow.
+ * instruction card, one optional glow ring around the hole.
  *
  * With 7 tutorials and several pages each, a code-authored multi-step
  * sequence living inside a single component doesn't scale — you'd end
@@ -39,6 +39,19 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *
  * Targeting a real element: see TutorialTargets.tsx — one shared file,
  * one thin override export per target, reused across every page.
+ *
+ * The glow ring is plain CSS (border + box-shadow + a CSS keyframe
+ * pulse), drawn directly around the same measured rect and shape used
+ * to cut the hole — so it's always perfectly aligned to it with no
+ * separate layer to place or keep in sync. An earlier version tried
+ * embedding a live native component (a ComponentInstance slot) as an
+ * arrow inside the portal; it crashed (Suspense frames from Framer's
+ * lazy component loading, unavailable to a component instantiated
+ * bare outside Framer's normal render tree) — this project's own git
+ * history (deleted OverlayPortal.tsx / OverlayOverride.tsx) already
+ * fought the same class of problem trying to portal live component
+ * content, so plain CSS is the deliberate choice here, not an
+ * oversight.
  */
 
 type HoleShape = "rectangle" | "circle" | "pill"
@@ -66,12 +79,11 @@ interface Props {
     progressIndex: number
     progressTotal: number
 
-    showArrow: boolean
-    arrowComponent?: React.ComponentType<any>
-    arrowSize: number
-    arrowDelaySeconds: number
-    arrowOffsetX: number
-    arrowOffsetY: number
+    showGlow: boolean
+    glowVariant: "static" | "breathing" | "ripple"
+    glowColor: string
+    glowIntensity: number
+    glowDelaySeconds: number // 0 = as soon as the hole appears. Uncapped.
 
     autoAdvanceAfterSeconds: number // 0 = off. Uncapped otherwise.
     autoAdvanceLink?: string
@@ -219,12 +231,11 @@ export default function TutorialOverlay(props: Props) {
         showProgressDots,
         progressIndex,
         progressTotal,
-        showArrow,
-        arrowComponent: ArrowComponent,
-        arrowSize,
-        arrowDelaySeconds,
-        arrowOffsetX,
-        arrowOffsetY,
+        showGlow,
+        glowVariant,
+        glowColor,
+        glowIntensity,
+        glowDelaySeconds,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
@@ -242,7 +253,7 @@ export default function TutorialOverlay(props: Props) {
     const [mounted, setMounted] = React.useState(false)
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
-    const [arrowShown, setArrowShown] = React.useState(false)
+    const [glowShown, setGlowShown] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
@@ -267,7 +278,7 @@ export default function TutorialOverlay(props: Props) {
     }, [pageGroup, stepNumber])
 
     React.useEffect(() => setMounted(true), [])
-    React.useEffect(() => setArrowShown(false), [target])
+    React.useEffect(() => setGlowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
     // e.g. a draggable element like CircleOverrides.tsx's circles).
@@ -295,15 +306,15 @@ export default function TutorialOverlay(props: Props) {
         }
     }, [active, isMyTurn, target])
 
-    // Timer-driven arrow reveal — independent of any click, uncapped delay.
+    // Timer-driven glow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !showArrow) return
+        if (!active || !isMyTurn || !showGlow) return
         const t = setTimeout(
-            () => setArrowShown(true),
-            Math.max(arrowDelaySeconds, 0) * 1000
+            () => setGlowShown(true),
+            Math.max(glowDelaySeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, showArrow, arrowDelaySeconds])
+    }, [active, isMyTurn, showGlow, glowDelaySeconds])
 
     // Optional timer-driven navigation to the next page — for a pure
     // "watch this" beat that needs no tap at all.
@@ -388,10 +399,12 @@ export default function TutorialOverlay(props: Props) {
               )}")`
             : undefined
 
-    const arrowAnchor =
-        rect != null
-            ? { x: rect.left + rect.width / 2 + arrowOffsetX, y: rect.top + arrowOffsetY }
-            : null
+    // Same shape/radius logic as the hole cut, so the glow always traces
+    // it exactly — nothing to keep in sync manually.
+    const glowRadius: React.CSSProperties["borderRadius"] =
+        holeShape === "circle" ? "50%" : holeShape === "pill" ? 999 : cornerRadius
+    const glowBlur = 10 + glowIntensity * 3
+    const glowSpread = 1 + glowIntensity
 
     const content = (
         <div data-tutorial-overlay="true" style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
@@ -467,32 +480,63 @@ export default function TutorialOverlay(props: Props) {
                 </div>
             )}
 
-            {/* "click here" arrow — your own native Framer component (its
-                loop animation keeps running untouched; we only fade the
-                wrapper in/out and position it). No component chosen = no
-                arrow. The wrapper gets an explicit pixel size — see the
-                note above ArrowComponent's property control for why. */}
-            <AnimatePresence>
-                {showArrow && arrowShown && arrowAnchor && ArrowComponent && (
-                    <motion.div
-                        key="arrow"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+            {/* glow ring — appears/disappears on its own, traces the hole
+                exactly since it shares the same rect/shape/radius. Plain
+                CSS + a keyframe pulse, no separate layer, no crash risk. */}
+            {showGlow && glowShown && rect && (
+                <>
+                    <style>{`
+                        @keyframes tutorial-glow-breathe {
+                            0%, 100% { opacity: 0.5; transform: scale(0.97); }
+                            50% { opacity: 1; transform: scale(1.03); }
+                        }
+                        @keyframes tutorial-glow-ripple {
+                            0% { transform: scale(1); opacity: 0.55; }
+                            100% { transform: scale(1.4); opacity: 0; }
+                        }
+                    `}</style>
+                    <div
                         style={{
                             position: "fixed",
-                            left: arrowAnchor.x,
-                            top: arrowAnchor.y,
-                            width: arrowSize,
-                            height: arrowSize,
+                            left: rect.left,
+                            top: rect.top,
+                            width: rect.width,
+                            height: rect.height,
                             pointerEvents: "none",
                         }}
                     >
-                        <ArrowComponent />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        {glowVariant === "ripple" ? (
+                            [0, 0.6, 1.2].map((delay) => (
+                                <div
+                                    key={delay}
+                                    style={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        borderRadius: glowRadius,
+                                        border: `2px solid ${glowColor}`,
+                                        animation: "tutorial-glow-ripple 1.8s ease-out infinite",
+                                        animationDelay: `${delay}s`,
+                                    }}
+                                />
+                            ))
+                        ) : (
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    borderRadius: glowRadius,
+                                    border: `2px solid ${glowColor}`,
+                                    boxShadow: `0 0 ${glowBlur}px ${glowSpread}px ${glowColor}`,
+                                    animation:
+                                        glowVariant === "breathing"
+                                            ? "tutorial-glow-breathe 1.8s ease-in-out infinite"
+                                            : "none",
+                                }}
+                            />
+                        )}
+                    </div>
+                </>
+            )}
 
             {/* skip / exit — the only other clickable surfaces in the overlay */}
             {showSkipButton && (
@@ -599,11 +643,11 @@ TutorialOverlay.defaultProps = {
     showProgressDots: true,
     progressIndex: 1,
     progressTotal: 4,
-    showArrow: true,
-    arrowSize: 120,
-    arrowDelaySeconds: 1.2,
-    arrowOffsetX: 0,
-    arrowOffsetY: -20,
+    showGlow: true,
+    glowVariant: "breathing",
+    glowColor: "rgba(5,147,144,1)",
+    glowIntensity: 2,
+    glowDelaySeconds: 0,
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
     blurAmount: 8,
@@ -729,49 +773,43 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: 4,
         hidden: (props) => !props.showProgressDots,
     },
-    showArrow: {
+    showGlow: {
         type: ControlType.Boolean,
-        title: "Arrow",
+        title: "Glow",
         defaultValue: true,
         enabledTitle: "Show",
         disabledTitle: "Hide",
     },
-    // ComponentInstance content has, in this exact project's history,
-    // been forced to a percentage size by Framer and collapsed to 0x0
-    // once portaled without a sized parent to resolve against (see the
-    // deleted OverlayPortal.tsx commits). arrowSize below exists so the
-    // wrapper always has a real, non-zero pixel size for that to land on.
-    arrowComponent: {
-        type: ControlType.ComponentInstance,
-        title: "Arrow component",
-        hidden: (props) => !props.showArrow,
+    glowVariant: {
+        type: ControlType.Enum,
+        title: "Glow style",
+        options: ["static", "breathing", "ripple"],
+        optionTitles: ["Soft glow", "Breathing pulse", "Ripple ping"],
+        defaultValue: "breathing",
+        hidden: (props) => !props.showGlow,
     },
-    arrowSize: {
-        type: ControlType.Number,
-        title: "Arrow box size",
-        min: 10,
-        defaultValue: 120,
-        hidden: (props) => !props.showArrow,
+    glowColor: {
+        type: ControlType.Color,
+        title: "Glow color",
+        defaultValue: "rgba(5,147,144,1)",
+        hidden: (props) => !props.showGlow,
     },
-    arrowDelaySeconds: {
+    glowIntensity: {
         type: ControlType.Number,
-        title: "Arrow delay (sec)",
+        title: "Glow intensity",
+        min: 0,
+        max: 5,
+        step: 1,
+        defaultValue: 2,
+        hidden: (props) => !props.showGlow,
+    },
+    glowDelaySeconds: {
+        type: ControlType.Number,
+        title: "Glow delay (sec)",
         min: 0,
         step: 0.1,
-        defaultValue: 1.2,
-        hidden: (props) => !props.showArrow,
-    },
-    arrowOffsetX: {
-        type: ControlType.Number,
-        title: "Arrow offset X",
         defaultValue: 0,
-        hidden: (props) => !props.showArrow,
-    },
-    arrowOffsetY: {
-        type: ControlType.Number,
-        title: "Arrow offset Y",
-        defaultValue: -20,
-        hidden: (props) => !props.showArrow,
+        hidden: (props) => !props.showGlow,
     },
     autoAdvanceAfterSeconds: {
         type: ControlType.Number,
