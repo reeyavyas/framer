@@ -728,14 +728,18 @@ export default function TutorialOverlay(props: Props) {
                             </g>
                         ) : (
                             <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
-                                {/* Cubic — the first control point (60,15) swings
-                                    the curve's body out much further than a
-                                    quadratic could while the second control
-                                    point (30,55) keeps the same end tangent
-                                    computed above, so strengthening the curve
-                                    doesn't reintroduce the alignment bug. */}
+                                {/* Quadratic, deliberately — a single control
+                                    point can only ever bow one direction, so
+                                    this structurally cannot produce the
+                                    S-curve a cubic's two opposing control
+                                    points did. A quadratic's end tangent
+                                    depends only on (end - control), never on
+                                    the start point, so the start below (55,5)
+                                    can be pushed far out for a much stronger
+                                    bow with zero effect on the already-correct
+                                    curveArrowAngle computed above. */}
                                 <path
-                                    d="M15,8 C60,15 30,55 50,78"
+                                    d="M55,5 Q30,55 50,78"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
