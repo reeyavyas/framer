@@ -67,9 +67,8 @@ interface Props {
     progressTotal: number
 
     showArrow: boolean
-    arrowImage?: { src: string } | string
-    arrowWidth: number
-    arrowRotation: number
+    arrowComponent?: React.ComponentType<any>
+    arrowSize: number
     arrowDelaySeconds: number
     arrowOffsetX: number
     arrowOffsetY: number
@@ -221,9 +220,8 @@ export default function TutorialOverlay(props: Props) {
         progressIndex,
         progressTotal,
         showArrow,
-        arrowImage,
-        arrowWidth,
-        arrowRotation,
+        arrowComponent: ArrowComponent,
+        arrowSize,
         arrowDelaySeconds,
         arrowOffsetX,
         arrowOffsetY,
@@ -469,27 +467,30 @@ export default function TutorialOverlay(props: Props) {
                 </div>
             )}
 
-            {/* "click here" arrow — your own uploaded asset, positioned and
-                rotated to point wherever you need. No image set = no arrow. */}
+            {/* "click here" arrow — your own native Framer component (its
+                loop animation keeps running untouched; we only fade the
+                wrapper in/out and position it). No component chosen = no
+                arrow. The wrapper gets an explicit pixel size — see the
+                note above ArrowComponent's property control for why. */}
             <AnimatePresence>
-                {showArrow && arrowShown && arrowAnchor && arrowImage && (
-                    <motion.img
+                {showArrow && arrowShown && arrowAnchor && ArrowComponent && (
+                    <motion.div
                         key="arrow"
-                        src={typeof arrowImage === "string" ? arrowImage : arrowImage.src}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         style={{
                             position: "fixed",
-                            left: arrowAnchor.x - arrowWidth / 2,
-                            top: arrowAnchor.y - arrowWidth / 2,
-                            width: arrowWidth,
-                            height: "auto",
-                            transform: `rotate(${arrowRotation}deg)`,
+                            left: arrowAnchor.x,
+                            top: arrowAnchor.y,
+                            width: arrowSize,
+                            height: arrowSize,
                             pointerEvents: "none",
                         }}
-                    />
+                    >
+                        <ArrowComponent />
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -599,8 +600,7 @@ TutorialOverlay.defaultProps = {
     progressIndex: 1,
     progressTotal: 4,
     showArrow: true,
-    arrowWidth: 80,
-    arrowRotation: 0,
+    arrowSize: 120,
     arrowDelaySeconds: 1.2,
     arrowOffsetX: 0,
     arrowOffsetY: -20,
@@ -736,23 +736,21 @@ addPropertyControls(TutorialOverlay, {
         enabledTitle: "Show",
         disabledTitle: "Hide",
     },
-    arrowImage: {
-        type: ControlType.Image,
-        title: "Arrow asset",
+    // ComponentInstance content has, in this exact project's history,
+    // been forced to a percentage size by Framer and collapsed to 0x0
+    // once portaled without a sized parent to resolve against (see the
+    // deleted OverlayPortal.tsx commits). arrowSize below exists so the
+    // wrapper always has a real, non-zero pixel size for that to land on.
+    arrowComponent: {
+        type: ControlType.ComponentInstance,
+        title: "Arrow component",
         hidden: (props) => !props.showArrow,
     },
-    arrowWidth: {
+    arrowSize: {
         type: ControlType.Number,
-        title: "Arrow width",
+        title: "Arrow box size",
         min: 10,
-        defaultValue: 80,
-        hidden: (props) => !props.showArrow,
-    },
-    arrowRotation: {
-        type: ControlType.Number,
-        title: "Arrow rotation",
-        step: 1,
-        defaultValue: 0,
+        defaultValue: 120,
         hidden: (props) => !props.showArrow,
     },
     arrowDelaySeconds: {
