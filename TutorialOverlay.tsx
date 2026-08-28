@@ -512,6 +512,12 @@ export default function TutorialOverlay(props: Props) {
     // than hand-set.
     const curveArrowAngle = bezierEndAngleDeg(48.89, 54.67, 58, 20.44)
     const bounceArrowAngle = bezierEndAngleDeg(50, 50, 50, 12)
+    // Manual aesthetic nudge on top of the true tangent angle — the head
+    // reads better turned a couple degrees further left than the exact
+    // geometric tangent. Increasing this swings the head further toward
+    // pointing left; decreasing (or going negative) swings it back
+    // toward/past straight down. Tweak freely without touching the path.
+    const curveArrowheadAdjustDeg = 4
 
     const arrowAnchor =
         rect != null
@@ -741,7 +747,7 @@ export default function TutorialOverlay(props: Props) {
                                     fill="none"
                                     strokeLinecap="round"
                                 />
-                                <g transform={`translate(48.89,54.67) rotate(${curveArrowAngle})`}>
+                                <g transform={`translate(48.89,54.67) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}>
                                     <path
                                         d="M-11,-8 L0,0 L-11,8"
                                         fill="none"
