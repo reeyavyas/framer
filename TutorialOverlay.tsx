@@ -510,7 +510,7 @@ export default function TutorialOverlay(props: Props) {
     // These must match the actual path coordinates rendered below — see
     // the comment on bezierEndAngleDeg for why this is computed rather
     // than hand-set.
-    const curveArrowAngle = bezierEndAngleDeg(54.89, 54.67, 58, 20.44)
+    const curveArrowAngle = bezierEndAngleDeg(48.89, 54.67, 58, 20.44)
     const bounceArrowAngle = bezierEndAngleDeg(50, 50, 50, 12)
 
     const arrowAnchor =
@@ -733,15 +733,15 @@ export default function TutorialOverlay(props: Props) {
                                     component's 0-100 one (uniform scale, so
                                     the shape and every tangent angle are
                                     preserved exactly): (146,42) (261,92)
-                                    (247,246) × 100/450. */}
+                                    (220,246) × 100/450. */}
                                 <path
-                                    d="M32.44,9.33 Q58,20.44 54.89,54.67"
+                                    d="M32.44,9.33 Q58,20.44 48.89,54.67"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
                                     strokeLinecap="round"
                                 />
-                                <g transform={`translate(54.89,54.67) rotate(${curveArrowAngle})`}>
+                                <g transform={`translate(48.89,54.67) rotate(${curveArrowAngle})`}>
                                     <path
                                         d="M-11,-8 L0,0 L-11,8"
                                         fill="none"
