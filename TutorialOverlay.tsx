@@ -532,6 +532,81 @@ export default function TutorialOverlay(props: Props) {
             ? { x: rect.left + rect.width / 2 + arrowOffsetX, y: rect.top + arrowOffsetY }
             : null
 
+    const arrowKeyframes = (
+        <style>{`
+            @keyframes tutorial-arrow-curve-pulse {
+                0%, 100% { opacity: 0.65; transform: translate(0px, 0px); }
+                50% { opacity: 1; transform: translate(4px, 4px); }
+            }
+            @keyframes tutorial-arrow-bounce {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(12px); }
+            }
+        `}</style>
+    )
+
+    // Shared between the real portaled arrow and the canvas-mode preview
+    // below, so there is only ever one copy of this markup to keep
+    // correct — see the note at the render site for why a canvas preview
+    // is possible for the arrow specifically (it needs no real DOM
+    // measurement) when the rest of the overlay does not.
+    const arrowSvg = (
+        <svg viewBox="0 0 100 100" width="100%" height="100%">
+            {arrowVariant === "bounce" ? (
+                <g style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}>
+                    <path
+                        d="M50,12 L50,50"
+                        stroke={arrowColor}
+                        strokeWidth={arrowStrokeWidth}
+                        fill="none"
+                        strokeLinecap="round"
+                    />
+                    <g transform={`translate(50,50) rotate(${bounceArrowAngle})`}>
+                        <path
+                            d="M-11,-8 L0,0 L-11,8"
+                            fill="none"
+                            stroke={arrowColor}
+                            strokeWidth={arrowStrokeWidth}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </g>
+                </g>
+            ) : (
+                <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
+                    {/* User-specified path, scaled from the original 0-450
+                        viewBox into this component's 0-100 one (uniform
+                        scale, so the shape and every tangent angle are
+                        preserved exactly): (146,42) (261,92) (220,246) ×
+                        100/450. */}
+                    <path
+                        d="M32.44,9.33 Q58,20.44 48.89,54.67"
+                        stroke={arrowColor}
+                        strokeWidth={arrowStrokeWidth}
+                        fill="none"
+                        strokeLinecap="round"
+                    />
+                    <g
+                        transform={`translate(${48.89 + curveArrowheadOffsetX},${54.67 + curveArrowheadOffsetY}) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}
+                    >
+                        <path
+                            d="M-11,-8 L0,0 L-11,8"
+                            fill="none"
+                            stroke={arrowColor}
+                            strokeWidth={arrowStrokeWidth}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </g>
+                </g>
+            )}
+        </svg>
+    )
+
+    const arrowTransform = arrowReflect
+        ? `rotate(${arrowRotation}deg) rotate(${arrowReflectAngle}deg) scaleY(-1) rotate(${-arrowReflectAngle}deg)`
+        : `rotate(${arrowRotation}deg)`
+
     const content = (
         <div data-tutorial-overlay="true" style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
             {/* dim + blur, hole cut for this page's target, click-blocking / scroll-passthrough */}
@@ -692,84 +767,12 @@ export default function TutorialOverlay(props: Props) {
                         top: arrowAnchor.y - arrowSize / 2,
                         width: arrowSize,
                         height: arrowSize,
-                        transform: arrowReflect
-                            ? `rotate(${arrowRotation}deg) rotate(${arrowReflectAngle}deg) scaleY(-1) rotate(${-arrowReflectAngle}deg)`
-                            : `rotate(${arrowRotation}deg)`,
+                        transform: arrowTransform,
                         pointerEvents: "none",
                     }}
                 >
-                    <style>{`
-                        @keyframes tutorial-arrow-curve-pulse {
-                            0%, 100% { opacity: 0.65; transform: translate(0px, 0px); }
-                            50% { opacity: 1; transform: translate(4px, 4px); }
-                        }
-                        @keyframes tutorial-arrow-bounce {
-                            0%, 100% { transform: translateY(0px); }
-                            50% { transform: translateY(12px); }
-                        }
-                    `}</style>
-                    <svg viewBox="0 0 100 100" width="100%" height="100%">
-                        {/* Arrowhead angle is computed by bezierEndAngleDeg
-                            above from the SAME coordinates the line path
-                            uses, then applied as an explicit rotate() on its
-                            own <g> — not left to the SVG engine's own marker
-                            orient="auto", which is mathematically equivalent
-                            but rendered visibly misaligned in Framer's
-                            Preview across multiple attempts. Both the line
-                            and the arrowhead's <g> sit inside one outer <g>
-                            per variant, so they still move as a single unit
-                            under the pulse/bounce animation and under
-                            arrowRotation on the wrapper above. */}
-                        {arrowVariant === "bounce" ? (
-                            <g style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}>
-                                <path
-                                    d="M50,12 L50,50"
-                                    stroke={arrowColor}
-                                    strokeWidth={arrowStrokeWidth}
-                                    fill="none"
-                                    strokeLinecap="round"
-                                />
-                                <g transform={`translate(50,50) rotate(${bounceArrowAngle})`}>
-                                    <path
-                                        d="M-11,-8 L0,0 L-11,8"
-                                        fill="none"
-                                        stroke={arrowColor}
-                                        strokeWidth={arrowStrokeWidth}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </g>
-                            </g>
-                        ) : (
-                            <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
-                                {/* User-specified path, scaled from the
-                                    original 0-450 viewBox into this
-                                    component's 0-100 one (uniform scale, so
-                                    the shape and every tangent angle are
-                                    preserved exactly): (146,42) (261,92)
-                                    (220,246) × 100/450. */}
-                                <path
-                                    d="M32.44,9.33 Q58,20.44 48.89,54.67"
-                                    stroke={arrowColor}
-                                    strokeWidth={arrowStrokeWidth}
-                                    fill="none"
-                                    strokeLinecap="round"
-                                />
-                                <g
-                                    transform={`translate(${48.89 + curveArrowheadOffsetX},${54.67 + curveArrowheadOffsetY}) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}
-                                >
-                                    <path
-                                        d="M-11,-8 L0,0 L-11,8"
-                                        fill="none"
-                                        stroke={arrowColor}
-                                        strokeWidth={arrowStrokeWidth}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </g>
-                            </g>
-                        )}
-                    </svg>
+                    {arrowKeyframes}
+                    {arrowSvg}
                 </div>
             )}
 
@@ -835,25 +838,58 @@ export default function TutorialOverlay(props: Props) {
                         inset: 0,
                         border: "2px dashed rgba(255,90,90,0.7)",
                         background: "rgba(255,90,90,0.08)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "monospace",
-                        fontSize: 10,
-                        color: "rgba(200,50,50,0.9)",
-                        textAlign: "center",
-                        padding: 4,
+                        overflow: "hidden",
                     }}
                 >
-                    Tutorial overlay
-                    <br />
-                    target: {target || "(none set)"}
-                    {pageGroup && (
-                        <>
-                            <br />
-                            {pageGroup} · step {stepNumber}
-                        </>
+                    {/* Everything else in this overlay (the hole, the glow,
+                        the card's anchor) depends on measuring a REAL target
+                        element on the real page — that doesn't exist on
+                        Framer's design-time canvas, only in Preview, so it
+                        can't be shown here. The arrow is different: its
+                        shape, color, curve, and every offset/rotation
+                        control is a plain prop value with no dependency on
+                        any real DOM element, so it can render live right on
+                        the canvas — tune color/curve/rotation/offsets here
+                        and see them immediately, no Preview round-trip
+                        needed for THIS piece specifically. */}
+                    {showArrow && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: 10,
+                            }}
+                        >
+                            {arrowKeyframes}
+                            <div style={{ width: "70%", maxWidth: 160, aspectRatio: "1 / 1", transform: arrowTransform }}>
+                                {arrowSvg}
+                            </div>
+                        </div>
                     )}
+                    <div
+                        style={{
+                            position: "absolute",
+                            left: 4,
+                            right: 4,
+                            bottom: 4,
+                            fontFamily: "monospace",
+                            fontSize: 10,
+                            color: "rgba(200,50,50,0.9)",
+                            textAlign: "center",
+                            pointerEvents: "none",
+                        }}
+                    >
+                        target: {target || "(none set)"}
+                        {pageGroup && (
+                            <>
+                                {" · "}
+                                {pageGroup} step {stepNumber}
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
         </>
