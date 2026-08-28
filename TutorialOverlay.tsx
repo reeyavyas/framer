@@ -49,15 +49,20 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * The glow ring is plain CSS (border + box-shadow + a CSS keyframe
  * pulse), drawn directly around the same measured rect and shape used
  * to cut the hole — so it's always perfectly aligned to it with no
- * separate layer to place or keep in sync. An earlier version tried
- * embedding a live native component (a ComponentInstance slot) as an
- * arrow inside the portal; it crashed (Suspense frames from Framer's
- * lazy component loading, unavailable to a component instantiated
- * bare outside Framer's normal render tree) — this project's own git
- * history (deleted OverlayPortal.tsx / OverlayOverride.tsx) already
- * fought the same class of problem trying to portal live component
- * content, so plain CSS is the deliberate choice here, not an
- * oversight.
+ * separate layer to place or keep in sync.
+ *
+ * The arrow is hand-built inline SVG + framer-motion — plain React,
+ * the same category as everything else in this file, not a live
+ * Framer component instance. (An earlier version tried embedding a
+ * native ComponentInstance slot as the arrow and it crashed — Suspense
+ * frames from Framer's own lazy component loading, unavailable to a
+ * component instantiated bare outside Framer's normal render tree.
+ * This project's own git history — deleted OverlayPortal.tsx /
+ * OverlayOverride.tsx — already fought that same class of problem
+ * trying to portal live Framer component content.) The line and the
+ * arrowhead live inside ONE <g> together, so arrowRotation rotates
+ * them as a single rigid unit — there's no way for the two pieces to
+ * drift out of alignment with each other.
  */
 
 type HoleShape = "rectangle" | "circle" | "pill"
@@ -93,6 +98,16 @@ interface Props {
     glowColor: string
     glowIntensity: number
     glowDelaySeconds: number // 0 = as soon as the hole appears. Uncapped.
+
+    showArrow: boolean
+    arrowVariant: "curve" | "bounce"
+    arrowColor: string
+    arrowStrokeWidth: number
+    arrowSize: number
+    arrowRotation: number // degrees, rotates the whole grouped line+arrowhead together
+    arrowDelaySeconds: number // uncapped
+    arrowOffsetX: number
+    arrowOffsetY: number
 
     autoAdvanceAfterSeconds: number // 0 = off. Uncapped otherwise.
     autoAdvanceLink?: string
@@ -248,6 +263,15 @@ export default function TutorialOverlay(props: Props) {
         glowColor,
         glowIntensity,
         glowDelaySeconds,
+        showArrow,
+        arrowVariant,
+        arrowColor,
+        arrowStrokeWidth,
+        arrowSize,
+        arrowRotation,
+        arrowDelaySeconds,
+        arrowOffsetX,
+        arrowOffsetY,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
@@ -266,6 +290,7 @@ export default function TutorialOverlay(props: Props) {
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
     const [glowShown, setGlowShown] = React.useState(false)
+    const [arrowShown, setArrowShown] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
@@ -291,6 +316,7 @@ export default function TutorialOverlay(props: Props) {
 
     React.useEffect(() => setMounted(true), [])
     React.useEffect(() => setGlowShown(false), [target])
+    React.useEffect(() => setArrowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
     // e.g. a draggable element like CircleOverrides.tsx's circles).
@@ -327,6 +353,16 @@ export default function TutorialOverlay(props: Props) {
         )
         return () => clearTimeout(t)
     }, [active, isMyTurn, showGlow, glowDelaySeconds])
+
+    // Timer-driven arrow reveal — independent of any click, uncapped delay.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !showArrow) return
+        const t = setTimeout(
+            () => setArrowShown(true),
+            Math.max(arrowDelaySeconds, 0) * 1000
+        )
+        return () => clearTimeout(t)
+    }, [active, isMyTurn, showArrow, arrowDelaySeconds])
 
     // Optional timer-driven navigation to the next page — for a pure
     // "watch this" beat that needs no tap at all.
@@ -453,6 +489,11 @@ export default function TutorialOverlay(props: Props) {
         holeShape === "circle" ? "50%" : holeShape === "pill" ? 999 : cornerRadius
     const glowBlur = 10 + glowIntensity * 3
     const glowSpread = 1 + glowIntensity
+
+    const arrowAnchor =
+        rect != null
+            ? { x: rect.left + rect.width / 2 + arrowOffsetX, y: rect.top + arrowOffsetY }
+            : null
 
     const content = (
         <div data-tutorial-overlay="true" style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
@@ -586,6 +627,65 @@ export default function TutorialOverlay(props: Props) {
                 </>
             )}
 
+            {/* click-here arrow — line + arrowhead live in ONE <g>, so
+                arrowRotation (on this plain outer wrapper) always rotates
+                them together as a single rigid unit. Loop animation is
+                plain CSS keyframes on the <g>, not framer-motion — keeps
+                this fully independent of the outer wrapper's own static
+                rotate() transform, the same separation that fixed the
+                card's positioning bug earlier in this file. */}
+            {showArrow && arrowShown && arrowAnchor && (
+                <div
+                    style={{
+                        position: "fixed",
+                        left: arrowAnchor.x - arrowSize / 2,
+                        top: arrowAnchor.y - arrowSize / 2,
+                        width: arrowSize,
+                        height: arrowSize,
+                        transform: `rotate(${arrowRotation}deg)`,
+                        pointerEvents: "none",
+                    }}
+                >
+                    <style>{`
+                        @keyframes tutorial-arrow-curve-pulse {
+                            0%, 100% { opacity: 0.65; transform: translate(0px, 0px); }
+                            50% { opacity: 1; transform: translate(4px, 4px); }
+                        }
+                        @keyframes tutorial-arrow-bounce {
+                            0%, 100% { transform: translateY(0px); }
+                            50% { transform: translateY(12px); }
+                        }
+                    `}</style>
+                    <svg viewBox="0 0 100 100" width="100%" height="100%">
+                        {arrowVariant === "bounce" ? (
+                            <g
+                                style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}
+                                stroke={arrowColor}
+                                strokeWidth={arrowStrokeWidth}
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M50,12 L50,55" />
+                                <path d="M35,40 L50,58 L65,40" />
+                            </g>
+                        ) : (
+                            <g
+                                style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}
+                                stroke={arrowColor}
+                                strokeWidth={arrowStrokeWidth}
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M22,18 Q26,64 62,70" />
+                                <path d="M48,55 L63,70 L70,53" />
+                            </g>
+                        )}
+                    </svg>
+                </div>
+            )}
+
             {/* skip / exit — the only other clickable surfaces in the overlay */}
             {showSkipButton && (
                 <a
@@ -699,6 +799,15 @@ TutorialOverlay.defaultProps = {
     glowColor: "rgba(5,147,144,1)",
     glowIntensity: 2,
     glowDelaySeconds: 0,
+    showArrow: false,
+    arrowVariant: "curve",
+    arrowColor: "rgba(5,147,144,1)",
+    arrowStrokeWidth: 8,
+    arrowSize: 90,
+    arrowRotation: 0,
+    arrowDelaySeconds: 1.2,
+    arrowOffsetX: 0,
+    arrowOffsetY: -100,
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
     blurAmount: 8,
@@ -885,6 +994,68 @@ addPropertyControls(TutorialOverlay, {
         step: 0.1,
         defaultValue: 0,
         hidden: (props) => !props.showGlow,
+    },
+    showArrow: {
+        type: ControlType.Boolean,
+        title: "Arrow",
+        defaultValue: false,
+        enabledTitle: "Show",
+        disabledTitle: "Hide",
+    },
+    arrowVariant: {
+        type: ControlType.Enum,
+        title: "Arrow style",
+        options: ["curve", "bounce"],
+        optionTitles: ["Curved", "Bounce"],
+        defaultValue: "curve",
+        hidden: (props) => !props.showArrow,
+    },
+    arrowColor: {
+        type: ControlType.Color,
+        title: "Arrow color",
+        defaultValue: "rgba(5,147,144,1)",
+        hidden: (props) => !props.showArrow,
+    },
+    arrowStrokeWidth: {
+        type: ControlType.Number,
+        title: "Arrow stroke width",
+        min: 1,
+        defaultValue: 8,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowSize: {
+        type: ControlType.Number,
+        title: "Arrow size",
+        min: 10,
+        defaultValue: 90,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowRotation: {
+        type: ControlType.Number,
+        title: "Arrow rotation",
+        step: 1,
+        defaultValue: 0,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowDelaySeconds: {
+        type: ControlType.Number,
+        title: "Arrow delay (sec)",
+        min: 0,
+        step: 0.1,
+        defaultValue: 1.2,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowOffsetX: {
+        type: ControlType.Number,
+        title: "Arrow offset X",
+        defaultValue: 0,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowOffsetY: {
+        type: ControlType.Number,
+        title: "Arrow offset Y",
+        defaultValue: -100,
+        hidden: (props) => !props.showArrow,
     },
     autoAdvanceAfterSeconds: {
         type: ControlType.Number,
