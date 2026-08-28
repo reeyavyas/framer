@@ -26,4 +26,11 @@ function withTutorialTarget(id: string) {
     }
 }
 
-export const MoreTabTarget = withTutorialTarget("more-tab")
+// Framer's Override dropdown only picks up top-level exported function
+// declarations matching (Component) => ComponentType — not a const
+// assigned from calling another function. So each target gets its own
+// thin named export like this one, even though they all share the
+// same factory above. Add one more per target the same way.
+export function MoreTabTarget(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("more-tab")(Component)
+}
