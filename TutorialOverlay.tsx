@@ -678,25 +678,28 @@ export default function TutorialOverlay(props: Props) {
                     `}</style>
                     <svg viewBox="0 0 100 100" width="100%" height="100%">
                         <defs>
-                            {/* Open chevron, not a filled triangle — drawn with
-                                strokeWidth="1" in marker-unit space, which
-                                (markerUnits defaults to strokeWidth) means it
-                                renders at exactly the same stroke thickness as
-                                the line itself, not a heavier solid shape. */}
+                            {/* Open chevron, not a filled triangle. markerUnits
+                                is explicitly "userSpaceOnUse" — every number
+                                here lives in the SAME 0-100 units as the line
+                                path below, no implicit marker-viewBox scaling
+                                to get wrong. strokeWidth={arrowStrokeWidth} is
+                                the literal same value passed to the line's own
+                                stroke-width, not a converted or scaled one, so
+                                the two are guaranteed to render identically. */}
                             <marker
                                 id={arrowMarkerId}
-                                viewBox="0 0 10 10"
-                                refX="8"
-                                refY="5"
-                                markerWidth="6"
-                                markerHeight="6"
+                                markerUnits="userSpaceOnUse"
+                                markerWidth="24"
+                                markerHeight="24"
+                                refX="16"
+                                refY="12"
                                 orient="auto"
                             >
                                 <path
-                                    d="M2,1 L8,5 L2,9"
+                                    d="M6,4 L16,12 L6,20"
                                     fill="none"
                                     stroke={arrowColor}
-                                    strokeWidth="1"
+                                    strokeWidth={arrowStrokeWidth}
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                 />
@@ -705,7 +708,7 @@ export default function TutorialOverlay(props: Props) {
                         {arrowVariant === "bounce" ? (
                             <g style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}>
                                 <path
-                                    d="M50,12 L50,55"
+                                    d="M50,12 L50,50"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
@@ -715,8 +718,12 @@ export default function TutorialOverlay(props: Props) {
                             </g>
                         ) : (
                             <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
+                                {/* End tangent = (endpoint - controlPoint) = (20,23),
+                                    ~49° off horizontal — a clearly diagonal
+                                    downward point, not the ~9° near-horizontal
+                                    tangent the previous curve produced. */}
                                 <path
-                                    d="M22,18 Q26,64 62,70"
+                                    d="M15,10 Q30,55 50,78"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
