@@ -13,11 +13,25 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *
  * With 7 tutorials and several pages each, a code-authored multi-step
  * sequence living inside a single component doesn't scale — you'd end
- * up duplicating the whole file per page. Instead, cross-page
- * progression is just real Framer navigation: whatever the real target
- * element already does when tapped (or an optional timer-driven link
- * for a pure "watch this" beat) is what moves the user to the next
- * page. This component never manages a sequence itself.
+ * up duplicating the whole file per page. Instead:
+ *
+ *  - Moving to a DIFFERENT PAGE is just real Framer navigation:
+ *    whatever the real target element already does when tapped (or an
+ *    optional timer-driven link for a pure "watch this" beat) is what
+ *    moves the user on. Nothing to configure for this.
+ *
+ *  - A page with SEVERAL steps gets several TutorialOverlay instances
+ *    dropped on it — one per step — sharing a `pageGroup` string. Give
+ *    each instance a `stepNumber` (1, 2, 3, …); only the current step
+ *    shows itself, and `clickAdvancesStep` / `nextStepAfterSeconds`
+ *    hands off to the next stepNumber in that same group. A page with
+ *    only one step just leaves `pageGroup` blank — it behaves exactly
+ *    as a single always-on overlay, no coordination needed. Pick a
+ *    `pageGroup` string that's unique to that one page (e.g. its page
+ *    name) so unrelated pages never cross-talk.
+ *
+ * This component never manages a cross-PAGE sequence itself — only the
+ * optional same-page step handoff described above.
  *
  * For the end of a whole tutorial, use TutorialCongrats.tsx instead —
  * a separate, smaller component built for a full-screen finish, with
@@ -35,6 +49,11 @@ interface Props {
     target: string
     holeShape: HoleShape
     cornerRadius: number
+
+    pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
+    stepNumber: number // 1-based position within pageGroup
+    clickAdvancesStep: boolean // tapping the real target hands off to stepNumber + 1
+    nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
 
     cardTitle: string
     cardBody: string
@@ -118,12 +137,42 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
     else (target as HTMLElement).scrollBy({ top, left })
 }
 
+// ---------------------------------------------------------------------
+// Shared same-page step coordination. Multiple TutorialOverlay
+// instances sharing one `pageGroup` take turns — only the instance
+// whose stepNumber matches the group's current step renders itself.
+// Same module-level-Map coordination technique CircleOverrides.tsx
+// already uses to keep its several circle instances in sync.
+// ---------------------------------------------------------------------
+const pageStepState = new Map<string, number>()
+const pageStepListeners = new Map<string, Set<() => void>>()
+
+function getPageStep(groupId: string): number {
+    return pageStepState.get(groupId) ?? 1
+}
+
+function setPageStep(groupId: string, step: number) {
+    pageStepState.set(groupId, step)
+    pageStepListeners.get(groupId)?.forEach((fn) => fn())
+}
+
+function subscribePageStep(groupId: string, onChange: () => void) {
+    if (!pageStepListeners.has(groupId)) pageStepListeners.set(groupId, new Set())
+    const listeners = pageStepListeners.get(groupId)!
+    listeners.add(onChange)
+    return () => listeners.delete(onChange)
+}
+
 export default function TutorialOverlay(props: Props) {
     const {
         active,
         target,
         holeShape,
         cornerRadius,
+        pageGroup,
+        stepNumber,
+        clickAdvancesStep,
+        nextStepAfterSeconds,
         cardTitle,
         cardBody,
         cardAnchor,
@@ -155,9 +204,29 @@ export default function TutorialOverlay(props: Props) {
     const [arrowShown, setArrowShown] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
+    const rectRef = React.useRef<DOMRect | null>(null)
     const arrowMarkerId = React.useRef(
         `tutorial-arrowhead-${Math.random().toString(36).slice(2)}`
     ).current
+
+    // Re-render whenever this page group's current step changes, so the
+    // instance whose stepNumber now matches can pick up rendering.
+    const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+    React.useEffect(() => {
+        if (!pageGroup) return
+        return subscribePageStep(pageGroup, forceUpdate)
+    }, [pageGroup])
+
+    // A fresh page load resets its group to step 1, so a stale counter
+    // left over from a previous visit can't skip straight to step 3.
+    React.useEffect(() => {
+        if (pageGroup && stepNumber === 1) setPageStep(pageGroup, 1)
+    }, [pageGroup, stepNumber])
+
+    const isMyTurn = !pageGroup || getPageStep(pageGroup) === stepNumber
+    const advanceStep = React.useCallback(() => {
+        if (pageGroup) setPageStep(pageGroup, stepNumber + 1)
+    }, [pageGroup, stepNumber])
 
     React.useEffect(() => setMounted(true), [])
     React.useEffect(() => setArrowShown(false), [target])
@@ -165,13 +234,18 @@ export default function TutorialOverlay(props: Props) {
     // Measure the target, tracking it continuously (targets can move —
     // e.g. a draggable element like CircleOverrides.tsx's circles).
     React.useEffect(() => {
-        if (!active || !target) {
+        if (!active || !isMyTurn || !target) {
+            rectRef.current = null
             setRect(null)
             return
         }
         function measure() {
             const el = document.querySelector(`[data-tutorial-target="${target}"]`)
-            if (el) setRect(el.getBoundingClientRect())
+            if (el) {
+                const next = el.getBoundingClientRect()
+                rectRef.current = next
+                setRect(next)
+            }
             setViewport({ w: window.innerWidth, h: window.innerHeight })
         }
         measure()
@@ -181,27 +255,57 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             window.clearInterval(id)
         }
-    }, [active, target])
+    }, [active, isMyTurn, target])
 
     // Timer-driven arrow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !showArrow) return
+        if (!active || !isMyTurn || !showArrow) return
         const t = setTimeout(
             () => setArrowShown(true),
             Math.max(arrowDelaySeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, showArrow, arrowDelaySeconds])
+    }, [active, isMyTurn, showArrow, arrowDelaySeconds])
 
     // Optional timer-driven navigation to the next page — for a pure
     // "watch this" beat that needs no tap at all.
     React.useEffect(() => {
-        if (!active || !autoAdvanceAfterSeconds || !autoAdvanceLink) return
+        if (!active || !isMyTurn || !autoAdvanceAfterSeconds || !autoAdvanceLink) return
         const t = setTimeout(() => {
             window.location.href = autoAdvanceLink
         }, Math.max(autoAdvanceAfterSeconds, 0) * 1000)
         return () => clearTimeout(t)
-    }, [active, autoAdvanceAfterSeconds, autoAdvanceLink])
+    }, [active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
+
+    // Optional timer-driven hand-off to the next step on THIS page —
+    // independent of any click, uncapped delay.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !nextStepAfterSeconds) return
+        const t = setTimeout(advanceStep, Math.max(nextStepAfterSeconds, 0) * 1000)
+        return () => clearTimeout(t)
+    }, [active, isMyTurn, nextStepAfterSeconds, advanceStep])
+
+    // Click-driven hand-off — a non-blocking capture listener that
+    // watches for a real tap landing inside this step's hole. It never
+    // calls preventDefault/stopPropagation, so the real element
+    // underneath still gets the real click; we just also notice it.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !clickAdvancesStep) return
+        function onPointerDown(e: PointerEvent) {
+            const r = rectRef.current
+            if (
+                r &&
+                e.clientX >= r.left &&
+                e.clientX <= r.right &&
+                e.clientY >= r.top &&
+                e.clientY <= r.bottom
+            ) {
+                advanceStep()
+            }
+        }
+        window.addEventListener("pointerdown", onPointerDown, true)
+        return () => window.removeEventListener("pointerdown", onPointerDown, true)
+    }, [active, isMyTurn, clickAdvancesStep, advanceStep])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
@@ -235,7 +339,7 @@ export default function TutorialOverlay(props: Props) {
         }
     }, [active])
 
-    if (!active) return null
+    if (!active || !isMyTurn) return null
 
     const clipPath =
         rect && viewport.w
@@ -450,6 +554,12 @@ export default function TutorialOverlay(props: Props) {
                     Tutorial overlay
                     <br />
                     target: {target || "(none set)"}
+                    {pageGroup && (
+                        <>
+                            <br />
+                            {pageGroup} · step {stepNumber}
+                        </>
+                    )}
                 </div>
             )}
         </>
@@ -461,6 +571,10 @@ TutorialOverlay.defaultProps = {
     target: "more-tab",
     holeShape: "pill",
     cornerRadius: 0,
+    pageGroup: "",
+    stepNumber: 1,
+    clickAdvancesStep: false,
+    nextStepAfterSeconds: 0,
     cardTitle: "Let's disable your debit card",
     cardBody: "Tap on More",
     cardAnchor: "top",
@@ -509,6 +623,36 @@ addPropertyControls(TutorialOverlay, {
         max: 999,
         defaultValue: 0,
         hidden: (props) => props.holeShape !== "rectangle",
+    },
+    pageGroup: {
+        type: ControlType.String,
+        title: "Page group",
+        defaultValue: "",
+        placeholder: "blank = single-step page",
+    },
+    stepNumber: {
+        type: ControlType.Number,
+        title: "Step number",
+        min: 1,
+        step: 1,
+        defaultValue: 1,
+        hidden: (props) => !props.pageGroup,
+    },
+    clickAdvancesStep: {
+        type: ControlType.Boolean,
+        title: "Click advances step",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
+    },
+    nextStepAfterSeconds: {
+        type: ControlType.Number,
+        title: "Next step after (sec)",
+        min: 0,
+        step: 0.5,
+        defaultValue: 0,
+        hidden: (props) => !props.pageGroup,
     },
     cardTitle: {
         type: ControlType.String,
