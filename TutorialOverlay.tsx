@@ -653,7 +653,22 @@ export default function TutorialOverlay(props: Props) {
         : `rotate(${arrowRotation}deg)`
 
     const content = (
-        <div data-tutorial-overlay="true" style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
+        // pointerEvents:"none" here is the actual fix for clicks not
+        // reaching real elements under the hole — this outermost wrapper
+        // spans the full viewport and, despite being visually empty
+        // itself, defaults to pointer-events:auto and was silently
+        // catching every click across the whole screen before any child
+        // (all of which already correctly had pointer-events:none/auto
+        // set individually), any window-level JS listener, or the real
+        // page underneath ever got a chance. Children that need to be
+        // clickable (skip/exit buttons) already set their own explicit
+        // pointerEvents:"auto", which overrides this at that element —
+        // pointer-events is decided per-element, a "none" ancestor does
+        // not disable an "auto" descendant.
+        <div
+            data-tutorial-overlay="true"
+            style={{ position: "fixed", inset: 0, zIndex: 90000, pointerEvents: "none" }}
+        >
             {/* dim + blur — visual only now. pointerEvents is "none": clicking
                 is blocked/passed-through by an explicit JS check below, not
                 by clip-path hit-test exclusion, which reliably PAINTS the
