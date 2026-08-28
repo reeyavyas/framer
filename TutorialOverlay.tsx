@@ -43,6 +43,7 @@ type Step = {
     cardTitle: string | null
     cardBody: string | null
     progressIndex: number // -1 hides the progress card for this step
+    cardAnchor?: "top" | "bottom" // where the card sits — move it off the hole
     showArrow: boolean
     arrowDelaMs: number // ms after entering this step before the arrow draws in
     arrowOffset: { x: number; y: number } // px, relative to hole center
@@ -71,18 +72,19 @@ const STEPS: Step[] = [
         arrowOffset: { x: 0, y: 0 },
     },
     {
-        id: "tap-target",
-        target: "send-money-button",
+        id: "tap-more-tab",
+        target: "more-tab",
         holeShape: "pill",
         cornerRadius: 0,
         clickAdvances: true,
         autoAdvanceAfter: null,
-        cardTitle: null,
-        cardBody: null,
+        cardTitle: "Let's disable your debit card",
+        cardBody: "Tap on More",
         progressIndex: 1,
+        cardAnchor: "top", // the hole sits at the bottom nav — keep the card clear of it
         showArrow: true,
         arrowDelaMs: 1200,
-        arrowOffset: { x: 0, y: -110 },
+        arrowOffset: { x: 0, y: -20 },
     },
     {
         id: "watch-result",
@@ -120,6 +122,8 @@ interface Props {
     dimColor: string
     blurAmount: number
     accentColor: string
+    arrowColor: string
+    showProgressDots: boolean
     showSkipButton: boolean
     skipLabel: string
     skipLink?: string
@@ -188,6 +192,8 @@ export default function TutorialOverlay(props: Props) {
         dimColor,
         blurAmount,
         accentColor,
+        arrowColor,
+        showProgressDots,
         showSkipButton,
         skipLabel,
         skipLink,
@@ -208,6 +214,9 @@ export default function TutorialOverlay(props: Props) {
     const step = STEPS[stepIndex]
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
+    const arrowMarkerId = React.useRef(
+        `tutorial-arrowhead-${Math.random().toString(36).slice(2)}`
+    ).current
 
     const advance = React.useCallback(() => {
         setStepIndex((i) => Math.min(i + 1, STEPS.length - 1))
@@ -362,19 +371,22 @@ export default function TutorialOverlay(props: Props) {
                 }}
             />
 
-            {/* progress bullets — appear/disappear on their own, never clicked */}
+            {/* instruction card — appears/disappears on its own, never clicked.
+                Dots only render when showProgressDots is on AND the step sets
+                a progressIndex; the card itself shows whenever there's a
+                title/body, dots or not. */}
             <AnimatePresence>
-                {step.progressIndex >= 0 && (
+                {(step.cardTitle || step.cardBody || (showProgressDots && step.progressIndex >= 0)) && (
                     <motion.div
                         key="progress-card"
-                        initial={{ opacity: 0, y: 24 }}
+                        initial={{ opacity: 0, y: step.cardAnchor === "top" ? -24 : 24 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 24 }}
+                        exit={{ opacity: 0, y: step.cardAnchor === "top" ? -24 : 24 }}
                         transition={{ duration: 0.45, ease: "easeOut" }}
                         style={{
                             position: "fixed",
                             left: "50%",
-                            bottom: 90,
+                            ...(step.cardAnchor === "top" ? { top: 110 } : { bottom: 90 }),
                             transform: "translateX(-50%)",
                             display: "flex",
                             flexDirection: "column",
@@ -395,21 +407,23 @@ export default function TutorialOverlay(props: Props) {
                         {step.cardBody && (
                             <div style={{ fontSize: 22, opacity: 0.85 }}>{step.cardBody}</div>
                         )}
-                        <div style={{ display: "flex", gap: 10 }}>
-                            {Array.from({ length: TOTAL_MICRO_STEPS }).map((_, i) => (
-                                <div
-                                    key={i}
-                                    style={{
-                                        width: i === step.progressIndex ? 28 : 10,
-                                        height: 10,
-                                        borderRadius: 999,
-                                        background:
-                                            i <= step.progressIndex ? accentColor : "rgba(255,255,255,0.3)",
-                                        transition: "width 0.3s ease, background 0.3s ease",
-                                    }}
-                                />
-                            ))}
-                        </div>
+                        {showProgressDots && step.progressIndex >= 0 && (
+                            <div style={{ display: "flex", gap: 10 }}>
+                                {Array.from({ length: TOTAL_MICRO_STEPS }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            width: i === step.progressIndex ? 28 : 10,
+                                            height: 10,
+                                            borderRadius: 999,
+                                            background:
+                                                i <= step.progressIndex ? accentColor : "rgba(255,255,255,0.3)",
+                                            transition: "width 0.3s ease, background 0.3s ease",
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -433,26 +447,33 @@ export default function TutorialOverlay(props: Props) {
                             pointerEvents: "none",
                         }}
                     >
+                        {/* The arrowhead is an SVG marker with orient="auto", so it
+                            always points along the curve's own tangent at its end
+                            point — it can't drift out of alignment with the line
+                            the way two independently hand-placed paths could. */}
+                        <defs>
+                            <marker
+                                id={arrowMarkerId}
+                                viewBox="0 0 10 10"
+                                refX="6"
+                                refY="5"
+                                markerWidth="7"
+                                markerHeight="7"
+                                orient="auto"
+                            >
+                                <path d="M0,0 L10,5 L0,10 Z" fill={arrowColor} />
+                            </marker>
+                        </defs>
                         <motion.path
-                            d="M20,10 C10,60 40,95 85,100"
+                            d="M20,15 C10,65 35,95 78,98"
                             fill="none"
-                            stroke={accentColor}
+                            stroke={arrowColor}
                             strokeWidth={6}
                             strokeLinecap="round"
+                            markerEnd={`url(#${arrowMarkerId})`}
                             initial={{ pathLength: 0 }}
                             animate={{ pathLength: 1 }}
                             transition={{ duration: 0.6, ease: "easeOut" }}
-                        />
-                        <motion.path
-                            d="M68,86 L85,100 L100,80"
-                            fill="none"
-                            stroke={accentColor}
-                            strokeWidth={6}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.35, delay: 0.55, ease: "easeOut" }}
                         />
                     </motion.svg>
                 )}
@@ -589,6 +610,8 @@ TutorialOverlay.defaultProps = {
     dimColor: "rgba(10, 10, 20, 0.55)",
     blurAmount: 8,
     accentColor: "rgba(5,147,144,1)",
+    arrowColor: "rgba(5,147,144,1)",
+    showProgressDots: true,
     showSkipButton: true,
     skipLabel: "Skip",
     showExitButton: true,
@@ -621,6 +644,18 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Color,
         title: "Accent color",
         defaultValue: "rgba(5,147,144,1)",
+    },
+    arrowColor: {
+        type: ControlType.Color,
+        title: "Arrow color",
+        defaultValue: "rgba(5,147,144,1)",
+    },
+    showProgressDots: {
+        type: ControlType.Boolean,
+        title: "Progress dots",
+        defaultValue: true,
+        enabledTitle: "Show",
+        disabledTitle: "Hide",
     },
     showSkipButton: {
         type: ControlType.Boolean,
