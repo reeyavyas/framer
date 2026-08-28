@@ -510,7 +510,7 @@ export default function TutorialOverlay(props: Props) {
     // These must match the actual path coordinates rendered below — see
     // the comment on bezierEndAngleDeg for why this is computed rather
     // than hand-set.
-    const curveArrowAngle = bezierEndAngleDeg(50, 78, 28, 52)
+    const curveArrowAngle = bezierEndAngleDeg(54.89, 54.67, 58, 20.44)
     const bounceArrowAngle = bezierEndAngleDeg(50, 50, 50, 12)
 
     const arrowAnchor =
@@ -728,25 +728,20 @@ export default function TutorialOverlay(props: Props) {
                             </g>
                         ) : (
                             <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
-                                {/* Quadratic, still — mathematically incapable
-                                    of true inflection. But (55,5) swung the
-                                    start-to-end tangent through ~85° of total
-                                    rotation, and a large rotation swing reads
-                                    as "changing direction" — visually S-like —
-                                    even with zero true inflection. The
-                                    original liked shape swung only ~23°; this
-                                    swings ~31°, a moderate, not dramatic,
-                                    increase, keeping x and y both monotonic
-                                    (20→28→50, 4→52→78 — no back-and-forth in
-                                    either axis at all). */}
+                                {/* User-specified path, scaled from the
+                                    original 0-450 viewBox into this
+                                    component's 0-100 one (uniform scale, so
+                                    the shape and every tangent angle are
+                                    preserved exactly): (146,42) (261,92)
+                                    (247,246) × 100/450. */}
                                 <path
-                                    d="M20,4 Q28,52 50,78"
+                                    d="M32.44,9.33 Q58,20.44 54.89,54.67"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
                                     strokeLinecap="round"
                                 />
-                                <g transform={`translate(50,78) rotate(${curveArrowAngle})`}>
+                                <g transform={`translate(54.89,54.67) rotate(${curveArrowAngle})`}>
                                     <path
                                         d="M-11,-8 L0,0 L-11,8"
                                         fill="none"
