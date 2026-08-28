@@ -489,7 +489,14 @@ export default function TutorialOverlay(props: Props) {
         }
     }, [active])
 
-    if (!active || !isMyTurn) return null
+    // isMyTurn only matters for the real runtime handoff between steps —
+    // on the canvas nothing is actually advancing the shared pageGroup
+    // counter (that only happens from real clicks/timers in Preview), so
+    // gating on it there would make every step but #1 invisible even
+    // though active is true. Every instance stays inspectable on canvas
+    // regardless of pageGroup/stepNumber.
+    if (!active) return null
+    if (!isCanvas && !isMyTurn) return null
 
     const clipPath =
         rect && viewport.w
