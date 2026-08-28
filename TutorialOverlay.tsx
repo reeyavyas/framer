@@ -510,7 +510,7 @@ export default function TutorialOverlay(props: Props) {
     // These must match the actual path coordinates rendered below — see
     // the comment on bezierEndAngleDeg for why this is computed rather
     // than hand-set.
-    const curveArrowAngle = bezierEndAngleDeg(50, 78, 30, 55)
+    const curveArrowAngle = bezierEndAngleDeg(50, 78, 28, 52)
     const bounceArrowAngle = bezierEndAngleDeg(50, 50, 50, 12)
 
     const arrowAnchor =
@@ -728,18 +728,19 @@ export default function TutorialOverlay(props: Props) {
                             </g>
                         ) : (
                             <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
-                                {/* Quadratic, deliberately — a single control
-                                    point can only ever bow one direction, so
-                                    this structurally cannot produce the
-                                    S-curve a cubic's two opposing control
-                                    points did. A quadratic's end tangent
-                                    depends only on (end - control), never on
-                                    the start point, so the start below (55,5)
-                                    can be pushed far out for a much stronger
-                                    bow with zero effect on the already-correct
-                                    curveArrowAngle computed above. */}
+                                {/* Quadratic, still — mathematically incapable
+                                    of true inflection. But (55,5) swung the
+                                    start-to-end tangent through ~85° of total
+                                    rotation, and a large rotation swing reads
+                                    as "changing direction" — visually S-like —
+                                    even with zero true inflection. The
+                                    original liked shape swung only ~23°; this
+                                    swings ~31°, a moderate, not dramatic,
+                                    increase, keeping x and y both monotonic
+                                    (20→28→50, 4→52→78 — no back-and-forth in
+                                    either axis at all). */}
                                 <path
-                                    d="M55,5 Q30,55 50,78"
+                                    d="M20,4 Q28,52 50,78"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
