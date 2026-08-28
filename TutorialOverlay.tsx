@@ -518,6 +518,14 @@ export default function TutorialOverlay(props: Props) {
     // pointing left; decreasing (or going negative) swings it back
     // toward/past straight down. Tweak freely without touching the path.
     const curveArrowheadAdjustDeg = 4
+    // Manual position nudge, in the same 0-100 viewBox units as the path
+    // coordinates — negative X moves the head left, positive moves it
+    // right (Y works the same, negative = up). At the default Arrow size
+    // (90px), 1 unit ≈ 0.9px on screen, so ±1 to ±2 here is roughly a
+    // "pixel or two." If Arrow size is set differently, scale this
+    // number by (arrowSize / 100) to keep the same real-pixel shift.
+    const curveArrowheadOffsetX = -1.5
+    const curveArrowheadOffsetY = 0
 
     const arrowAnchor =
         rect != null
@@ -747,7 +755,9 @@ export default function TutorialOverlay(props: Props) {
                                     fill="none"
                                     strokeLinecap="round"
                                 />
-                                <g transform={`translate(48.89,54.67) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}>
+                                <g
+                                    transform={`translate(${48.89 + curveArrowheadOffsetX},${54.67 + curveArrowheadOffsetY}) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}
+                                >
                                     <path
                                         d="M-11,-8 L0,0 L-11,8"
                                         fill="none"
