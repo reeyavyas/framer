@@ -682,7 +682,12 @@ export default function TutorialOverlay(props: Props) {
                 fight. Dots only render when showProgressDots is on; the card
                 itself shows whenever there's a title/body, dots or not. */}
             {(cardTitle || cardBody || (showProgressDots && progressTotal > 0)) && (
-                <div style={cardWrapperStyle(cardAnchorX, cardAnchorY, cardOffsetX, cardOffsetY)}>
+                <div
+                    style={{
+                        ...cardWrapperStyle(cardAnchorX, cardAnchorY, cardOffsetX, cardOffsetY),
+                        pointerEvents: "none",
+                    }}
+                >
                     <AnimatePresence>
                         <motion.div
                             key="progress-card"
