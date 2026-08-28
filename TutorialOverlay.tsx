@@ -399,6 +399,42 @@ export default function TutorialOverlay(props: Props) {
         return () => clearTimeout(t)
     }, [active, isMyTurn, nextStepAfterSeconds, advanceStep])
 
+    // Explicit click-blocking. Replaces relying on clip-path to exclude
+    // the hole from hit-testing — clip-path reliably PAINTS the hole, but
+    // whether it reliably excludes that same region from real pointer
+    // hit-testing turned out not to be dependable: a correctly-linked
+    // real element under the hole wasn't receiving taps. This does the
+    // same job explicitly instead: any click landing outside the current
+    // hole is blocked (preventDefault + stopPropagation) so the user
+    // can't wander into the real UI; a click inside the hole is left
+    // completely alone, so it reaches whatever's really there exactly as
+    // if this overlay weren't in the DOM at all. Clicks on this overlay's
+    // own UI (skip/exit buttons) are always excluded from blocking.
+    React.useEffect(() => {
+        if (!active || !isMyTurn) return
+        function blockOutsideHole(e: PointerEvent | MouseEvent) {
+            const eventTarget = e.target as HTMLElement | null
+            if (eventTarget?.closest("[data-tutorial-overlay]")) return
+            const r = rectRef.current
+            const insideHole =
+                !!r &&
+                e.clientX >= r.left &&
+                e.clientX <= r.right &&
+                e.clientY >= r.top &&
+                e.clientY <= r.bottom
+            if (!insideHole) {
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
+        window.addEventListener("pointerdown", blockOutsideHole, true)
+        window.addEventListener("click", blockOutsideHole, true)
+        return () => {
+            window.removeEventListener("pointerdown", blockOutsideHole, true)
+            window.removeEventListener("click", blockOutsideHole, true)
+        }
+    }, [active, isMyTurn])
+
     // Click-driven hand-off — a non-blocking capture listener that
     // watches for a real tap landing inside this step's hole. It never
     // calls preventDefault/stopPropagation, so the real element
@@ -459,9 +495,11 @@ export default function TutorialOverlay(props: Props) {
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
+    // Attached to window (capture), not the dim div — that div is now
+    // pointerEvents:"none" (see above), so it never receives wheel/touch
+    // events itself; window-level listeners don't depend on that at all.
     React.useEffect(() => {
-        if (!active || !overlayRef.current) return
-        const el = overlayRef.current
+        if (!active) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
         function onWheel(e: WheelEvent) {
@@ -479,13 +517,13 @@ export default function TutorialOverlay(props: Props) {
             lastY = y
             e.preventDefault()
         }
-        el.addEventListener("wheel", onWheel, { passive: false })
-        el.addEventListener("touchstart", onTouchStart, { passive: true })
-        el.addEventListener("touchmove", onTouchMove, { passive: false })
+        window.addEventListener("wheel", onWheel, { passive: false, capture: true })
+        window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true })
+        window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true })
         return () => {
-            el.removeEventListener("wheel", onWheel)
-            el.removeEventListener("touchstart", onTouchStart)
-            el.removeEventListener("touchmove", onTouchMove)
+            window.removeEventListener("wheel", onWheel, true)
+            window.removeEventListener("touchstart", onTouchStart, true)
+            window.removeEventListener("touchmove", onTouchMove, true)
         }
     }, [active])
 
@@ -616,7 +654,13 @@ export default function TutorialOverlay(props: Props) {
 
     const content = (
         <div data-tutorial-overlay="true" style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
-            {/* dim + blur, hole cut for this page's target, click-blocking / scroll-passthrough */}
+            {/* dim + blur — visual only now. pointerEvents is "none": clicking
+                is blocked/passed-through by an explicit JS check below, not
+                by clip-path hit-test exclusion, which reliably PAINTS the
+                hole but wasn't reliably excluding it from real clicks — a
+                correctly-linked real element under the hole wasn't
+                receiving taps. This div still shows the dim/blur/hole
+                visually; it just no longer decides what's clickable. */}
             <div
                 ref={overlayRef}
                 style={{
@@ -627,7 +671,7 @@ export default function TutorialOverlay(props: Props) {
                     WebkitBackdropFilter: `blur(${blurAmount}px)`,
                     clipPath,
                     WebkitClipPath: clipPath,
-                    pointerEvents: "auto",
+                    pointerEvents: "none",
                     transition: "background 0.4s ease, backdrop-filter 0.4s ease",
                 }}
             />
