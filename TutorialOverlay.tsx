@@ -705,10 +705,14 @@ export default function TutorialOverlay(props: Props) {
                             }}
                         >
                             {cardTitle && (
-                                <div style={{ fontSize: 32, fontWeight: 700 }}>{cardTitle}</div>
+                                <div style={{ fontSize: 32, fontWeight: 700, whiteSpace: "pre-line" }}>
+                                    {cardTitle}
+                                </div>
                             )}
                             {cardBody && (
-                                <div style={{ fontSize: 22, opacity: 0.85 }}>{cardBody}</div>
+                                <div style={{ fontSize: 22, opacity: 0.85, whiteSpace: "pre-line" }}>
+                                    {cardBody}
+                                </div>
                             )}
                             {showProgressDots && progressTotal > 0 && (
                                 <div style={{ display: "flex", gap: 10 }}>
@@ -1080,10 +1084,12 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.String,
         title: "Card title",
         defaultValue: "",
+        displayTextArea: true,
     },
     cardBody: {
         type: ControlType.String,
         title: "Card body",
+        displayTextArea: true,
         defaultValue: "",
     },
     cardAnchorX: {
