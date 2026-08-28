@@ -57,17 +57,22 @@ interface Props {
 
     cardTitle: string
     cardBody: string
-    cardAnchor: "top" | "bottom"
+    cardAnchorX: "left" | "center" | "right"
+    cardAnchorY: "top" | "center" | "bottom"
+    cardOffsetX: number
+    cardOffsetY: number
 
     showProgressDots: boolean
     progressIndex: number
     progressTotal: number
 
     showArrow: boolean
+    arrowImage?: { src: string } | string
+    arrowWidth: number
+    arrowRotation: number
     arrowDelaySeconds: number
     arrowOffsetX: number
     arrowOffsetY: number
-    arrowColor: string
 
     autoAdvanceAfterSeconds: number // 0 = off. Uncapped otherwise.
     autoAdvanceLink?: string
@@ -137,6 +142,39 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
     else (target as HTMLElement).scrollBy({ top, left })
 }
 
+// Card positioning lives on a plain (non-motion) wrapper, never on the
+// motion.div itself — framer-motion takes full ownership of the
+// `transform` CSS property on any element it animates, so a static
+// centering transform set alongside an animated one gets silently
+// discarded. Keeping the two on separate elements avoids that clash.
+function cardWrapperStyle(
+    anchorX: "left" | "center" | "right",
+    anchorY: "top" | "center" | "bottom",
+    offsetX: number,
+    offsetY: number
+): React.CSSProperties {
+    const style: React.CSSProperties = { position: "fixed" }
+    let translateX = "0"
+    let translateY = "0"
+
+    if (anchorX === "left") style.left = 40 + offsetX
+    else if (anchorX === "right") style.right = 40 - offsetX
+    else {
+        style.left = `calc(50% + ${offsetX}px)`
+        translateX = "-50%"
+    }
+
+    if (anchorY === "top") style.top = 100 + offsetY
+    else if (anchorY === "bottom") style.bottom = 90 - offsetY
+    else {
+        style.top = `calc(50% + ${offsetY}px)`
+        translateY = "-50%"
+    }
+
+    style.transform = `translate(${translateX}, ${translateY})`
+    return style
+}
+
 // ---------------------------------------------------------------------
 // Shared same-page step coordination. Multiple TutorialOverlay
 // instances sharing one `pageGroup` take turns — only the instance
@@ -175,15 +213,20 @@ export default function TutorialOverlay(props: Props) {
         nextStepAfterSeconds,
         cardTitle,
         cardBody,
-        cardAnchor,
+        cardAnchorX,
+        cardAnchorY,
+        cardOffsetX,
+        cardOffsetY,
         showProgressDots,
         progressIndex,
         progressTotal,
         showArrow,
+        arrowImage,
+        arrowWidth,
+        arrowRotation,
         arrowDelaySeconds,
         arrowOffsetX,
         arrowOffsetY,
-        arrowColor,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
@@ -205,9 +248,6 @@ export default function TutorialOverlay(props: Props) {
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
-    const arrowMarkerId = React.useRef(
-        `tutorial-arrowhead-${Math.random().toString(36).slice(2)}`
-    ).current
 
     // Re-render whenever this page group's current step changes, so the
     // instance whose stepNumber now matches can pick up rendering.
@@ -374,108 +414,82 @@ export default function TutorialOverlay(props: Props) {
             />
 
             {/* instruction card — appears/disappears on its own, never clicked.
-                Dots only render when showProgressDots is on; the card itself
-                shows whenever there's a title/body, dots or not. */}
-            <AnimatePresence>
-                {(cardTitle || cardBody || (showProgressDots && progressTotal > 0)) && (
-                    <motion.div
-                        key="progress-card"
-                        initial={{ opacity: 0, y: cardAnchor === "top" ? -24 : 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: cardAnchor === "top" ? -24 : 24 }}
-                        transition={{ duration: 0.45, ease: "easeOut" }}
-                        style={{
-                            position: "fixed",
-                            left: "50%",
-                            ...(cardAnchor === "top" ? { top: 110 } : { bottom: 90 }),
-                            transform: "translateX(-50%)",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 14,
-                            padding: "24px 36px",
-                            borderRadius: 24,
-                            background: "rgba(20,20,28,0.88)",
-                            color: "#fff",
-                            maxWidth: 760,
-                            textAlign: "center",
-                            pointerEvents: "none",
-                        }}
-                    >
-                        {cardTitle && (
-                            <div style={{ fontSize: 32, fontWeight: 700 }}>{cardTitle}</div>
-                        )}
-                        {cardBody && (
-                            <div style={{ fontSize: 22, opacity: 0.85 }}>{cardBody}</div>
-                        )}
-                        {showProgressDots && progressTotal > 0 && (
-                            <div style={{ display: "flex", gap: 10 }}>
-                                {Array.from({ length: progressTotal }).map((_, i) => (
-                                    <div
-                                        key={i}
-                                        style={{
-                                            width: i === progressIndex ? 28 : 10,
-                                            height: 10,
-                                            borderRadius: 999,
-                                            background:
-                                                i <= progressIndex ? accentColor : "rgba(255,255,255,0.3)",
-                                            transition: "width 0.3s ease, background 0.3s ease",
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                Positioning lives on this plain wrapper; the motion.div inside
+                only ever animates opacity/y, so the two transforms never
+                fight. Dots only render when showProgressDots is on; the card
+                itself shows whenever there's a title/body, dots or not. */}
+            {(cardTitle || cardBody || (showProgressDots && progressTotal > 0)) && (
+                <div style={cardWrapperStyle(cardAnchorX, cardAnchorY, cardOffsetX, cardOffsetY)}>
+                    <AnimatePresence>
+                        <motion.div
+                            key="progress-card"
+                            initial={{ opacity: 0, y: cardAnchorY === "top" ? -24 : cardAnchorY === "bottom" ? 24 : 0 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: cardAnchorY === "top" ? -24 : cardAnchorY === "bottom" ? 24 : 0 }}
+                            transition={{ duration: 0.45, ease: "easeOut" }}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 14,
+                                padding: "24px 36px",
+                                borderRadius: 24,
+                                background: "rgba(20,20,28,0.88)",
+                                color: "#fff",
+                                maxWidth: 760,
+                                textAlign: "center",
+                                pointerEvents: "none",
+                            }}
+                        >
+                            {cardTitle && (
+                                <div style={{ fontSize: 32, fontWeight: 700 }}>{cardTitle}</div>
+                            )}
+                            {cardBody && (
+                                <div style={{ fontSize: 22, opacity: 0.85 }}>{cardBody}</div>
+                            )}
+                            {showProgressDots && progressTotal > 0 && (
+                                <div style={{ display: "flex", gap: 10 }}>
+                                    {Array.from({ length: progressTotal }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            style={{
+                                                width: i === progressIndex ? 28 : 10,
+                                                height: 10,
+                                                borderRadius: 999,
+                                                background:
+                                                    i <= progressIndex ? accentColor : "rgba(255,255,255,0.3)",
+                                                transition: "width 0.3s ease, background 0.3s ease",
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            )}
 
-            {/* "click here" arrow — draws itself in on a delay, no click needed */}
+            {/* "click here" arrow — your own uploaded asset, positioned and
+                rotated to point wherever you need. No image set = no arrow. */}
             <AnimatePresence>
-                {arrowShown && arrowAnchor && (
-                    <motion.svg
+                {showArrow && arrowShown && arrowAnchor && arrowImage && (
+                    <motion.img
                         key="arrow"
-                        width="140"
-                        height="120"
-                        viewBox="0 0 140 120"
+                        src={typeof arrowImage === "string" ? arrowImage : arrowImage.src}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         style={{
                             position: "fixed",
-                            left: arrowAnchor.x - 70,
-                            top: arrowAnchor.y - 110,
+                            left: arrowAnchor.x - arrowWidth / 2,
+                            top: arrowAnchor.y - arrowWidth / 2,
+                            width: arrowWidth,
+                            height: "auto",
+                            transform: `rotate(${arrowRotation}deg)`,
                             pointerEvents: "none",
                         }}
-                    >
-                        {/* The arrowhead is an SVG marker with orient="auto", so it
-                            always points along the curve's own tangent at its end
-                            point — it can't drift out of alignment with the line. */}
-                        <defs>
-                            <marker
-                                id={arrowMarkerId}
-                                viewBox="0 0 10 10"
-                                refX="6"
-                                refY="5"
-                                markerWidth="7"
-                                markerHeight="7"
-                                orient="auto"
-                            >
-                                <path d="M0,0 L10,5 L0,10 Z" fill={arrowColor} />
-                            </marker>
-                        </defs>
-                        <motion.path
-                            d="M20,15 C10,65 35,95 78,98"
-                            fill="none"
-                            stroke={arrowColor}
-                            strokeWidth={6}
-                            strokeLinecap="round"
-                            markerEnd={`url(#${arrowMarkerId})`}
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 0.6, ease: "easeOut" }}
-                        />
-                    </motion.svg>
+                    />
                 )}
             </AnimatePresence>
 
@@ -577,15 +591,19 @@ TutorialOverlay.defaultProps = {
     nextStepAfterSeconds: 0,
     cardTitle: "Let's disable your debit card",
     cardBody: "Tap on More",
-    cardAnchor: "top",
+    cardAnchorX: "center",
+    cardAnchorY: "top",
+    cardOffsetX: 0,
+    cardOffsetY: 0,
     showProgressDots: true,
     progressIndex: 1,
     progressTotal: 4,
     showArrow: true,
+    arrowWidth: 80,
+    arrowRotation: 0,
     arrowDelaySeconds: 1.2,
     arrowOffsetX: 0,
     arrowOffsetY: -20,
-    arrowColor: "rgba(5,147,144,1)",
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
     blurAmount: 8,
@@ -664,12 +682,29 @@ addPropertyControls(TutorialOverlay, {
         title: "Card body",
         defaultValue: "",
     },
-    cardAnchor: {
+    cardAnchorX: {
         type: ControlType.Enum,
-        title: "Card position",
-        options: ["top", "bottom"],
-        optionTitles: ["Top", "Bottom"],
+        title: "Card position X",
+        options: ["left", "center", "right"],
+        optionTitles: ["Left", "Center", "Right"],
+        defaultValue: "center",
+    },
+    cardAnchorY: {
+        type: ControlType.Enum,
+        title: "Card position Y",
+        options: ["top", "center", "bottom"],
+        optionTitles: ["Top", "Center", "Bottom"],
         defaultValue: "bottom",
+    },
+    cardOffsetX: {
+        type: ControlType.Number,
+        title: "Card offset X",
+        defaultValue: 0,
+    },
+    cardOffsetY: {
+        type: ControlType.Number,
+        title: "Card offset Y",
+        defaultValue: 0,
     },
     showProgressDots: {
         type: ControlType.Boolean,
@@ -701,6 +736,25 @@ addPropertyControls(TutorialOverlay, {
         enabledTitle: "Show",
         disabledTitle: "Hide",
     },
+    arrowImage: {
+        type: ControlType.Image,
+        title: "Arrow asset",
+        hidden: (props) => !props.showArrow,
+    },
+    arrowWidth: {
+        type: ControlType.Number,
+        title: "Arrow width",
+        min: 10,
+        defaultValue: 80,
+        hidden: (props) => !props.showArrow,
+    },
+    arrowRotation: {
+        type: ControlType.Number,
+        title: "Arrow rotation",
+        step: 1,
+        defaultValue: 0,
+        hidden: (props) => !props.showArrow,
+    },
     arrowDelaySeconds: {
         type: ControlType.Number,
         title: "Arrow delay (sec)",
@@ -719,12 +773,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Number,
         title: "Arrow offset Y",
         defaultValue: -20,
-        hidden: (props) => !props.showArrow,
-    },
-    arrowColor: {
-        type: ControlType.Color,
-        title: "Arrow color",
-        defaultValue: "rgba(5,147,144,1)",
         hidden: (props) => !props.showArrow,
     },
     autoAdvanceAfterSeconds: {
