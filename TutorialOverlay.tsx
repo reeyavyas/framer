@@ -127,6 +127,19 @@ interface Props {
     style?: React.CSSProperties
 }
 
+// Angle (degrees, atan2 convention: 0° = pointing +X/right, 90° =
+// pointing +Y/down) of a Bezier curve's tangent at its endpoint. For a
+// quadratic or cubic curve the end tangent is always (endpoint - the
+// LAST control point before it) — this is what the arrowhead below is
+// rotated to, computed directly from the same coordinates the path
+// itself uses, rather than trusted to the SVG engine's own marker
+// orient="auto" calculation (which repeatedly rendered visibly
+// mismatched in Framer's Preview despite being mathematically correct
+// for a plain browser).
+function bezierEndAngleDeg(endX: number, endY: number, lastControlX: number, lastControlY: number): number {
+    return (Math.atan2(endY - lastControlY, endX - lastControlX) * 180) / Math.PI
+}
+
 // ---------------------------------------------------------------------
 // Geometry helpers (same clip-path evenodd hole trick as SpotlightOverlay)
 // ---------------------------------------------------------------------
@@ -298,9 +311,6 @@ export default function TutorialOverlay(props: Props) {
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
-    const arrowMarkerId = React.useRef(
-        `tutorial-arrowhead-${Math.random().toString(36).slice(2)}`
-    ).current
 
     // Re-render whenever this page group's current step changes, so the
     // instance whose stepNumber now matches can pick up rendering.
@@ -497,6 +507,12 @@ export default function TutorialOverlay(props: Props) {
     const glowBlur = 10 + glowIntensity * 3
     const glowSpread = 1 + glowIntensity
 
+    // These must match the actual path coordinates rendered below — see
+    // the comment on bezierEndAngleDeg for why this is computed rather
+    // than hand-set.
+    const curveArrowAngle = bezierEndAngleDeg(50, 78, 30, 55)
+    const bounceArrowAngle = bezierEndAngleDeg(50, 50, 50, 12)
+
     const arrowAnchor =
         rect != null
             ? { x: rect.left + rect.width / 2 + arrowOffsetX, y: rect.top + arrowOffsetY }
@@ -640,12 +656,14 @@ export default function TutorialOverlay(props: Props) {
                 </>
             )}
 
-            {/* click-here arrow — the arrowhead is an SVG marker BOUND to
-                the line path (orient="auto"), not a second hand-placed
-                shape — the browser computes its angle straight from the
-                path's actual end tangent, so it's structurally impossible
-                for it to drift out of alignment with the line, at any
-                rotation. arrowRotation and the optional reflect both live
+            {/* click-here arrow — the arrowhead's angle is computed in JS
+                (bezierEndAngleDeg, above) from the line path's own
+                coordinates and applied as an explicit rotate() on its own
+                <g>, rather than relying on the SVG engine's built-in marker
+                orient="auto" (mathematically equivalent, but rendered
+                visibly misaligned in Framer's Preview across repeated
+                attempts, so this gives us an explicit, checkable number
+                instead). arrowRotation and the optional reflect both live
                 on this one plain outer wrapper, so line + arrowhead always
                 move as a single rigid unit. Loop animation is plain CSS
                 keyframes on the <g>, not framer-motion — keeps that fully
@@ -677,34 +695,17 @@ export default function TutorialOverlay(props: Props) {
                         }
                     `}</style>
                     <svg viewBox="0 0 100 100" width="100%" height="100%">
-                        <defs>
-                            {/* Open chevron, not a filled triangle. markerUnits
-                                is explicitly "userSpaceOnUse" — every number
-                                here lives in the SAME 0-100 units as the line
-                                path below, no implicit marker-viewBox scaling
-                                to get wrong. strokeWidth={arrowStrokeWidth} is
-                                the literal same value passed to the line's own
-                                stroke-width, not a converted or scaled one, so
-                                the two are guaranteed to render identically. */}
-                            <marker
-                                id={arrowMarkerId}
-                                markerUnits="userSpaceOnUse"
-                                markerWidth="24"
-                                markerHeight="24"
-                                refX="16"
-                                refY="12"
-                                orient="auto"
-                            >
-                                <path
-                                    d="M6,4 L16,12 L6,20"
-                                    fill="none"
-                                    stroke={arrowColor}
-                                    strokeWidth={arrowStrokeWidth}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </marker>
-                        </defs>
+                        {/* Arrowhead angle is computed by bezierEndAngleDeg
+                            above from the SAME coordinates the line path
+                            uses, then applied as an explicit rotate() on its
+                            own <g> — not left to the SVG engine's own marker
+                            orient="auto", which is mathematically equivalent
+                            but rendered visibly misaligned in Framer's
+                            Preview across multiple attempts. Both the line
+                            and the arrowhead's <g> sit inside one outer <g>
+                            per variant, so they still move as a single unit
+                            under the pulse/bounce animation and under
+                            arrowRotation on the wrapper above. */}
                         {arrowVariant === "bounce" ? (
                             <g style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}>
                                 <path
@@ -713,23 +714,43 @@ export default function TutorialOverlay(props: Props) {
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
                                     strokeLinecap="round"
-                                    markerEnd={`url(#${arrowMarkerId})`}
                                 />
+                                <g transform={`translate(50,50) rotate(${bounceArrowAngle})`}>
+                                    <path
+                                        d="M-11,-8 L0,0 L-11,8"
+                                        fill="none"
+                                        stroke={arrowColor}
+                                        strokeWidth={arrowStrokeWidth}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </g>
                             </g>
                         ) : (
                             <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
-                                {/* End tangent = (endpoint - controlPoint) = (20,23),
-                                    ~49° off horizontal — a clearly diagonal
-                                    downward point, not the ~9° near-horizontal
-                                    tangent the previous curve produced. */}
+                                {/* Cubic — the first control point (60,15) swings
+                                    the curve's body out much further than a
+                                    quadratic could while the second control
+                                    point (30,55) keeps the same end tangent
+                                    computed above, so strengthening the curve
+                                    doesn't reintroduce the alignment bug. */}
                                 <path
-                                    d="M15,10 Q30,55 50,78"
+                                    d="M15,8 C60,15 30,55 50,78"
                                     stroke={arrowColor}
                                     strokeWidth={arrowStrokeWidth}
                                     fill="none"
                                     strokeLinecap="round"
-                                    markerEnd={`url(#${arrowMarkerId})`}
                                 />
+                                <g transform={`translate(50,78) rotate(${curveArrowAngle})`}>
+                                    <path
+                                        d="M-11,-8 L0,0 L-11,8"
+                                        fill="none"
+                                        stroke={arrowColor}
+                                        strokeWidth={arrowStrokeWidth}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </g>
                             </g>
                         )}
                     </svg>
