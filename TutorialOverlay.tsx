@@ -665,9 +665,21 @@ export default function TutorialOverlay(props: Props) {
         // pointerEvents:"auto", which overrides this at that element —
         // pointer-events is decided per-element, a "none" ancestor does
         // not disable an "auto" descendant.
+        // zIndex 8000 (8500 for skip/exit below) is deliberately well
+        // under any full-screen "system" overlay — e.g. an inactivity/
+        // idle-timeout screen — which should sit above this and use a
+        // higher value. If a system overlay like that ever appears to
+        // not be receiving clicks despite a higher z-index, check
+        // whether it's also portaled to document.body the same way
+        // this component is: two elements only stack by z-index
+        // predictably when they're both in the same stacking context.
+        // A z-index set from inside Framer's normal (non-portaled)
+        // layer tree can be trapped inside an ancestor's own stacking
+        // context and lose to this one regardless of its number — the
+        // same issue this whole component exists to sidestep.
         <div
             data-tutorial-overlay="true"
-            style={{ position: "fixed", inset: 0, zIndex: 90000, pointerEvents: "none" }}
+            style={{ position: "fixed", inset: 0, zIndex: 8000, pointerEvents: "none" }}
         >
             {/* dim + blur — visual only now. pointerEvents is "none": clicking
                 is blocked/passed-through by an explicit JS check below, not
@@ -860,7 +872,7 @@ export default function TutorialOverlay(props: Props) {
                         position: "fixed",
                         top: 80,
                         right: 40,
-                        zIndex: 95000,
+                        zIndex: 8500,
                         pointerEvents: "auto",
                         padding: "12px 34px",
                         borderRadius: 999,
@@ -883,7 +895,7 @@ export default function TutorialOverlay(props: Props) {
                         position: "fixed",
                         top: 80,
                         left: 40,
-                        zIndex: 95000,
+                        zIndex: 8500,
                         pointerEvents: "auto",
                         width: 64,
                         height: 64,
