@@ -105,6 +105,8 @@ interface Props {
     arrowStrokeWidth: number
     arrowSize: number
     arrowRotation: number // degrees, rotates the whole grouped line+arrowhead together
+    arrowReflect: boolean
+    arrowReflectAngle: number // degrees — the axis to mirror across. 0 = horizontal flip, 90 = vertical flip.
     arrowDelaySeconds: number // uncapped
     arrowOffsetX: number
     arrowOffsetY: number
@@ -269,6 +271,8 @@ export default function TutorialOverlay(props: Props) {
         arrowStrokeWidth,
         arrowSize,
         arrowRotation,
+        arrowReflect,
+        arrowReflectAngle,
         arrowDelaySeconds,
         arrowOffsetX,
         arrowOffsetY,
@@ -294,6 +298,9 @@ export default function TutorialOverlay(props: Props) {
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
+    const arrowMarkerId = React.useRef(
+        `tutorial-arrowhead-${Math.random().toString(36).slice(2)}`
+    ).current
 
     // Re-render whenever this page group's current step changes, so the
     // instance whose stepNumber now matches can pick up rendering.
@@ -571,7 +578,13 @@ export default function TutorialOverlay(props: Props) {
 
             {/* glow ring — appears/disappears on its own, traces the hole
                 exactly since it shares the same rect/shape/radius. Plain
-                CSS + a keyframe pulse, no separate layer, no crash risk. */}
+                CSS + a keyframe pulse, no separate layer, no crash risk.
+                The static/breathing box-shadow is `inset`, so it radiates
+                inward from the hole's edge (over the real content showing
+                through the cutout) rather than bleeding outward into the
+                dimmed area around it. Ripple's expanding rings are left
+                outward-growing on purpose — that's a different "ping"
+                idiom, not the glow being asked about here. */}
             {showGlow && glowShown && rect && (
                 <>
                     <style>{`
@@ -615,7 +628,7 @@ export default function TutorialOverlay(props: Props) {
                                     inset: 0,
                                     borderRadius: glowRadius,
                                     border: `2px solid ${glowColor}`,
-                                    boxShadow: `0 0 ${glowBlur}px ${glowSpread}px ${glowColor}`,
+                                    boxShadow: `inset 0 0 ${glowBlur}px ${glowSpread}px ${glowColor}`,
                                     animation:
                                         glowVariant === "breathing"
                                             ? "tutorial-glow-breathe 1.8s ease-in-out infinite"
@@ -627,13 +640,18 @@ export default function TutorialOverlay(props: Props) {
                 </>
             )}
 
-            {/* click-here arrow — line + arrowhead live in ONE <g>, so
-                arrowRotation (on this plain outer wrapper) always rotates
-                them together as a single rigid unit. Loop animation is
-                plain CSS keyframes on the <g>, not framer-motion — keeps
-                this fully independent of the outer wrapper's own static
-                rotate() transform, the same separation that fixed the
-                card's positioning bug earlier in this file. */}
+            {/* click-here arrow — the arrowhead is an SVG marker BOUND to
+                the line path (orient="auto"), not a second hand-placed
+                shape — the browser computes its angle straight from the
+                path's actual end tangent, so it's structurally impossible
+                for it to drift out of alignment with the line, at any
+                rotation. arrowRotation and the optional reflect both live
+                on this one plain outer wrapper, so line + arrowhead always
+                move as a single rigid unit. Loop animation is plain CSS
+                keyframes on the <g>, not framer-motion — keeps that fully
+                independent of this wrapper's own static transform, the
+                same separation that fixed the card's positioning bug
+                earlier in this file. */}
             {showArrow && arrowShown && arrowAnchor && (
                 <div
                     style={{
@@ -642,7 +660,9 @@ export default function TutorialOverlay(props: Props) {
                         top: arrowAnchor.y - arrowSize / 2,
                         width: arrowSize,
                         height: arrowSize,
-                        transform: `rotate(${arrowRotation}deg)`,
+                        transform: arrowReflect
+                            ? `rotate(${arrowRotation}deg) rotate(${arrowReflectAngle}deg) scaleY(-1) rotate(${-arrowReflectAngle}deg)`
+                            : `rotate(${arrowRotation}deg)`,
                         pointerEvents: "none",
                     }}
                 >
@@ -657,29 +677,40 @@ export default function TutorialOverlay(props: Props) {
                         }
                     `}</style>
                     <svg viewBox="0 0 100 100" width="100%" height="100%">
-                        {arrowVariant === "bounce" ? (
-                            <g
-                                style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}
-                                stroke={arrowColor}
-                                strokeWidth={arrowStrokeWidth}
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                        <defs>
+                            <marker
+                                id={arrowMarkerId}
+                                viewBox="0 0 10 10"
+                                refX="6"
+                                refY="5"
+                                markerWidth="6"
+                                markerHeight="6"
+                                orient="auto"
                             >
-                                <path d="M50,12 L50,55" />
-                                <path d="M35,40 L50,58 L65,40" />
+                                <path d="M0,0 L10,5 L0,10 Z" fill={arrowColor} />
+                            </marker>
+                        </defs>
+                        {arrowVariant === "bounce" ? (
+                            <g style={{ animation: "tutorial-arrow-bounce 1.2s ease-in-out infinite" }}>
+                                <path
+                                    d="M50,12 L50,55"
+                                    stroke={arrowColor}
+                                    strokeWidth={arrowStrokeWidth}
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    markerEnd={`url(#${arrowMarkerId})`}
+                                />
                             </g>
                         ) : (
-                            <g
-                                style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}
-                                stroke={arrowColor}
-                                strokeWidth={arrowStrokeWidth}
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="M22,18 Q26,64 62,70" />
-                                <path d="M48,55 L63,70 L70,53" />
+                            <g style={{ animation: "tutorial-arrow-curve-pulse 1.6s ease-in-out infinite" }}>
+                                <path
+                                    d="M22,18 Q26,64 62,70"
+                                    stroke={arrowColor}
+                                    strokeWidth={arrowStrokeWidth}
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    markerEnd={`url(#${arrowMarkerId})`}
+                                />
                             </g>
                         )}
                     </svg>
@@ -805,6 +836,8 @@ TutorialOverlay.defaultProps = {
     arrowStrokeWidth: 8,
     arrowSize: 90,
     arrowRotation: 0,
+    arrowReflect: false,
+    arrowReflectAngle: 0,
     arrowDelaySeconds: 1.2,
     arrowOffsetX: 0,
     arrowOffsetY: -100,
@@ -1036,6 +1069,21 @@ addPropertyControls(TutorialOverlay, {
         step: 1,
         defaultValue: 0,
         hidden: (props) => !props.showArrow,
+    },
+    arrowReflect: {
+        type: ControlType.Boolean,
+        title: "Arrow reflect",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.showArrow,
+    },
+    arrowReflectAngle: {
+        type: ControlType.Number,
+        title: "Reflect axis (°)",
+        step: 1,
+        defaultValue: 0,
+        hidden: (props) => !props.showArrow || !props.arrowReflect,
     },
     arrowDelaySeconds: {
         type: ControlType.Number,
