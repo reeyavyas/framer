@@ -84,6 +84,9 @@ interface Props {
 
     cardTitle: string
     cardBody: string
+    cardBackgroundColor: string
+    cardTitleColor: string
+    cardBodyColor: string
     cardAnchorX: "left" | "center" | "right"
     cardAnchorY: "top" | "center" | "bottom"
     cardOffsetX: number
@@ -281,6 +284,9 @@ export default function TutorialOverlay(props: Props) {
         scrollContainerTarget,
         cardTitle,
         cardBody,
+        cardBackgroundColor,
+        cardTitleColor,
+        cardBodyColor,
         cardAnchorX,
         cardAnchorY,
         cardOffsetX,
@@ -835,8 +841,7 @@ export default function TutorialOverlay(props: Props) {
                                 gap: 24,
                                 padding: "40px 60px",
                                 borderRadius: 24,
-                                background: "rgba(20,20,28,0.88)",
-                                color: "#fff",
+                                background: cardBackgroundColor,
                                 maxWidth: 760,
                                 textAlign: "center",
                                 pointerEvents: "none",
@@ -847,6 +852,7 @@ export default function TutorialOverlay(props: Props) {
                                     style={{
                                         fontSize: 42,
                                         fontWeight: 700,
+                                        color: cardTitleColor,
                                         whiteSpace: "pre-line",
                                     }}
                                 >
@@ -857,7 +863,7 @@ export default function TutorialOverlay(props: Props) {
                                 <div
                                     style={{
                                         fontSize: 30,
-                                        opacity: 0.8,
+                                        color: cardBodyColor,
                                         whiteSpace: "pre-line",
                                     }}
                                 >
@@ -1133,6 +1139,9 @@ TutorialOverlay.defaultProps = {
     scrollContainerTarget: "",
     cardTitle: "Let's disable your debit card",
     cardBody: "Tap on More",
+    cardBackgroundColor: "rgba(20,20,28,0.88)",
+    cardTitleColor: "#ffffff",
+    cardBodyColor: "rgba(255,255,255,0.8)",
     cardAnchorX: "center",
     cardAnchorY: "top",
     cardOffsetX: 0,
@@ -1259,6 +1268,21 @@ addPropertyControls(TutorialOverlay, {
         title: "Card body",
         displayTextArea: true,
         defaultValue: "",
+    },
+    cardBackgroundColor: {
+        type: ControlType.Color,
+        title: "Card color",
+        defaultValue: "rgba(20,20,28,0.88)",
+    },
+    cardTitleColor: {
+        type: ControlType.Color,
+        title: "Card title color",
+        defaultValue: "#ffffff",
+    },
+    cardBodyColor: {
+        type: ControlType.Color,
+        title: "Card body color",
+        defaultValue: "rgba(255,255,255,0.8)",
     },
     cardAnchorX: {
         type: ControlType.Enum,
