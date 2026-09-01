@@ -278,6 +278,12 @@ export default function InactivityOverlay() {
 
     const overlayFrame = (
         <div
+            // Lets TutorialOverlay's own click-blocker (a capture-phase
+            // window listener that stops propagation on anything
+            // outside its hole) recognize this as a separate system
+            // overlay and let clicks on it through, instead of
+            // swallowing them before they ever reach this DOM subtree.
+            data-system-overlay="true"
             style={{
                 position: "fixed",
                 top: 0,

@@ -414,7 +414,15 @@ export default function TutorialOverlay(props: Props) {
         if (!active || !isMyTurn) return
         function blockOutsideHole(e: PointerEvent | MouseEvent) {
             const eventTarget = e.target as HTMLElement | null
-            if (eventTarget?.closest("[data-tutorial-overlay]")) return
+            // Also exempt any other full-screen "system" overlay (e.g.
+            // an inactivity/idle-timeout modal) that marks its own
+            // portaled root with data-system-overlay. Without this, a
+            // capture-phase stopPropagation() here runs before the
+            // click ever reaches that overlay's own DOM/React handlers
+            // — silently swallowing taps on it even though it's
+            // visually on top, since this listener is on window and
+            // fires first regardless of z-index.
+            if (eventTarget?.closest("[data-tutorial-overlay], [data-system-overlay]")) return
             const r = rectRef.current
             const insideHole =
                 !!r &&
