@@ -82,10 +82,12 @@ interface Props {
     scrollThresholdPercent: number // 0-100, how far down before it counts as "scrolled"
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
 
-    cardTitle: string
+    cardTitleLine1: string
+    cardTitleLine1Color: string
+    cardTitleLine2: string
+    cardTitleLine2Color: string
     cardBody: string
     cardBackgroundColor: string
-    cardTitleColor: string
     cardBodyColor: string
     cardAnchorX: "left" | "center" | "right"
     cardAnchorY: "top" | "center" | "bottom"
@@ -282,10 +284,12 @@ export default function TutorialOverlay(props: Props) {
         scrollAdvancesStep,
         scrollThresholdPercent,
         scrollContainerTarget,
-        cardTitle,
+        cardTitleLine1,
+        cardTitleLine1Color,
+        cardTitleLine2,
+        cardTitleLine2Color,
         cardBody,
         cardBackgroundColor,
-        cardTitleColor,
         cardBodyColor,
         cardAnchorX,
         cardAnchorY,
@@ -797,7 +801,8 @@ export default function TutorialOverlay(props: Props) {
                 only ever animates opacity/y, so the two transforms never
                 fight. Dots only render when showProgressDots is on; the card
                 itself shows whenever there's a title/body, dots or not. */}
-            {(cardTitle ||
+            {(cardTitleLine1 ||
+                cardTitleLine2 ||
                 cardBody ||
                 (showProgressDots && progressTotal > 0)) && (
                 <div
@@ -847,16 +852,38 @@ export default function TutorialOverlay(props: Props) {
                                 pointerEvents: "none",
                             }}
                         >
-                            {cardTitle && (
+                            {(cardTitleLine1 || cardTitleLine2) && (
                                 <div
                                     style={{
-                                        fontSize: 42,
-                                        fontWeight: 700,
-                                        color: cardTitleColor,
-                                        whiteSpace: "pre-line",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 4,
                                     }}
                                 >
-                                    {cardTitle}
+                                    {cardTitleLine1 && (
+                                        <div
+                                            style={{
+                                                fontSize: 42,
+                                                fontWeight: 700,
+                                                color: cardTitleLine1Color,
+                                                whiteSpace: "pre-line",
+                                            }}
+                                        >
+                                            {cardTitleLine1}
+                                        </div>
+                                    )}
+                                    {cardTitleLine2 && (
+                                        <div
+                                            style={{
+                                                fontSize: 42,
+                                                fontWeight: 700,
+                                                color: cardTitleLine2Color,
+                                                whiteSpace: "pre-line",
+                                            }}
+                                        >
+                                            {cardTitleLine2}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {cardBody && (
@@ -1137,10 +1164,12 @@ TutorialOverlay.defaultProps = {
     scrollAdvancesStep: false,
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
-    cardTitle: "Let's disable your debit card",
+    cardTitleLine1: "Let's disable your debit card",
+    cardTitleLine1Color: "#ffffff",
+    cardTitleLine2: "",
+    cardTitleLine2Color: "#ffffff",
     cardBody: "Tap on More",
     cardBackgroundColor: "rgba(20,20,28,0.88)",
-    cardTitleColor: "#ffffff",
     cardBodyColor: "rgba(255,255,255,0.8)",
     cardAnchorX: "center",
     cardAnchorY: "top",
@@ -1257,11 +1286,27 @@ addPropertyControls(TutorialOverlay, {
         placeholder: "blank = whole page",
         hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
     },
-    cardTitle: {
+    cardTitleLine1: {
         type: ControlType.String,
-        title: "Card title",
+        title: "Card title line 1",
         defaultValue: "",
         displayTextArea: true,
+    },
+    cardTitleLine1Color: {
+        type: ControlType.Color,
+        title: "Line 1 color",
+        defaultValue: "#ffffff",
+    },
+    cardTitleLine2: {
+        type: ControlType.String,
+        title: "Card title line 2",
+        defaultValue: "",
+        displayTextArea: true,
+    },
+    cardTitleLine2Color: {
+        type: ControlType.Color,
+        title: "Line 2 color",
+        defaultValue: "#ffffff",
     },
     cardBody: {
         type: ControlType.String,
@@ -1273,11 +1318,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Color,
         title: "Card color",
         defaultValue: "rgba(20,20,28,0.88)",
-    },
-    cardTitleColor: {
-        type: ControlType.Color,
-        title: "Card title color",
-        defaultValue: "#ffffff",
     },
     cardBodyColor: {
         type: ControlType.Color,
