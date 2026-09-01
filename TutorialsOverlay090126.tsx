@@ -819,8 +819,8 @@ export default function TutorialOverlay(props: Props) {
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
-                                gap: 14,
-                                padding: "24px 36px",
+                                gap: 24,
+                                padding: "40px 60px",
                                 borderRadius: 24,
                                 background: "rgba(20,20,28,0.88)",
                                 color: "#fff",
@@ -843,7 +843,7 @@ export default function TutorialOverlay(props: Props) {
                             {cardBody && (
                                 <div
                                     style={{
-                                        fontSize: 34,
+                                        fontSize: 30,
                                         opacity: 0.8,
                                         whiteSpace: "pre-line",
                                     }}
