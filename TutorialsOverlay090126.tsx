@@ -451,7 +451,12 @@ export default function TutorialOverlay(props: Props) {
             // — silently swallowing taps on it even though it's
             // visually on top, since this listener is on window and
             // fires first regardless of z-index.
-            if (eventTarget?.closest("[data-tutorial-overlay], [data-system-overlay]")) return
+            if (
+                eventTarget?.closest(
+                    "[data-tutorial-overlay], [data-system-overlay]"
+                )
+            )
+                return
             const r = rectRef.current
             const insideHole =
                 !!r &&
@@ -619,14 +624,14 @@ export default function TutorialOverlay(props: Props) {
     // geometric tangent. Increasing this swings the head further toward
     // pointing left; decreasing (or going negative) swings it back
     // toward/past straight down. Tweak freely without touching the path.
-    const curveArrowheadAdjustDeg = 3
+    const curveArrowheadAdjustDeg = 2
     // Manual position nudge, in the same 0-100 viewBox units as the path
     // coordinates — negative X moves the head left, positive moves it
     // right (Y works the same, negative = up). At the default Arrow size
     // (90px), 1 unit ≈ 0.9px on screen, so ±1 to ±2 here is roughly a
     // "pixel or two." If Arrow size is set differently, scale this
     // number by (arrowSize / 100) to keep the same real-pixel shift.
-    const curveArrowheadOffsetX = -1
+    const curveArrowheadOffsetX = -0.6
     const curveArrowheadOffsetY = 1
 
     const arrowAnchor =
@@ -992,7 +997,7 @@ export default function TutorialOverlay(props: Props) {
                     onClick={(e) => !skipLink && e.preventDefault()}
                     style={{
                         position: "fixed",
-                        top: 80,
+                        top: 60,
                         right: 40,
                         zIndex: 8500,
                         pointerEvents: "auto",
@@ -1015,7 +1020,7 @@ export default function TutorialOverlay(props: Props) {
                     aria-label="Exit tutorial"
                     style={{
                         position: "fixed",
-                        top: 80,
+                        top: 60,
                         left: 40,
                         zIndex: 8500,
                         pointerEvents: "auto",
