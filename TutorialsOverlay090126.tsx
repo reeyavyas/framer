@@ -645,8 +645,8 @@ export default function TutorialOverlay(props: Props) {
     const arrowKeyframes = (
         <style>{`
             @keyframes tutorial-arrow-curve-pulse {
-                0%, 100% { opacity: 0.65; transform: translate(0px, 0px); }
-                50% { opacity: 1; transform: translate(4px, 4px); }
+                0%, 100% { transform: translate(0px, 0px); }
+                50% { transform: translate(4px, 4px); }
             }
             @keyframes tutorial-arrow-bounce {
                 0%, 100% { transform: translateY(0px); }
