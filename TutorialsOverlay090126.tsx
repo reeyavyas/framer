@@ -84,11 +84,14 @@ interface Props {
 
     cardTitleLine1: string
     cardTitleLine1Color: string
+    cardTitleLine1Font: React.CSSProperties
     cardTitleLine2: string
     cardTitleLine2Color: string
+    cardTitleLine2Font: React.CSSProperties
     cardBody: string
     cardBackgroundColor: string
     cardBodyColor: string
+    cardBodyFont: React.CSSProperties
     cardAnchorX: "left" | "center" | "right"
     cardAnchorY: "top" | "center" | "bottom"
     cardOffsetX: number
@@ -286,11 +289,14 @@ export default function TutorialOverlay(props: Props) {
         scrollContainerTarget,
         cardTitleLine1,
         cardTitleLine1Color,
+        cardTitleLine1Font,
         cardTitleLine2,
         cardTitleLine2Color,
+        cardTitleLine2Font,
         cardBody,
         cardBackgroundColor,
         cardBodyColor,
+        cardBodyFont,
         cardAnchorX,
         cardAnchorY,
         cardOffsetX,
@@ -865,8 +871,7 @@ export default function TutorialOverlay(props: Props) {
                                     {cardTitleLine1 && (
                                         <div
                                             style={{
-                                                fontSize: 42,
-                                                fontWeight: 700,
+                                                ...cardTitleLine1Font,
                                                 color: cardTitleLine1Color,
                                                 whiteSpace: "pre-line",
                                             }}
@@ -877,8 +882,7 @@ export default function TutorialOverlay(props: Props) {
                                     {cardTitleLine2 && (
                                         <div
                                             style={{
-                                                fontSize: 42,
-                                                fontWeight: 700,
+                                                ...cardTitleLine2Font,
                                                 color: cardTitleLine2Color,
                                                 whiteSpace: "pre-line",
                                             }}
@@ -891,7 +895,7 @@ export default function TutorialOverlay(props: Props) {
                             {cardBody && (
                                 <div
                                     style={{
-                                        fontSize: 30,
+                                        ...cardBodyFont,
                                         color: cardBodyColor,
                                         whiteSpace: "pre-line",
                                     }}
@@ -1168,11 +1172,14 @@ TutorialOverlay.defaultProps = {
     scrollContainerTarget: "",
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
+    cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
     cardTitleLine2: "",
     cardTitleLine2Color: "#ffffff",
+    cardTitleLine2Font: { fontSize: 42, fontWeight: 700 },
     cardBody: "Tap on More",
     cardBackgroundColor: "rgba(20,20,28,0.88)",
     cardBodyColor: "rgba(255,255,255,0.8)",
+    cardBodyFont: { fontSize: 30 },
     cardAnchorX: "center",
     cardAnchorY: "top",
     cardOffsetX: 0,
@@ -1299,6 +1306,13 @@ addPropertyControls(TutorialOverlay, {
         title: "Line 1 color",
         defaultValue: "#ffffff",
     },
+    cardTitleLine1Font: {
+        type: ControlType.Font,
+        title: "Line 1 font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 42, fontWeight: 700 },
+    },
     cardTitleLine2: {
         type: ControlType.String,
         title: "Card title line 2",
@@ -1309,6 +1323,13 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Color,
         title: "Line 2 color",
         defaultValue: "#ffffff",
+    },
+    cardTitleLine2Font: {
+        type: ControlType.Font,
+        title: "Line 2 font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 42, fontWeight: 700 },
     },
     cardBody: {
         type: ControlType.String,
@@ -1325,6 +1346,13 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Color,
         title: "Card body color",
         defaultValue: "rgba(255,255,255,0.8)",
+    },
+    cardBodyFont: {
+        type: ControlType.Font,
+        title: "Body font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 30 },
     },
     cardAnchorX: {
         type: ControlType.Enum,
