@@ -124,7 +124,7 @@ interface Props {
     autoAdvanceLink?: string
 
     dimColor: string
-    blurAmount: number
+    blurAmount: number // backdrop-filter blur applied to the card's own background, not the full-screen dim layer
     accentColor: string
 
     showSkipButton: boolean
@@ -807,26 +807,26 @@ export default function TutorialOverlay(props: Props) {
                 pointerEvents: "none",
             }}
         >
-            {/* dim + blur — visual only now. pointerEvents is "none": clicking
+            {/* dim — visual only now. pointerEvents is "none": clicking
                 is blocked/passed-through by an explicit JS check below, not
                 by clip-path hit-test exclusion, which reliably PAINTS the
                 hole but wasn't reliably excluding it from real clicks — a
                 correctly-linked real element under the hole wasn't
-                receiving taps. This div still shows the dim/blur/hole
-                visually; it just no longer decides what's clickable. */}
+                receiving taps. This div still shows the dim/hole visually;
+                it just no longer decides what's clickable. Deliberately no
+                blur here — blurAmount is applied on the card's own
+                container below instead, so only what's directly behind the
+                card gets blurred, not the whole screen. */}
             <div
                 ref={overlayRef}
                 style={{
                     position: "fixed",
                     inset: 0,
                     background: dimColor,
-                    backdropFilter: `blur(${blurAmount}px)`,
-                    WebkitBackdropFilter: `blur(${blurAmount}px)`,
                     clipPath,
                     WebkitClipPath: clipPath,
                     pointerEvents: "none",
-                    transition:
-                        "background 0.4s ease, backdrop-filter 0.4s ease",
+                    transition: "background 0.4s ease",
                 }}
             />
 
@@ -881,6 +881,8 @@ export default function TutorialOverlay(props: Props) {
                                 padding: "40px 60px",
                                 borderRadius: 24,
                                 background: cardBackgroundColor,
+                                backdropFilter: `blur(${blurAmount}px)`,
+                                WebkitBackdropFilter: `blur(${blurAmount}px)`,
                                 maxWidth: 760,
                                 textAlign: "center",
                                 pointerEvents: "none",
@@ -1571,7 +1573,7 @@ addPropertyControls(TutorialOverlay, {
     },
     blurAmount: {
         type: ControlType.Number,
-        title: "Blur (px)",
+        title: "Card background blur (px)",
         min: 0,
         max: 30,
         step: 1,
