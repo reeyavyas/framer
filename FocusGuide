@@ -34,6 +34,7 @@ interface Props {
     shape: Shape
     color: string
     cornerRadius: number
+    padding: number
     intensity: number
     appearTrigger: AppearTrigger
     delaySeconds: number
@@ -60,6 +61,7 @@ export default function FocusGuide(props: Props) {
         shape,
         color,
         cornerRadius,
+        padding,
         intensity,
         appearTrigger,
         delaySeconds,
@@ -144,7 +146,7 @@ export default function FocusGuide(props: Props) {
             <div
                 style={{
                     position: "absolute",
-                    inset: 0,
+                    inset: -padding,
                     borderRadius: radius,
                     border: `2px solid ${color}`,
                     boxShadow: `0 0 ${glowBlur}px ${glowSpread}px ${color}`,
@@ -163,7 +165,7 @@ export default function FocusGuide(props: Props) {
                 <div
                     style={{
                         position: "absolute",
-                        inset: 0,
+                        inset: -padding,
                         borderRadius: radius,
                         border: `2px solid ${color}`,
                         boxShadow: `0 0 ${glowBlur}px ${glowSpread}px ${color}`,
@@ -188,7 +190,7 @@ export default function FocusGuide(props: Props) {
                         key={delay}
                         style={{
                             position: "absolute",
-                            inset: 0,
+                            inset: -padding,
                             borderRadius: radius,
                             border: `2px solid ${color}`,
                             animation: isVisible
@@ -201,7 +203,7 @@ export default function FocusGuide(props: Props) {
                 <div
                     style={{
                         position: "absolute",
-                        inset: 0,
+                        inset: -padding,
                         borderRadius: radius,
                         border: `2px solid ${color}`,
                         opacity: 0.9,
@@ -220,7 +222,7 @@ export default function FocusGuide(props: Props) {
                 data-focus-link={resolvedLink}
                 style={{
                     position: "absolute",
-                    inset: 0,
+                    inset: -padding,
                     display: "block",
                     borderRadius: radius,
                 }}
@@ -261,6 +263,7 @@ FocusGuide.defaultProps = {
     shape: "rectangle",
     color: "#7F77DD",
     cornerRadius: 12,
+    padding: 0,
     intensity: 2,
     appearTrigger: "delay",
     delaySeconds: 2,
@@ -297,6 +300,13 @@ addPropertyControls(FocusGuide, {
         max: 999,
         defaultValue: 12,
         hidden: (props) => props.shape !== "rectangle",
+    },
+    padding: {
+        type: ControlType.Number,
+        title: "Padding",
+        min: 0,
+        max: 200,
+        defaultValue: 0,
     },
     intensity: {
         type: ControlType.Number,
