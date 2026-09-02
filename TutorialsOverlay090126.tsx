@@ -73,6 +73,7 @@ interface Props {
     target: string
     holeShape: HoleShape
     cornerRadius: number
+    holePadding: number // expands the measured target's box outward on all sides before cutting the hole
 
     pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
     stepNumber: number // 1-based position within pageGroup
@@ -277,6 +278,7 @@ export default function TutorialOverlay(props: Props) {
         target,
         holeShape,
         cornerRadius,
+        holePadding,
         pageGroup,
         stepNumber,
         clickAdvancesStep,
@@ -373,7 +375,21 @@ export default function TutorialOverlay(props: Props) {
                 `[data-tutorial-target="${target}"]`
             )
             if (el) {
-                const next = el.getBoundingClientRect()
+                const raw = el.getBoundingClientRect()
+                // Pad outward on all sides here, once, so every downstream
+                // consumer of this rect — the hole cutout, the click-block
+                // and click-advance hit tests, the glow ring, the arrow
+                // anchor — automatically uses the padded box instead of
+                // needing its own special case.
+                const p = Math.max(0, holePadding)
+                const next = p
+                    ? new DOMRect(
+                          raw.left - p,
+                          raw.top - p,
+                          raw.width + p * 2,
+                          raw.height + p * 2
+                      )
+                    : raw
                 rectRef.current = next
                 setRect(next)
             }
@@ -386,7 +402,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             window.clearInterval(id)
         }
-    }, [active, isMyTurn, target])
+    }, [active, isMyTurn, target, holePadding])
 
     // Timer-driven glow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
@@ -1157,6 +1173,7 @@ TutorialOverlay.defaultProps = {
     target: "more-tab",
     holeShape: "pill",
     cornerRadius: 0,
+    holePadding: 0,
     pageGroup: "",
     stepNumber: 1,
     clickAdvancesStep: false,
@@ -1231,6 +1248,13 @@ addPropertyControls(TutorialOverlay, {
         max: 999,
         defaultValue: 0,
         hidden: (props) => props.holeShape !== "rectangle",
+    },
+    holePadding: {
+        type: ControlType.Number,
+        title: "Hole padding",
+        min: 0,
+        max: 200,
+        defaultValue: 0,
     },
     pageGroup: {
         type: ControlType.String,
