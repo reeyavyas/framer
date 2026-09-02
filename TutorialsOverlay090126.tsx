@@ -73,7 +73,10 @@ interface Props {
     target: string
     holeShape: HoleShape
     cornerRadius: number
-    holePadding: number // expands the measured target's box outward on all sides before cutting the hole
+    holePaddingTop: number // expands the measured target's box outward before cutting the hole
+    holePaddingRight: number
+    holePaddingBottom: number
+    holePaddingLeft: number
 
     pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
     stepNumber: number // 1-based position within pageGroup
@@ -278,7 +281,10 @@ export default function TutorialOverlay(props: Props) {
         target,
         holeShape,
         cornerRadius,
-        holePadding,
+        holePaddingTop,
+        holePaddingRight,
+        holePaddingBottom,
+        holePaddingLeft,
         pageGroup,
         stepNumber,
         clickAdvancesStep,
@@ -376,20 +382,24 @@ export default function TutorialOverlay(props: Props) {
             )
             if (el) {
                 const raw = el.getBoundingClientRect()
-                // Pad outward on all sides here, once, so every downstream
+                // Pad outward per-side here, once, so every downstream
                 // consumer of this rect — the hole cutout, the click-block
                 // and click-advance hit tests, the glow ring, the arrow
                 // anchor — automatically uses the padded box instead of
                 // needing its own special case.
-                const p = Math.max(0, holePadding)
-                const next = p
-                    ? new DOMRect(
-                          raw.left - p,
-                          raw.top - p,
-                          raw.width + p * 2,
-                          raw.height + p * 2
-                      )
-                    : raw
+                const top = Math.max(0, holePaddingTop)
+                const right = Math.max(0, holePaddingRight)
+                const bottom = Math.max(0, holePaddingBottom)
+                const left = Math.max(0, holePaddingLeft)
+                const next =
+                    top || right || bottom || left
+                        ? new DOMRect(
+                              raw.left - left,
+                              raw.top - top,
+                              raw.width + left + right,
+                              raw.height + top + bottom
+                          )
+                        : raw
                 rectRef.current = next
                 setRect(next)
             }
@@ -402,7 +412,15 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             window.clearInterval(id)
         }
-    }, [active, isMyTurn, target, holePadding])
+    }, [
+        active,
+        isMyTurn,
+        target,
+        holePaddingTop,
+        holePaddingRight,
+        holePaddingBottom,
+        holePaddingLeft,
+    ])
 
     // Timer-driven glow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
@@ -1173,7 +1191,10 @@ TutorialOverlay.defaultProps = {
     target: "more-tab",
     holeShape: "pill",
     cornerRadius: 0,
-    holePadding: 0,
+    holePaddingTop: 0,
+    holePaddingRight: 0,
+    holePaddingBottom: 0,
+    holePaddingLeft: 0,
     pageGroup: "",
     stepNumber: 1,
     clickAdvancesStep: false,
@@ -1249,9 +1270,30 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: 0,
         hidden: (props) => props.holeShape !== "rectangle",
     },
-    holePadding: {
+    holePaddingTop: {
         type: ControlType.Number,
-        title: "Hole padding",
+        title: "Padding top",
+        min: 0,
+        max: 200,
+        defaultValue: 0,
+    },
+    holePaddingRight: {
+        type: ControlType.Number,
+        title: "Padding right",
+        min: 0,
+        max: 200,
+        defaultValue: 0,
+    },
+    holePaddingBottom: {
+        type: ControlType.Number,
+        title: "Padding bottom",
+        min: 0,
+        max: 200,
+        defaultValue: 0,
+    },
+    holePaddingLeft: {
+        type: ControlType.Number,
+        title: "Padding left",
         min: 0,
         max: 200,
         defaultValue: 0,
