@@ -412,7 +412,19 @@ export default function TutorialOverlay(props: Props) {
     React.useEffect(() => setArrowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
-    // e.g. a draggable element like CircleOverrides.tsx's circles).
+    // e.g. a draggable element like CircleOverrides.tsx's circles, or
+    // scrolling: the hole, glow, arrow, and card all derive their
+    // position from this rect). A setInterval(measure, 150) here used to
+    // visibly lag behind the target during scroll — up to 150ms stale,
+    // which reads as the glow/arrow "not staying on the target" and as
+    // generally janky/step-y motion rather than smooth tracking.
+    // requestAnimationFrame instead re-measures on every paint (so it's
+    // never more than one frame behind, matching the arrow's own visual
+    // smoothness to the actual scroll), and getBoundingClientRect() is
+    // cheap enough to call every frame. setRect/setViewport only fire
+    // when a value actually changed, so idle frames (nothing moving)
+    // don't trigger a re-render — the rAF loop itself is the only
+    // per-frame cost while a step with a target is active.
     React.useEffect(() => {
         if (!active || !isMyTurn || !target) {
             rectRef.current = null
@@ -425,17 +437,31 @@ export default function TutorialOverlay(props: Props) {
             )
             if (el) {
                 const next = el.getBoundingClientRect()
-                rectRef.current = next
-                setRect(next)
+                const prev = rectRef.current
+                if (
+                    !prev ||
+                    prev.left !== next.left ||
+                    prev.top !== next.top ||
+                    prev.width !== next.width ||
+                    prev.height !== next.height
+                ) {
+                    rectRef.current = next
+                    setRect(next)
+                }
             }
-            setViewport({ w: window.innerWidth, h: window.innerHeight })
+            const w = window.innerWidth
+            const h = window.innerHeight
+            setViewport((v) => (v.w === w && v.h === h ? v : { w, h }))
         }
         measure()
         window.addEventListener("resize", measure)
-        const id = window.setInterval(measure, 150)
+        let rafId = requestAnimationFrame(function tick() {
+            measure()
+            rafId = requestAnimationFrame(tick)
+        })
         return () => {
             window.removeEventListener("resize", measure)
-            window.clearInterval(id)
+            cancelAnimationFrame(rafId)
         }
     }, [active, isMyTurn, target])
 
