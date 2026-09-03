@@ -219,15 +219,51 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // `transform` CSS property on any element it animates, so a static
 // centering transform set alongside an animated one gets silently
 // discarded. Keeping the two on separate elements avoids that clash.
+//
+// Target-relative, same as the arrow: when a target rect is available,
+// the anchor/offset props place the card relative to the TARGET's edges
+// (not the screen), computed fresh from whatever `rect` state currently
+// holds — which the measure effect already re-measures on an interval
+// and on resize, so as the target moves during scroll the card moves
+// with it automatically, no separate scroll listener needed here. Falls
+// back to the old screen-relative behavior when there's no target (a
+// step with no hole, e.g. a closing "all set" card).
+const CARD_TARGET_GAP = 24
+
 function cardWrapperStyle(
     anchorX: "left" | "center" | "right",
     anchorY: "top" | "center" | "bottom",
     offsetX: number,
-    offsetY: number
+    offsetY: number,
+    rect: DOMRect | null
 ): React.CSSProperties {
     const style: React.CSSProperties = { position: "fixed" }
     let translateX = "0"
     let translateY = "0"
+
+    if (rect) {
+        if (anchorX === "left") style.left = rect.left + offsetX
+        else if (anchorX === "right") {
+            style.left = rect.right + offsetX
+            translateX = "-100%"
+        } else {
+            style.left = rect.left + rect.width / 2 + offsetX
+            translateX = "-50%"
+        }
+
+        if (anchorY === "top") {
+            style.top = rect.top - CARD_TARGET_GAP - offsetY
+            translateY = "-100%"
+        } else if (anchorY === "bottom") {
+            style.top = rect.bottom + CARD_TARGET_GAP + offsetY
+        } else {
+            style.top = rect.top + rect.height / 2 + offsetY
+            translateY = "-50%"
+        }
+
+        style.transform = `translate(${translateX}, ${translateY})`
+        return style
+    }
 
     if (anchorX === "left") style.left = 40 + offsetX
     else if (anchorX === "right") style.right = 40 - offsetX
@@ -817,7 +853,8 @@ export default function TutorialOverlay(props: Props) {
                             cardAnchorX,
                             cardAnchorY,
                             cardOffsetX,
-                            cardOffsetY
+                            cardOffsetY,
+                            rect
                         ),
                         pointerEvents: "none",
                     }}
@@ -1358,14 +1395,18 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Enum,
         title: "Card position X",
         options: ["left", "center", "right"],
-        optionTitles: ["Left", "Center", "Right"],
+        optionTitles: [
+            "Align left edge with target",
+            "Centered on target",
+            "Align right edge with target",
+        ],
         defaultValue: "center",
     },
     cardAnchorY: {
         type: ControlType.Enum,
         title: "Card position Y",
         options: ["top", "center", "bottom"],
-        optionTitles: ["Top", "Center", "Bottom"],
+        optionTitles: ["Above target", "Centered on target", "Below target"],
         defaultValue: "bottom",
     },
     cardOffsetX: {
