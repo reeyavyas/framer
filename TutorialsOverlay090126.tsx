@@ -235,7 +235,8 @@ function cardWrapperStyle(
     anchorY: "top" | "center" | "bottom",
     offsetX: number,
     offsetY: number,
-    rect: DOMRect | null
+    rect: DOMRect | null,
+    viewportW: number
 ): React.CSSProperties {
     const style: React.CSSProperties = { position: "fixed" }
     let translateX = "0"
@@ -244,8 +245,16 @@ function cardWrapperStyle(
     if (rect) {
         if (anchorX === "left") style.left = rect.left + offsetX
         else if (anchorX === "right") {
-            style.left = rect.right + offsetX
-            translateX = "-100%"
+            // Deliberately `right` here, not `left` + translateX(-100%).
+            // For an auto-width position:fixed box, the browser computes
+            // shrink-to-fit width BEFORE applying any transform, capped
+            // at (viewport width - left) — so anchoring near the right
+            // edge of the screen with `left` would force-narrow the box
+            // to whatever sliver of room is right of that point, then
+            // shift the already-too-narrow box back left. `right` avoids
+            // this: its available-width cap runs toward the left edge,
+            // which has plenty of room for a target near the right side.
+            style.right = Math.max(0, viewportW - rect.right - offsetX)
         } else {
             style.left = rect.left + rect.width / 2 + offsetX
             translateX = "-50%"
@@ -854,7 +863,8 @@ export default function TutorialOverlay(props: Props) {
                             cardAnchorY,
                             cardOffsetX,
                             cardOffsetY,
-                            rect
+                            rect,
+                            viewport.w
                         ),
                         pointerEvents: "none",
                     }}
@@ -892,7 +902,7 @@ export default function TutorialOverlay(props: Props) {
                                 background: cardBackgroundColor,
                                 backdropFilter: `blur(${blurAmount}px)`,
                                 WebkitBackdropFilter: `blur(${blurAmount}px)`,
-                                maxWidth: 760,
+                                maxWidth: 900,
                                 textAlign: "center",
                                 pointerEvents: "none",
                             }}
