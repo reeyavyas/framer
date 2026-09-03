@@ -219,15 +219,60 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // `transform` CSS property on any element it animates, so a static
 // centering transform set alongside an animated one gets silently
 // discarded. Keeping the two on separate elements avoids that clash.
+//
+// Target-relative, same as the arrow: when a target rect is available,
+// the anchor/offset props place the card relative to the TARGET's edges
+// (not the screen), computed fresh from whatever `rect` state currently
+// holds — which the measure effect already re-measures on an interval
+// and on resize, so as the target moves during scroll the card moves
+// with it automatically, no separate scroll listener needed here. Falls
+// back to the old screen-relative behavior when there's no target (a
+// step with no hole, e.g. a closing "all set" card).
+const CARD_TARGET_GAP = 24
+
 function cardWrapperStyle(
     anchorX: "left" | "center" | "right",
     anchorY: "top" | "center" | "bottom",
     offsetX: number,
-    offsetY: number
+    offsetY: number,
+    rect: DOMRect | null,
+    viewportW: number
 ): React.CSSProperties {
     const style: React.CSSProperties = { position: "fixed" }
     let translateX = "0"
     let translateY = "0"
+
+    if (rect) {
+        if (anchorX === "left") style.left = rect.left + offsetX
+        else if (anchorX === "right") {
+            // Deliberately `right` here, not `left` + translateX(-100%).
+            // For an auto-width position:fixed box, the browser computes
+            // shrink-to-fit width BEFORE applying any transform, capped
+            // at (viewport width - left) — so anchoring near the right
+            // edge of the screen with `left` would force-narrow the box
+            // to whatever sliver of room is right of that point, then
+            // shift the already-too-narrow box back left. `right` avoids
+            // this: its available-width cap runs toward the left edge,
+            // which has plenty of room for a target near the right side.
+            style.right = Math.max(0, viewportW - rect.right - offsetX)
+        } else {
+            style.left = rect.left + rect.width / 2 + offsetX
+            translateX = "-50%"
+        }
+
+        if (anchorY === "top") {
+            style.top = rect.top - CARD_TARGET_GAP - offsetY
+            translateY = "-100%"
+        } else if (anchorY === "bottom") {
+            style.top = rect.bottom + CARD_TARGET_GAP + offsetY
+        } else {
+            style.top = rect.top + rect.height / 2 + offsetY
+            translateY = "-50%"
+        }
+
+        style.transform = `translate(${translateX}, ${translateY})`
+        return style
+    }
 
     if (anchorX === "left") style.left = 40 + offsetX
     else if (anchorX === "right") style.right = 40 - offsetX
@@ -367,7 +412,19 @@ export default function TutorialOverlay(props: Props) {
     React.useEffect(() => setArrowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
-    // e.g. a draggable element like CircleOverrides.tsx's circles).
+    // e.g. a draggable element like CircleOverrides.tsx's circles, or
+    // scrolling: the hole, glow, arrow, and card all derive their
+    // position from this rect). A setInterval(measure, 150) here used to
+    // visibly lag behind the target during scroll — up to 150ms stale,
+    // which reads as the glow/arrow "not staying on the target" and as
+    // generally janky/step-y motion rather than smooth tracking.
+    // requestAnimationFrame instead re-measures on every paint (so it's
+    // never more than one frame behind, matching the arrow's own visual
+    // smoothness to the actual scroll), and getBoundingClientRect() is
+    // cheap enough to call every frame. setRect/setViewport only fire
+    // when a value actually changed, so idle frames (nothing moving)
+    // don't trigger a re-render — the rAF loop itself is the only
+    // per-frame cost while a step with a target is active.
     React.useEffect(() => {
         if (!active || !isMyTurn || !target) {
             rectRef.current = null
@@ -380,17 +437,31 @@ export default function TutorialOverlay(props: Props) {
             )
             if (el) {
                 const next = el.getBoundingClientRect()
-                rectRef.current = next
-                setRect(next)
+                const prev = rectRef.current
+                if (
+                    !prev ||
+                    prev.left !== next.left ||
+                    prev.top !== next.top ||
+                    prev.width !== next.width ||
+                    prev.height !== next.height
+                ) {
+                    rectRef.current = next
+                    setRect(next)
+                }
             }
-            setViewport({ w: window.innerWidth, h: window.innerHeight })
+            const w = window.innerWidth
+            const h = window.innerHeight
+            setViewport((v) => (v.w === w && v.h === h ? v : { w, h }))
         }
         measure()
         window.addEventListener("resize", measure)
-        const id = window.setInterval(measure, 150)
+        let rafId = requestAnimationFrame(function tick() {
+            measure()
+            rafId = requestAnimationFrame(tick)
+        })
         return () => {
             window.removeEventListener("resize", measure)
-            window.clearInterval(id)
+            cancelAnimationFrame(rafId)
         }
     }, [active, isMyTurn, target])
 
@@ -817,7 +888,9 @@ export default function TutorialOverlay(props: Props) {
                             cardAnchorX,
                             cardAnchorY,
                             cardOffsetX,
-                            cardOffsetY
+                            cardOffsetY,
+                            rect,
+                            viewport.w
                         ),
                         pointerEvents: "none",
                     }}
@@ -855,7 +928,7 @@ export default function TutorialOverlay(props: Props) {
                                 background: cardBackgroundColor,
                                 backdropFilter: `blur(${blurAmount}px)`,
                                 WebkitBackdropFilter: `blur(${blurAmount}px)`,
-                                maxWidth: 760,
+                                maxWidth: 900,
                                 textAlign: "center",
                                 pointerEvents: "none",
                             }}
@@ -1358,14 +1431,18 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Enum,
         title: "Card position X",
         options: ["left", "center", "right"],
-        optionTitles: ["Left", "Center", "Right"],
+        optionTitles: [
+            "Align left edge with target",
+            "Centered on target",
+            "Align right edge with target",
+        ],
         defaultValue: "center",
     },
     cardAnchorY: {
         type: ControlType.Enum,
         title: "Card position Y",
         options: ["top", "center", "bottom"],
-        optionTitles: ["Top", "Center", "Bottom"],
+        optionTitles: ["Above target", "Centered on target", "Below target"],
         defaultValue: "bottom",
     },
     cardOffsetX: {
