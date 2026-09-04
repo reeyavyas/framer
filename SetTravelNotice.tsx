@@ -28,19 +28,30 @@ import { addPropertyControls, ControlType } from "framer"
  *     -> JSON string: { startDate: "YYYY-MM-DD", endDate: "YYYY-MM-DD",
  *                        destinations: string[], savedAt: number }
  *
- * and also sets a one-shot flag:
+ * and also sets two one-shot flags:
  *
  *   sessionStorage.getItem("kioskTravelNoticeToastFlag") -> "1"
+ *   sessionStorage.getItem("kioskTravelNoticeSectionFlag") -> "1"
  *
- * which TravelNoticeToast.tsx's withTravelNoticeToast override (applied
- * on whatever page the Save link lands on) reads once, clears, and uses
- * to trigger the "Your travel notice has been created" toast. A "Card
- * Controls" page can read the first key directly to populate a
- * "Travel Notice" row under Happening Now.
+ * The first is read once, cleared, and used by TravelNoticeToast.tsx's
+ * withTravelNoticeToast override (applied on whatever page the Save link
+ * lands on) to trigger the "Your travel notice has been created" toast.
+ *
+ * The second is read once, cleared, and used by TravelNoticeSection.tsx's
+ * overrides (applied on the Card Controls page) to decide whether the
+ * "Happening Now" / "Future Plans" summary row should render at all. It's
+ * deliberately separate from the toast flag and from the persistent
+ * kioskTravelNotice record below: the record stays in sessionStorage so
+ * the section has data to read *when* it's allowed to show, but the
+ * section itself should only ever appear on the page load immediately
+ * after Save — not on a later refresh of Card Controls in the same
+ * session — so its visibility is gated by this one-shot flag instead of
+ * by the record's mere presence.
  */
 
 const STORAGE_KEY = "kioskTravelNotice"
 const STORAGE_TOAST_FLAG_KEY = "kioskTravelNoticeToastFlag"
+const STORAGE_SECTION_FLAG_KEY = "kioskTravelNoticeSectionFlag"
 
 type FieldKey = "start" | "end" | "destinations"
 
@@ -671,6 +682,7 @@ export default function SetTravelNotice(props: Props) {
             }
             window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
             window.sessionStorage.setItem(STORAGE_TOAST_FLAG_KEY, "1")
+            window.sessionStorage.setItem(STORAGE_SECTION_FLAG_KEY, "1")
         }
         if (!saveLink) e.preventDefault()
     }

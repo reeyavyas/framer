@@ -14,6 +14,18 @@ code files. This branch is intentionally separate from `tutorials-layers`
   user builds visually in Framer: `withTravelNoticeToast` (auto show →
   hold `VISIBLE_MS` → fade `FADE_MS` → hide; edit those two constants
   directly) and `withTravelNoticeToastDismiss` (manual × button).
+- **TravelNoticeSection.tsx** — four Code Overrides for the "Happening
+  Now" / "Future Plans" summary row on Card Controls, applied to a
+  hand-built layer group between "Card Section" and "Misplaced Card":
+  `withTravelNoticeSectionVisibility` (outer frame — hides the whole
+  section unless a fresh one-shot flag is present),
+  `withTravelNoticeHeaderLabel` ("Happening Now" if the saved Start Date
+  is today, "Future Plans" if it's a future date — no count suffix),
+  `withTravelNoticeDateRangeText` (e.g. "September 02, 2026 - November
+  03, 2026"), and `withTravelNoticeDestinationsText` (comma-separated
+  "State - United States" entries, each internally non-breaking so a
+  name never splits mid-entry across a wrap). The layer recipe for what
+  to build in Framer was handed off in chat, not committed as a file.
 
 ## Key decisions made this session
 
@@ -39,6 +51,14 @@ code files. This branch is intentionally separate from `tutorials-layers`
   - `sessionStorage["kioskTravelNoticeToastFlag"]` → `"1"`, one-shot
     flag consumed by `withTravelNoticeToast` (read once, cleared,
     drives the toast).
+  - `sessionStorage["kioskTravelNoticeSectionFlag"]` → `"1"`, one-shot
+    flag consumed by TravelNoticeSection.tsx's overrides (read once,
+    cleared, drives the "Happening Now"/"Future Plans" section). Kept
+    deliberately separate from the toast flag and from the
+    kioskTravelNotice record: the record persists so the section has
+    data to read when it *is* allowed to show, but the section itself
+    must disappear on any refresh of Card Controls, not just for a new
+    kiosk session — so its visibility, unlike the record, is one-shot.
 - **Branch structure**: `travel-notice` branch created as a clean split
   from `tutorials-layers` — same repo, but this branch's tree contains
   ONLY these two files (all TutorialOverlay-family files were removed
@@ -51,20 +71,25 @@ code files. This branch is intentionally separate from `tutorials-layers`
 
 ## Not done yet — next step
 
-The Card Controls page does **not** currently read `kioskTravelNotice`
-or populate anything. That page/component belongs to the user (built
-outside this session). To finish the loop, still need:
+TravelNoticeSection.tsx's four overrides are written and committed, but
+they only do anything once applied to real layers in Framer — that part
+happens in the Framer editor, outside this repo. Still need (user-side):
 
-1. The user's Card Controls layer structure (layer names, how the
-   "Happening Now" section is built — a list of frames? one frame with
-   text layers?) so a Code Override can be written to match it.
-2. Decide the display date format for the range (Sept 02, 2026 -
-   Nov 03, 2026, per the reference screenshots) and whether the whole
-   "Happening Now" section hides entirely when nothing is saved yet.
-3. Write `withTravelNoticeSummary` (or similarly named) override that
-   reads `kioskTravelNotice` from sessionStorage on mount and fills in
-   that section — sketch of the approach is in the last assistant
-   message of this session, not yet committed as real code.
-
-Pick up by asking the user for their Card Controls layer structure and
-writing that override.
+1. Build the layer group in Framer between "Card Section" and
+   "Misplaced Card" — outer frame ("Travel Notice Section"), a rail
+   (dot / line / dot) for the timeline look, and content text layers for
+   the header, date range, "Destinations:" label (static), destinations
+   value, and "That's All!" footer (static). See TravelNoticeSection.tsx's
+   header comment for the exact expected shape.
+2. Apply the four overrides from TravelNoticeSection.tsx to their
+   matching layers (outer frame gets `withTravelNoticeSectionVisibility`;
+   the three dynamic text layers each get their matching
+   `withTravelNotice*Text`/`withTravelNoticeHeaderLabel` override).
+3. On the same Card Controls page, apply the existing
+   `withTravelNoticeToast` / `withTravelNoticeToastDismiss` overrides
+   (from TravelNoticeToast.tsx — unchanged, already generic to any page)
+   to the "Your travel notice has been created" toast layers.
+4. Verify in Framer Preview: Save → land on Card Controls → section +
+   toast both show; toast auto-hides or dismisses on ×; refresh Card
+   Controls → section is gone, toast doesn't reappear, kioskTravelNotice
+   itself is still in sessionStorage untouched.
