@@ -203,3 +203,33 @@ rendered height. No coordinate math, no manual sync — it's correct by
 construction regardless of how many lines the destinations text wraps
 to. This replaces the "hand-build layers + 4 overrides" plan entirely;
 see "What exists" and "Not done yet" above for the current shape.
+
+## End-of-day wrap-up (still Session 4)
+
+User is stopping for today, picking back up next week. Status:
+
+- Code side (this repo) is in a clean, pushed state as of commit
+  `cf36ad7` — `SetTravelNotice.tsx`, `TravelNoticeSection.tsx`, and this
+  NOTES.md are all committed to `travel-notice`, nothing pending.
+- On the Framer side, the user has pulled/pasted the updated code files
+  in, but on first look the TravelNoticeSection component's default
+  styling (colors/fonts/spacing property-control defaults) does **not**
+  yet match their reference screenshot — expect a styling/property-value
+  pass next session, not a logic change. Bring the reference screenshot
+  back into that conversation.
+- The success toast layers (the "Your travel notice has been created"
+  toast itself, built visually in Framer, with `withTravelNoticeToast` /
+  `withTravelNoticeToastDismiss` from TravelNoticeToast.tsx applied to
+  it) have **not** been built yet on the Card Controls page. This is
+  separate from the styling pass above — still fully outstanding.
+- **Team-project working norm, stated explicitly by the user**: this is
+  a team project — other members read the code even though they don't
+  write it, so the user wants to weigh in on changes at any level of
+  size, comments included, not just logic/behavior. Don't treat a
+  comment-only or doc-only edit as too minor to flag or explain.
+
+Next session, in order: (1) style TravelNoticeSection's property
+controls to match the reference screenshot, (2) build the toast layers
+and apply the existing toast overrides, (3) full Preview pass per the
+"Not done yet" checklist above (including the long-destinations-list
+rail check).
