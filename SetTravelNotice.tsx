@@ -60,7 +60,7 @@ interface Props {
     saveLink?: string
     cancelLink?: string
 
-    calendarIcon?: { src: string; srcSet?: string }
+    calendarIcon?: string
 
     labelColor: string
     fieldBackgroundColor: string
@@ -1017,13 +1017,12 @@ function CalendarIconOrCustom({
 }: {
     style: React.CSSProperties
     color: string
-    icon?: { src: string; srcSet?: string }
+    icon?: string
 }) {
-    if (icon?.src) {
+    if (icon) {
         return (
             <img
-                src={icon.src}
-                srcSet={icon.srcSet}
+                src={icon}
                 alt=""
                 style={{ ...style, objectFit: "contain" }}
             />
