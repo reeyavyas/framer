@@ -115,6 +115,7 @@ interface Props {
     fieldCornerRadius: number
     chipCornerRadius: number
     panelCornerRadius: number
+    calendarDayCornerRadius: number
     buttonHeight: number
     buttonCornerRadius: number
     buttonPaddingX: number
@@ -253,7 +254,7 @@ function CalendarPanel({
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 left: 0,
-                right: 0,
+                width: "100%",
                 zIndex: 20,
                 background: props.panelBackgroundColor,
                 border: `1px solid ${props.panelBorderColor}`,
@@ -387,7 +388,7 @@ function CalendarPanel({
                                     width: "78%",
                                     aspectRatio: "1 / 1",
                                     maxWidth: 56,
-                                    borderRadius: "50%",
+                                    borderRadius: props.calendarDayCornerRadius,
                                     border: isToday
                                         ? `2px solid ${props.calendarTodayRingColor}`
                                         : "2px solid transparent",
@@ -712,75 +713,79 @@ export default function SetTravelNotice(props: Props) {
                 >
                     {startDateLabel}
                 </div>
-                <div
-                    onClick={() =>
-                        setOpenField((f) => (f === "start" ? null : "start"))
-                    }
-                    style={{
-                        height: fieldHeight,
-                        display: "flex",
-                        alignItems: "stretch",
-                        boxSizing: "border-box",
-                        background: fieldBackgroundColor,
-                        border: `2px solid ${
-                            openField === "start"
-                                ? fieldFocusBorderColor
-                                : fieldBorderColor
-                        }`,
-                        borderRadius: fieldCornerRadius,
-                        overflow: "hidden",
-                        cursor: "pointer",
-                    }}
-                >
-                    <span
-                        style={{
-                            ...fieldValueFont,
-                            color: fieldTextColor,
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "0 24px",
-                            minWidth: 0,
-                        }}
-                    >
-                        {startDate
-                            ? openField === "start"
-                                ? formatFieldShort(startDate)
-                                : formatFieldLong(startDate)
-                            : ""}
-                    </span>
+                <div style={{ position: "relative" }}>
                     <div
+                        onClick={() =>
+                            setOpenField((f) =>
+                                f === "start" ? null : "start"
+                            )
+                        }
                         style={{
-                            flexShrink: 0,
+                            height: fieldHeight,
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 20px",
-                            background: iconCellBackgroundColor,
-                            borderLeft: `2px solid ${iconDividerColor}`,
+                            alignItems: "stretch",
+                            boxSizing: "border-box",
+                            background: fieldBackgroundColor,
+                            border: `2px solid ${
+                                openField === "start"
+                                    ? fieldFocusBorderColor
+                                    : fieldBorderColor
+                            }`,
+                            borderRadius: fieldCornerRadius,
+                            overflow: "hidden",
+                            cursor: "pointer",
                         }}
                     >
-                        <CalendarIconOrCustom
-                            style={iconStyle}
-                            color={iconColor}
-                            icon={calendarIcon}
-                        />
+                        <span
+                            style={{
+                                ...fieldValueFont,
+                                color: fieldTextColor,
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "0 24px",
+                                minWidth: 0,
+                            }}
+                        >
+                            {startDate
+                                ? openField === "start"
+                                    ? formatFieldShort(startDate)
+                                    : formatFieldLong(startDate)
+                                : ""}
+                        </span>
+                        <div
+                            style={{
+                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "0 20px",
+                                background: iconCellBackgroundColor,
+                                borderLeft: `2px solid ${iconDividerColor}`,
+                            }}
+                        >
+                            <CalendarIconOrCustom
+                                style={iconStyle}
+                                color={iconColor}
+                                icon={calendarIcon}
+                            />
+                        </div>
                     </div>
+                    {openField === "start" && (
+                        <CalendarPanel
+                            viewMonth={startViewMonth}
+                            onChangeViewMonth={setStartViewMonth}
+                            selectedDate={startDate}
+                            minDate={startMin}
+                            maxDate={startMax}
+                            onSelectDate={(d) => {
+                                setStartDate(d)
+                                setOpenField(null)
+                            }}
+                            props={props}
+                        />
+                    )}
                 </div>
-                {openField === "start" && (
-                    <CalendarPanel
-                        viewMonth={startViewMonth}
-                        onChangeViewMonth={setStartViewMonth}
-                        selectedDate={startDate}
-                        minDate={startMin}
-                        maxDate={startMax}
-                        onSelectDate={(d) => {
-                            setStartDate(d)
-                            setOpenField(null)
-                        }}
-                        props={props}
-                    />
-                )}
             </div>
 
             {/* End Date */}
@@ -794,77 +799,79 @@ export default function SetTravelNotice(props: Props) {
                 >
                     {endDateLabel}
                 </div>
-                <div
-                    onClick={() =>
-                        startDate &&
-                        setOpenField((f) => (f === "end" ? null : "end"))
-                    }
-                    style={{
-                        height: fieldHeight,
-                        display: "flex",
-                        alignItems: "stretch",
-                        boxSizing: "border-box",
-                        background: fieldBackgroundColor,
-                        border: `2px solid ${
-                            openField === "end"
-                                ? fieldFocusBorderColor
-                                : fieldBorderColor
-                        }`,
-                        borderRadius: fieldCornerRadius,
-                        overflow: "hidden",
-                        cursor: startDate ? "pointer" : "default",
-                        opacity: startDate ? 1 : 0.45,
-                    }}
-                >
-                    <span
-                        style={{
-                            ...fieldValueFont,
-                            color: fieldTextColor,
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "0 24px",
-                            minWidth: 0,
-                        }}
-                    >
-                        {endDate
-                            ? openField === "end"
-                                ? formatFieldShort(endDate)
-                                : formatFieldLong(endDate)
-                            : ""}
-                    </span>
+                <div style={{ position: "relative" }}>
                     <div
+                        onClick={() =>
+                            startDate &&
+                            setOpenField((f) => (f === "end" ? null : "end"))
+                        }
                         style={{
-                            flexShrink: 0,
+                            height: fieldHeight,
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 20px",
-                            background: iconCellBackgroundColor,
-                            borderLeft: `2px solid ${iconDividerColor}`,
+                            alignItems: "stretch",
+                            boxSizing: "border-box",
+                            background: fieldBackgroundColor,
+                            border: `2px solid ${
+                                openField === "end"
+                                    ? fieldFocusBorderColor
+                                    : fieldBorderColor
+                            }`,
+                            borderRadius: fieldCornerRadius,
+                            overflow: "hidden",
+                            cursor: startDate ? "pointer" : "default",
+                            opacity: startDate ? 1 : 0.45,
                         }}
                     >
-                        <CalendarIconOrCustom
-                            style={iconStyle}
-                            color={iconColor}
-                            icon={calendarIcon}
-                        />
+                        <span
+                            style={{
+                                ...fieldValueFont,
+                                color: fieldTextColor,
+                                flex: 1,
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "0 24px",
+                                minWidth: 0,
+                            }}
+                        >
+                            {endDate
+                                ? openField === "end"
+                                    ? formatFieldShort(endDate)
+                                    : formatFieldLong(endDate)
+                                : ""}
+                        </span>
+                        <div
+                            style={{
+                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "0 20px",
+                                background: iconCellBackgroundColor,
+                                borderLeft: `2px solid ${iconDividerColor}`,
+                            }}
+                        >
+                            <CalendarIconOrCustom
+                                style={iconStyle}
+                                color={iconColor}
+                                icon={calendarIcon}
+                            />
+                        </div>
                     </div>
+                    {openField === "end" && startDate && (
+                        <CalendarPanel
+                            viewMonth={endViewMonth}
+                            onChangeViewMonth={setEndViewMonth}
+                            selectedDate={endDate}
+                            minDate={endMin}
+                            maxDate={endMax}
+                            onSelectDate={(d) => {
+                                setEndDate(d)
+                                setOpenField(null)
+                            }}
+                            props={props}
+                        />
+                    )}
                 </div>
-                {openField === "end" && startDate && (
-                    <CalendarPanel
-                        viewMonth={endViewMonth}
-                        onChangeViewMonth={setEndViewMonth}
-                        selectedDate={endDate}
-                        minDate={endMin}
-                        maxDate={endMax}
-                        onSelectDate={(d) => {
-                            setEndDate(d)
-                            setOpenField(null)
-                        }}
-                        props={props}
-                    />
-                )}
             </div>
 
             {/* Destinations */}
@@ -1224,6 +1231,7 @@ SetTravelNotice.defaultProps = {
     fieldCornerRadius: 12,
     chipCornerRadius: 999,
     panelCornerRadius: 16,
+    calendarDayCornerRadius: 999,
     buttonHeight: 100,
     buttonCornerRadius: 12,
     buttonPaddingX: 56,
@@ -1571,6 +1579,13 @@ addPropertyControls(SetTravelNotice, {
         min: 0,
         max: 60,
         defaultValue: 16,
+    },
+    calendarDayCornerRadius: {
+        type: ControlType.Number,
+        title: "Chosen date corner radius",
+        min: 0,
+        max: 999,
+        defaultValue: 999,
     },
     buttonHeight: {
         type: ControlType.Number,
