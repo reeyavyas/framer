@@ -116,6 +116,7 @@ interface Props {
     chipCornerRadius: number
     panelCornerRadius: number
     calendarDayCornerRadius: number
+    calendarGridWidthPercent: number
     buttonHeight: number
     buttonCornerRadius: number
     buttonPaddingX: number
@@ -336,79 +337,93 @@ function CalendarPanel({
 
             <div
                 style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    marginBottom: 4,
+                    width: `${props.calendarGridWidthPercent}%`,
+                    margin: "0 auto",
                 }}
             >
-                {WEEKDAY_SHORT.map((w) => (
-                    <div
-                        key={w}
-                        style={{
-                            ...props.calendarWeekdayFont,
-                            color: props.calendarWeekdayColor,
-                            textAlign: "center",
-                            padding: "8px 0",
-                        }}
-                    >
-                        {w}
-                    </div>
-                ))}
-            </div>
-
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                }}
-            >
-                {grid.map((date, i) => {
-                    const inMonth = date.getMonth() === viewMonth.getMonth()
-                    const outOfRange =
-                        isBeforeDay(date, minDate) || isAfterDay(date, maxDate)
-                    const disabled = !inMonth || outOfRange
-                    const selected =
-                        !!selectedDate && isSameDay(date, selectedDate)
-                    const isToday = isSameDay(date, today)
-                    return (
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                        marginBottom: 4,
+                    }}
+                >
+                    {WEEKDAY_SHORT.map((w) => (
                         <div
-                            key={i}
+                            key={w}
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "4px 0",
+                                ...props.calendarWeekdayFont,
+                                color: props.calendarWeekdayColor,
+                                textAlign: "center",
+                                padding: "8px 0",
                             }}
                         >
-                            <button
-                                type="button"
-                                disabled={disabled}
-                                onClick={() => !disabled && onSelectDate(date)}
+                            {w}
+                        </div>
+                    ))}
+                </div>
+
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(7, 1fr)",
+                    }}
+                >
+                    {grid.map((date, i) => {
+                        const inMonth =
+                            date.getMonth() === viewMonth.getMonth()
+                        const outOfRange =
+                            isBeforeDay(date, minDate) ||
+                            isAfterDay(date, maxDate)
+                        const disabled = !inMonth || outOfRange
+                        const selected =
+                            !!selectedDate && isSameDay(date, selectedDate)
+                        const isToday = isSameDay(date, today)
+                        return (
+                            <div
+                                key={i}
                                 style={{
-                                    width: "78%",
-                                    aspectRatio: "1 / 1",
-                                    maxWidth: 56,
-                                    borderRadius: props.calendarDayCornerRadius,
-                                    border: isToday
-                                        ? `2px solid ${props.calendarTodayRingColor}`
-                                        : "2px solid transparent",
-                                    background: selected
-                                        ? props.calendarSelectedBackgroundColor
-                                        : "transparent",
-                                    color: selected
-                                        ? props.calendarSelectedTextColor
-                                        : disabled
-                                          ? props.calendarDayMutedColor
-                                          : props.calendarDayColor,
-                                    cursor: disabled ? "default" : "pointer",
-                                    ...props.calendarDayFont,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "4px 0",
                                 }}
                             >
-                                {date.getDate()}
-                            </button>
-                        </div>
-                    )
-                })}
+                                <button
+                                    type="button"
+                                    disabled={disabled}
+                                    onClick={() =>
+                                        !disabled && onSelectDate(date)
+                                    }
+                                    style={{
+                                        width: "78%",
+                                        aspectRatio: "1 / 1",
+                                        maxWidth: 56,
+                                        borderRadius:
+                                            props.calendarDayCornerRadius,
+                                        border: isToday
+                                            ? `2px solid ${props.calendarTodayRingColor}`
+                                            : "2px solid transparent",
+                                        background: selected
+                                            ? props.calendarSelectedBackgroundColor
+                                            : "transparent",
+                                        color: selected
+                                            ? props.calendarSelectedTextColor
+                                            : disabled
+                                              ? props.calendarDayMutedColor
+                                              : props.calendarDayColor,
+                                        cursor: disabled
+                                            ? "default"
+                                            : "pointer",
+                                        ...props.calendarDayFont,
+                                    }}
+                                >
+                                    {date.getDate()}
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
 
             <div
@@ -1232,6 +1247,7 @@ SetTravelNotice.defaultProps = {
     chipCornerRadius: 999,
     panelCornerRadius: 16,
     calendarDayCornerRadius: 999,
+    calendarGridWidthPercent: 65,
     buttonHeight: 100,
     buttonCornerRadius: 12,
     buttonPaddingX: 56,
@@ -1586,6 +1602,14 @@ addPropertyControls(SetTravelNotice, {
         min: 0,
         max: 999,
         defaultValue: 999,
+    },
+    calendarGridWidthPercent: {
+        type: ControlType.Number,
+        title: "Calendar grid width (%)",
+        min: 30,
+        max: 100,
+        step: 1,
+        defaultValue: 65,
     },
     buttonHeight: {
         type: ControlType.Number,
