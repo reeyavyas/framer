@@ -942,7 +942,7 @@ export default function SetTravelNotice(props: Props) {
                                         color: chipTextColor,
                                     }}
                                 >
-                                    {state}
+                                    {state} - United States
                                 </span>
                                 <button
                                     type="button"
