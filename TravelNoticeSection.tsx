@@ -1,41 +1,35 @@
 import * as React from "react"
-import type { ComponentType } from "react"
-import { RenderTarget } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 
 /**
  * TravelNoticeSection
  *
- * Four Code Overrides for the "Happening Now" / "Future Plans" summary
- * row on Card Controls (right panel → Code → Override → this file → pick
- * the function), applied to a hand-built layer group sitting between
- * "Card Section" and "Misplaced Card". Expected layer shape — see the
- * layer recipe handed off alongside this file for the full build:
+ * Self-contained "Happening Now" / "Future Plans" summary component for
+ * Card Controls. Drop this in as ONE layer between "Card Section" and
+ * "Misplaced Card" — there's no hand-built dot/line rail to align. The
+ * connecting line between the two dots is a flex:1 child in a flex
+ * column, so it always stretches to exactly match the content column's
+ * height, whether the destinations text wraps to 1 line or several —
+ * no manual adjustment needed as the destinations list grows.
  *
- *   Travel Notice Section (outer frame)      <- withTravelNoticeSectionVisibility
- *     ├─ TN Rail (dot / line / dot)           (static, no override)
- *     └─ TN Content
- *          ├─ TN Header Text                  <- withTravelNoticeHeaderLabel
- *          ├─ TN Detail Block
- *          │    ├─ TN Date Range Text         <- withTravelNoticeDateRangeText
- *          │    ├─ TN Destinations Label      (static text: "Destinations:")
- *          │    └─ TN Destinations Text       <- withTravelNoticeDestinationsText
- *          └─ TN Footer Text                  (static text: "That's All!")
+ * Data: reads the same sessionStorage contract SetTravelNotice.tsx
+ * writes on Save —
  *
- * withTravelNoticeSectionVisibility goes on the outer frame and hides the
- * whole thing (display: none) unless a fresh one-shot flag is present.
+ *   sessionStorage.getItem("kioskTravelNotice")
+ *     -> { startDate, endDate, destinations, savedAt }
+ *   sessionStorage.getItem("kioskTravelNoticeSectionFlag") -> "1"
  *
- * One-shot by design: kioskTravelNoticeSectionFlag is read and cleared
- * once per page load, the moment any one of these four overrides first
- * mounts (whichever happens to mount first — the read is idempotent, so
- * it doesn't matter which). That means the section shows on the page
- * load right after Save is clicked, and disappears again on any later
- * refresh of Card Controls within the same session — this section's
- * visibility is intentionally NOT tied to whether kioskTravelNotice still
- * has data (it does, and keeps it — just this section stops showing it).
+ * The second is a one-shot flag: read and cleared the moment this
+ * component first mounts on a page load. That means the section shows
+ * on the page load right after Save, and renders nothing at all (zero
+ * height, not just visually hidden) on any later refresh of Card
+ * Controls within the same kiosk session — kioskTravelNotice itself is
+ * untouched and keeps persisting; only this component's own visibility
+ * is one-shot.
  *
- * On the canvas all four overrides are inert — layers render exactly as
- * designed, so the section stays freely stylable there. The read/hide/
- * fill-in behavior only runs in Preview/Published.
+ * On the canvas this always renders with sample data so it stays
+ * stylable via the property controls below; the real read/hide/fill-in
+ * behavior only runs in Preview/Published.
  */
 
 const STORAGE_KEY = "kioskTravelNotice"
@@ -64,7 +58,7 @@ interface StoredNotice {
 }
 
 interface NoticeSummary {
-    headerLabel: "Happening Now" | "Future Plans"
+    headerLabel: string
     dateRangeText: string
     destinationsText: string
 }
@@ -87,11 +81,10 @@ function todayISO(): string {
 let noticeSummary: NoticeSummary | null = null
 let sectionArmedForThisLoad = false
 
-// Runs once per page load regardless of how many of the four overrides
-// below mount — reads the one-shot flag and clears it immediately (so a
-// later refresh of this same page can't re-show the section), and — only
-// if the flag was actually set — reads the persistent kioskTravelNotice
-// record to build the summary these overrides render.
+// Runs once per page load — reads the one-shot flag and clears it
+// immediately (so a later refresh of this same page renders nothing),
+// and — only if the flag was actually set — reads the persistent
+// kioskTravelNotice record to build the summary this component renders.
 function armSectionFromStorageOnce() {
     if (sectionArmedForThisLoad) return
     sectionArmedForThisLoad = true
@@ -127,52 +120,359 @@ function armSectionFromStorageOnce() {
     }
 }
 
-function useNoticeSummary(isCanvas: boolean): NoticeSummary | null {
+const SAMPLE_SUMMARY: NoticeSummary = {
+    headerLabel: "Happening Now",
+    dateRangeText: "September 02, 2026 - November 03, 2026",
+    destinationsText: "Illinois - United States, Texas - United States",
+}
+
+interface Props {
+    destinationsLabel: string
+    footerLabel: string
+
+    dotColor: string
+    lineColor: string
+    headerTextColor: string
+    dateRangeTextColor: string
+    destinationsLabelColor: string
+    destinationsTextColor: string
+    footerTextColor: string
+    backgroundColor: string
+
+    headerFont: React.CSSProperties
+    dateRangeFont: React.CSSProperties
+    destinationsLabelFont: React.CSSProperties
+    destinationsTextFont: React.CSSProperties
+    footerFont: React.CSSProperties
+
+    dotSize: number
+    lineWidth: number
+    railContentGap: number
+    detailGap: number
+    rowGap: number
+    paddingX: number
+    paddingY: number
+
+    style?: React.CSSProperties
+}
+
+/**
+ * @framerSupportedLayoutWidth any
+ * @framerSupportedLayoutHeight any
+ * @framerIntrinsicWidth 1080
+ * @framerIntrinsicHeight 300
+ */
+export default function TravelNoticeSection(props: Props) {
+    const {
+        destinationsLabel,
+        footerLabel,
+        dotColor,
+        lineColor,
+        headerTextColor,
+        dateRangeTextColor,
+        destinationsLabelColor,
+        destinationsTextColor,
+        footerTextColor,
+        backgroundColor,
+        headerFont,
+        dateRangeFont,
+        destinationsLabelFont,
+        destinationsTextFont,
+        footerFont,
+        dotSize,
+        lineWidth,
+        railContentGap,
+        detailGap,
+        rowGap,
+        paddingX,
+        paddingY,
+        style,
+    } = props
+
+    const isCanvas = RenderTarget.current() === RenderTarget.canvas
+
     const [summary] = React.useState<NoticeSummary | null>(() => {
-        if (isCanvas) return null
+        if (isCanvas) return SAMPLE_SUMMARY
         armSectionFromStorageOnce()
         return noticeSummary
     })
-    return summary
-}
 
-export function withTravelNoticeSectionVisibility(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function TravelNoticeSectionVisibility(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const summary = useNoticeSummary(isCanvas)
-        if (isCanvas) return <Component {...props} />
+    // Renders nothing at all (not just hidden) when there's no fresh
+    // one-shot flag — the section takes up zero space in the layer
+    // stack rather than leaving an empty gap.
+    if (!summary) return null
 
-        return (
-            <Component
-                {...props}
+    return (
+        <div
+            style={{
+                ...style,
+                width: "100%",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "stretch",
+                gap: railContentGap,
+                padding: `${paddingY}px ${paddingX}px`,
+                background: backgroundColor,
+                fontFamily: "Inter, sans-serif",
+            }}
+        >
+            {/* Rail: dot / line / dot. The line is flex:1 so it always
+                stretches to exactly match the content column's height,
+                no matter how many lines the destinations text wraps to. */}
+            <div
                 style={{
-                    ...props.style,
-                    display: summary ? props.style?.display : "none",
+                    flexShrink: 0,
+                    width: dotSize,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                 }}
-            />
-        )
-    }
+            >
+                <div
+                    style={{
+                        flexShrink: 0,
+                        width: dotSize,
+                        height: dotSize,
+                        borderRadius: "50%",
+                        background: dotColor,
+                    }}
+                />
+                <div
+                    style={{
+                        flex: 1,
+                        width: lineWidth,
+                        background: lineColor,
+                    }}
+                />
+                <div
+                    style={{
+                        flexShrink: 0,
+                        width: dotSize,
+                        height: dotSize,
+                        borderRadius: "50%",
+                        background: dotColor,
+                    }}
+                />
+            </div>
+
+            {/* Content */}
+            <div
+                style={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    gap: rowGap,
+                }}
+            >
+                <div style={{ ...headerFont, color: headerTextColor }}>
+                    {summary.headerLabel}
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: detailGap,
+                    }}
+                >
+                    <div style={{ ...dateRangeFont, color: dateRangeTextColor }}>
+                        {summary.dateRangeText}
+                    </div>
+                    <div
+                        style={{
+                            ...destinationsLabelFont,
+                            color: destinationsLabelColor,
+                        }}
+                    >
+                        {destinationsLabel}
+                    </div>
+                    <div
+                        style={{
+                            ...destinationsTextFont,
+                            color: destinationsTextColor,
+                        }}
+                    >
+                        {summary.destinationsText}
+                    </div>
+                </div>
+                <div style={{ ...footerFont, color: footerTextColor }}>
+                    {footerLabel}
+                </div>
+            </div>
+        </div>
+    )
 }
 
-function makeSummaryTextOverride(pick: (summary: NoticeSummary) => string) {
-    return function (Component: ComponentType<any>): ComponentType<any> {
-        return function TravelNoticeSummaryText(props: any) {
-            const isCanvas = RenderTarget.current() === RenderTarget.canvas
-            const summary = useNoticeSummary(isCanvas)
-            if (isCanvas || !summary) return <Component {...props} />
-            return <Component {...props} text={pick(summary)} />
-        }
-    }
+TravelNoticeSection.defaultProps = {
+    destinationsLabel: "Destinations:",
+    footerLabel: "That's All!",
+    dotColor: "#1f4fa8",
+    lineColor: "#c7d3e8",
+    headerTextColor: "#22262b",
+    dateRangeTextColor: "#22262b",
+    destinationsLabelColor: "#6b7076",
+    destinationsTextColor: "#22262b",
+    footerTextColor: "#22262b",
+    backgroundColor: "#f2f3f5",
+    headerFont: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
+    dateRangeFont: {
+        fontFamily: "Inter",
+        fontSize: 26,
+        fontWeight: 700,
+        fontStyle: "italic",
+    },
+    destinationsLabelFont: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
+    destinationsTextFont: { fontFamily: "Inter", fontSize: 24, fontWeight: 400 },
+    footerFont: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
+    dotSize: 20,
+    lineWidth: 2,
+    railContentGap: 20,
+    detailGap: 10,
+    rowGap: 20,
+    paddingX: 32,
+    paddingY: 28,
 }
 
-export const withTravelNoticeHeaderLabel = makeSummaryTextOverride(
-    (summary) => summary.headerLabel
-)
-export const withTravelNoticeDateRangeText = makeSummaryTextOverride(
-    (summary) => summary.dateRangeText
-)
-export const withTravelNoticeDestinationsText = makeSummaryTextOverride(
-    (summary) => summary.destinationsText
-)
+addPropertyControls(TravelNoticeSection, {
+    destinationsLabel: {
+        type: ControlType.String,
+        title: "Destinations label",
+        defaultValue: "Destinations:",
+    },
+    footerLabel: {
+        type: ControlType.String,
+        title: "Footer label",
+        defaultValue: "That's All!",
+    },
+    dotColor: {
+        type: ControlType.Color,
+        title: "Dot color",
+        defaultValue: "#1f4fa8",
+    },
+    lineColor: {
+        type: ControlType.Color,
+        title: "Line color",
+        defaultValue: "#c7d3e8",
+    },
+    headerTextColor: {
+        type: ControlType.Color,
+        title: "Header text",
+        defaultValue: "#22262b",
+    },
+    dateRangeTextColor: {
+        type: ControlType.Color,
+        title: "Date range text",
+        defaultValue: "#22262b",
+    },
+    destinationsLabelColor: {
+        type: ControlType.Color,
+        title: "Destinations label color",
+        defaultValue: "#6b7076",
+    },
+    destinationsTextColor: {
+        type: ControlType.Color,
+        title: "Destinations text",
+        defaultValue: "#22262b",
+    },
+    footerTextColor: {
+        type: ControlType.Color,
+        title: "Footer text",
+        defaultValue: "#22262b",
+    },
+    backgroundColor: {
+        type: ControlType.Color,
+        title: "Background",
+        defaultValue: "#f2f3f5",
+    },
+    headerFont: {
+        type: ControlType.Font,
+        title: "Header font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
+    },
+    dateRangeFont: {
+        type: ControlType.Font,
+        title: "Date range font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: {
+            fontFamily: "Inter",
+            fontSize: 26,
+            fontWeight: 700,
+            fontStyle: "italic",
+        },
+    },
+    destinationsLabelFont: {
+        type: ControlType.Font,
+        title: "Destinations label font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
+    },
+    destinationsTextFont: {
+        type: ControlType.Font,
+        title: "Destinations text font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontFamily: "Inter", fontSize: 24, fontWeight: 400 },
+    },
+    footerFont: {
+        type: ControlType.Font,
+        title: "Footer font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
+    },
+    dotSize: {
+        type: ControlType.Number,
+        title: "Dot size",
+        min: 8,
+        max: 60,
+        defaultValue: 20,
+    },
+    lineWidth: {
+        type: ControlType.Number,
+        title: "Line width",
+        min: 1,
+        max: 12,
+        defaultValue: 2,
+    },
+    railContentGap: {
+        type: ControlType.Number,
+        title: "Rail-content gap",
+        min: 0,
+        max: 80,
+        defaultValue: 20,
+    },
+    detailGap: {
+        type: ControlType.Number,
+        title: "Detail row gap",
+        min: 0,
+        max: 40,
+        defaultValue: 10,
+    },
+    rowGap: {
+        type: ControlType.Number,
+        title: "Row gap (header/detail/footer)",
+        min: 0,
+        max: 80,
+        defaultValue: 20,
+    },
+    paddingX: {
+        type: ControlType.Number,
+        title: "Horizontal padding",
+        min: 0,
+        max: 120,
+        defaultValue: 32,
+    },
+    paddingY: {
+        type: ControlType.Number,
+        title: "Vertical padding",
+        min: 0,
+        max: 120,
+        defaultValue: 28,
+    },
+})

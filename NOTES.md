@@ -14,18 +14,20 @@ code files. This branch is intentionally separate from `tutorials-layers`
   user builds visually in Framer: `withTravelNoticeToast` (auto show →
   hold `VISIBLE_MS` → fade `FADE_MS` → hide; edit those two constants
   directly) and `withTravelNoticeToastDismiss` (manual × button).
-- **TravelNoticeSection.tsx** — four Code Overrides for the "Happening
-  Now" / "Future Plans" summary row on Card Controls, applied to a
-  hand-built layer group between "Card Section" and "Misplaced Card":
-  `withTravelNoticeSectionVisibility` (outer frame — hides the whole
-  section unless a fresh one-shot flag is present),
-  `withTravelNoticeHeaderLabel` ("Happening Now" if the saved Start Date
-  is today, "Future Plans" if it's a future date — no count suffix),
-  `withTravelNoticeDateRangeText` (e.g. "September 02, 2026 - November
-  03, 2026"), and `withTravelNoticeDestinationsText` (comma-separated
-  "State - United States" entries, each internally non-breaking so a
-  name never splits mid-entry across a wrap). The layer recipe for what
-  to build in Framer was handed off in chat, not committed as a file.
+- **TravelNoticeSection.tsx** — a self-contained code component (same
+  pattern as SetTravelNotice.tsx, not a Code Override) for the
+  "Happening Now" / "Future Plans" summary row on Card Controls. Drop it
+  in as one layer between "Card Section" and "Misplaced Card" — no
+  hand-built dot/line rail required. Renders "Happening Now" if the
+  saved Start Date is today, "Future Plans" if it's a future date (no
+  count suffix), the date range (e.g. "September 02, 2026 - November
+  03, 2026"), and comma-separated "State - United States" destinations
+  (each internally non-breaking so a name never splits mid-entry across
+  a wrap). The connecting line between the header/footer dots is a
+  flex:1 child, so it always stretches to match the content column's
+  actual height instead of needing manual alignment as the destinations
+  list grows — see "Session 4" below for why this isn't hand-built
+  layers + overrides like the Toast.
 
 ## Key decisions made this session
 
@@ -52,7 +54,7 @@ code files. This branch is intentionally separate from `tutorials-layers`
     flag consumed by `withTravelNoticeToast` (read once, cleared,
     drives the toast).
   - `sessionStorage["kioskTravelNoticeSectionFlag"]` → `"1"`, one-shot
-    flag consumed by TravelNoticeSection.tsx's overrides (read once,
+    flag consumed by the TravelNoticeSection.tsx component (read once,
     cleared, drives the "Happening Now"/"Future Plans" section). Kept
     deliberately separate from the toast flag and from the
     kioskTravelNotice record: the record persists so the section has
@@ -71,28 +73,26 @@ code files. This branch is intentionally separate from `tutorials-layers`
 
 ## Not done yet — next step
 
-TravelNoticeSection.tsx's four overrides are written and committed, but
-they only do anything once applied to real layers in Framer — that part
-happens in the Framer editor, outside this repo. Still need (user-side):
+TravelNoticeSection.tsx is written and committed as a full component,
+but it only shows up once dropped into the Card Controls page in
+Framer — that part happens in the Framer editor, outside this repo.
+Still need (user-side):
 
-1. Build the layer group in Framer between "Card Section" and
-   "Misplaced Card" — outer frame ("Travel Notice Section"), a rail
-   (dot / line / dot) for the timeline look, and content text layers for
-   the header, date range, "Destinations:" label (static), destinations
-   value, and "That's All!" footer (static). See TravelNoticeSection.tsx's
-   header comment for the exact expected shape.
-2. Apply the four overrides from TravelNoticeSection.tsx to their
-   matching layers (outer frame gets `withTravelNoticeSectionVisibility`;
-   the three dynamic text layers each get their matching
-   `withTravelNotice*Text`/`withTravelNoticeHeaderLabel` override).
-3. On the same Card Controls page, apply the existing
+1. Drag the TravelNoticeSection component in as one layer between
+   "Card Section" and "Misplaced Card". No hand-built rail/dot/text
+   layers needed — it renders its own dots, line, and text, sized by
+   its own property controls (colors, fonts, dot size, line width,
+   gaps, padding) in Framer's right panel.
+2. On the same Card Controls page, apply the existing
    `withTravelNoticeToast` / `withTravelNoticeToastDismiss` overrides
    (from TravelNoticeToast.tsx — unchanged, already generic to any page)
    to the "Your travel notice has been created" toast layers.
-4. Verify in Framer Preview: Save → land on Card Controls → section +
+3. Verify in Framer Preview: Save → land on Card Controls → section +
    toast both show; toast auto-hides or dismisses on ×; refresh Card
    Controls → section is gone, toast doesn't reappear, kioskTravelNotice
-   itself is still in sessionStorage untouched.
+   itself is still in sessionStorage untouched. Also verify with a long
+   destinations list (several states) that the rail's line still
+   reaches exactly from the top dot to the bottom dot.
 
 ## Session 2 — visual polish pass on SetTravelNotice.tsx
 
@@ -179,3 +179,27 @@ along the way:
 - Still open: the actual Framer-side layer build + override wiring (see
   "Not done yet" above) — that part is on the user, this session only
   had code-file access, not the Framer canvas itself.
+
+## Session 4 — TravelNoticeSection rebuilt as a component, not overrides
+
+While the user was wiring up the hand-built-layers plan from Session 3,
+they raised a real problem: the rail's connecting line has to span from
+the header dot to the footer dot, but the detail block between them
+(date range + destinations) changes height depending on how many
+destinations wrap to how many lines. A hand-built rail (fixed dot
+positions/line length) has no way to know that height, so it's prone to
+exactly the gap/misalignment the user was trying to avoid — and it's
+not something committed code here can verify, since it depends on the
+actual Framer canvas.
+
+Fix: rewrote TravelNoticeSection.tsx from four Code Overrides into one
+self-contained component (same shape as SetTravelNotice.tsx). The rail
+is now `display:flex, flexDirection:column` with the two dots
+`flexShrink:0` and the line `flex:1` — the browser stretches the line to
+fill whatever space is left after the dots, and because the rail and
+content columns sit in the same flex row (default stretch cross-axis),
+the rail's total height always equals the content column's actual
+rendered height. No coordinate math, no manual sync — it's correct by
+construction regardless of how many lines the destinations text wraps
+to. This replaces the "hand-build layers + 4 overrides" plan entirely;
+see "What exists" and "Not done yet" above for the current shape.

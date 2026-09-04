@@ -37,9 +37,10 @@ import { addPropertyControls, ControlType } from "framer"
  * withTravelNoticeToast override (applied on whatever page the Save link
  * lands on) to trigger the "Your travel notice has been created" toast.
  *
- * The second is read once, cleared, and used by TravelNoticeSection.tsx's
- * overrides (applied on the Card Controls page) to decide whether the
- * "Happening Now" / "Future Plans" summary row should render at all. It's
+ * The second is read once, cleared, and used by the TravelNoticeSection
+ * component (dropped in as a single layer on the Card Controls page) to
+ * decide whether the "Happening Now" / "Future Plans" summary row should
+ * render at all. It's
  * deliberately separate from the toast flag and from the persistent
  * kioskTravelNotice record below: the record stays in sessionStorage so
  * the section has data to read *when* it's allowed to show, but the
