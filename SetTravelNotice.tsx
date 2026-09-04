@@ -405,7 +405,7 @@ function CalendarPanel({
                                     ...props.calendarDayFont,
                                 }}
                             >
-                                {date.getDate()}
+                                {String(date.getDate()).padStart(2, "0")}
                             </button>
                         </div>
                     )
