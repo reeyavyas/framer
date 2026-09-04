@@ -116,7 +116,7 @@ interface Props {
     chipCornerRadius: number
     panelCornerRadius: number
     calendarDayCornerRadius: number
-    calendarPanelWidthPercent: number
+    calendarPanelWidth: number
     buttonHeight: number
     buttonCornerRadius: number
     buttonPaddingX: number
@@ -255,7 +255,7 @@ function CalendarPanel({
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 left: 0,
-                width: `${props.calendarPanelWidthPercent}%`,
+                width: props.calendarPanelWidth,
                 zIndex: 20,
                 background: props.panelBackgroundColor,
                 border: `1px solid ${props.panelBorderColor}`,
@@ -1233,7 +1233,7 @@ SetTravelNotice.defaultProps = {
     chipCornerRadius: 999,
     panelCornerRadius: 16,
     calendarDayCornerRadius: 999,
-    calendarPanelWidthPercent: 68,
+    calendarPanelWidth: 700,
     buttonHeight: 100,
     buttonCornerRadius: 12,
     buttonPaddingX: 56,
@@ -1589,13 +1589,14 @@ addPropertyControls(SetTravelNotice, {
         max: 999,
         defaultValue: 999,
     },
-    calendarPanelWidthPercent: {
+    calendarPanelWidth: {
         type: ControlType.Number,
-        title: "Calendar dropdown width (%)",
-        min: 30,
-        max: 100,
-        step: 1,
-        defaultValue: 68,
+        title: "Calendar dropdown width",
+        min: 200,
+        max: 1080,
+        step: 10,
+        defaultValue: 700,
+        unit: "px",
     },
     buttonHeight: {
         type: ControlType.Number,
