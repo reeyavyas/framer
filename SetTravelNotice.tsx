@@ -214,12 +214,23 @@ function toISODate(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, "0")
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
-// Always 42 cells (6 full weeks) so the panel's height never jumps
-// between months — matches the reference screenshot's grid exactly.
+// Built as 42 cells (6 full weeks) so every month lines up on the same
+// weekday grid, then trimmed below to drop any trailing week that's
+// entirely the next month (e.g. September only needs 5 rows, not 6) —
+// a 4-row floor keeps at least a full month's worth of weeks visible.
 function getMonthGrid(viewMonth: Date): Date[] {
     const first = startOfMonth(viewMonth)
     const gridStart = addDays(first, -first.getDay())
-    return Array.from({ length: 42 }, (_, i) => addDays(gridStart, i))
+    const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i))
+    let end = cells.length
+    while (end > 28) {
+        const weekIsNextMonth = cells
+            .slice(end - 7, end)
+            .every((d) => d.getMonth() !== viewMonth.getMonth())
+        if (!weekIsNextMonth) break
+        end -= 7
+    }
+    return cells.slice(0, end)
 }
 
 // ---------------------------------------------------------------------
