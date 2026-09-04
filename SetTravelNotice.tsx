@@ -69,6 +69,8 @@ interface Props {
     fieldTextColor: string
     placeholderColor: string
     iconColor: string
+    iconCellBackgroundColor: string
+    iconDividerColor: string
 
     chipBackgroundColor: string
     chipTextColor: string
@@ -547,6 +549,8 @@ export default function SetTravelNotice(props: Props) {
         fieldTextColor,
         placeholderColor,
         iconColor,
+        iconCellBackgroundColor,
+        iconDividerColor,
         chipBackgroundColor,
         chipTextColor,
         chipRemoveColor,
@@ -715,9 +719,7 @@ export default function SetTravelNotice(props: Props) {
                     style={{
                         height: fieldHeight,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0 24px",
+                        alignItems: "stretch",
                         boxSizing: "border-box",
                         background: fieldBackgroundColor,
                         border: `2px solid ${
@@ -726,17 +728,44 @@ export default function SetTravelNotice(props: Props) {
                                 : fieldBorderColor
                         }`,
                         borderRadius: fieldCornerRadius,
+                        overflow: "hidden",
                         cursor: "pointer",
                     }}
                 >
-                    <span style={{ ...fieldValueFont, color: fieldTextColor }}>
+                    <span
+                        style={{
+                            ...fieldValueFont,
+                            color: fieldTextColor,
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0 24px",
+                            minWidth: 0,
+                        }}
+                    >
                         {startDate
                             ? openField === "start"
                                 ? formatFieldShort(startDate)
                                 : formatFieldLong(startDate)
                             : ""}
                     </span>
-                    <CalendarIconOrCustom style={iconStyle} color={iconColor} icon={calendarIcon} />
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 20px",
+                            background: iconCellBackgroundColor,
+                            borderLeft: `2px solid ${iconDividerColor}`,
+                        }}
+                    >
+                        <CalendarIconOrCustom
+                            style={iconStyle}
+                            color={iconColor}
+                            icon={calendarIcon}
+                        />
+                    </div>
                 </div>
                 {openField === "start" && (
                     <CalendarPanel
@@ -773,9 +802,7 @@ export default function SetTravelNotice(props: Props) {
                     style={{
                         height: fieldHeight,
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0 24px",
+                        alignItems: "stretch",
                         boxSizing: "border-box",
                         background: fieldBackgroundColor,
                         border: `2px solid ${
@@ -784,18 +811,45 @@ export default function SetTravelNotice(props: Props) {
                                 : fieldBorderColor
                         }`,
                         borderRadius: fieldCornerRadius,
+                        overflow: "hidden",
                         cursor: startDate ? "pointer" : "default",
                         opacity: startDate ? 1 : 0.45,
                     }}
                 >
-                    <span style={{ ...fieldValueFont, color: fieldTextColor }}>
+                    <span
+                        style={{
+                            ...fieldValueFont,
+                            color: fieldTextColor,
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0 24px",
+                            minWidth: 0,
+                        }}
+                    >
                         {endDate
                             ? openField === "end"
                                 ? formatFieldShort(endDate)
                                 : formatFieldLong(endDate)
                             : ""}
                     </span>
-                    <CalendarIconOrCustom style={iconStyle} color={iconColor} icon={calendarIcon} />
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 20px",
+                            background: iconCellBackgroundColor,
+                            borderLeft: `2px solid ${iconDividerColor}`,
+                        }}
+                    >
+                        <CalendarIconOrCustom
+                            style={iconStyle}
+                            color={iconColor}
+                            icon={calendarIcon}
+                        />
+                    </div>
                 </div>
                 {openField === "end" && startDate && (
                     <CalendarPanel
@@ -1127,6 +1181,8 @@ SetTravelNotice.defaultProps = {
     fieldTextColor: "#22262b",
     placeholderColor: "#9aa0a6",
     iconColor: "#6b7076",
+    iconCellBackgroundColor: "#f5f6f7",
+    iconDividerColor: "#d7dade",
     chipBackgroundColor: "#eef1f4",
     chipTextColor: "#22262b",
     chipRemoveColor: "#6b7076",
@@ -1286,6 +1342,16 @@ addPropertyControls(SetTravelNotice, {
         type: ControlType.Color,
         title: "Icon color",
         defaultValue: "#6b7076",
+    },
+    iconCellBackgroundColor: {
+        type: ControlType.Color,
+        title: "Icon cell background",
+        defaultValue: "#f5f6f7",
+    },
+    iconDividerColor: {
+        type: ControlType.Color,
+        title: "Icon divider line",
+        defaultValue: "#d7dade",
     },
     chipBackgroundColor: {
         type: ControlType.Color,
