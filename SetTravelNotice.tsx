@@ -60,6 +60,8 @@ interface Props {
     saveLink?: string
     cancelLink?: string
 
+    calendarIcon?: { src: string; srcSet?: string }
+
     labelColor: string
     fieldBackgroundColor: string
     fieldBorderColor: string
@@ -537,6 +539,7 @@ export default function SetTravelNotice(props: Props) {
         cancelLabel,
         saveLink,
         cancelLink,
+        calendarIcon,
         labelColor,
         fieldBackgroundColor,
         fieldBorderColor,
@@ -733,7 +736,7 @@ export default function SetTravelNotice(props: Props) {
                                 : formatFieldLong(startDate)
                             : ""}
                     </span>
-                    <CalendarIcon style={iconStyle} color={iconColor} />
+                    <CalendarIconOrCustom style={iconStyle} color={iconColor} icon={calendarIcon} />
                 </div>
                 {openField === "start" && (
                     <CalendarPanel
@@ -792,7 +795,7 @@ export default function SetTravelNotice(props: Props) {
                                 : formatFieldLong(endDate)
                             : ""}
                     </span>
-                    <CalendarIcon style={iconStyle} color={iconColor} />
+                    <CalendarIconOrCustom style={iconStyle} color={iconColor} icon={calendarIcon} />
                 </div>
                 {openField === "end" && startDate && (
                     <CalendarPanel
@@ -1005,6 +1008,29 @@ export default function SetTravelNotice(props: Props) {
 // Inline icons — kept as plain SVG (no icon-library dependency) to match
 // the thin-line style in the reference screenshots.
 // ---------------------------------------------------------------------
+// Renders the caller's own uploaded image (Icon property control) if one
+// is set, falling back to the built-in line-art CalendarIcon otherwise.
+function CalendarIconOrCustom({
+    style,
+    color,
+    icon,
+}: {
+    style: React.CSSProperties
+    color: string
+    icon?: { src: string; srcSet?: string }
+}) {
+    if (icon?.src) {
+        return (
+            <img
+                src={icon.src}
+                srcSet={icon.srcSet}
+                alt=""
+                style={{ ...style, objectFit: "contain" }}
+            />
+        )
+    }
+    return <CalendarIcon style={style} color={color} />
+}
 function CalendarIcon({
     style,
     color,
@@ -1187,6 +1213,10 @@ addPropertyControls(SetTravelNotice, {
     cancelLink: {
         type: ControlType.Link,
         title: "Cancel link",
+    },
+    calendarIcon: {
+        type: ControlType.Image,
+        title: "Calendar icon",
     },
     startDateLabel: {
         type: ControlType.String,
