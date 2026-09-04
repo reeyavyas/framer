@@ -68,3 +68,74 @@ outside this session). To finish the loop, still need:
 
 Pick up by asking the user for their Card Controls layer structure and
 writing that override.
+
+## Session 2 — visual polish pass on SetTravelNotice.tsx
+
+Card Controls integration above is still outstanding (untouched this
+session). This session was entirely visual fixes/polish on the form
+itself, driven by screenshot comparisons against the user's reference
+app. In commit order:
+
+- **Custom calendar icon**: added a `calendarIcon` Image property
+  control so the built-in SVG calendar icon can be swapped for an
+  uploaded PNG. First pass was broken — Framer's `ControlType.Image`
+  passes the picked image as a plain URL **string**, not an
+  `{src, srcSet}` object; the prop type/usage was fixed to `string`.
+- **Date field icon cell**: the calendar icon on Start/End Date fields
+  now sits in its own right-side cell with a dedicated background
+  color (`iconCellBackgroundColor`) and a vertical divider border
+  (`iconDividerColor`), instead of floating in the same flat pill as
+  the date text — matches the reference app's field styling.
+- **Destination chips**: chip text now reads "State - United States"
+  (was just the state name) in one consistent chip font/color.
+  `chipCornerRadius` (already a property control, default 999/pill)
+  is the knob for chip roundness if the user wants it more rectangular.
+- **Destinations dropdown gap**: fixed a visible gap/flash of the
+  "Add up to N destinations" helper text between the field and the
+  dropdown list — the dropdown's `position: absolute` was resolving
+  against the whole label+field+helper block instead of just the
+  field. Fixed by wrapping the field + its dropdown in their own
+  nested `position: relative` container, and hiding the helper text
+  while the dropdown is open.
+- **Calendar dropdown sizing** (went through a few iterations, final
+  state below):
+  - Selected-date corner radius was hardcoded `borderRadius: "50%"` on
+    the day-cell button — now a `calendarDayCornerRadius` Number
+    control (default 999 = circle) so the user can make it more
+    rectangular without touching code.
+  - The calendar dropdown's own width is **not** 100%/relative to the
+    field. User's reference app has the calendar dropdown narrower
+    than the field and left-aligned under it. Landed on a **fixed
+    pixel width** (`calendarPanelWidth`, default 700px, `left: 0`) —
+    explicitly NOT a percentage, because the field itself is set to
+    Fill (1fr) in Framer and a %-based width would stretch/shrink the
+    dropdown along with the parent instead of staying constant.
+  - Grid trimming: `getMonthGrid` always built a fixed 6 rows (42
+    cells) so panel height wouldn't jump between months; now trims any
+    trailing week that's entirely next month (down to a 4-row floor),
+    so e.g. September 2026 only renders 5 rows instead of showing a
+    dead row of Oct 4-10. Note: this means dropdown height now varies
+    slightly month to month (5 vs 6 rows) — flagged to the user as a
+    tradeoff, not yet asked to change it.
+  - Single-digit day numbers now zero-pad ("01"-"09" instead of "1"-"9").
+- **Calendar header arrows** (`‹ ›` prev/next month buttons): talked
+  through in chat but **not yet committed as code** — user asked how
+  to make them bigger and how to add left/right padding; answered with
+  exact line references (around line 307/341 for font size via
+  `...props.calendarHeaderFont` + explicit `fontSize` override, and
+  line ~304/338 `padding: 8` → `padding: "8px 20px"` for horizontal
+  padding) and left it for the user to edit directly, rather than
+  adding new property controls. If picking this back up, check
+  whether the user actually made those edits or still wants them done
+  in code with real property controls.
+
+## Not done yet — next step (as of this note)
+
+User is starting a **new chat specifically for "Save" button
+functionality** — i.e. wiring up what happens when Save is tapped,
+beyond the sessionStorage write that already exists in
+`persistAndProceed()` (writes `kioskTravelNotice` +
+`kioskTravelNoticeToastFlag`, then follows `saveLink`). Whatever that
+next session covers, the Card Controls "Happening Now" wiring
+described above is still a separate, still-open thread — don't assume
+one supersedes the other.
