@@ -446,7 +446,7 @@ function DestinationsPanel({
         <div
             style={{
                 position: "absolute",
-                top: "calc(100% + 8px)",
+                top: "100%",
                 left: 0,
                 right: 0,
                 zIndex: 20,
@@ -878,125 +878,129 @@ export default function SetTravelNotice(props: Props) {
                 >
                     {destinationsLabel}
                 </div>
-                <div
-                    onClick={() =>
-                        !atMaxDestinations &&
-                        setOpenField((f) =>
-                            f === "destinations" ? null : "destinations"
-                        )
-                    }
-                    style={{
-                        minHeight: fieldHeight,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        padding: "12px 24px",
-                        boxSizing: "border-box",
-                        background: fieldBackgroundColor,
-                        border: `2px solid ${
-                            openField === "destinations"
-                                ? fieldFocusBorderColor
-                                : fieldBorderColor
-                        }`,
-                        borderRadius: fieldCornerRadius,
-                        cursor: atMaxDestinations ? "default" : "pointer",
-                    }}
-                >
+                <div style={{ position: "relative" }}>
                     <div
+                        onClick={() =>
+                            !atMaxDestinations &&
+                            setOpenField((f) =>
+                                f === "destinations" ? null : "destinations"
+                            )
+                        }
                         style={{
-                            flex: 1,
+                            minHeight: fieldHeight,
                             display: "flex",
-                            flexWrap: "wrap",
-                            gap: 10,
                             alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            padding: "12px 24px",
+                            boxSizing: "border-box",
+                            background: fieldBackgroundColor,
+                            border: `2px solid ${
+                                openField === "destinations"
+                                    ? fieldFocusBorderColor
+                                    : fieldBorderColor
+                            }`,
+                            borderRadius: fieldCornerRadius,
+                            cursor: atMaxDestinations ? "default" : "pointer",
                         }}
                     >
-                        {destinations.length === 0 && (
-                            <span
-                                style={{
-                                    ...fieldValueFont,
-                                    color: placeholderColor,
-                                    fontStyle: "italic",
-                                }}
-                            >
-                                {destinationsPlaceholder}
-                            </span>
-                        )}
-                        {destinations.map((state) => (
-                            <span
-                                key={state}
-                                onClick={(e) => e.stopPropagation()}
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 10,
-                                    background: chipBackgroundColor,
-                                    borderRadius: chipCornerRadius,
-                                    padding: "8px 12px 8px 18px",
-                                }}
-                            >
+                        <div
+                            style={{
+                                flex: 1,
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 10,
+                                alignItems: "center",
+                            }}
+                        >
+                            {destinations.length === 0 && (
                                 <span
                                     style={{
-                                        ...chipFont,
-                                        color: chipTextColor,
+                                        ...fieldValueFont,
+                                        color: placeholderColor,
+                                        fontStyle: "italic",
                                     }}
                                 >
-                                    {state} - United States
+                                    {destinationsPlaceholder}
                                 </span>
-                                <button
-                                    type="button"
-                                    aria-label={`Remove ${state}`}
-                                    onClick={() => removeDestination(state)}
+                            )}
+                            {destinations.map((state) => (
+                                <span
+                                    key={state}
+                                    onClick={(e) => e.stopPropagation()}
                                     style={{
-                                        background: "transparent",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        padding: 4,
-                                        display: "flex",
+                                        display: "inline-flex",
                                         alignItems: "center",
+                                        gap: 10,
+                                        background: chipBackgroundColor,
+                                        borderRadius: chipCornerRadius,
+                                        padding: "8px 12px 8px 18px",
                                     }}
                                 >
-                                    <XIcon
+                                    <span
                                         style={{
-                                            width: iconSize * 0.5,
-                                            height: iconSize * 0.5,
+                                            ...chipFont,
+                                            color: chipTextColor,
                                         }}
-                                        color={chipRemoveColor}
-                                    />
-                                </button>
-                            </span>
-                        ))}
+                                    >
+                                        {state} - United States
+                                    </span>
+                                    <button
+                                        type="button"
+                                        aria-label={`Remove ${state}`}
+                                        onClick={() => removeDestination(state)}
+                                        style={{
+                                            background: "transparent",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            padding: 4,
+                                            display: "flex",
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <XIcon
+                                            style={{
+                                                width: iconSize * 0.5,
+                                                height: iconSize * 0.5,
+                                            }}
+                                            color={chipRemoveColor}
+                                        />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                        <ChevronIcon style={iconStyle} color={iconColor} />
                     </div>
-                    <ChevronIcon style={iconStyle} color={iconColor} />
+                    {openField === "destinations" && (
+                        <DestinationsPanel
+                            options={availableOptions}
+                            onSelect={addDestination}
+                            props={props}
+                        />
+                    )}
                 </div>
-                {openField === "destinations" && (
-                    <DestinationsPanel
-                        options={availableOptions}
-                        onSelect={addDestination}
-                        props={props}
-                    />
+                {openField !== "destinations" && (
+                    <div
+                        style={{
+                            ...helperTextFont,
+                            color: labelColor,
+                            textAlign: "right",
+                            marginTop: 10,
+                        }}
+                    >
+                        {(() => {
+                            const [prefix, suffix] =
+                                destinationsHelperTemplate.split("{n}")
+                            return (
+                                <>
+                                    {prefix}
+                                    <b>{maxDestinations}</b>
+                                    {suffix}
+                                </>
+                            )
+                        })()}
+                    </div>
                 )}
-                <div
-                    style={{
-                        ...helperTextFont,
-                        color: labelColor,
-                        textAlign: "right",
-                        marginTop: 10,
-                    }}
-                >
-                    {(() => {
-                        const [prefix, suffix] =
-                            destinationsHelperTemplate.split("{n}")
-                        return (
-                            <>
-                                {prefix}
-                                <b>{maxDestinations}</b>
-                                {suffix}
-                            </>
-                        )
-                    })()}
-                </div>
             </div>
 
             {/* Save / Cancel */}
