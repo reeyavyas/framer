@@ -10,31 +10,41 @@ into a layer's Code panel inside Framer.
 
 ## Project structure
 
-```
-tutorials/           Kiosk onboarding/walkthrough system
-  FocusGuide.tsx        "Click here" glow overlay for a specific layer
-  SpotlightOverlay.tsx  Dims/blurs the screen except a cut-out target area
-  TutorialOverlay.tsx   Per-step instruction card + hole + glow (one instance per tutorial beat)
-  TutorialTargets.tsx   Override that tags a layer so TutorialOverlay can find/measure it
-  TutorialCongrats.tsx  Full-screen "you did it" finish screen for a tutorial
-  InactivityOverlay.tsx Idle/kiosk-reset screen after a few minutes of no input
+The repo is organized by product-facing group rather than by code type.
+Each group has its own `NOTES.md` with detail; `NOTES.md` at the repo
+root is the map across all of them.
 
-banking-features/
-  travel-notice/       "Set a travel notice on your card" banking feature
+```
+card-controls/          Card-level account actions (settings)
+  travel-notice/           "Set a travel notice on your card"
     SetTravelNotice.tsx      The form
     TravelNoticeSection.tsx  Where an active notice is displayed
     TravelNoticeToast.tsx    Confirmation toast on save
+  NOTES.md
 
-visuals/
-  backgrounds/          Animated gradient background presets (via @firecms/neat)
+money-management/       Budgeting UI
+  CircleOverrides.tsx      Draggable "Budget Circles" spending categories
+  NOTES.md
+
+main/                    Site-wide, page-agnostic pieces
+  backgrounds/              Animated gradient presets (via @firecms/neat)
     NeatGradient1.tsx
     bluemotionbackgeound.tsx
     bluemotionbackground2.tsx
-  circles/
-    CircleOverrides.tsx   Floating draggable circles with physics/corner-avoidance
-  carousel/
-    CurvedCarousel.tsx    Curved card carousel (flip-card stack)
-    CurvedCarouselV2.tsx  Newer carousel revision (fixes front-card reset mid-drag)
+  InactivityOverlay.tsx     Idle-timeout kiosk redirect to homepage
+  NOTES.md
+
+tutorials/               The tutorial system
+  tutorials-main-page/      Builds the Tutorials landing page
+    CurvedCarousel.tsx        Curved card carousel (flip-card stack)
+    CurvedCarouselV2.tsx      Newer carousel revision (fixes front-card reset mid-drag)
+  tutorial-overlays/        Droppable on top of any page to turn it into a tutorial
+    FocusGuide.tsx             "Click here" glow overlay for a specific layer
+    SpotlightOverlay.tsx       Dims/blurs the screen except a cut-out target area
+    TutorialOverlay.tsx        Per-step instruction card + hole + glow
+    TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
+    TutorialCongrats.tsx       Full-screen "you did it" finish screen for a tutorial
+  NOTES.md
 ```
 
 ## Using a component in Framer
@@ -50,15 +60,20 @@ visuals/
 
 - `main` is a fresh consolidation of the most current version of every
   component, pulled from the feature branches where it was actively
-  developed. Full iteration history (bug fixes, dead ends, session
-  handoff notes) lives on those branches, not in `main`'s history.
-- `tutorials/TutorialOverlay.tsx` is the merged/current tutorial-card
-  component (previously iterated on as `TutorialsOverlay090126.tsx`);
-  it supersedes the earlier `TutorialOverlay.tsx` draft.
-- `visuals/circles/CircleOverrides.tsx` is the confirmed-good version from
-  `claude/framer-circle-physics-0jt0rf` (drag-collision iteration fix, the
-  Budget Circles 1/2 variant split, and the success-toast bridge). The
-  other physics-related branches (`claude/circles-corner-avoidance-*`,
-  `claude/draggable-circles-physics-*`, `claude/framer-corner-avoidance-*`)
-  hold earlier, superseded experiments of this same file and can be
-  disregarded for new work.
+  developed, then reorganized into the group structure above. Full
+  iteration history (bug fixes, dead ends, session handoff notes) lives
+  on those original branches, not in `main`'s history.
+- `tutorials/tutorial-overlays/TutorialOverlay.tsx` is the merged/current
+  tutorial-card component (previously iterated on as
+  `TutorialsOverlay090126.tsx`); it supersedes an earlier
+  `TutorialOverlay.tsx` draft.
+- `money-management/CircleOverrides.tsx` is the confirmed-good version
+  from `claude/framer-circle-physics-0jt0rf` (drag-collision iteration
+  fix, the Budget Circles 1/2 variant split, and the success-toast
+  bridge). Other physics-related branches
+  (`claude/circles-corner-avoidance-*`, `claude/draggable-circles-physics-*`,
+  `claude/framer-corner-avoidance-*`) hold earlier, superseded
+  experiments of this same file and can be disregarded for new work.
+
+See `NOTES.md` for the group map, and each group's own `NOTES.md` for
+per-group detail and branch-naming convention.
