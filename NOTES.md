@@ -22,6 +22,9 @@ with the detail on what's in it; this file is just the map.
     underneath is untouched, and these components spotlight one target
     at a time instead of letting the user tap anywhere.
   See `tutorials/NOTES.md`.
+- **`archived/`** — code that isn't live anywhere but is kept for
+  reference (e.g. superseded experiments) rather than only living on a
+  branch. See `archived/NOTES.md`.
 
 ## Branch naming
 

@@ -86,8 +86,19 @@ export function withTravelNoticeToast(
 
         React.useEffect(() => {
             if (isCanvas) return
+            // Subscribe BEFORE arming. armToastFromStorageOnce() can call
+            // setToastPhase("visible") synchronously, which notifies every
+            // listener in toastListeners right then — if this component's
+            // forceUpdate weren't registered yet, it would miss that one
+            // notification and never re-render for the "visible" phase,
+            // staying stuck at its initial (opacity 0) render until the
+            // later "fading"/"hidden" timers force a re-render, by which
+            // point toastPhase has already moved past "visible" and the
+            // toast never actually became opaque at any render this
+            // component made.
+            const unsubscribe = subscribeToast(forceUpdate)
             armToastFromStorageOnce()
-            return subscribeToast(forceUpdate)
+            return unsubscribe
         }, [isCanvas])
 
         if (isCanvas) return <Component {...props} />

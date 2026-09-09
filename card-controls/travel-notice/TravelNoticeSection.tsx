@@ -380,16 +380,31 @@ export default function TravelNoticeSection(props: Props) {
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
-    const [summary] = React.useState<NoticeSummary | null>(() =>
-        isCanvas ? SAMPLE_SUMMARY : readNoticeIfUnshown()
+    // Starts at null (SAMPLE_SUMMARY on canvas) rather than reading
+    // sessionStorage directly in this initializer. The published site
+    // is server-rendered, where sessionStorage doesn't exist, so the
+    // server's HTML always has nothing here; if this initializer read
+    // sessionStorage synchronously, the client's hydration render would
+    // already see the real notice and produce different output than
+    // the server sent — a hydration mismatch (React error #418/#422:
+    // "Caught a recoverable error... switched to client rendering").
+    // Deferring the real read to the useEffect below means the first
+    // render (server AND client hydration) always matches: nothing.
+    const [summary, setSummary] = React.useState<NoticeSummary | null>(
+        isCanvas ? SAMPLE_SUMMARY : null
     )
 
-    // Marking "shown" is a write, so it happens here — after commit —
-    // rather than inside the useState initializer above, which must
-    // stay pure. See markCurrentNoticeShown()'s comment for why mixing
-    // the two caused a real bug.
+    // Runs after mount (client-only, post-hydration) — safe to touch
+    // sessionStorage here. Marking "shown" is a write, so it happens in
+    // this same effect, after the read, rather than inside the useState
+    // initializer above, which must stay pure. See
+    // markCurrentNoticeShown()'s comment for why mixing the two caused
+    // a real bug.
     React.useEffect(() => {
-        if (isCanvas || !summary) return
+        if (isCanvas) return
+        const found = readNoticeIfUnshown()
+        if (!found) return
+        setSummary(found)
         markCurrentNoticeShown()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
