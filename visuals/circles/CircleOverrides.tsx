@@ -844,3 +844,359 @@ export function UncategorizedCircle(
         )
     )
 }
+
+// ============================================
+// Budget Circles 2 (7 circles, variant 2)
+// ============================================
+// Same useDraggableCircle mechanics and entrance animation as the six
+// above — ids are suffixed "-v2" so they never collide with Budget
+// Circles 1's ids in the shared circles Map (see the id-collision risk
+// discussed when the two-component split was built).
+
+export function AutoCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "auto-v2",
+            125,
+            { x: 71, y: 548 },
+            { x: -240, y: CANVAS_HEIGHT + 240 },
+            0,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function DiningCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "dining-v2",
+            95,
+            { x: 545, y: 208 },
+            { x: -300, y: CANVAS_HEIGHT + 160 },
+            80,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function HealthCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "health-v2",
+            120,
+            { x: 293, y: 159 },
+            { x: -220, y: CANVAS_HEIGHT + 300 },
+            160,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function ShoppingCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "shopping-v2",
+            132.5,
+            { x: 748, y: 532 },
+            { x: -360, y: CANVAS_HEIGHT + 220 },
+            240,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function PersonalCareCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "personalcare-v2",
+            95,
+            { x: 708, y: 339 },
+            { x: -260, y: CANVAS_HEIGHT + 180 },
+            320,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function UncategorizedCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "uncategorized-v2",
+            95,
+            { x: 159, y: 351 },
+            { x: -280, y: CANVAS_HEIGHT + 280 },
+            400,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+export function BillsCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "bills-v2",
+            200,
+            { x: 332, y: 397 },
+            { x: -320, y: CANVAS_HEIGHT + 340 },
+            480,
+            Component,
+            props,
+            ref
+        )
+    )
+}
+
+// ============================================
+// Cross-component variant bridge
+// ============================================
+// Framer's own "Trigger" prop (Triggers panel) requires the paid Convert
+// Add-On to fire an event from one component into another. This is a plain
+// window CustomEvent instead, which isn't scoped to a single component the
+// way a Framer Trigger is, so it works between Budget Circles and the Save
+// button (two separate top-level components) with no add-on needed.
+const BUDGETS_VARIANT_EVENT = "budgets:variant2"
+
+// Apply to the Save button. Fires the bridge event on click, then calls
+// through to whatever onClick/onTap Framer's own interactions already
+// attached (e.g. Close Overlay) so this doesn't replace that behavior.
+export function withBudgetsVariantTrigger(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const fire = useCallback(
+            (event: any, source: string) => {
+                console.log(`[budgets-bridge] ${source} fired on trigger`)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
+                    console.log("[budgets-bridge] dispatched", BUDGETS_VARIANT_EVENT)
+                }
+            },
+            []
+        )
+
+        const handleClick = useCallback(
+            (event: any) => {
+                props.onClick?.(event)
+                fire(event, "onClick")
+            },
+            [props, fire]
+        )
+        const handleTap = useCallback(
+            (event: any, info: any) => {
+                props.onTap?.(event, info)
+                fire(event, "onTap")
+            },
+            [props, fire]
+        )
+        const handlePointerDown = useCallback(
+            (event: any) => {
+                props.onPointerDown?.(event)
+                fire(event, "onPointerDown")
+            },
+            [props, fire]
+        )
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                onClick={handleClick}
+                onTap={handleTap}
+                onPointerDown={handlePointerDown}
+            />
+        )
+    })
+}
+
+// Framer's canvas Variants aren't controllable via props from outside (a
+// wrapped component's active variant is decided internally, before any
+// prop we inject ever reaches it — confirmed by watching data-framer-name
+// stay "Variant 1" even after forcing a variant prop). Plain, non-Variant
+// components don't have that problem: mounting/unmounting is an ordinary
+// React prop-driven behavior, so this splits the old single Variant-based
+// "Budget Circles" into two independent components and controls which one
+// is mounted directly, instead of trying to flip an internal Variant.
+
+// Apply to Budget Circles 1 (the current 6-circle layout, built as its own
+// plain component, no Variant feature). Unmounts itself once the bridge
+// event fires.
+export function withBudgetsCircles1Visibility(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [hidden, setHidden] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setHidden(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
+
+        if (hidden) return null
+        return <Component {...props} ref={ref} />
+    })
+}
+
+// Apply to Budget Circles 2 (the 7-circle layout including Bills &
+// Utilities, also its own plain component). Stays unmounted until the
+// bridge event fires, then mounts.
+export function withBudgetsCircles2Visibility(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [visible, setVisible] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setVisible(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
+
+        if (!visible) return null
+        return <Component {...props} ref={ref} />
+    })
+}
+
+// How long the toast stays fully visible before it starts fading.
+const TOAST_VISIBLE_MS = 3000
+// How long the fade-out itself takes.
+const TOAST_FADE_MS = 400
+// Fired by the toast's own "x" button (see withToastDismissButton) to
+// dismiss it early, skipping the rest of TOAST_VISIBLE_MS.
+const TOAST_DISMISS_EVENT = "budgets:toastDismiss"
+
+// Apply to the success toast/banner (whatever visually shows "Bills &
+// Utilities budget created successfully" — build that content in Framer,
+// this only drives when it appears and fades). Listens for the same
+// bridge event that mounts Budget Circles 2, so it shows up at the same
+// moment that set becomes visible, holds for TOAST_VISIBLE_MS, fades over
+// TOAST_FADE_MS, then unmounts — or dismisses immediately if the "x"
+// button (see withToastDismissButton, below) fires TOAST_DISMISS_EVENT
+// first.
+export function withBudgetsSuccessToast(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const [mounted, setMounted] = useState(false)
+        const [opacity, setOpacity] = useState(0)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            let hideTimer: ReturnType<typeof setTimeout> | null = null
+            let unmountTimer: ReturnType<typeof setTimeout> | null = null
+            let fadeInFrame: number | null = null
+
+            const clearTimers = () => {
+                if (hideTimer) clearTimeout(hideTimer)
+                if (unmountTimer) clearTimeout(unmountTimer)
+                if (fadeInFrame !== null) cancelAnimationFrame(fadeInFrame)
+            }
+
+            const startFadeOut = () => {
+                clearTimers()
+                setOpacity(0)
+                unmountTimer = setTimeout(() => setMounted(false), TOAST_FADE_MS)
+            }
+
+            const showHandler = () => {
+                clearTimers()
+                setMounted(true)
+                setOpacity(0)
+                // Mount at opacity 0 first, then flip to 1 on the next
+                // frame so the fade-in actually transitions instead of
+                // popping straight to visible.
+                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+                hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
+            }
+
+            const dismissHandler = () => startFadeOut()
+
+            window.addEventListener(BUDGETS_VARIANT_EVENT, showHandler)
+            window.addEventListener(TOAST_DISMISS_EVENT, dismissHandler)
+            return () => {
+                window.removeEventListener(BUDGETS_VARIANT_EVENT, showHandler)
+                window.removeEventListener(TOAST_DISMISS_EVENT, dismissHandler)
+                clearTimers()
+            }
+        }, [])
+
+        if (!mounted) return null
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                style={{
+                    ...props.style,
+                    opacity,
+                    transition: `opacity ${TOAST_FADE_MS}ms ease`,
+                }}
+            />
+        )
+    })
+}
+
+// Apply to the toast's "x" button layer. Dispatches TOAST_DISMISS_EVENT
+// on click/tap, which withBudgetsSuccessToast picks up to fade out and
+// unmount immediately instead of waiting out the rest of its timer.
+export function withToastDismissButton(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) => {
+        const dismiss = useCallback(
+            (event: any) => {
+                props.onClick?.(event)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
+            },
+            [props]
+        )
+        const dismissTap = useCallback(
+            (event: any, info: any) => {
+                props.onTap?.(event, info)
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
+            },
+            [props]
+        )
+
+        return (
+            <Component
+                {...props}
+                ref={ref}
+                onClick={dismiss}
+                onTap={dismissTap}
+            />
+        )
+    })
+}

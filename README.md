@@ -55,10 +55,10 @@ visuals/
 - `tutorials/TutorialOverlay.tsx` is the merged/current tutorial-card
   component (previously iterated on as `TutorialsOverlay090126.tsx`);
   it supersedes the earlier `TutorialOverlay.tsx` draft.
-- `visuals/circles/CircleOverrides.tsx` is the version currently wired
-  into the live tutorial pages. Several branches
-  (`claude/circles-corner-avoidance-*`, `claude/draggable-circles-physics-*`,
-  `claude/framer-circle-physics-*`, `claude/framer-corner-avoidance-*`)
-  contain **experimental, unmerged** physics/corner-avoidance variants of
-  this same file — check those branches before starting new circle-physics
-  work, so effort isn't duplicated.
+- `visuals/circles/CircleOverrides.tsx` is the confirmed-good version from
+  `claude/framer-circle-physics-0jt0rf` (drag-collision iteration fix, the
+  Budget Circles 1/2 variant split, and the success-toast bridge). The
+  other physics-related branches (`claude/circles-corner-avoidance-*`,
+  `claude/draggable-circles-physics-*`, `claude/framer-corner-avoidance-*`)
+  hold earlier, superseded experiments of this same file and can be
+  disregarded for new work.
