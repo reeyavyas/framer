@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (if any tooling/linting is added around these components)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Framer local cache/build artifacts (if the project is ever opened as a Framer package)
+.framer/
+dist/
+build/
+
+# Misc
+*.log
+.cache/
