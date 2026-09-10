@@ -18,11 +18,24 @@ Card-level account actions a user manages from settings.
   - Pulled from `claude/lucid-ride-48wl0l`, the branch both fixes above
     actually shipped on — not `travel-notice`, which predates them.
 
-## Planned
-
-- **Set Card Alerts** — not yet built. When work starts, give it its
-  own subfolder here (`card-controls/card-alerts/`) alongside
-  `travel-notice/`.
+- `card-alerts/` — "Set Card Alerts": a native list of per-category
+  toggles (Spending alerts, Transportation, Household, ...), with a
+  fixed "$100" spending threshold rather than a user-typed amount.
+  - `CardAlertsToggleReport.tsx` — one override applied to every toggle
+    layer. Reports each tap into a shared map keyed by the toggle's own
+    `data-framer-name`, so Save can tell whether anything is on without
+    per-toggle code.
+  - `CardAlertsSave.tsx` — the Save button (enabled once any toggle is
+    on) and its "Saving..." overlay. Unlike Travel Notice, this page
+    shows a brief spinner before navigating, matching the reference
+    app's flow — the overlay needs no fade-out or sessionStorage
+    handoff since it never survives past the page it's on.
+  - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
+    Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
+    separate storage key.
+  - No sessionStorage record of the actual alert selections — this is a
+    tap-through walkthrough, not a persisted setting (unlike Travel
+    Notice's own record).
 
 ## Branch naming
 
