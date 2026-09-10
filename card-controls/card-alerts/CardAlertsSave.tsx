@@ -10,13 +10,23 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  * "Saving..." overlay (right panel -> Code -> Override -> this file):
  *
  *  - withCardAlertsSave — apply to the Save button's own frame. Reads
- *    CardAlertsToggleReport's shared map (is any toggle on?) to switch
- *    between enabled/disabled visuals, the same isValid-driven styling
- *    SetTravelNotice.tsx uses for its own Save link. Tapping it while
- *    enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit the
- *    constant directly — same convention as TravelNoticeToast.tsx's
- *    VISIBLE_MS/FADE_MS), sets the one-shot toast flag, then follows
- *    the layer's own Link. Tapping while disabled does nothing.
+ *    CardAlertsToggleReport's shared on-count (is any toggle on?) to
+ *    switch between enabled/disabled visuals, the same isValid-driven
+ *    styling SetTravelNotice.tsx uses for its own Save link. Tapping it
+ *    while enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit
+ *    the constant directly — same convention as TravelNoticeToast.tsx's
+ *    VISIBLE_MS/FADE_MS), sets the one-shot toast flag, then navigates
+ *    to CARD_CONTROLS_LINK. Tapping while disabled does nothing.
+ *
+ *    IMPORTANT — remove any native Link set on the Save layer itself in
+ *    Framer's Properties panel. A native Link navigates on tap through
+ *    Framer's own mechanism, entirely independent of this override's
+ *    onClick — it wins the race every time, which is why a disabled
+ *    (grayed-out) button was still tappable and the Saving overlay
+ *    never got a chance to show before the page unloaded. With no
+ *    native Link on the layer, this override is the only thing that
+ *    can navigate, so both the disabled-tap guard and SAVE_DELAY_MS
+ *    actually take effect.
  *
  *  - withCardAlertsSavingOverlay — apply to the "Saving..." overlay
  *    frame (dimmed background + spinner + text — build the spin as a
@@ -30,6 +40,11 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  */
 
 const STORAGE_TOAST_FLAG_KEY = "kioskCardAlertsToastFlag"
+
+// Card Controls' real published path — update this to match, since
+// removing the Save layer's native Link (see header comment above)
+// means props.href is no longer available to read it from.
+const CARD_CONTROLS_LINK = "/card-controls"
 
 // Edit this value directly to change how long the spinner shows before
 // navigating away.
@@ -83,14 +98,13 @@ export function withCardAlertsSave(
                     // own navigation before that delay is up.
                     e.preventDefault()
                     if (!enabled) return
-                    const href = props.href
                     setSavingOverlayVisible(true)
                     window.setTimeout(() => {
                         window.sessionStorage.setItem(
                             STORAGE_TOAST_FLAG_KEY,
                             "1"
                         )
-                        if (href) window.location.href = href
+                        window.location.href = CARD_CONTROLS_LINK
                     }, SAVE_DELAY_MS)
                 }}
             />

@@ -21,15 +21,23 @@ Card-level account actions a user manages from settings.
 - `card-alerts/` — "Set Card Alerts": a native list of per-category
   toggles (Spending alerts, Transportation, Household, ...), with a
   fixed "$100" spending threshold rather than a user-typed amount.
-  - `CardAlertsToggleReport.tsx` — one override applied to every toggle
-    layer. Reports each tap into a shared map keyed by the toggle's own
-    `data-framer-name`, so Save can tell whether anything is on without
-    per-toggle code.
+  - `CardAlertsToggleReport.tsx` — 24 near-identical numbered overrides,
+    one applied per toggle layer, each with its own private on/off
+    closure contributing to a shared on-count. (An earlier version kept
+    one shared map keyed by the toggle's own `data-framer-name` instead
+    of per-toggle closures — broke in practice, both from two toggles
+    colliding on the same key and from a toggle's own on-tap and
+    off-tap landing on different keys, so Save's enabled state didn't
+    track reliably.)
   - `CardAlertsSave.tsx` — the Save button (enabled once any toggle is
     on) and its "Saving..." overlay. Unlike Travel Notice, this page
     shows a brief spinner before navigating, matching the reference
     app's flow — the overlay needs no fade-out or sessionStorage
-    handoff since it never survives past the page it's on.
+    handoff since it never survives past the page it's on. The Save
+    layer must NOT have a native Framer Link — navigation is entirely
+    code-driven (to `CARD_CONTROLS_LINK`) so the disabled-tap guard and
+    the delay both actually take effect, instead of racing a native
+    Link's own independent navigation.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.
