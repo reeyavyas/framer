@@ -33,11 +33,19 @@ Card-level account actions a user manages from settings.
     on) and its "Saving..." overlay. Unlike Travel Notice, this page
     shows a brief spinner before navigating, matching the reference
     app's flow — the overlay needs no fade-out or sessionStorage
-    handoff since it never survives past the page it's on. The Save
-    layer must NOT have a native Framer Link — navigation is entirely
-    code-driven (to `CARD_CONTROLS_LINK`) so the disabled-tap guard and
-    the delay both actually take effect, instead of racing a native
-    Link's own independent navigation.
+    handoff since it never survives past the page it's on. Neither Save
+    layer may have a native Framer Link — navigation is entirely
+    code-driven so the disabled-tap guard and the delay both actually
+    take effect, instead of racing a native Link's own independent
+    navigation. There are two Set Card Alerts pages (the base page, and
+    a tutorial-overlay duplicate reached from the tutorials flow), each
+    landing on its own matching Card Controls variant, so Save comes in
+    two exports off one factory: `withCardAlertsSave` ->
+    `CARD_CONTROLS_LINK` for the base page's Save button,
+    `withCardAlertsSaveTutorial` -> `CARD_CONTROLS_TUTORIAL_LINK` for
+    the tutorial duplicate's. Everything else (toggle counting, the
+    overlay, the toast) is identical either way and needs no
+    duplicating — only the destination differs.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.
