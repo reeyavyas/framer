@@ -25,13 +25,16 @@ import { RenderTarget } from "framer"
  *
  * Every numbered export is its own plain top-level `function`, not a
  * `const` assigned from a shared factory's return value — an earlier
- * version generated all 24 from one `makeToggleReporter()` factory,
- * and every one of them silently disappeared from Framer's Code
+ * version generated all of them from one `makeToggleReporter()`
+ * factory, and every one silently disappeared from Framer's Code
  * Override picker, which only lists exports shaped exactly like
  * `function name(Component) {...}` at the top level of the file (it
  * doesn't evaluate the file to see what a factory call resolves to).
  * The actual tap-handling logic still lives in one place —
  * handleToggleTap below — each export just supplies its own flag.
+ *
+ * There are 20 of these, matching this app's own category list exactly
+ * (no spares) — add more the same way if a category gets added later.
  *
  * Every tap flips that toggle's own flag and adjusts one shared
  * on-count by ±1; CardAlertsSave.tsx reads `anyToggleOn()` (true
@@ -75,8 +78,7 @@ function handleToggleTap(
     notifyToggleListeners()
 }
 
-// Apply a different one of these to each toggle layer. 24 is more than
-// the reference app's own category list needs — extras just go unused.
+// Apply a different one of these to each of the app's 20 toggle layers.
 
 let isOn1 = false
 export function withCardAlertsToggleReport1(
@@ -558,98 +560,3 @@ export function withCardAlertsToggleReport20(
     }
 }
 
-let isOn21 = false
-export function withCardAlertsToggleReport21(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport21(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(
-                        props,
-                        e,
-                        () => isOn21,
-                        (v) => (isOn21 = v)
-                    )
-                }
-            />
-        )
-    }
-}
-
-let isOn22 = false
-export function withCardAlertsToggleReport22(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport22(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(
-                        props,
-                        e,
-                        () => isOn22,
-                        (v) => (isOn22 = v)
-                    )
-                }
-            />
-        )
-    }
-}
-
-let isOn23 = false
-export function withCardAlertsToggleReport23(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport23(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(
-                        props,
-                        e,
-                        () => isOn23,
-                        (v) => (isOn23 = v)
-                    )
-                }
-            />
-        )
-    }
-}
-
-let isOn24 = false
-export function withCardAlertsToggleReport24(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport24(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(
-                        props,
-                        e,
-                        () => isOn24,
-                        (v) => (isOn24 = v)
-                    )
-                }
-            />
-        )
-    }
-}

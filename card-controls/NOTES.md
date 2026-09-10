@@ -21,14 +21,14 @@ Card-level account actions a user manages from settings.
 - `card-alerts/` — "Set Card Alerts": a native list of per-category
   toggles (Spending alerts, Transportation, Household, ...), with a
   fixed "$100" spending threshold rather than a user-typed amount.
-  - `CardAlertsToggleReport.tsx` — 24 near-identical numbered overrides,
-    one applied per toggle layer, each with its own private module-level
+  - `CardAlertsToggleReport.tsx` — 20 near-identical numbered overrides,
+    one per toggle (no spares), each with its own private module-level
     on/off flag contributing to a shared on-count. (Two earlier, broken
     versions: one kept a shared map keyed by the toggle's own
     `data-framer-name` instead of per-toggle state — broke from two
     toggles colliding on the same key and from a toggle's own on-tap and
-    off-tap landing on different keys; the other generated all 24 from
-    one factory function assigned to `const` exports — Framer's Code
+    off-tap landing on different keys; the other generated every export
+    from one factory function assigned to `const`s — Framer's Code
     Override picker only lists exports shaped like a literal top-level
     `function name(Component) {...}`, so every factory-produced export
     silently failed to show up in the dropdown at all.)
