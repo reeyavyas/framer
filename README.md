@@ -64,6 +64,16 @@ single layer's override slot — and the import needs the explicit
 `"./CardAlertsToggleReport"`). Framer's code editor doesn't resolve
 extensionless local imports the way a typical TS/webpack setup does.
 
+An Override only shows up in a layer's Code panel dropdown if it's
+exported as a literal top-level `function name(Component) {...}` (or an
+arrow function assigned directly the same way). A `const` assigned from
+a factory call's return value — e.g. `export const withThing =
+makeThing()` — doesn't get recognized and silently disappears from the
+picker, even though it's valid, working TypeScript. If you need several
+overrides that share most of their logic, write each as its own
+top-level `function` that calls into a shared helper, rather than
+generating the exports themselves from a factory.
+
 ## Notes on this snapshot
 
 - `main` is a fresh consolidation of the most current version of every

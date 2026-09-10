@@ -15,8 +15,15 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  *    (navigates to CARD_CONTROLS_LINK), the tutorial-overlay duplicate
  *    page's Save uses withCardAlertsSaveTutorial (navigates to
  *    CARD_CONTROLS_TUTORIAL_LINK) — everything else about the two is
- *    identical, so both are produced by the same makeCardAlertsSave
- *    factory rather than two copies of the same component. Each reads
+ *    identical, so both are thin wrappers around the shared
+ *    renderCardAlertsSave below rather than two copies of the same
+ *    component. Both are plain top-level `function` exports rather
+ *    than a factory-produced `const` — Framer's Code Override picker
+ *    only lists exports shaped exactly like
+ *    `function name(Component) {...}` at the top level of the file; a
+ *    `const` assigned from a factory call's return value (what an
+ *    earlier version of this file did) doesn't get recognized and
+ *    silently disappears from the dropdown. Each reads
  *    CardAlertsToggleReport's shared on-count (is any toggle on?) to
  *    switch between enabled/disabled visuals, the same isValid-driven
  *    styling SetTravelNotice.tsx uses for its own Save link. Tapping it
@@ -74,65 +81,71 @@ function setSavingOverlayVisible(visible: boolean) {
     savingOverlayListeners.forEach((fn) => fn())
 }
 
-// Factory so the base and tutorial Save overrides share every line of
-// behavior and differ only in where they navigate.
-function makeCardAlertsSave(
+// Shared body for both Save exports below — takes the destination as a
+// plain argument so it isn't a factory whose RETURN VALUE gets assigned
+// to a const (see the header comment on why that shape goes missing
+// from Framer's Override picker).
+function renderCardAlertsSave(
+    Component: ComponentType<any>,
     destination: string
-): (Component: ComponentType<any>) => ComponentType<any> {
-    return function withCardAlertsSave(
-        Component: ComponentType<any>
-    ): ComponentType<any> {
-        return function CardAlertsSave(props: any) {
-            const isCanvas = RenderTarget.current() === RenderTarget.canvas
-            const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+): ComponentType<any> {
+    return function CardAlertsSave(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
 
-            React.useEffect(() => {
-                if (isCanvas) return
-                return subscribeToggles(forceUpdate)
-            }, [isCanvas])
+        React.useEffect(() => {
+            if (isCanvas) return
+            return subscribeToggles(forceUpdate)
+        }, [isCanvas])
 
-            if (isCanvas) return <Component {...props} />
+        if (isCanvas) return <Component {...props} />
 
-            const enabled = anyToggleOn()
+        const enabled = anyToggleOn()
 
-            return (
-                <Component
-                    {...props}
-                    style={{
-                        ...props.style,
-                        background: enabled
-                            ? ENABLED_BACKGROUND
-                            : DISABLED_BACKGROUND,
-                        color: enabled ? ENABLED_TEXT : DISABLED_TEXT,
-                        cursor: enabled ? "pointer" : "default",
-                    }}
-                    onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                        // Fully owns the tap (unlike the additive overrides
-                        // elsewhere in this project) since it has to hold
-                        // navigation until the delay below elapses — chaining
-                        // props.onClick here could let a native Link fire its
-                        // own navigation before that delay is up.
-                        e.preventDefault()
-                        if (!enabled) return
-                        setSavingOverlayVisible(true)
-                        window.setTimeout(() => {
-                            window.sessionStorage.setItem(
-                                STORAGE_TOAST_FLAG_KEY,
-                                "1"
-                            )
-                            window.location.href = destination
-                        }, SAVE_DELAY_MS)
-                    }}
-                />
-            )
-        }
+        return (
+            <Component
+                {...props}
+                style={{
+                    ...props.style,
+                    background: enabled
+                        ? ENABLED_BACKGROUND
+                        : DISABLED_BACKGROUND,
+                    color: enabled ? ENABLED_TEXT : DISABLED_TEXT,
+                    cursor: enabled ? "pointer" : "default",
+                }}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    // Fully owns the tap (unlike the additive overrides
+                    // elsewhere in this project) since it has to hold
+                    // navigation until the delay below elapses — chaining
+                    // props.onClick here could let a native Link fire its
+                    // own navigation before that delay is up.
+                    e.preventDefault()
+                    if (!enabled) return
+                    setSavingOverlayVisible(true)
+                    window.setTimeout(() => {
+                        window.sessionStorage.setItem(
+                            STORAGE_TOAST_FLAG_KEY,
+                            "1"
+                        )
+                        window.location.href = destination
+                    }, SAVE_DELAY_MS)
+                }}
+            />
+        )
     }
 }
 
-export const withCardAlertsSave = makeCardAlertsSave(CARD_CONTROLS_LINK)
-export const withCardAlertsSaveTutorial = makeCardAlertsSave(
-    CARD_CONTROLS_TUTORIAL_LINK
-)
+export function withCardAlertsSave(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return renderCardAlertsSave(Component, CARD_CONTROLS_LINK)
+}
+
+export function withCardAlertsSaveTutorial(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return renderCardAlertsSave(Component, CARD_CONTROLS_TUTORIAL_LINK)
+}
 
 export function withCardAlertsSavingOverlay(
     Component: ComponentType<any>

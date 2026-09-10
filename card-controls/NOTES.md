@@ -22,13 +22,16 @@ Card-level account actions a user manages from settings.
   toggles (Spending alerts, Transportation, Household, ...), with a
   fixed "$100" spending threshold rather than a user-typed amount.
   - `CardAlertsToggleReport.tsx` — 24 near-identical numbered overrides,
-    one applied per toggle layer, each with its own private on/off
-    closure contributing to a shared on-count. (An earlier version kept
-    one shared map keyed by the toggle's own `data-framer-name` instead
-    of per-toggle closures — broke in practice, both from two toggles
-    colliding on the same key and from a toggle's own on-tap and
-    off-tap landing on different keys, so Save's enabled state didn't
-    track reliably.)
+    one applied per toggle layer, each with its own private module-level
+    on/off flag contributing to a shared on-count. (Two earlier, broken
+    versions: one kept a shared map keyed by the toggle's own
+    `data-framer-name` instead of per-toggle state — broke from two
+    toggles colliding on the same key and from a toggle's own on-tap and
+    off-tap landing on different keys; the other generated all 24 from
+    one factory function assigned to `const` exports — Framer's Code
+    Override picker only lists exports shaped like a literal top-level
+    `function name(Component) {...}`, so every factory-produced export
+    silently failed to show up in the dropdown at all.)
   - `CardAlertsSave.tsx` — the Save button (enabled once any toggle is
     on) and its "Saving..." overlay. Unlike Travel Notice, this page
     shows a brief spinner before navigating, matching the reference
@@ -40,12 +43,15 @@ Card-level account actions a user manages from settings.
     navigation. There are two Set Card Alerts pages (the base page, and
     a tutorial-overlay duplicate reached from the tutorials flow), each
     landing on its own matching Card Controls variant, so Save comes in
-    two exports off one factory: `withCardAlertsSave` ->
-    `CARD_CONTROLS_LINK` for the base page's Save button,
-    `withCardAlertsSaveTutorial` -> `CARD_CONTROLS_TUTORIAL_LINK` for
-    the tutorial duplicate's. Everything else (toggle counting, the
-    overlay, the toast) is identical either way and needs no
-    duplicating — only the destination differs.
+    two exports: `withCardAlertsSave` -> `CARD_CONTROLS_LINK` for the
+    base page's Save button, `withCardAlertsSaveTutorial` ->
+    `CARD_CONTROLS_TUTORIAL_LINK` for the tutorial duplicate's. Both are
+    plain top-level `function` exports delegating to a shared
+    `renderCardAlertsSave` helper, not `const`s from a factory call, for
+    the same picker-visibility reason as `CardAlertsToggleReport.tsx`
+    above. Everything else (toggle counting, the overlay, the toast) is
+    identical either way and needs no duplicating — only the destination
+    differs.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.
