@@ -1,7 +1,7 @@
 import * as React from "react"
 import type { ComponentType } from "react"
 import { RenderTarget } from "framer"
-import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport"
+import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
 
 /**
  * CardAlertsSave

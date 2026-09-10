@@ -56,6 +56,14 @@ tutorials/               The tutorial system
    tunable (colors, fonts, timing, targets) is a property control, not a
    value you need to hand-edit in code.
 
+If a file imports from another local file (e.g. `CardAlertsSave.tsx`
+importing from `CardAlertsToggleReport.tsx`), both need to exist as
+their own separate files in Framer's Code panel — not pasted into a
+single layer's override slot — and the import needs the explicit
+`.tsx` extension (`"./CardAlertsToggleReport.tsx"`, not
+`"./CardAlertsToggleReport"`). Framer's code editor doesn't resolve
+extensionless local imports the way a typical TS/webpack setup does.
+
 ## Notes on this snapshot
 
 - `main` is a fresh consolidation of the most current version of every
