@@ -28,3 +28,11 @@ The branches these came from
 `claude/framer-corner-avoidance-yjepo3`) were deleted after this archive
 was created — their full commit history is gone, but the final state of
 each experiment is preserved here.
+
+## `tutorials-main-page/`
+
+- `CurvedCarousel.tsx` — the original (V1) curved/arc flip-card
+  carousel. Superseded by `CurvedCarouselV2.tsx` (fixes the front-card
+  reset firing mid-drag), which is the version still live in
+  `tutorials/tutorials-main-page/` — see `tutorials/NOTES.md`. Kept
+  here for reference rather than deleted outright.

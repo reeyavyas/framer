@@ -6,10 +6,10 @@ The interactive tutorial system, split into two independent subgroups.
 
 Builds the Tutorials landing page itself.
 
-- `CurvedCarousel.tsx` / `CurvedCarouselV2.tsx` — the curved/arc card
-  carousel that holds the flip-card tutorial entries. V2 is current
-  (fixes the front-card reset firing mid-drag); V1 is kept alongside it
-  since both are still in active use.
+- `CurvedCarouselV2.tsx` — the curved/arc card carousel that holds the
+  flip-card tutorial entries. Current version (fixes the front-card
+  reset firing mid-drag). The superseded V1, `CurvedCarousel.tsx`, has
+  moved to `archived/tutorials-main-page/` — see `archived/NOTES.md`.
 
 ## `tutorial-overlays/`
 
