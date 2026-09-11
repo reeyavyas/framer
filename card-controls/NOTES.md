@@ -69,7 +69,7 @@ not here — see `tutorials/card-controls-tutorial/NOTES.md`. Only
 components that actually need a tutorial-specific tweak get a duplicate;
 everything else in the tutorial flow uses these components directly.
 
-- `TravelNoticeSection.tsx` → `TravelNoticeTutorial.tsx`
+- `TravelNoticeSection.tsx` → `TravelNoticeSectionTutorial.tsx`
 
 (`card-alerts/CardAlertsSave.tsx` predates this convention and instead
 exports both `withCardAlertsSave` and `withCardAlertsSaveTutorial` from

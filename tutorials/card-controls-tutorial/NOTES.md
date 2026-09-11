@@ -12,7 +12,7 @@ Base-page components in `card-controls/` and `money-management/` are for
 free exploration — no tutorial concerns baked in. When a tutorial needs
 a component to behave differently, the base component is left untouched
 and a tweaked copy lives here instead, named `<Component>Tutorial.tsx`
-(e.g. `TravelNoticeSection.tsx` → `TravelNoticeTutorial.tsx`). Keep the
+(e.g. `TravelNoticeSection.tsx` → `TravelNoticeSectionTutorial.tsx`). Keep the
 internal function name, `defaultProps` target, and `addPropertyControls`
 target renamed to match the file (Framer's Insert/override picker keys
 off these), and give any component-owned storage keys their own
@@ -46,9 +46,9 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
     it's just always styled "enabled". It still writes the exact same
     `kioskTravelNotice` / `kioskTravelNoticeToastFlag` sessionStorage
     keys as the base form, so `TravelNoticeToast.tsx` and
-    `TravelNoticeTutorial.tsx` (below) both work unmodified. Cancel is
+    `TravelNoticeSectionTutorial.tsx` (below) both work unmodified. Cancel is
     unchanged from the base form.
-- `TravelNoticeTutorial.tsx` — duplicate of
+- `TravelNoticeSectionTutorial.tsx` — duplicate of
   `card-controls/travel-notice/TravelNoticeSection.tsx`. No functional
   changes needed: it already reads whatever's under the shared
   `kioskTravelNotice` key and already labels it "Future Plans" whenever
@@ -56,8 +56,8 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   `SetTravelNoticeTutorial.tsx`'s fixed 1-month-out date — so it shows
   "Future Plans" (never "Happening Now") automatically. Only its
   canvas-only `SAMPLE_SUMMARY` placeholder was refreshed, to preview
-  correctly. Its own-shown marker key remains
-  `kioskTravelNoticeTutorialShownAt`, distinct from the base page's
+  correctly. Its own-shown marker key is
+  `kioskTravelNoticeSectionTutorialShownAt`, distinct from the base page's
   `kioskTravelNoticeSectionShownAt`.
 - `TravelNoticeToast.tsx` — **not duplicated, on purpose.** The base
   file's toast behavior after Save is exactly what this tutorial step

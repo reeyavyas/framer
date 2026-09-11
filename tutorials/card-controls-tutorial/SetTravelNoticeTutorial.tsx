@@ -31,7 +31,7 @@ import { addPropertyControls, ControlType } from "framer"
  * Save still writes the exact same sessionStorage record
  * SetTravelNotice.tsx does, under the same keys, so
  * TravelNoticeToast.tsx (unchanged, shared with the base flow) and
- * tutorials/card-controls-tutorial/TravelNoticeTutorial.tsx pick it up
+ * tutorials/card-controls-tutorial/TravelNoticeSectionTutorial.tsx pick it up
  * exactly the same way — Save doesn't need a disabled state here since
  * the fixed values make it valid from the very first render.
  */

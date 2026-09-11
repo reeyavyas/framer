@@ -40,7 +40,7 @@ inside the tutorial flow, not a full copy of the folder. See
 - `SetTravelNoticeTutorial.tsx` — duplicate of
   `card-controls/travel-notice/SetTravelNotice.tsx`, with every field
   pre-populated and frozen (fixed dates/destinations, no dropdowns).
-- `TravelNoticeTutorial.tsx` — duplicate of
+- `TravelNoticeSectionTutorial.tsx` — duplicate of
   `card-controls/travel-notice/TravelNoticeSection.tsx`.
 - `TravelNoticeToast.tsx` is deliberately *not* duplicated here — the
   tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`

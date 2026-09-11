@@ -2,7 +2,7 @@ import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 
 /**
- * TravelNoticeTutorial
+ * TravelNoticeSectionTutorial
  *
  * Tutorial-duplicate of `card-controls/travel-notice/TravelNoticeSection.tsx`,
  * for the card-controls tutorial flow (see `tutorials/card-controls-tutorial/NOTES.md`).
@@ -58,7 +58,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *
  * Mechanism: this component tracks the `savedAt` of the last notice it
  * has already shown, in its OWN sessionStorage key
- * ("kioskTravelNoticeTutorialShownAt") — read and written only here,
+ * ("kioskTravelNoticeSectionTutorialShownAt") — read and written only here,
  * never by SetTravelNotice.tsx, and distinct from the base page's own
  * marker key so the two don't clobber each other's "already shown"
  * state within the same session. Each time it checks, if the current
@@ -93,7 +93,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  */
 
 const STORAGE_KEY = "kioskTravelNotice"
-const SHOWN_MARKER_KEY = "kioskTravelNoticeTutorialShownAt"
+const SHOWN_MARKER_KEY = "kioskTravelNoticeSectionTutorialShownAt"
 
 const MONTH_NAMES = [
     "January",
@@ -360,7 +360,7 @@ interface Props {
  * @framerIntrinsicWidth 1080
  * @framerIntrinsicHeight 300
  */
-export default function TravelNoticeTutorial(props: Props) {
+export default function TravelNoticeSectionTutorial(props: Props) {
     const {
         destinationsLabel,
         footerLabel,
@@ -610,7 +610,7 @@ export default function TravelNoticeTutorial(props: Props) {
     )
 }
 
-TravelNoticeTutorial.defaultProps = {
+TravelNoticeSectionTutorial.defaultProps = {
     destinationsLabel: "Destinations:",
     footerLabel: "That's All!",
     dotColor: "#2f8f8b",
@@ -649,7 +649,7 @@ TravelNoticeTutorial.defaultProps = {
     detailPaddingY: 20,
 }
 
-addPropertyControls(TravelNoticeTutorial, {
+addPropertyControls(TravelNoticeSectionTutorial, {
     destinationsLabel: {
         type: ControlType.String,
         title: "Destinations label",
