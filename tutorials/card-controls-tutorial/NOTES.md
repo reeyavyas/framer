@@ -66,6 +66,37 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   directly. Don't add a tutorial copy of this file unless its behavior
   actually needs to diverge.
 
+## Wiring a TutorialOverlay step to a field inside one of these components
+
+`TutorialOverlay.tsx` finds its target with
+`document.querySelector('[data-tutorial-target="..."]')` — see
+`tutorial-overlays/NOTES.md`. Normally that attribute is added via a
+`TutorialTargets.tsx` Code Override applied to a real Framer layer. That
+doesn't work for a field *inside* one of these components (e.g. the
+Start Date row in `SetTravelNoticeTutorial.tsx`) — it's plain JSX inside
+this component's own render, not a separately selectable layer on the
+canvas, so there's nothing to attach a Code Override to. Instead, the
+attribute is hardcoded directly in the component's own source:
+
+- `SetTravelNoticeTutorial.tsx` — the Start Date row (label + field
+  together) carries `data-tutorial-target="start-date"` directly in its
+  JSX.
+
+To chain a scroll-down beat into this step (e.g. "Scroll Down" as step
+1, spotlighting Start Date as step 2), drop two `TutorialOverlay`
+instances on the page sharing one `pageGroup` string:
+
+1. Step 1 — `target` blank (no hole), `scrollAdvancesStep: true` +
+   `scrollThresholdPercent` set, `stepNumber: 1`.
+2. Step 2 — `target: "start-date"`, `stepNumber: 2`.
+
+Scrolling past the threshold on step 1 advances the shared `pageGroup`'s
+step counter to 2, at which point step 2 becomes "its turn," measures
+the tagged Start Date row, and cuts its hole/spotlight there — no
+further code changes needed once a field already carries its
+`data-tutorial-target` attribute. Add the same attribute to any other
+field in these components the same way, as a tutorial step needs it.
+
 ## Branch naming
 
 `card-controls-tutorial/<feature>`

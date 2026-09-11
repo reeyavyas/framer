@@ -223,8 +223,12 @@ export default function SetTravelNoticeTutorial(props: Props) {
                 boxSizing: "border-box",
             }}
         >
-            {/* Start Date — frozen, not clickable */}
-            <div>
+            {/* Start Date — frozen, not clickable. Tagged directly (not
+                via a TutorialTargets.tsx Code Override) since this div
+                lives inside this component's own render tree, not as a
+                separately selectable Framer layer — see
+                tutorials/card-controls-tutorial/NOTES.md. */}
+            <div data-tutorial-target="start-date">
                 <div
                     style={{
                         ...labelFont,
