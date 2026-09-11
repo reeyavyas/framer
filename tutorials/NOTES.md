@@ -26,9 +26,41 @@ anywhere else on the page.
   (one instance per tutorial beat, configured entirely from the
   Properties panel)
 - `TutorialTargets.tsx` — Override that tags a layer so
-  `TutorialOverlay` can find/measure it
+  `TutorialOverlay` can find/measure it. **Out of sync with the live
+  Framer project as of this writing:** the card-controls travel-notice
+  tutorial added `TravelStart`/`TravelEnd`/`TravelSave` exports
+  (tagging `travel-start`/`travel-end`/`travel-save`) directly in
+  Framer's own code editor, which have not been pulled back into this
+  repo's copy of the file. Reconcile before trusting this file as the
+  source of truth for what's actually live. See
+  `card-controls-tutorial/NOTES.md` for how these three are used.
 - `TutorialCongrats.tsx` — full-screen finish screen for the end of a
   tutorial
+
+### Known issue: TutorialOverlay can render null on Published while working in Preview
+
+Seen on the card-controls travel-notice tutorial's "Scroll Down" step
+(`pageGroup: "travel-notice"`, `stepNumber: 1`): `TutorialOverlay`
+rendered correctly in Preview (`document.querySelector('[data-tutorial-overlay="true"]')`
+returned a real, correctly-sized div, card visible) but returned `null`
+— not mounted at all — on the Published site, even after an explicit
+republish and testing in a fresh incognito window on the identical
+page. `[data-tutorial-target]` markers on the same page were present
+and correct in both environments.
+
+Ruled out over a long debugging session: blank `pageGroup`, wrong
+`stepNumber`, `scrollContainerTarget` pointed at a non-scrollable
+marker layer instead of the real scroll container, browser scroll-
+position restoration on reload, responsive-breakpoint mismatch (page
+has only one breakpoint), stale module-level step-counter state,
+CDN/publish caching. The component's own code was confirmed correct
+(Preview proves it renders and positions correctly) — whatever's
+causing Published to differ from Preview here is Framer-platform
+behavior this repo's source can't diagnose alone (e.g. a per-instance
+property value, most likely `Active`, desyncing between draft and
+published state). Not yet resolved. Next untested step: toggle
+`Active` off, then on, then republish, to force Framer to re-commit
+that instance's actual saved value.
 
 ## `card-controls-tutorial/`
 

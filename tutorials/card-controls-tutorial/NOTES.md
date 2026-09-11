@@ -69,33 +69,64 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
 ## Wiring a TutorialOverlay step to a field inside one of these components
 
 `TutorialOverlay.tsx` finds its target with
-`document.querySelector('[data-tutorial-target="..."]')` — see
-`tutorial-overlays/NOTES.md`. Normally that attribute is added via a
-`TutorialTargets.tsx` Code Override applied to a real Framer layer. That
-doesn't work for a field *inside* one of these components (e.g. the
-Start Date row in `SetTravelNoticeTutorial.tsx`) — it's plain JSX inside
-this component's own render, not a separately selectable layer on the
-canvas, so there's nothing to attach a Code Override to. Instead, the
-attribute is hardcoded directly in the component's own source:
+`document.querySelector('[data-tutorial-target="..."]')` — see the
+`tutorial-overlays/` section of `tutorials/NOTES.md`. Normally that
+attribute is added via a `TutorialTargets.tsx` Code Override applied to
+a real Framer layer. That doesn't work for a field *inside* one of
+these components (e.g. the Start Date row in
+`SetTravelNoticeTutorial.tsx`) — it's plain JSX inside this component's
+own render, not a separately selectable layer on the canvas, so there's
+nothing to attach a Code Override to directly.
 
-- `SetTravelNoticeTutorial.tsx` — the Start Date row (label + field
-  together) carries `data-tutorial-target="start-date"` directly in its
-  JSX.
+Two approaches ended up in play for the travel-notice tutorial —
+**worth reconciling to just one before building the next tutorial**:
 
-To chain a scroll-down beat into this step (e.g. "Scroll Down" as step
-1, spotlighting Start Date as step 2), drop two `TutorialOverlay`
+1. **Hardcoded in-source attribute** (what this repo's code does): the
+   Start Date row in `SetTravelNoticeTutorial.tsx` carries
+   `data-tutorial-target="start-date"` directly in its JSX.
+2. **Separate marker layers** (what actually ended up wired up live, in
+   Framer): three empty, invisible Framer layers —
+   `travel-start`, `travel-end`, `travel-save` — positioned on the
+   canvas over the Start Date field, End Date field, and Save button
+   respectively, each tagged via its own `TutorialTargets.tsx` Code
+   Override export (`TravelStart`/`TravelEnd`/`TravelSave`). These
+   exports were added directly in Framer's code editor and, as of this
+   writing, have **not** been pulled into this repo's copy of
+   `TutorialTargets.tsx` — see the flag in `tutorials/NOTES.md`.
+
+Since approach 2 is what's actually live, prefer `target: "travel-start"`
+/ `"travel-end"` / `"travel-save"` on real `TutorialOverlay` instances
+over `target: "start-date"` for now. Marker-layer positions need to be
+kept in sync by hand if the underlying field ever moves; the in-source
+attribute (approach 1) doesn't have that problem but can't be
+positioned/adjusted from Framer's canvas the way a marker layer can —
+that's presumably why the marker-layer approach was chosen. Pick one
+and remove the other once the live TutorialOverlay-not-showing bug
+(below) is resolved.
+
+To chain a scroll-down beat into a spotlight step (e.g. "Scroll Down" as
+step 1, spotlighting Start Date as step 2), drop two `TutorialOverlay`
 instances on the page sharing one `pageGroup` string:
 
 1. Step 1 — `target` blank (no hole), `scrollAdvancesStep: true` +
    `scrollThresholdPercent` set, `stepNumber: 1`.
-2. Step 2 — `target: "start-date"`, `stepNumber: 2`.
+2. Step 2 — `target: "travel-start"` (or `"start-date"`, if you
+   reconcile to the in-source approach instead), `stepNumber: 2`.
 
 Scrolling past the threshold on step 1 advances the shared `pageGroup`'s
 step counter to 2, at which point step 2 becomes "its turn," measures
-the tagged Start Date row, and cuts its hole/spotlight there — no
-further code changes needed once a field already carries its
-`data-tutorial-target` attribute. Add the same attribute to any other
-field in these components the same way, as a tutorial step needs it.
+the tagged element, and cuts its hole/spotlight there.
+
+**Known live issue, unresolved:** the "Scroll Down" step-1
+`TutorialOverlay` instance on this exact page renders correctly in
+Preview but not on the Published site (confirmed via
+`document.querySelector('[data-tutorial-overlay="true"]')` — a real,
+correctly-sized element in Preview; `null` in Published, even after a
+republish and fresh incognito test on the identical page). Full
+debugging history and ruled-out causes are in the `tutorial-overlays/`
+section of `tutorials/NOTES.md`. Next untested step: toggle `Active`
+off/on and republish, to rule out a desynced per-instance property
+value.
 
 ## Branch naming
 
