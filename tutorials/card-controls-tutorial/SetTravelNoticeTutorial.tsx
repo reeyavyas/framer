@@ -11,7 +11,7 @@ import { addPropertyControls, ControlType } from "framer"
  * this is a walkthrough step, not something the tutorial user actually
  * fills in:
  *
- *   - Start Date is fixed to one month from today.
+ *   - Start Date is fixed to two weeks from today.
  *   - End Date is fixed to 7 days after Start Date.
  *   - Destinations is a fixed set of three states — Illinois, Kentucky,
  *     Missouri — that can't be changed.
@@ -40,7 +40,7 @@ const STORAGE_KEY = "kioskTravelNotice"
 const STORAGE_TOAST_FLAG_KEY = "kioskTravelNoticeToastFlag"
 
 const TUTORIAL_DESTINATIONS = ["Illinois", "Kentucky", "Missouri"]
-const START_MONTHS_FROM_TODAY = 1
+const START_DAYS_FROM_TODAY = 14
 const TRIP_LENGTH_DAYS = 7
 
 const MONTH_NAMES = [
@@ -120,17 +120,6 @@ function addDays(d: Date, n: number): Date {
     r.setDate(r.getDate() + n)
     return r
 }
-// Adds n months, clamping the day-of-month into the target month
-// instead of letting it overflow (e.g. Jan 31 + 1 month lands on Feb
-// 28/29, not "March 3") — same rule the base form uses.
-function addMonthsClamped(d: Date, n: number): Date {
-    const targetMonthIndex = d.getMonth() + n
-    const targetYear = d.getFullYear() + Math.floor(targetMonthIndex / 12)
-    const normMonth = ((targetMonthIndex % 12) + 12) % 12
-    const daysInTargetMonth = new Date(targetYear, normMonth + 1, 0).getDate()
-    const day = Math.min(d.getDate(), daysInTargetMonth)
-    return new Date(targetYear, normMonth, day)
-}
 // "September 11" — month + day only, no year, no weekday.
 function formatMonthDay(d: Date): string {
     return `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`
@@ -193,7 +182,7 @@ export default function SetTravelNoticeTutorial(props: Props) {
     // session that happens to stay open across midnight shouldn't have
     // its "pre-populated" example date silently shift underneath it.
     const startDate = React.useMemo(
-        () => addMonthsClamped(startOfDay(new Date()), START_MONTHS_FROM_TODAY),
+        () => addDays(startOfDay(new Date()), START_DAYS_FROM_TODAY),
         []
     )
     const endDate = React.useMemo(

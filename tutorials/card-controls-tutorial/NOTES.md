@@ -29,7 +29,7 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   `card-controls/travel-notice/SetTravelNotice.tsx`. Every field is
   pre-populated and frozen instead of user-editable, since this is a
   walkthrough step, not a form the tutorial user actually fills in:
-  - Start Date = 1 month from today; End Date = Start Date + 7 days.
+  - Start Date = 2 weeks from today; End Date = Start Date + 7 days.
     Displayed as month + day only ("September 11") — no year, no
     weekday, unlike the base form's long format. Neither date field
     (nor its calendar icon) opens a calendar dropdown; the dropdown/
@@ -53,7 +53,7 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   changes needed: it already reads whatever's under the shared
   `kioskTravelNotice` key and already labels it "Future Plans" whenever
   the record's start date isn't today, which is always true for
-  `SetTravelNoticeTutorial.tsx`'s fixed 1-month-out date — so it shows
+  `SetTravelNoticeTutorial.tsx`'s fixed 2-weeks-out date — so it shows
   "Future Plans" (never "Happening Now") automatically. Only its
   canvas-only `SAMPLE_SUMMARY` placeholder was refreshed, to preview
   correctly. Its own-shown marker key is

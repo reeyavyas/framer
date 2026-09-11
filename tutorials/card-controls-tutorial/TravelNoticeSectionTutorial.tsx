@@ -11,7 +11,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * whichever record is under sessionStorage's "kioskTravelNotice" key,
  * and already labels it "Future Plans" whenever the record's startDate
  * isn't today. SetTravelNoticeTutorial.tsx (this tutorial's own
- * duplicate of the form) always writes a startDate a month out, so this
+ * duplicate of the form) always writes a startDate two weeks out, so this
  * naturally shows "Future Plans" — never "Happening Now" — with no
  * changes needed here. Only SAMPLE_SUMMARY below (the canvas-only
  * placeholder) was updated, to preview correctly.
