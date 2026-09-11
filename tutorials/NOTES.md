@@ -37,8 +37,14 @@ components — only the ones that actually need to behave differently
 inside the tutorial flow, not a full copy of the folder. See
 `card-controls-tutorial/NOTES.md`.
 
+- `SetTravelNoticeTutorial.tsx` — duplicate of
+  `card-controls/travel-notice/SetTravelNotice.tsx`, with every field
+  pre-populated and frozen (fixed dates/destinations, no dropdowns).
 - `TravelNoticeTutorial.tsx` — duplicate of
   `card-controls/travel-notice/TravelNoticeSection.tsx`.
+- `TravelNoticeToast.tsx` is deliberately *not* duplicated here — the
+  tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
+  directly. See `card-controls-tutorial/NOTES.md`.
 
 More `<group>-tutorial/` subfolders (e.g. `money-management-tutorial/`)
 will show up here the same way, as tutorial work needs them.

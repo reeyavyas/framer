@@ -6,7 +6,15 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  *
  * Tutorial-duplicate of `card-controls/travel-notice/TravelNoticeSection.tsx`,
  * for the card-controls tutorial flow (see `tutorials/card-controls-tutorial/NOTES.md`).
- * Cloned as-is for now, pending tutorial-specific changes.
+ *
+ * No functional changes from the base component — it already reads
+ * whichever record is under sessionStorage's "kioskTravelNotice" key,
+ * and already labels it "Future Plans" whenever the record's startDate
+ * isn't today. SetTravelNoticeTutorial.tsx (this tutorial's own
+ * duplicate of the form) always writes a startDate a month out, so this
+ * naturally shows "Future Plans" — never "Happening Now" — with no
+ * changes needed here. Only SAMPLE_SUMMARY below (the canvas-only
+ * placeholder) was updated, to preview correctly.
  *
  * Self-contained "Happening Now" / "Future Plans" summary component for
  * Card Controls. Drop this in as ONE layer between "Card Section" and
@@ -298,9 +306,13 @@ function DestinationsList({
 }
 
 const SAMPLE_SUMMARY: NoticeSummary = {
-    headerLabel: "Happening Now",
-    dateRangeText: "September 02, 2026 - November 03, 2026",
-    destinations: ["Illinois - United States", "Texas - United States"],
+    headerLabel: "Future Plans",
+    dateRangeText: "October 11, 2026 - October 18, 2026",
+    destinations: [
+        "Illinois - United States",
+        "Kentucky - United States",
+        "Missouri - United States",
+    ],
 }
 
 interface Props {
