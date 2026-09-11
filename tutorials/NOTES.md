@@ -62,6 +62,34 @@ published state). Not yet resolved. Next untested step: toggle
 `Active` off, then on, then republish, to force Framer to re-commit
 that instance's actual saved value.
 
+### Fixed: scroll-advance step self-advancing instantly on the 1080x1920 kiosk viewport
+
+Separate from the issue above. The same "Scroll Down" step-1 instance
+(`scrollAdvancesStep: true`, watching `window` since
+`scrollContainerTarget` is blank) was advancing to step 2 the instant it
+mounted on the kiosk's real 1080x1920 screen — before the user scrolled
+at all — while working correctly on shorter preview/desktop windows.
+
+Root cause: `checkScroll()` in `TutorialOverlay.tsx` ran synchronously
+on mount (needed so a step that's already scrolled past threshold on
+load counts immediately), and its `max <= 0` branch (no scrollable
+overflow) defaulted `percent` to `100` — treating "nothing to scroll"
+as "already fully scrolled." On a normal preview window the page
+content overflows the shorter viewport and genuinely needs a scroll, so
+this branch never ran. On the kiosk's actual tall 1920px-high viewport
+there's enough room for the content to fit without overflowing at all,
+so `max <= 0` was true on mount, and the step advanced itself
+immediately with the "scroll down" prompt never actually seen.
+
+Fix: changed the `max <= 0` fallback from `100` to `0` in both the
+`window` and container branches — "nothing to scroll" no longer
+satisfies the threshold; only a real scroll event (which can't fire on
+a non-overflowing container anyway) can. If a scroll-gated step is ever
+placed somewhere its content might legitimately never overflow at every
+target viewport, it will now simply never auto-advance via scroll
+there instead of skipping itself early — worth keeping in mind when
+reusing `scrollAdvancesStep` on a new page.
+
 ## `card-controls-tutorial/`
 
 Tutorial-specific duplicates of individual `card-controls/` base-page

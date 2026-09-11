@@ -128,6 +128,13 @@ section of `tutorials/NOTES.md`. Next untested step: toggle `Active`
 off/on and republish, to rule out a desynced per-instance property
 value.
 
+**Fixed:** a separate bug where this same step-1 "Scroll Down" instance
+self-advanced instantly on the kiosk's real 1080x1920 viewport, before
+the user scrolled at all. Root cause and fix are in the
+`tutorial-overlays/` section of `tutorials/NOTES.md` (the `checkScroll`
+fallback in `TutorialOverlay.tsx`) — flagged here too since this page's
+step-1 instance is the one it was actually observed on.
+
 ## Branch naming
 
 `card-controls-tutorial/<feature>`

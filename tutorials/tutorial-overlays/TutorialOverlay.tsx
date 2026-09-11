@@ -606,11 +606,19 @@ export default function TutorialOverlay(props: Props) {
             if (el === window) {
                 const doc = document.documentElement
                 const max = doc.scrollHeight - doc.clientHeight
-                percent = max > 0 ? (window.scrollY / max) * 100 : 100
+                // max <= 0 means there's nothing to scroll — e.g. on a
+                // tall kiosk viewport (1080x1920) where content that
+                // overflows a shorter preview window fits without
+                // overflowing here at all. Treating that as "100%
+                // scrolled" made this step advance itself the instant it
+                // mounted, before the user ever scrolled — 0 means "not
+                // satisfied yet" instead, so only a real scroll event
+                // (impossible when max <= 0 anyway) can advance it.
+                percent = max > 0 ? (window.scrollY / max) * 100 : 0
             } else {
                 const node = el as HTMLElement
                 const max = node.scrollHeight - node.clientHeight
-                percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+                percent = max > 0 ? (node.scrollTop / max) * 100 : 0
             }
             if (percent >= scrollThresholdPercent) advanceStep()
         }
