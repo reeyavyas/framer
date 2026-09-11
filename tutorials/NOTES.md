@@ -1,6 +1,6 @@
 # Tutorials — Notes
 
-The interactive tutorial system, split into two independent subgroups.
+The interactive tutorial system, split into independent subgroups.
 
 ## `tutorials-main-page/`
 
@@ -30,9 +30,23 @@ anywhere else on the page.
 - `TutorialCongrats.tsx` — full-screen finish screen for the end of a
   tutorial
 
+## `card-controls-tutorial/`
+
+Tutorial-specific duplicates of individual `card-controls/` base-page
+components — only the ones that actually need to behave differently
+inside the tutorial flow, not a full copy of the folder. See
+`card-controls-tutorial/NOTES.md`.
+
+- `TravelNoticeTutorial.tsx` — duplicate of
+  `card-controls/travel-notice/TravelNoticeSection.tsx`.
+
+More `<group>-tutorial/` subfolders (e.g. `money-management-tutorial/`)
+will show up here the same way, as tutorial work needs them.
+
 ## Branch naming
 
 ```
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
+card-controls-tutorial/<feature>
 ```

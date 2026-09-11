@@ -59,6 +59,23 @@ Card-level account actions a user manages from settings.
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
 
+## Tutorial variants
+
+These are the free-exploration base-page components — no tutorial
+concerns. Where the card-controls tutorial needs a component to behave
+differently, a tweaked duplicate lives in
+`tutorials/card-controls-tutorial/` instead (named `<Component>Tutorial.tsx`),
+not here — see `tutorials/card-controls-tutorial/NOTES.md`. Only
+components that actually need a tutorial-specific tweak get a duplicate;
+everything else in the tutorial flow uses these components directly.
+
+- `TravelNoticeSection.tsx` → `TravelNoticeTutorial.tsx`
+
+(`card-alerts/CardAlertsSave.tsx` predates this convention and instead
+exports both `withCardAlertsSave` and `withCardAlertsSaveTutorial` from
+one file — see the `card-alerts/` section above. New tutorial variants
+should use the separate-file convention instead.)
+
 ## Branch naming
 
 `card-controls/<feature>` — e.g. `card-controls/card-alerts`
