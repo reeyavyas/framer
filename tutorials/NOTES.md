@@ -46,6 +46,21 @@ anywhere else on the page.
   for how these three are used.
 - `TutorialCongrats.tsx` — full-screen finish screen for the end of a
   tutorial
+- `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
+  JS-owned position, for a step needing a real zero-tolerance one-way
+  scroll lock (native scroll + a JS veto can't give that without
+  jank — see the file's own top comment). One export per container,
+  same convention as `TutorialTargets.tsx`: `VirtualScrollTravelContent`
+  (id `"scrollable-content"`, Travel Notice page) and
+  `VirtualScrollCardAlertsContent` (id `"card-alerts-scroll"`, Card
+  Alerts tutorial page). **Never apply the same export to a second
+  container** — its id keys a single shared registry entry, so two
+  containers under the same id race for it and whichever last
+  registers "wins," leaving the other with a lock that was never
+  really applied to IT. This exact mistake (reusing
+  `VirtualScrollTravelContent` on the Card Alerts page instead of
+  adding a second export) was reported as "still able to scroll up"
+  on a step that should have been locked.
 
 ### Known issue: TutorialOverlay can render null on Published while working in Preview
 

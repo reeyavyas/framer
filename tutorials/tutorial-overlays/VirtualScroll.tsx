@@ -173,7 +173,7 @@ function withVirtualScroll(id: string) {
             }, [setPos])
 
             React.useEffect(() => {
-                registry.set(id, {
+                const handle: VirtualScrollHandle = {
                     getPercent: () =>
                         maxRef.current > 0
                             ? (posRef.current / maxRef.current) * 100
@@ -196,9 +196,22 @@ function withVirtualScroll(id: string) {
                             listenersRef.current.delete(fn)
                         }
                     },
-                })
+                }
+                registry.set(id, handle)
                 return () => {
-                    registry.delete(id)
+                    // Only remove OWN registration, never someone else's
+                    // that may have since taken over this id — the same
+                    // id applied to two containers (e.g. by mistake, or
+                    // briefly during a page transition where both are
+                    // mounted at once) would otherwise let whichever one
+                    // unmounts/re-runs LAST silently delete the other's
+                    // live entry out from under it, even though that
+                    // other container is the one actually on screen.
+                    // registry is keyed by a developer-chosen string with
+                    // no other uniqueness guarantee, so this equality
+                    // check is the only thing enforcing "an id names AT
+                    // MOST one live container" instead of just assuming it.
+                    if (registry.get(id) === handle) registry.delete(id)
                 }
             }, [])
 
@@ -310,4 +323,23 @@ export function VirtualScrollTravelContent(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withVirtualScroll("scrollable-content")(Component)
+}
+
+// Card Alerts Tutorial Page "Scrollable Content" — its OWN id, not a
+// reuse of VirtualScrollTravelContent's "scrollable-content". Applying
+// the same export/id to a second page's container was the actual bug
+// behind a report of still being able to scroll up on the Card Alerts
+// toggle step despite lockScrollWhileActive: the registry above is one
+// shared Map keyed only by this string, so two different containers
+// registered under the same id race for that one slot — whichever
+// mounts/re-registers last "wins" the lookup, and the OTHER container
+// (quite possibly the one actually on screen) is left with a floor
+// lock that was never really applied to IT. Matches this file's own
+// documented convention (see the top-of-file comment): every container
+// gets its own thin export, exactly like TutorialTargets.tsx does per
+// target — this was simply the second one ever needed.
+export function VirtualScrollCardAlertsContent(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withVirtualScroll("card-alerts-scroll")(Component)
 }
