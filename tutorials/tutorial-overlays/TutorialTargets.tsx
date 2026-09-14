@@ -128,3 +128,49 @@ export function TravelDestinations(
 export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-save")(Component)
 }
+
+// Card Alerts Tutorial page — one export per toggle layer the tutorial
+// spotlights and asks the user to tap. Each toggle IS the real tappable
+// element (a native Framer switch), same category as MoreTabTarget/
+// CardToggle/TravelScroll above — so this uses plain withTutorialTarget,
+// not withTutorialMarker: the toggle must still receive the real tap
+// itself (that's what flips its own on/off visual), it's not a marker
+// sitting on top of something else.
+//
+// Don't also apply this toggle's original withCardAlertsToggleReportN
+// override (from card-controls/card-alerts/CardAlertsToggleReport.tsx)
+// on the tutorial page's copy of that layer — that override's on/off
+// flag is a MODULE-LEVEL variable shared by every layer using that same
+// numbered export, so a tutorial tap would flip the exact same flag the
+// real Set Card Alerts page uses, contaminating a real user's actual
+// alert settings. The tutorial doesn't need it anyway: Save on a frozen
+// walkthrough page can just be hardcoded enabled (see
+// SetTravelNoticeTutorial.tsx's Save for precedent), and the native
+// switch already animates its own on/off state on tap with no override
+// needed for that part.
+//
+// Add one more numbered export the same way for each toggle this
+// tutorial needs tappable — they don't need to correspond to any
+// particular real alert category, the number is just an arbitrary label
+// matching whichever toggle layer you apply it to on the canvas.
+
+//Card Alerts Tutorial Page toggle #1
+export function CardAlertsToggleTarget1(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-alerts-toggle-1")(Component)
+}
+
+//Card Alerts Tutorial Page toggle #2
+export function CardAlertsToggleTarget2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-alerts-toggle-2")(Component)
+}
+
+//Card Alerts Tutorial Page toggle #3
+export function CardAlertsToggleTarget3(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-alerts-toggle-3")(Component)
+}

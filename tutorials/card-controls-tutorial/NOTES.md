@@ -66,6 +66,47 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   directly. Don't add a tutorial copy of this file unless its behavior
   actually needs to diverge.
 
+## Card Alerts flow — tapping specific toggles on
+
+Card Alerts is different from travel notice: there's no single custom
+code component to duplicate (`<Component>Tutorial.tsx`) — the real Set
+Card Alerts page is built from ~20 native Framer toggle switch layers on
+canvas, each with its own instance of a numbered
+`withCardAlertsToggleReportN` override from
+`card-controls/card-alerts/CardAlertsToggleReport.tsx`. "Duplicating the
+page" here means duplicating the canvas frame itself in Framer, which
+carries each layer's existing Code Override along with it.
+
+That's the trap: `withCardAlertsToggleReportN`'s on/off flag
+(`isOn1`, `isOn2`, ...) is a MODULE-LEVEL variable per number, shared by
+every layer using that same numbered export — it exists to let
+`CardAlertsSave.tsx` know whether *any* toggle on the real page is on.
+If the tutorial-duplicate page's toggles keep that same override after
+duplication, tapping one in the tutorial flips the exact same flag the
+real page uses, contaminating a real user's actual alert settings.
+
+The tutorial doesn't need that override at all: the native Framer
+switch already animates its own on/off visual on tap with no override
+involved, and — same call `SetTravelNoticeTutorial.tsx`'s Save already
+made — a frozen walkthrough's Save button can just be hardcoded enabled
+rather than replicating real "is anything on?" validation.
+
+So, per toggle the tutorial wants the user to tap:
+
+1. On the tutorial-duplicate page, remove that toggle's copied-over
+   `withCardAlertsToggleReportN` override entirely.
+2. Apply one of `TutorialTargets.tsx`'s `CardAlertsToggleTarget1` /
+   `CardAlertsToggleTarget2` / `CardAlertsToggleTarget3` (add more the
+   same way if needed) instead — plain `withTutorialTarget`, not the
+   marker variant, since the toggle itself is the real tappable element
+   here (same category as `CardToggle`/`TravelScroll`), not something
+   sitting on top of a separate real element.
+3. Drop a `TutorialOverlay` instance targeting that id, `stepNumber` in
+   sequence with the rest of the flow, `clickAdvancesStep: true`, one
+   toggle spotlighted per step — matches how `TravelSave` etc. already
+   work, just without the click-through concern those needed (this
+   marker doesn't sit over anything else).
+
 ## Wiring a TutorialOverlay step to a field inside one of these components
 
 `TutorialOverlay.tsx` finds its target with
