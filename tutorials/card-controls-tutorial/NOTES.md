@@ -85,13 +85,17 @@ Two approaches ended up in play for the travel-notice tutorial —
    Start Date row in `SetTravelNoticeTutorial.tsx` carries
    `data-tutorial-target="start-date"` directly in its JSX.
 2. **Separate marker layers** (what actually ended up wired up live, in
-   Framer): three empty, invisible Framer layers —
-   `travel-start`, `travel-end`, `travel-save` — positioned on the
-   canvas over the Start Date field, End Date field, and Save button
-   respectively, each tagged via its own `TutorialTargets.tsx` Code
-   Override export (`TravelStart`/`TravelEnd`/`TravelSave`). These
+   Framer): four empty, invisible Framer layers —
+   `travel-start`, `travel-end`, `travel-destinations`, `travel-save` —
+   positioned on the canvas over the Start Date field, End Date field,
+   Destinations field, and Save button respectively, each tagged via
+   its own `TutorialTargets.tsx` Code Override export
+   (`TravelStart`/`TravelEnd`/`TravelDestinations`/`TravelSave`). These
    exports were originally added directly in Framer's code editor and
-   have since been pulled into this repo's copy of `TutorialTargets.tsx`.
+   have since been pulled into this repo's copy of `TutorialTargets.tsx`
+   — each goes through the `withTutorialMarker` helper there, which
+   forces `pointer-events: none` on the marker so it can't swallow the
+   tap meant for the real field/button it sits on top of.
 
 Since approach 2 is what's actually live, prefer `target: "travel-start"`
 / `"travel-end"` / `"travel-save"` on real `TutorialOverlay` instances

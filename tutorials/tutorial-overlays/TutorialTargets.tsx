@@ -30,14 +30,16 @@ function withTutorialTarget(id: string) {
 // marker layer stacked on top of a separate real element purely so
 // TutorialOverlay has something to measure — the marker itself must
 // never be the thing that receives the tap, or the real element
-// underneath (e.g. SetTravelNoticeTutorial.tsx's actual Save link) would
+// underneath (e.g. SetTravelNoticeTutorial.tsx's actual Save link, or
+// the base SetTravelNotice.tsx's calendar/destinations dropdowns) would
 // never see the click at all: the browser resolves a click by DOM
 // hit-testing at that point, and TutorialOverlay's own click-blocking
 // (the window-capture listener in TutorialOverlay.tsx) only checks
 // coordinates against the hole — it never un-does the browser having
 // already handed the event to whichever element is visually on top.
-// Don't use this for a target that IS the real tappable element itself
-// (e.g. MoreTabTarget below) — that one still needs to receive taps.
+// Don't use this for a target that IS the real tappable/scrollable
+// element itself (e.g. MoreTabTarget, TravelScroll below) — those still
+// need to receive taps/scroll input.
 function withTutorialMarker(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
         return React.forwardRef(function TutorialMarker(props: any, ref: any) {
@@ -56,31 +58,73 @@ function withTutorialMarker(id: string) {
 // Framer's Override dropdown only picks up top-level exported function
 // declarations matching (Component) => ComponentType — not a const
 // assigned from calling another function. So each target gets its own
-// thin named export like this one, even though they all share the
-// same factory above. Add one more per target the same way.
-export function MoreTabTarget(Component: ComponentType<any>): ComponentType<any> {
+// thin named export like this one, even though they share the same
+// factory above. Add one more per target the same way.
+
+//More bottom nav menu
+export function MoreTabTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return withTutorialTarget("more-tab")(Component)
 }
 
-// Marker layers for the card-controls-tutorial travel-notice flow —
-// three empty, invisible Framer layers positioned over
-// SetTravelNoticeTutorial.tsx's Start Date field, End Date field, and
-// Save button respectively (that component's fields aren't separately
-// selectable Framer layers, so a marker layer is overlaid instead — see
-// tutorials/card-controls-tutorial/NOTES.md, "Wiring a TutorialOverlay
-// step to a field inside one of these components"). These three exports
-// were added directly in Framer's code editor before this repo's copy
-// caught up; pulled in here now so the two stay in sync. Uses
-// withTutorialMarker (not withTutorialTarget) since all three sit on
-// top of a separate real element rather than being the tappable element
-// themselves — travel-save in particular MUST stay click-through, or
-// the real Save link underneath it can never be tapped.
+//Card Controls at the top of More page
+export function CardControlsTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-controls")(Component)
+}
+
+//Card Controls Page Toggle/Switch
+export function CardToggle(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("card-toggle")(Component)
+}
+
+//Card Controls Page "Set Travel Notice"
+export function TravelNotice(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("travel-notice")(Component)
+}
+
+//Travel Notice Page Scrollable Content — the real scroll container
+//itself, not a marker, so this stays plain (no pointer-events:none) or
+//nothing on the page could be scrolled at all.
+export function TravelScroll(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("travel-scroll")(Component)
+}
+
+// Marker layers for SetTravelNoticeTutorial.tsx's (and potentially
+// SetTravelNotice.tsx's) individual fields — Start Date, End Date,
+// Destinations, and the Save button aren't separately selectable Framer
+// layers, they're plain JSX inside one component's render, so each gets
+// an empty, invisible marker layer positioned over it instead, tagged
+// here (see tutorials/card-controls-tutorial/NOTES.md, "Wiring a
+// TutorialOverlay step to a field inside one of these components").
+// All four use withTutorialMarker: each sits on top of a real field
+// that either is or could be interactive, so all four must stay
+// click-through.
+
+//Travel Notice Page "Start Date"
 export function TravelStart(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-start")(Component)
 }
+
+//Travel Notice Page "End Date"
 export function TravelEnd(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-end")(Component)
 }
+
+//Travel Notice Page "Destinations"
+export function TravelDestinations(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("travel-destinations")(Component)
+}
+
+//Travel Notice Page "Save" Button
 export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-save")(Component)
 }
