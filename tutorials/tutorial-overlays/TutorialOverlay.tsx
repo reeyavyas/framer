@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 
 /**
@@ -632,6 +632,68 @@ export default function TutorialOverlay(props: Props) {
         advanceStep,
     ])
 
+    // Scroll-driven glow position — bypasses rect state (and its extra
+    // React render/commit round-trip) for a step that's both spotlighting
+    // a target AND scroll-locked into a known container. The general
+    // rAF-measured `rect` state below still lags by up to one frame under
+    // scroll's main-thread contention (see the scroll lock's own comment)
+    // — visible as the glow trailing/wobbling relative to the target.
+    // useScroll's MotionValue updates via subscription, not React state,
+    // so useTransform can derive the glow's `top` from it with no render
+    // in between. Left/width/height still come from `rect` state below —
+    // those only change on resize/reflow, not on every scroll tick, so
+    // the one-frame lag there is in practice imperceptible; only the
+    // vertical, scroll-driven axis needed this.
+    //
+    // Deliberately scoped, not a wholesale replacement of `rect`: this
+    // only works when we already know which container is moving the
+    // target (scrollContainerTarget). Most steps' targets aren't inside
+    // an actively-scrolling container at all (e.g. a fixed bottom-nav
+    // tab), so `rect` stays the general-purpose mechanism everywhere else.
+    const scrollTracked = Boolean(
+        active && isMyTurn && lockScrollWhileActive && target
+    )
+    const scrollElRef = React.useRef<HTMLElement | null>(null)
+    const baseRectRef = React.useRef<DOMRect | null>(null)
+    const baseScrollRef = React.useRef(0)
+
+    // Runs before useScroll's own effect below (same-phase layout effects
+    // run in the order they were registered), so scrollElRef.current is
+    // already populated the first time useScroll tries to subscribe.
+    React.useLayoutEffect(() => {
+        if (!scrollTracked) {
+            scrollElRef.current = null
+            return
+        }
+        const resolved = resolveScrollTarget(scrollContainerTarget)
+        scrollElRef.current =
+            resolved === window ? document.documentElement : resolved
+    }, [scrollTracked, scrollContainerTarget])
+
+    const { scrollY } = useScroll({
+        container: scrollElRef as React.RefObject<HTMLElement>,
+    })
+
+    // Captures a fresh, independent measurement (not the laggy `rect`
+    // state) the moment scroll-tracking engages for this target, paired
+    // with the scroll position at that exact instant — the fixed point
+    // every later scrollY reading is measured against.
+    React.useLayoutEffect(() => {
+        if (!scrollTracked || !target) {
+            baseRectRef.current = null
+            return
+        }
+        const el = document.querySelector(`[data-tutorial-target="${target}"]`)
+        baseRectRef.current = el ? el.getBoundingClientRect() : null
+        baseScrollRef.current = scrollY.get()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scrollTracked, target, scrollContainerTarget])
+
+    const glowScrollTop = useTransform(scrollY, (v) => {
+        const base = baseRectRef.current
+        return base ? base.top - (v - baseScrollRef.current) : 0
+    })
+
     // One-way scroll lock — for a card anchored to a target that only
     // reads correctly at or past a certain scroll position (e.g. it sits
     // right above the target and gets clipped by fixed chrome like a
@@ -1104,11 +1166,11 @@ export default function TutorialOverlay(props: Props) {
                             100% { transform: scale(1.4); opacity: 0; }
                         }
                     `}</style>
-                    <div
+                    <motion.div
                         style={{
                             position: "fixed",
                             left: rect.left,
-                            top: rect.top,
+                            top: scrollTracked ? glowScrollTop : rect.top,
                             width: rect.width,
                             height: rect.height,
                             pointerEvents: "none",
@@ -1144,7 +1206,7 @@ export default function TutorialOverlay(props: Props) {
                                 }}
                             />
                         )}
-                    </div>
+                    </motion.div>
                 </>
             )}
 
