@@ -138,6 +138,20 @@ export function getVirtualScroll(
     return id ? registry.get(id) : undefined
 }
 
+// Also exposed on window, not just as an ES export: card-controls/card-
+// alerts/CardAlertsSave.tsx (a different top-level folder from this
+// file's own) needs to reach this registry, and a static cross-folder
+// import turned out unsafe here — Framer's actual project file tree
+// isn't guaranteed to mirror this repo's folder layout the way a
+// same-folder import (like TutorialOverlay.tsx's own
+// `./VirtualScroll.tsx`) can rely on, and an import that doesn't
+// resolve to the exact right path silently breaks EVERY export in the
+// importing file's Override picker, not just the one that used it —
+// which is exactly what happened the first time this was tried as an
+// import. Anything reaching this file from outside tutorial-overlays/
+// should go through window instead.
+;(window as any).__getVirtualScroll = getVirtualScroll
+
 function withVirtualScroll(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
         return React.forwardRef(function VirtualScrollContainer(

@@ -73,6 +73,20 @@ anywhere else on the page.
   continuing to scroll forward would slide it out from under their
   finger) — lock alone still permits that forward motion.
 
+  `scrollToTop()` animates position back to 0 — used by
+  `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the
+  tutorial page is scrolled to top before navigating away, same as the
+  base page's plain `scrollTo()`. That file is outside this
+  `tutorials/` tree, so `getVirtualScroll` is also assigned to
+  `window.__getVirtualScroll` for it to call — see the comment next to
+  that assignment for why a static cross-folder import isn't safe here
+  (it silently broke every export in `CardAlertsSave.tsx`'s Override
+  picker the first time this was tried as an import, not just the one
+  function that used it). Same-folder imports within `tutorial-
+  overlays/` (e.g. `TutorialOverlay.tsx`'s own `./VirtualScroll.tsx`)
+  remain the normal, safe way to reach this file — `window` is only for
+  reaching it from a different top-level folder.
+
 ### Known issue: TutorialOverlay can render null on Published while working in Preview
 
 Seen on the card-controls travel-notice tutorial's "Scroll Down" step

@@ -2,7 +2,6 @@ import * as React from "react"
 import type { ComponentType } from "react"
 import { RenderTarget } from "framer"
 import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
-import { getVirtualScroll } from "../../tutorials/tutorial-overlays/VirtualScroll.tsx"
 
 /**
  * CardAlertsSave
@@ -62,10 +61,14 @@ import { getVirtualScroll } from "../../tutorials/tutorial-overlays/VirtualScrol
  *    tutorial-duplicate page — its Scrollable Content frame should
  *    instead carry VirtualScroll.tsx's VirtualScrollCardAlertsContent
  *    (it already needs that override for the toggle step's lock/freeze
- *    behavior), which scrollCardAlertsToTop() checks for FIRST: native
- *    scrollTo() does nothing on a VirtualScroll container since it
- *    disables real overflow scrolling entirely and owns position via
- *    its own transform instead.
+ *    behavior), which scrollCardAlertsToTop() checks for FIRST via
+ *    window.__getVirtualScroll (see that function — NOT a static
+ *    import of VirtualScroll.tsx, an earlier version of this file tried
+ *    that and it silently broke every override in THIS file's picker,
+ *    not just the one that used it): native scrollTo() does nothing on
+ *    a VirtualScroll container since it disables real overflow
+ *    scrolling entirely and owns position via its own transform
+ *    instead.
  *
  * On the canvas all overrides are inert.
  */
@@ -97,10 +100,17 @@ function scrollCardAlertsToTop() {
     // The tutorial page's Scrollable Content frame is a VirtualScroll
     // container: check for it first, since native scrollTo() below does
     // nothing there (VirtualScroll disables real overflow scrolling and
-    // owns position via its own transform instead). Nothing is
-    // registered under this id on the base page, so this is a no-op
-    // there and falls through to the native ref.
-    const virtual = getVirtualScroll(VIRTUAL_SCROLL_ID)
+    // owns position via its own transform instead). Reached via
+    // window, not a static import of VirtualScroll.tsx — a cross-folder
+    // import (this file lives under card-controls/, VirtualScroll.tsx
+    // under tutorials/tutorial-overlays/) doesn't reliably resolve
+    // against Framer's actual project file tree, and when it fails it
+    // silently breaks discovery of EVERY export in this file, not just
+    // this function. window.__getVirtualScroll is only defined once
+    // VirtualScroll.tsx has actually loaded (i.e. some layer on the
+    // current page uses one of its exports) — undefined on the base
+    // page, where nothing does, so this falls through to the native ref.
+    const virtual = (window as any).__getVirtualScroll?.(VIRTUAL_SCROLL_ID)
     if (virtual) {
         virtual.scrollToTop()
         return
