@@ -80,7 +80,8 @@ interface Props {
     clickAdvancesStep: boolean // tapping the real target hands off to stepNumber + 1
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
-    scrollThresholdPercent: number // 0-100, how far down before it counts as "scrolled"
+    scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
+    scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     lockScrollWhileActive: boolean // ratchets scrollContainerTarget so it can only move forward while this step is showing, never back
 
@@ -342,6 +343,7 @@ export default function TutorialOverlay(props: Props) {
         clickAdvancesStep,
         nextStepAfterSeconds,
         scrollAdvancesStep,
+        scrollDirection,
         scrollThresholdPercent,
         scrollContainerTarget,
         lockScrollWhileActive,
@@ -601,10 +603,14 @@ export default function TutorialOverlay(props: Props) {
     }, [active, isMyTurn, clickAdvancesStep, advanceStep])
 
     // Scroll-driven hand-off — for a beat like "scroll down to see your
-    // other accounts" that has no tap target at all. Listens on the real
-    // scrollable container (tag it the same way as any other target, via
+    // other accounts" (scrollDirection "down") or "scroll up to see the
+    // card you just created" (scrollDirection "up", e.g. a target pinned
+    // at the top of the page that an earlier step scrolled away from)
+    // that has no tap target at all. Listens on the real scrollable
+    // container (tag it the same way as any other target, via
     // TutorialTargets.tsx) or the whole page if scrollContainerTarget is
-    // blank, and hands off once the user has scrolled past the threshold.
+    // blank, and hands off once the user has crossed the threshold in
+    // that direction.
     //
     // If scrollContainerTarget has been handed over to VirtualScroll.tsx
     // (a container needing a real zero-tolerance one-way lock elsewhere
@@ -616,8 +622,12 @@ export default function TutorialOverlay(props: Props) {
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (virtual) {
             function checkVirtual() {
-                if (virtual!.getPercent() >= scrollThresholdPercent)
-                    advanceStep()
+                const percent = virtual!.getPercent()
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                if (crossed) advanceStep()
             }
             checkVirtual()
             return virtual.subscribe(checkVirtual)
@@ -634,7 +644,11 @@ export default function TutorialOverlay(props: Props) {
                 const max = node.scrollHeight - node.clientHeight
                 percent = max > 0 ? (node.scrollTop / max) * 100 : 100
             }
-            if (percent >= scrollThresholdPercent) advanceStep()
+            const crossed =
+                scrollDirection === "up"
+                    ? percent <= scrollThresholdPercent
+                    : percent >= scrollThresholdPercent
+            if (crossed) advanceStep()
         }
         checkScroll()
         el.addEventListener("scroll", checkScroll, { passive: true })
@@ -643,6 +657,7 @@ export default function TutorialOverlay(props: Props) {
         active,
         isMyTurn,
         scrollAdvancesStep,
+        scrollDirection,
         scrollContainerTarget,
         scrollThresholdPercent,
         advanceStep,
@@ -1334,6 +1349,7 @@ TutorialOverlay.defaultProps = {
     clickAdvancesStep: false,
     nextStepAfterSeconds: 0,
     scrollAdvancesStep: false,
+    scrollDirection: "down",
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
     lockScrollWhileActive: false,
@@ -1445,6 +1461,17 @@ addPropertyControls(TutorialOverlay, {
         enabledTitle: "On",
         disabledTitle: "Off",
         hidden: (props) => !props.pageGroup,
+    },
+    scrollDirection: {
+        type: ControlType.Enum,
+        title: "Scroll direction",
+        options: ["down", "up"],
+        optionTitles: [
+            "Down — advance past the threshold",
+            "Up — advance back below the threshold",
+        ],
+        defaultValue: "down",
+        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
     },
     scrollThresholdPercent: {
         type: ControlType.Number,
