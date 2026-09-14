@@ -52,6 +52,15 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  *    sessionStorage handoff or fade-out timer: the moment SAVE_DELAY_MS
  *    elapses the page navigates away and takes the overlay with it.
  *
+ *  - withCardAlertsScrollContainer — apply to the page's own
+ *    "Scrollable Content" frame (the real native-scrolling container
+ *    holding the toggles list — not tagged with any
+ *    data-tutorial-target, that system is tutorial-only). Just captures
+ *    a ref to it in module-level state so the Save handler above can
+ *    scroll it back to the top the moment the Saving overlay appears,
+ *    without needing a broader lookup mechanism for something this
+ *    page-specific and single-purpose.
+ *
  * On the canvas all overrides are inert.
  */
 
@@ -72,6 +81,12 @@ const ENABLED_BACKGROUND = "#1f4fa8"
 const ENABLED_TEXT = "#ffffff"
 const DISABLED_BACKGROUND = "#d7dade"
 const DISABLED_TEXT = "#9aa0a6"
+
+let scrollContainerEl: HTMLElement | null = null
+
+function scrollCardAlertsToTop() {
+    scrollContainerEl?.scrollTo({ top: 0, behavior: "smooth" })
+}
 
 let savingOverlayVisible = false
 const savingOverlayListeners = new Set<() => void>()
@@ -122,6 +137,12 @@ function renderCardAlertsSave(
                     e.preventDefault()
                     if (!enabled) return
                     setSavingOverlayVisible(true)
+                    // Starts the moment the overlay appears, not after —
+                    // SAVE_DELAY_MS below is the only pause before
+                    // navigating, so the scroll needs its full length of
+                    // that delay to visually finish before the page
+                    // unloads out from under it.
+                    scrollCardAlertsToTop()
                     window.setTimeout(() => {
                         window.sessionStorage.setItem(
                             STORAGE_TOAST_FLAG_KEY,
@@ -178,4 +199,29 @@ export function withCardAlertsSavingOverlay(
             />
         )
     }
+}
+
+// Apply to the page's own "Scrollable Content" frame — the real native
+// scroll container holding the toggles list. Just captures a ref so
+// scrollCardAlertsToTop() above has something to call scrollTo() on;
+// this page has no data-tutorial-target of its own to look it up by
+// (that tagging system only exists on the tutorial-duplicate page).
+export function withCardAlertsScrollContainer(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return React.forwardRef(function CardAlertsScrollContainer(
+        props: any,
+        ref: any
+    ) {
+        return (
+            <Component
+                {...props}
+                ref={(node: HTMLElement | null) => {
+                    scrollContainerEl = node
+                    if (typeof ref === "function") ref(node)
+                    else if (ref) ref.current = node
+                }}
+            />
+        )
+    })
 }

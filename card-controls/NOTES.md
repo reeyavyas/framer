@@ -51,7 +51,13 @@ Card-level account actions a user manages from settings.
     the same picker-visibility reason as `CardAlertsToggleReport.tsx`
     above. Everything else (toggle counting, the overlay, the toast) is
     identical either way and needs no duplicating — only the destination
-    differs.
+    differs. `withCardAlertsScrollContainer` — apply to the page's
+    "Scrollable Content" frame — captures a ref in module state so the
+    Save handler can call `scrollCardAlertsToTop()` the instant the
+    Saving overlay appears, so the page is back at the top by the time
+    `SAVE_DELAY_MS` elapses and it navigates away. Base page only; add
+    the same on the tutorial duplicate if it ever needs the same
+    scroll-then-navigate behavior on Save.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.
