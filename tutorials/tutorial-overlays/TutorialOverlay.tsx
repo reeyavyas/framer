@@ -2,6 +2,7 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
+import { getVirtualScroll } from "./VirtualScroll.tsx"
 
 /**
  * TutorialOverlay
@@ -604,8 +605,23 @@ export default function TutorialOverlay(props: Props) {
     // scrollable container (tag it the same way as any other target, via
     // TutorialTargets.tsx) or the whole page if scrollContainerTarget is
     // blank, and hands off once the user has scrolled past the threshold.
+    //
+    // If scrollContainerTarget has been handed over to VirtualScroll.tsx
+    // (a container needing a real zero-tolerance one-way lock elsewhere
+    // on the same page), reads percent from its owned position instead
+    // of native scrollTop/scroll events — there's nothing native to
+    // listen to once a container's scrolling has been taken over.
     React.useEffect(() => {
         if (!active || !isMyTurn || !scrollAdvancesStep) return
+        const virtual = getVirtualScroll(scrollContainerTarget)
+        if (virtual) {
+            function checkVirtual() {
+                if (virtual!.getPercent() >= scrollThresholdPercent)
+                    advanceStep()
+            }
+            checkVirtual()
+            return virtual.subscribe(checkVirtual)
+        }
         const el = resolveScrollTarget(scrollContainerTarget)
         function checkScroll() {
             let percent: number
@@ -639,23 +655,23 @@ export default function TutorialOverlay(props: Props) {
     // scrollContainerTarget so its position can only move forward while
     // this step is showing, never back past where it already was.
     //
-    // Blocks the upward wheel/touch-drag gesture directly (preventDefault
-    // before the browser renders anything) rather than only correcting
-    // after a "scroll" event — a correction-based approach always means
-    // the browser already rendered at least one frame of reverse motion
-    // first, which isn't acceptable here (the card can get clipped by
-    // fixed chrome even briefly). The trade-off, accepted deliberately:
-    // a non-passive wheel/touchmove listener forces the browser to run
-    // ALL scrolling on this element on the main thread instead of the
-    // compositor for as long as this step is active, not just the
-    // blocked direction — a near-floor-only version of this was tried to
-    // avoid that cost, but toggling the listener mid-gesture wasn't
-    // reliable enough across browsers/devices to trust for this.
-    // The debounced "scroll" correction stays on as a fallback safety
-    // net only (e.g. this step activating already sitting at the floor,
-    // before any wheel/touchmove event has fired to engage the block).
+    // If scrollContainerTarget is a VirtualScroll.tsx container, this is
+    // trivial — VirtualScroll owns its position completely, so "never
+    // below the floor" is just a clamp it applies to every update
+    // itself; there's no second party fighting over the value, so
+    // there's no jank/reliability trade-off to make here at all. This is
+    // the reason VirtualScroll exists: native scroll + a JS veto are two
+    // authorities racing for the same value, which is what made the
+    // real-time wheel/touchmove block (still below, for any
+    // non-virtualized container) cost main-thread contention, and made
+    // the debounced correction unreliable when the two disagreed.
     React.useEffect(() => {
         if (!active || !isMyTurn || !lockScrollWhileActive) return
+        const virtual = getVirtualScroll(scrollContainerTarget)
+        if (virtual) {
+            virtual.lockFloorHere()
+            return
+        }
         const el = resolveScrollTarget(scrollContainerTarget)
         const getPos = () =>
             el === window ? window.scrollY : (el as HTMLElement).scrollTop
