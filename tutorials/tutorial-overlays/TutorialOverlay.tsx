@@ -81,6 +81,7 @@ interface Props {
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
     scrollThresholdPercent: number // 0-100, how far down before it counts as "scrolled"
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
+    lockScrollWhileActive: boolean // ratchets scrollContainerTarget so it can only move forward while this step is showing, never back
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -319,6 +320,16 @@ function subscribePageStep(groupId: string, onChange: () => void) {
     return () => listeners.delete(onChange)
 }
 
+// Resolves a scrollContainerTarget id (tagged via TutorialTargets.tsx,
+// same as any other target) to the element it names, or window when
+// blank or not found — the whole page.
+function resolveScrollTarget(containerId: string): HTMLElement | Window {
+    const container = containerId
+        ? document.querySelector(`[data-tutorial-target="${containerId}"]`)
+        : null
+    return container instanceof HTMLElement ? container : window
+}
+
 export default function TutorialOverlay(props: Props) {
     const {
         active,
@@ -332,6 +343,7 @@ export default function TutorialOverlay(props: Props) {
         scrollAdvancesStep,
         scrollThresholdPercent,
         scrollContainerTarget,
+        lockScrollWhileActive,
         cardTitleLine1,
         cardTitleLine1Color,
         cardTitleLine1Font,
@@ -594,13 +606,7 @@ export default function TutorialOverlay(props: Props) {
     // blank, and hands off once the user has scrolled past the threshold.
     React.useEffect(() => {
         if (!active || !isMyTurn || !scrollAdvancesStep) return
-        const container = scrollContainerTarget
-            ? document.querySelector(
-                  `[data-tutorial-target="${scrollContainerTarget}"]`
-              )
-            : null
-        const el: HTMLElement | Window =
-            container instanceof HTMLElement ? container : window
+        const el = resolveScrollTarget(scrollContainerTarget)
         function checkScroll() {
             let percent: number
             if (el === window) {
@@ -625,6 +631,33 @@ export default function TutorialOverlay(props: Props) {
         scrollThresholdPercent,
         advanceStep,
     ])
+
+    // One-way scroll lock — for a card anchored to a target that only
+    // reads correctly at or past a certain scroll position (e.g. it sits
+    // right above the target and gets clipped by fixed chrome like a
+    // bottom nav if the target scrolls back down toward it). Ratchets
+    // scrollContainerTarget so its position can only move forward while
+    // this step is showing, never back past where it already was.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !lockScrollWhileActive) return
+        const el = resolveScrollTarget(scrollContainerTarget)
+        let floor =
+            el === window ? window.scrollY : (el as HTMLElement).scrollTop
+        function holdFloor() {
+            const current =
+                el === window
+                    ? window.scrollY
+                    : (el as HTMLElement).scrollTop
+            if (current < floor) {
+                if (el === window) window.scrollTo(0, floor)
+                else (el as HTMLElement).scrollTop = floor
+            } else {
+                floor = current
+            }
+        }
+        el.addEventListener("scroll", holdFloor, { passive: true })
+        return () => el.removeEventListener("scroll", holdFloor)
+    }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
@@ -1243,6 +1276,7 @@ TutorialOverlay.defaultProps = {
     scrollAdvancesStep: false,
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
+    lockScrollWhileActive: false,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
     cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
@@ -1366,7 +1400,17 @@ addPropertyControls(TutorialOverlay, {
         title: "Scroll container ID",
         defaultValue: "",
         placeholder: "blank = whole page",
-        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+        hidden: (props) =>
+            !props.pageGroup ||
+            (!props.scrollAdvancesStep && !props.lockScrollWhileActive),
+    },
+    lockScrollWhileActive: {
+        type: ControlType.Boolean,
+        title: "Lock scroll while active",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
     },
     cardTitleLine1: {
         type: ControlType.String,
