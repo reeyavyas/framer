@@ -639,26 +639,21 @@ export default function TutorialOverlay(props: Props) {
     // scrollContainerTarget so its position can only move forward while
     // this step is showing, never back past where it already was.
     //
-    // A real-time block (preventDefault on wheel/touchmove) is the only
-    // way to guarantee zero visible backward movement — correcting after
-    // a "scroll" event always means the browser already rendered the
-    // reverse motion at least once. But a non-passive wheel/touchmove
-    // listener also forces the browser to run ALL scrolling on this
-    // element on the main thread instead of the compositor, not just the
-    // blocked direction — tried unconditionally before and it made
-    // forward scrolling janky for as long as this step stayed mounted.
-    //
-    // Compromise: only switch into real-time blocking within
-    // NEAR_FLOOR_BUFFER px of the floor, where the guarantee actually
-    // matters. Anywhere further past it, scrolling stays fully passive/
-    // compositor-driven (smooth), and a debounced "scroll" correction
-    // stays on as a fallback safety net for any edge case blocking
-    // doesn't catch (e.g. this step activating already at the floor,
-    // before the browser has committed to blocking for a gesture already
-    // in progress). Caveat: some browsers decide passive vs. blocking
-    // touch handling for a whole gesture at its start, so toggling the
-    // touchmove listener mid-gesture may not reliably engage on every
-    // device — worth re-testing on the real kiosk hardware.
+    // Blocks the upward wheel/touch-drag gesture directly (preventDefault
+    // before the browser renders anything) rather than only correcting
+    // after a "scroll" event — a correction-based approach always means
+    // the browser already rendered at least one frame of reverse motion
+    // first, which isn't acceptable here (the card can get clipped by
+    // fixed chrome even briefly). The trade-off, accepted deliberately:
+    // a non-passive wheel/touchmove listener forces the browser to run
+    // ALL scrolling on this element on the main thread instead of the
+    // compositor for as long as this step is active, not just the
+    // blocked direction — a near-floor-only version of this was tried to
+    // avoid that cost, but toggling the listener mid-gesture wasn't
+    // reliable enough across browsers/devices to trust for this.
+    // The debounced "scroll" correction stays on as a fallback safety
+    // net only (e.g. this step activating already sitting at the floor,
+    // before any wheel/touchmove event has fired to engage the block).
     React.useEffect(() => {
         if (!active || !isMyTurn || !lockScrollWhileActive) return
         const el = resolveScrollTarget(scrollContainerTarget)
@@ -669,10 +664,8 @@ export default function TutorialOverlay(props: Props) {
             target.scrollTo({ top: v, behavior: "smooth" })
         }
 
-        const NEAR_FLOOR_BUFFER = 24
         let floor = getPos()
         let settleTimer: ReturnType<typeof setTimeout> | undefined
-        let blocking = false
         let touchStartY = 0
 
         function onWheel(e: Event) {
@@ -688,39 +681,24 @@ export default function TutorialOverlay(props: Props) {
             const deltaY = (e as TouchEvent).touches[0].clientY - touchStartY
             if (deltaY > 0 && getPos() <= floor) e.preventDefault()
         }
-        function setBlocking(on: boolean) {
-            if (on === blocking) return
-            blocking = on
-            if (on) {
-                el.addEventListener("wheel", onWheel, { passive: false })
-                el.addEventListener("touchstart", onTouchStart, {
-                    passive: true,
-                })
-                el.addEventListener("touchmove", onTouchMove, {
-                    passive: false,
-                })
-            } else {
-                el.removeEventListener("wheel", onWheel)
-                el.removeEventListener("touchstart", onTouchStart)
-                el.removeEventListener("touchmove", onTouchMove)
-            }
-        }
-
         function onScroll() {
             const current = getPos()
             if (current > floor) floor = current
-            setBlocking(current - floor <= NEAR_FLOOR_BUFFER)
             if (settleTimer) clearTimeout(settleTimer)
             settleTimer = setTimeout(() => {
                 if (getPos() < floor) setPos(floor)
             }, 100)
         }
 
-        setBlocking(getPos() - floor <= NEAR_FLOOR_BUFFER)
+        el.addEventListener("wheel", onWheel, { passive: false })
+        el.addEventListener("touchstart", onTouchStart, { passive: true })
+        el.addEventListener("touchmove", onTouchMove, { passive: false })
         el.addEventListener("scroll", onScroll, { passive: true })
         return () => {
+            el.removeEventListener("wheel", onWheel)
+            el.removeEventListener("touchstart", onTouchStart)
+            el.removeEventListener("touchmove", onTouchMove)
             el.removeEventListener("scroll", onScroll)
-            setBlocking(false)
             if (settleTimer) clearTimeout(settleTimer)
         }
     }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
