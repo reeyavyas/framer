@@ -644,8 +644,20 @@ export default function TutorialOverlay(props: Props) {
     // wheel/touchmove listener forces the browser to run scrolling on
     // this element on the main thread instead of the compositor, which
     // made scrolling in general janky, not just the blocked direction.
-    // The correction itself uses scrollTo's smooth behavior instead of
-    // an instant jump so it reads as an eased stop rather than a snap.
+    //
+    // The correction itself is debounced to run only once scrolling has
+    // settled, rather than on every single "scroll" tick. Touch/momentum
+    // scrolling isn't perfectly monotonic — a tick can transiently report
+    // a value a hair below the floor (sub-pixel rounding, elastic
+    // bounce) even while the user is genuinely still scrolling forward.
+    // Correcting immediately on every such tick calls scrollTo() while
+    // the browser's own touch/momentum physics is still actively
+    // driving that same element's scrollTop — two things fighting for
+    // control of the same value, which is what made scrolling forward
+    // feel janky too, for as long as this step (and its listener) stays
+    // mounted, not just the blocked backward direction. Tracking the
+    // floor happens on every tick (cheap, no DOM writes); only the
+    // actual scrollTo correction waits for a quiet gap.
     React.useEffect(() => {
         if (!active || !isMyTurn || !lockScrollWhileActive) return
         const el = resolveScrollTarget(scrollContainerTarget)
@@ -656,15 +668,22 @@ export default function TutorialOverlay(props: Props) {
             target.scrollTo({ top: v, behavior: "smooth" })
         }
         let floor = getPos()
+        let settleTimer: ReturnType<typeof setTimeout> | undefined
 
         function onScroll() {
             const current = getPos()
-            if (current < floor) setPos(floor)
-            else floor = current
+            if (current > floor) floor = current
+            if (settleTimer) clearTimeout(settleTimer)
+            settleTimer = setTimeout(() => {
+                if (getPos() < floor) setPos(floor)
+            }, 100)
         }
 
         el.addEventListener("scroll", onScroll, { passive: true })
-        return () => el.removeEventListener("scroll", onScroll)
+        return () => {
+            el.removeEventListener("scroll", onScroll)
+            if (settleTimer) clearTimeout(settleTimer)
+        }
     }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
 
     // Let scroll/drag gestures reach the real UI even though we're
