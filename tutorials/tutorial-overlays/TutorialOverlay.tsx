@@ -85,6 +85,7 @@ interface Props {
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     lockScrollWhileActive: boolean // ratchets scrollContainerTarget so it can only move forward while this step is showing, never back
     releaseScrollLockWhileActive: boolean // undoes an earlier step's lockScrollWhileActive on the same scrollContainerTarget (VirtualScroll only — see the effect for why)
+    freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — unlike the lock above, resumes normally once the step ends
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -349,6 +350,7 @@ export default function TutorialOverlay(props: Props) {
         scrollContainerTarget,
         lockScrollWhileActive,
         releaseScrollLockWhileActive,
+        freezeScrollWhileActive,
         cardTitleLine1,
         cardTitleLine1Color,
         cardTitleLine1Font,
@@ -757,6 +759,29 @@ export default function TutorialOverlay(props: Props) {
         releaseScrollLockWhileActive,
         scrollContainerTarget,
     ])
+
+    // Freezes a VirtualScroll container completely — neither direction
+    // moves — for exactly as long as THIS step is active, then resumes
+    // normally. Different problem from lockScrollWhileActive above:
+    // that's a one-way ratchet (forward motion still allowed, and it
+    // deliberately outlives the step that set it, for a target that
+    // must never be revisited for the rest of the flow); this is for a
+    // target that needs to hold perfectly still — neither direction —
+    // while the user decides whether to interact with it (e.g. a
+    // toggle inside a scrollable list, where even scrolling further
+    // down would slide the very thing they're being asked to tap out
+    // from under their finger). Scoped to the step's own lifetime via
+    // the cleanup, unlike the lock's floor. VirtualScroll-only, same
+    // reason as the lock: freezing native scroll in real time needs the
+    // same wheel/touchmove veto that costs main-thread jank, which
+    // VirtualScroll exists specifically to avoid.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !freezeScrollWhileActive) return
+        const virtual = getVirtualScroll(scrollContainerTarget)
+        if (!virtual) return
+        virtual.freezeHere()
+        return () => virtual.unfreeze()
+    }, [active, isMyTurn, freezeScrollWhileActive, scrollContainerTarget])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
@@ -1378,6 +1403,7 @@ TutorialOverlay.defaultProps = {
     scrollContainerTarget: "",
     lockScrollWhileActive: false,
     releaseScrollLockWhileActive: false,
+    freezeScrollWhileActive: false,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
     cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
@@ -1516,7 +1542,8 @@ addPropertyControls(TutorialOverlay, {
             !props.pageGroup ||
             (!props.scrollAdvancesStep &&
                 !props.lockScrollWhileActive &&
-                !props.releaseScrollLockWhileActive),
+                !props.releaseScrollLockWhileActive &&
+                !props.freezeScrollWhileActive),
     },
     lockScrollWhileActive: {
         type: ControlType.Boolean,
@@ -1529,6 +1556,14 @@ addPropertyControls(TutorialOverlay, {
     releaseScrollLockWhileActive: {
         type: ControlType.Boolean,
         title: "Release scroll lock while active",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
+    },
+    freezeScrollWhileActive: {
+        type: ControlType.Boolean,
+        title: "Freeze scroll while active",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",

@@ -62,6 +62,17 @@ anywhere else on the page.
   adding a second export) was reported as "still able to scroll up"
   on a step that should have been locked.
 
+  `lockScrollWhileActive`/`releaseFloor` (a one-way ratchet — forward
+  motion always allowed, and it deliberately outlives the step that
+  set it) is a different tool from `TutorialOverlay`'s
+  `freezeScrollWhileActive`/`freezeHere`/`unfreeze` (stops motion in
+  BOTH directions, scoped strictly to the step's own lifetime — undone
+  automatically once the step ends). Reach for freeze when a target
+  needs to hold perfectly still while the user decides whether to
+  interact with it (e.g. a toggle inside a scrollable list, where even
+  continuing to scroll forward would slide it out from under their
+  finger) — lock alone still permits that forward motion.
+
 ### Known issue: TutorialOverlay can render null on Published while working in Preview
 
 Seen on the card-controls travel-notice tutorial's "Scroll Down" step

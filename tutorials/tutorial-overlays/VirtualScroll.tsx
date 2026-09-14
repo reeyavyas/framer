@@ -103,6 +103,18 @@ export interface VirtualScrollHandle {
     // in the same flow with different needs (e.g. "scroll up to see
     // the thing you just saved") should be able to undo it.
     releaseFloor(): void
+    // Freezes position completely — neither direction moves, not just
+    // "can't go backward" — until unfreeze() is called. Used by
+    // TutorialOverlay's freezeScrollWhileActive for a step whose target
+    // needs to hold perfectly still while the user decides whether to
+    // interact with it (e.g. a toggle inside a scrollable list), rather
+    // than merely being unable to go back to where it was. Distinct
+    // from lockFloorHere/releaseFloor: those still allow forward
+    // motion and are a deliberate ratchet that outlives the step that
+    // set it; this blocks all motion and is meant to be undone by the
+    // same step's own end.
+    freezeHere(): void
+    unfreeze(): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
     subscribe(fn: () => void): () => void
@@ -129,6 +141,7 @@ function withVirtualScroll(id: string) {
             const posRef = React.useRef(0) // 0 = top, increases downward
             const floorRef = React.useRef(0)
             const maxRef = React.useRef(0)
+            const frozenRef = React.useRef(false)
             const dragRef = React.useRef<{
                 id: number
                 startY: number
@@ -138,6 +151,13 @@ function withVirtualScroll(id: string) {
 
             const setPos = React.useCallback(
                 (v: number) => {
+                    // Frozen means frozen — not clamped to a range, not
+                    // "no further than this," just entirely unresponsive
+                    // to input until unfrozen. Checked before floor/max
+                    // even apply, so freezing overrides an active
+                    // lockFloorHere ratchet for free (there's no motion
+                    // left for the floor to constrain).
+                    if (frozenRef.current) return
                     const clamped = Math.min(
                         Math.max(v, floorRef.current - EDGE_TOLERANCE_PX),
                         maxRef.current
@@ -183,6 +203,12 @@ function withVirtualScroll(id: string) {
                     },
                     releaseFloor: () => {
                         floorRef.current = 0
+                    },
+                    freezeHere: () => {
+                        frozenRef.current = true
+                    },
+                    unfreeze: () => {
+                        frozenRef.current = false
                     },
                     subscribe: (fn) => {
                         listenersRef.current.add(fn)
