@@ -2,6 +2,7 @@ import * as React from "react"
 import type { ComponentType } from "react"
 import { RenderTarget } from "framer"
 import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
+import { getVirtualScroll } from "../../tutorials/tutorial-overlays/VirtualScroll.tsx"
 
 /**
  * CardAlertsSave
@@ -52,14 +53,19 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  *    sessionStorage handoff or fade-out timer: the moment SAVE_DELAY_MS
  *    elapses the page navigates away and takes the overlay with it.
  *
- *  - withCardAlertsScrollContainer — apply to the page's own
+ *  - withCardAlertsScrollContainer — apply to the BASE page's own
  *    "Scrollable Content" frame (the real native-scrolling container
  *    holding the toggles list — not tagged with any
  *    data-tutorial-target, that system is tutorial-only). Just captures
- *    a ref to it in module-level state so the Save handler above can
- *    scroll it back to the top the moment the Saving overlay appears,
- *    without needing a broader lookup mechanism for something this
- *    page-specific and single-purpose.
+ *    a ref to it in module-level state so scrollCardAlertsToTop() below
+ *    has something to call scrollTo() on. Don't apply this on the
+ *    tutorial-duplicate page — its Scrollable Content frame should
+ *    instead carry VirtualScroll.tsx's VirtualScrollCardAlertsContent
+ *    (it already needs that override for the toggle step's lock/freeze
+ *    behavior), which scrollCardAlertsToTop() checks for FIRST: native
+ *    scrollTo() does nothing on a VirtualScroll container since it
+ *    disables real overflow scrolling entirely and owns position via
+ *    its own transform instead.
  *
  * On the canvas all overrides are inert.
  */
@@ -67,11 +73,10 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
 const STORAGE_TOAST_FLAG_KEY = "kioskCardAlertsToastFlag"
 
 // The base Card Controls page's real published path.
-const CARD_CONTROLS_LINK = "/card-controls"
+const CARD_CONTROLS_LINK = "/base-pages/card-controls"
 
-// The tutorial-overlay duplicate of Card Controls — update this to its
-// real published path too.
-const CARD_CONTROLS_TUTORIAL_LINK = "/card-controls-tutorial"
+// The tutorial-overlay duplicate of Card Controls' real published path.
+const CARD_CONTROLS_TUTORIAL_LINK = "/card-controls-tutorial/card-controls-3"
 
 // Edit this value directly to change how long the spinner shows before
 // navigating away.
@@ -84,7 +89,22 @@ const DISABLED_TEXT = "#9aa0a6"
 
 let scrollContainerEl: HTMLElement | null = null
 
+// Matches VirtualScrollCardAlertsContent's own id in VirtualScroll.tsx —
+// present only on the tutorial-duplicate page's Scrollable Content frame.
+const VIRTUAL_SCROLL_ID = "card-alerts-scroll"
+
 function scrollCardAlertsToTop() {
+    // The tutorial page's Scrollable Content frame is a VirtualScroll
+    // container: check for it first, since native scrollTo() below does
+    // nothing there (VirtualScroll disables real overflow scrolling and
+    // owns position via its own transform instead). Nothing is
+    // registered under this id on the base page, so this is a no-op
+    // there and falls through to the native ref.
+    const virtual = getVirtualScroll(VIRTUAL_SCROLL_ID)
+    if (virtual) {
+        virtual.scrollToTop()
+        return
+    }
     scrollContainerEl?.scrollTo({ top: 0, behavior: "smooth" })
 }
 

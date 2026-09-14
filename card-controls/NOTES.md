@@ -51,13 +51,21 @@ Card-level account actions a user manages from settings.
     the same picker-visibility reason as `CardAlertsToggleReport.tsx`
     above. Everything else (toggle counting, the overlay, the toast) is
     identical either way and needs no duplicating — only the destination
-    differs. `withCardAlertsScrollContainer` — apply to the page's
-    "Scrollable Content" frame — captures a ref in module state so the
-    Save handler can call `scrollCardAlertsToTop()` the instant the
-    Saving overlay appears, so the page is back at the top by the time
-    `SAVE_DELAY_MS` elapses and it navigates away. Base page only; add
-    the same on the tutorial duplicate if it ever needs the same
-    scroll-then-navigate behavior on Save.
+    differs. `withCardAlertsScrollContainer` — apply to the BASE page's
+    "Scrollable Content" frame only — captures a ref in module state so
+    `scrollCardAlertsToTop()` has a native element to call `scrollTo()`
+    on. The tutorial duplicate's Scrollable Content frame instead
+    carries `tutorials/tutorial-overlays/VirtualScroll.tsx`'s
+    `VirtualScrollCardAlertsContent` (it already needs that for the
+    toggle step's lock/freeze behavior — see
+    `tutorials/card-controls-tutorial/NOTES.md`), and
+    `scrollCardAlertsToTop()` checks `getVirtualScroll("card-alerts-
+    scroll")` first for exactly that reason: native `scrollTo()` is a
+    no-op on a VirtualScroll container, since it disables real overflow
+    scrolling and owns position via its own transform instead. Either
+    way, the Save handler calls it the instant the Saving overlay
+    appears, so the page is back at the top by the time
+    `SAVE_DELAY_MS` elapses and it navigates away.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.

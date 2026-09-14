@@ -1,6 +1,6 @@
 import * as React from "react"
 import type { ComponentType } from "react"
-import { motion, useMotionValue } from "framer-motion"
+import { animate, motion, useMotionValue } from "framer-motion"
 
 /**
  * VirtualScroll
@@ -115,6 +115,16 @@ export interface VirtualScrollHandle {
     // same step's own end.
     freezeHere(): void
     unfreeze(): void
+    // Smoothly animates position back to 0 (the true top). Used by
+    // CardAlertsSave.tsx's scrollCardAlertsToTop() the instant its
+    // Saving overlay appears, so the page is back at the top by the
+    // time the save delay elapses and it navigates away. Deliberately
+    // ignores both the floor (lockFloorHere's ratchet) and frozen
+    // state — by the point Save is tappable, whatever earlier step set
+    // either of those is long over, and the container is about to
+    // unmount anyway on navigation, so there's nothing left for either
+    // one to protect.
+    scrollToTop(): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
     subscribe(fn: () => void): () => void
@@ -209,6 +219,16 @@ function withVirtualScroll(id: string) {
                     },
                     unfreeze: () => {
                         frozenRef.current = false
+                    },
+                    scrollToTop: () => {
+                        animate(posRef.current, 0, {
+                            duration: 0.5,
+                            onUpdate: (v) => {
+                                posRef.current = v
+                                y.set(-v)
+                                listenersRef.current.forEach((fn) => fn())
+                            },
+                        })
                     },
                     subscribe: (fn) => {
                         listenersRef.current.add(fn)
