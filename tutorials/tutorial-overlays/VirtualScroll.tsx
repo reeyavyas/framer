@@ -150,7 +150,17 @@ export function getVirtualScroll(
 // which is exactly what happened the first time this was tried as an
 // import. Anything reaching this file from outside tutorial-overlays/
 // should go through window instead.
-;(window as any).__getVirtualScroll = getVirtualScroll
+//
+// Guarded — Framer server-renders these files too, where `window`
+// doesn't exist at all (not just "hasn't been touched yet"), so an
+// unconditional assignment here crashes rendering on every page any
+// tutorial-overlays file loads on, published or not. Same class of bug
+// TravelNoticeSectionTutorial.tsx already documents for
+// sessionStorage: this line runs at module-evaluation time, which
+// happens during SSR too, not only in the browser.
+if (typeof window !== "undefined") {
+    ;(window as any).__getVirtualScroll = getVirtualScroll
+}
 
 function withVirtualScroll(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
