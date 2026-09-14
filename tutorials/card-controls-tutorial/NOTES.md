@@ -90,9 +90,8 @@ Two approaches ended up in play for the travel-notice tutorial —
    canvas over the Start Date field, End Date field, and Save button
    respectively, each tagged via its own `TutorialTargets.tsx` Code
    Override export (`TravelStart`/`TravelEnd`/`TravelSave`). These
-   exports were added directly in Framer's code editor and, as of this
-   writing, have **not** been pulled into this repo's copy of
-   `TutorialTargets.tsx` — see the flag in `tutorials/NOTES.md`.
+   exports were originally added directly in Framer's code editor and
+   have since been pulled into this repo's copy of `TutorialTargets.tsx`.
 
 Since approach 2 is what's actually live, prefer `target: "travel-start"`
 / `"travel-end"` / `"travel-save"` on real `TutorialOverlay` instances

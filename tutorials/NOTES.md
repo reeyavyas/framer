@@ -26,14 +26,14 @@ anywhere else on the page.
   (one instance per tutorial beat, configured entirely from the
   Properties panel)
 - `TutorialTargets.tsx` — Override that tags a layer so
-  `TutorialOverlay` can find/measure it. **Out of sync with the live
-  Framer project as of this writing:** the card-controls travel-notice
-  tutorial added `TravelStart`/`TravelEnd`/`TravelSave` exports
-  (tagging `travel-start`/`travel-end`/`travel-save`) directly in
-  Framer's own code editor, which have not been pulled back into this
-  repo's copy of the file. Reconcile before trusting this file as the
-  source of truth for what's actually live. See
-  `card-controls-tutorial/NOTES.md` for how these three are used.
+  `TutorialOverlay` can find/measure it. The card-controls
+  travel-notice tutorial's `TravelStart`/`TravelEnd`/`TravelSave`
+  exports (tagging `travel-start`/`travel-end`/`travel-save`), added
+  directly in Framer's own code editor, have now been pulled back into
+  this repo's copy of the file — verify against the live Framer project
+  before trusting this as the source of truth if more overrides get
+  added there directly in the future. See `card-controls-tutorial/NOTES.md`
+  for how these three are used.
 - `TutorialCongrats.tsx` — full-screen finish screen for the end of a
   tutorial
 

@@ -34,3 +34,22 @@ function withTutorialTarget(id: string) {
 export function MoreTabTarget(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("more-tab")(Component)
 }
+
+// Marker layers for the card-controls-tutorial travel-notice flow —
+// three empty, invisible Framer layers positioned over
+// SetTravelNoticeTutorial.tsx's Start Date field, End Date field, and
+// Save button respectively (that component's fields aren't separately
+// selectable Framer layers, so a marker layer is overlaid instead — see
+// tutorials/card-controls-tutorial/NOTES.md, "Wiring a TutorialOverlay
+// step to a field inside one of these components"). These three exports
+// were added directly in Framer's code editor before this repo's copy
+// caught up; pulled in here now so the two stay in sync.
+export function TravelStart(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("travel-start")(Component)
+}
+export function TravelEnd(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("travel-end")(Component)
+}
+export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("travel-save")(Component)
+}
