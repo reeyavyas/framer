@@ -639,16 +639,13 @@ export default function TutorialOverlay(props: Props) {
     // scrollContainerTarget so its position can only move forward while
     // this step is showing, never back past where it already was.
     //
-    // Only wheel is intercepted directly (preventDefault before the
-    // browser moves anything — cheap, and wheel/trackpad input isn't
-    // touch-scroll). A non-passive touchmove listener was tried here too,
-    // but it forces the browser to hand ALL touch scrolling on this
-    // element to the main thread instead of the compositor — every
-    // scroll direction got janky, not just the blocked one. So touch
-    // relies on the "scroll" fallback below, eased back with scrollTo's
-    // smooth behavior instead of an instant jump so the rare correction
-    // (drag past the floor, or momentum overshoot) doesn't read as a
-    // snap.
+    // Corrects after the fact via the "scroll" event rather than
+    // intercepting wheel/touch gestures directly — a non-passive
+    // wheel/touchmove listener forces the browser to run scrolling on
+    // this element on the main thread instead of the compositor, which
+    // made scrolling in general janky, not just the blocked direction.
+    // The correction itself uses scrollTo's smooth behavior instead of
+    // an instant jump so it reads as an eased stop rather than a snap.
     React.useEffect(() => {
         if (!active || !isMyTurn || !lockScrollWhileActive) return
         const el = resolveScrollTarget(scrollContainerTarget)
@@ -660,22 +657,14 @@ export default function TutorialOverlay(props: Props) {
         }
         let floor = getPos()
 
-        function onWheel(e: Event) {
-            if ((e as WheelEvent).deltaY < 0 && getPos() <= floor)
-                e.preventDefault()
-        }
         function onScroll() {
             const current = getPos()
             if (current < floor) setPos(floor)
             else floor = current
         }
 
-        el.addEventListener("wheel", onWheel, { passive: false })
         el.addEventListener("scroll", onScroll, { passive: true })
-        return () => {
-            el.removeEventListener("wheel", onWheel)
-            el.removeEventListener("scroll", onScroll)
-        }
+        return () => el.removeEventListener("scroll", onScroll)
     }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
 
     // Let scroll/drag gestures reach the real UI even though we're
