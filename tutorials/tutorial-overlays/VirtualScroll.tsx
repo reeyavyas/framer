@@ -87,9 +87,22 @@ export interface VirtualScrollHandle {
     // Locks the floor at the CURRENT position — used by
     // TutorialOverlay's lockScrollWhileActive the moment that step
     // engages. Position can then never go below this again while the
-    // container stays mounted (until raiseFloor is called again from
-    // a later step, if ever).
+    // container stays mounted. Calling this again later only ever
+    // raises the floor further (to wherever position is AT THAT
+    // point) — it can't lower it, so a step that needs to undo an
+    // earlier lock (e.g. to let the user scroll back up to something
+    // now pinned above where an earlier step's lock ratcheted to)
+    // needs releaseFloor below instead.
     lockFloorHere(): void
+    // Resets the floor back to 0 (the true top), undoing whatever an
+    // earlier lockFloorHere call set it to. Used by TutorialOverlay's
+    // releaseScrollLockWhileActive — the lock is a deliberate one-way
+    // ratchet for the step that sets it (e.g. stopping a card from
+    // scrolling back down under fixed chrome while filling out a
+    // form), not a permanent property of the container; a later step
+    // in the same flow with different needs (e.g. "scroll up to see
+    // the thing you just saved") should be able to undo it.
+    releaseFloor(): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
     subscribe(fn: () => void): () => void
@@ -167,6 +180,9 @@ function withVirtualScroll(id: string) {
                             : 100,
                     lockFloorHere: () => {
                         floorRef.current = posRef.current
+                    },
+                    releaseFloor: () => {
+                        floorRef.current = 0
                     },
                     subscribe: (fn) => {
                         listenersRef.current.add(fn)

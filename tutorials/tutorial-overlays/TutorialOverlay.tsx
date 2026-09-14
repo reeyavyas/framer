@@ -84,6 +84,7 @@ interface Props {
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     lockScrollWhileActive: boolean // ratchets scrollContainerTarget so it can only move forward while this step is showing, never back
+    releaseScrollLockWhileActive: boolean // undoes an earlier step's lockScrollWhileActive on the same scrollContainerTarget (VirtualScroll only — see the effect for why)
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -347,6 +348,7 @@ export default function TutorialOverlay(props: Props) {
         scrollThresholdPercent,
         scrollContainerTarget,
         lockScrollWhileActive,
+        releaseScrollLockWhileActive,
         cardTitleLine1,
         cardTitleLine1Color,
         cardTitleLine1Font,
@@ -733,6 +735,28 @@ export default function TutorialOverlay(props: Props) {
             if (settleTimer) clearTimeout(settleTimer)
         }
     }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
+
+    // Undoes an earlier lockScrollWhileActive step's floor on a
+    // VirtualScroll container, so a later step needing to scroll back up
+    // past it isn't stuck forever. Only meaningful for VirtualScroll:
+    // lockFloorHere() there is a ratchet stored on the container itself
+    // (it outlives the step that set it, on purpose, so the lock holds
+    // while the user is still filling out the form it protects) —
+    // nothing else ever lowers it again, so a later "scroll up to see
+    // what you just saved" step sharing the same scrollContainerTarget
+    // would otherwise hit that same floor and go no further. The
+    // native-scroll lock branch above doesn't need this: its floor is a
+    // local variable scoped to that effect's own run, already gone the
+    // moment lockScrollWhileActive next reads false.
+    React.useEffect(() => {
+        if (!active || !isMyTurn || !releaseScrollLockWhileActive) return
+        getVirtualScroll(scrollContainerTarget)?.releaseFloor()
+    }, [
+        active,
+        isMyTurn,
+        releaseScrollLockWhileActive,
+        scrollContainerTarget,
+    ])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
@@ -1353,6 +1377,7 @@ TutorialOverlay.defaultProps = {
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
     lockScrollWhileActive: false,
+    releaseScrollLockWhileActive: false,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
     cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
@@ -1489,11 +1514,21 @@ addPropertyControls(TutorialOverlay, {
         placeholder: "blank = whole page",
         hidden: (props) =>
             !props.pageGroup ||
-            (!props.scrollAdvancesStep && !props.lockScrollWhileActive),
+            (!props.scrollAdvancesStep &&
+                !props.lockScrollWhileActive &&
+                !props.releaseScrollLockWhileActive),
     },
     lockScrollWhileActive: {
         type: ControlType.Boolean,
         title: "Lock scroll while active",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
+    },
+    releaseScrollLockWhileActive: {
+        type: ControlType.Boolean,
+        title: "Release scroll lock while active",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
