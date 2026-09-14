@@ -96,6 +96,28 @@ export function TravelScroll(
     return withTutorialTarget("travel-scroll")(Component)
 }
 
+// Card Alerts Tutorial Page Scrollable Content — the real scroll
+// container for the toggles list, same non-marker reasoning as
+// TravelScroll above. NOT "scrollable-content" — that string is
+// VirtualScroll.tsx's own internal registry key for
+// VirtualScrollTravelContent (a getVirtualScroll() lookup, unrelated to
+// this data-tutorial-target attribute/querySelector system), only ever
+// actually present on the Travel Notice page. Reusing it here for a
+// scrollContainerTarget on a page that doesn't have
+// VirtualScrollTravelContent applied resolves to nothing:
+// getVirtualScroll("scrollable-content") returns undefined, the
+// document.querySelector('[data-tutorial-target="scrollable-content"]')
+// fallback finds nothing either, and TutorialOverlay's
+// resolveScrollTarget silently falls back to locking/measuring `window`
+// instead — which does nothing if the real scrolling happens inside a
+// nested frame rather than the whole page. This target gives the Card
+// Alerts page its own real, distinct id instead.
+export function CardAlertsScroll(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-alerts-scroll")(Component)
+}
+
 // Marker layers for SetTravelNoticeTutorial.tsx's (and potentially
 // SetTravelNotice.tsx's) individual fields — Start Date, End Date,
 // Destinations, and the Save button aren't separately selectable Framer

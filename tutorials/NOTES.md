@@ -26,13 +26,16 @@ anywhere else on the page.
   (one instance per tutorial beat, configured entirely from the
   Properties panel)
 - `TutorialTargets.tsx` — Override that tags a layer so
-  `TutorialOverlay` can find/measure it. Now carries the full live
-  export list (`MoreTabTarget`, `CardControlsTarget`, `CardToggle`,
-  `TravelNotice`, `TravelScroll`, `TravelStart`, `TravelEnd`,
-  `TravelDestinations`, `TravelSave`), added directly in Framer's own
-  code editor and pulled back into this repo's copy — verify against
-  the live Framer project before trusting this as the source of truth
-  if more overrides get added there directly in the future. The four
+  `TutorialOverlay` can find/measure it. Carries the full live export
+  list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
+  `CardToggle`, `TravelNotice`, `TravelScroll`, `TravelStart`,
+  `TravelEnd`, `TravelDestinations`, `TravelSave`), added directly in
+  Framer's own code editor and pulled back into this repo's copy — plus
+  `CardAlertsScroll` and `CardAlertsToggleTarget1`/`2`/`3` (see
+  `card-controls-tutorial/NOTES.md`, "Card Alerts flow"), authored here
+  first and not yet applied to any layer in the live Framer project —
+  verify against the live Framer project before trusting this as the
+  source of truth either direction. The four
   field-marker exports (`TravelStart`/`TravelEnd`/`TravelDestinations`/
   `TravelSave`) go through a separate `withTutorialMarker` helper that
   forces `pointer-events: none`, since each sits on top of a real field
