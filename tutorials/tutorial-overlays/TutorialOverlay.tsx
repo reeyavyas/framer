@@ -639,37 +639,30 @@ export default function TutorialOverlay(props: Props) {
     // scrollContainerTarget so its position can only move forward while
     // this step is showing, never back past where it already was.
     //
-    // Blocks the upward wheel/touch-drag gesture itself (preventDefault
-    // before the browser moves anything), rather than only correcting
-    // after a native "scroll" event — reacting after the fact is what
-    // produced the visible snap-back/jumpiness. The "scroll" listener is
-    // kept only as a fallback for cases wheel/touch can't intercept
-    // (keyboard paging, touch-momentum overshoot after the finger lifts).
+    // Only wheel is intercepted directly (preventDefault before the
+    // browser moves anything — cheap, and wheel/trackpad input isn't
+    // touch-scroll). A non-passive touchmove listener was tried here too,
+    // but it forces the browser to hand ALL touch scrolling on this
+    // element to the main thread instead of the compositor — every
+    // scroll direction got janky, not just the blocked one. So touch
+    // relies on the "scroll" fallback below, eased back with scrollTo's
+    // smooth behavior instead of an instant jump so the rare correction
+    // (drag past the floor, or momentum overshoot) doesn't read as a
+    // snap.
     React.useEffect(() => {
         if (!active || !isMyTurn || !lockScrollWhileActive) return
         const el = resolveScrollTarget(scrollContainerTarget)
         const getPos = () =>
             el === window ? window.scrollY : (el as HTMLElement).scrollTop
         const setPos = (v: number) => {
-            if (el === window) window.scrollTo(0, v)
-            else (el as HTMLElement).scrollTop = v
+            const target = el === window ? window : (el as HTMLElement)
+            target.scrollTo({ top: v, behavior: "smooth" })
         }
         let floor = getPos()
-        let touchStartY = 0
 
         function onWheel(e: Event) {
             if ((e as WheelEvent).deltaY < 0 && getPos() <= floor)
                 e.preventDefault()
-        }
-        function onTouchStart(e: Event) {
-            touchStartY = (e as TouchEvent).touches[0].clientY
-        }
-        function onTouchMove(e: Event) {
-            // Dragging the finger down scrolls content up (scrollTop
-            // decreases), so a positive deltaY here is the "scroll back
-            // up" gesture we're blocking.
-            const deltaY = (e as TouchEvent).touches[0].clientY - touchStartY
-            if (deltaY > 0 && getPos() <= floor) e.preventDefault()
         }
         function onScroll() {
             const current = getPos()
@@ -678,13 +671,9 @@ export default function TutorialOverlay(props: Props) {
         }
 
         el.addEventListener("wheel", onWheel, { passive: false })
-        el.addEventListener("touchstart", onTouchStart, { passive: true })
-        el.addEventListener("touchmove", onTouchMove, { passive: false })
         el.addEventListener("scroll", onScroll, { passive: true })
         return () => {
             el.removeEventListener("wheel", onWheel)
-            el.removeEventListener("touchstart", onTouchStart)
-            el.removeEventListener("touchmove", onTouchMove)
             el.removeEventListener("scroll", onScroll)
         }
     }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
