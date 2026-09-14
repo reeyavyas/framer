@@ -685,7 +685,16 @@ export default function TutorialOverlay(props: Props) {
         }
         const el = document.querySelector(`[data-tutorial-target="${target}"]`)
         baseRectRef.current = el ? el.getBoundingClientRect() : null
-        baseScrollRef.current = scrollY.get()
+        // Read the scroll container's own scrollTop directly instead of
+        // scrollY.get() — useScroll's internal effect isn't guaranteed to
+        // have run yet at this point (it may use a plain useEffect, which
+        // runs after all useLayoutEffects), so the MotionValue could still
+        // hold its stale initial value here. This step usually activates
+        // well after the user has already scrolled, so trusting an
+        // uninitialized 0 would bake in a large, constant, wrong offset.
+        baseScrollRef.current = scrollElRef.current
+            ? scrollElRef.current.scrollTop
+            : 0
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollTracked, target, scrollContainerTarget])
 
