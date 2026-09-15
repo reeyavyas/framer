@@ -40,7 +40,7 @@ const EXIT_LINK = "/tutorials"
 const SHOW_CLOSE_BUTTON = true
 const ACCENT_COLOR = "rgba(5,147,144,1)"
 
-export function withCongratsGate(Component): React.ComponentType {
+export function withCongratsGate(Component) {
     return function CongratsGate(props) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
