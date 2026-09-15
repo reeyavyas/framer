@@ -2,7 +2,7 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { getPageStep, subscribePageStep } from "./TutorialOverlay.tsx"
+import { getPageStep, subscribePageStep } from "./PageStepState.tsx"
 
 /**
  * TutorialCongrats
@@ -19,7 +19,7 @@ import { getPageStep, subscribePageStep } from "./TutorialOverlay.tsx"
  * (e.g. a single-step page leaves TutorialOverlay's own `stepNumber` at
  * its default of 1, so `showAtStep` here is 2). This reads the same
  * shared step counter TutorialOverlay's instances hand off between
- * themselves (see its pageStepState) rather than owning a separate one,
+ * themselves (see PageStepState.tsx) rather than owning a separate one,
  * so there's nothing to keep in sync by hand. Leave `pageGroup` blank
  * to fall back to the plain `active` boolean instead (e.g. a page with
  * no card step at all before the congrats screen).

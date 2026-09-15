@@ -1,6 +1,6 @@
 import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { getPageStep, subscribePageStep } from "./TutorialOverlay.tsx"
+import { getPageStep, subscribePageStep } from "./PageStepState.tsx"
 
 /**
  * TutorialCongratsGate
@@ -27,7 +27,7 @@ import { getPageStep, subscribePageStep } from "./TutorialOverlay.tsx"
  *
  * Wiring: give this the same `pageGroup` string as the page's
  * TutorialOverlay step(s) (reads the same shared step counter — see
- * TutorialOverlay.tsx's pageStepState) and set `showAtStep` to one past
+ * PageStepState.tsx) and set `showAtStep` to one past
  * the last real step. Drop your existing congrats Frame/component onto
  * the canvas as normal, then set it as this component's "Congrats
  * content" property — do not delete or move it into this file.

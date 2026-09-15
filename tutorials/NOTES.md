@@ -25,6 +25,14 @@ anywhere else on the page.
 - `TutorialOverlay.tsx` — the per-step instruction card + hole + glow
   (one instance per tutorial beat, configured entirely from the
   Properties panel)
+- `PageStepState.tsx` — the shared same-page step counter
+  `TutorialOverlay.tsx`'s own steps hand off between themselves, pulled
+  out into its own small, dependency-free file so `TutorialCongrats.tsx`
+  and `TutorialCongratsGate.tsx` can read/subscribe to it without
+  importing all of `TutorialOverlay.tsx` (a large, animation-heavy file)
+  just to reach two functions — that was making Framer's canvas
+  noticeably heavy. Everything that touches the step counter, including
+  `TutorialOverlay.tsx` itself, imports from here now.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,

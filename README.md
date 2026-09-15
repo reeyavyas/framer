@@ -42,6 +42,7 @@ tutorials/               The tutorial system
     FocusGuide.tsx             "Click here" glow overlay for a specific layer
     SpotlightOverlay.tsx       Dims/blurs the screen except a cut-out target area
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
+    PageStepState.tsx          Shared same-page step counter (small/dependency-free, on purpose)
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongrats.tsx       Full-screen "you did it" finish screen for a tutorial
     TutorialCongratsGate.tsx   Same auto-show/redirect timing, for a custom-built congrats Frame
