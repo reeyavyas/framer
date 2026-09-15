@@ -31,10 +31,9 @@ anywhere else on the page.
   `CardToggle`, `TravelNotice`, `TravelScroll`, `TravelStart`,
   `TravelEnd`, `TravelDestinations`, `TravelSave`), added directly in
   Framer's own code editor and pulled back into this repo's copy — plus
-  `CardAlertsScroll`, `CardAlertsToggleTarget1`/`2`/`3`, and
-  `CardAlertsSaveTarget` (see `card-controls-tutorial/NOTES.md`, "Card
-  Alerts flow"), authored here first and not yet applied to any layer
-  in the live Framer project —
+  `CardAlertsToggleTarget1`/`2`/`3` and `CardAlertsSaveTarget` (see
+  `card-controls-tutorial/NOTES.md`, "Card Alerts flow"), authored here
+  first and not yet applied to any layer in the live Framer project —
   verify against the live Framer project before trusting this as the
   source of truth either direction. The four
   field-marker exports (`TravelStart`/`TravelEnd`/`TravelDestinations`/

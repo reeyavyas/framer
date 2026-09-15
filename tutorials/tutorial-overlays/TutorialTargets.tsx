@@ -96,27 +96,21 @@ export function TravelScroll(
     return withTutorialTarget("travel-scroll")(Component)
 }
 
-// Card Alerts Tutorial Page Scrollable Content — the real scroll
-// container for the toggles list, same non-marker reasoning as
-// TravelScroll above. NOT "scrollable-content" — that string is
-// VirtualScroll.tsx's own internal registry key for
-// VirtualScrollTravelContent (a getVirtualScroll() lookup, unrelated to
-// this data-tutorial-target attribute/querySelector system), only ever
-// actually present on the Travel Notice page. Reusing it here for a
-// scrollContainerTarget on a page that doesn't have
-// VirtualScrollTravelContent applied resolves to nothing:
-// getVirtualScroll("scrollable-content") returns undefined, the
-// document.querySelector('[data-tutorial-target="scrollable-content"]')
-// fallback finds nothing either, and TutorialOverlay's
-// resolveScrollTarget silently falls back to locking/measuring `window`
-// instead — which does nothing if the real scrolling happens inside a
-// nested frame rather than the whole page. This target gives the Card
-// Alerts page its own real, distinct id instead.
-export function CardAlertsScroll(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withTutorialTarget("card-alerts-scroll")(Component)
-}
+// Card Alerts Tutorial Page Scrollable Content has no plain
+// withTutorialTarget export here (unlike TravelScroll above) — this
+// page's Scrollable Content frame needs VirtualScroll.tsx's
+// VirtualScrollCardAlertsContent instead, for the toggle steps'
+// lock/freeze behavior. A CardAlertsScroll export used to exist for
+// this same id ("card-alerts-scroll") but Framer doesn't allow
+// stacking two Code Overrides on one layer, and TutorialOverlay's
+// scroll functions (scrollAdvancesStep, lockScrollWhileActive, etc.)
+// already check getVirtualScroll(scrollContainerTarget) FIRST — a pure
+// registry lookup keyed by the same id string, independent of any DOM
+// attribute — before ever falling back to
+// document.querySelector('[data-tutorial-target="..."]'). So once
+// VirtualScrollCardAlertsContent is applied and scrollContainerTarget
+// is set to "card-alerts-scroll", the fallback this export existed for
+// never runs; it was dead weight on a page that can't apply it anyway.
 
 // Marker layers for SetTravelNoticeTutorial.tsx's (and potentially
 // SetTravelNotice.tsx's) individual fields — Start Date, End Date,
