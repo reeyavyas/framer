@@ -65,6 +65,20 @@ import { getVirtualScroll } from "./VirtualScroll.tsx"
  * arrowhead live inside ONE <g> together, so arrowRotation rotates
  * them as a single rigid unit — there's no way for the two pieces to
  * drift out of alignment with each other.
+ *
+ * Every effect below that starts a timer, a requestAnimationFrame loop,
+ * or a global window listener checks `isCanvas` FIRST, before `active`
+ * or `isMyTurn`. This isn't style — a page with several steps (up to 8
+ * on some pages) means that many mounted instances at once, and every
+ * one of these effects used to run at design time too: a rAF loop
+ * re-measuring the DOM every frame, global click-blocking that (with no
+ * real target on canvas) ate every click in Framer's own editor, and a
+ * non-passive wheel/touchmove hijack on `window`. Together, on an
+ * 8-step page, that's what was making the canvas sluggish/unresponsive.
+ * Keep new effects following the same `isCanvas ||` first-check
+ * convention — it's the only thing standing between "this component
+ * runs in Preview/Published" and "this component also runs, pointlessly
+ * and expensively, wherever it merely sits on the canvas."
  */
 
 type HoleShape = "rectangle" | "circle" | "pill"
@@ -419,7 +433,14 @@ export default function TutorialOverlay(props: Props) {
     // don't trigger a re-render — the rAF loop itself is the only
     // per-frame cost while a step with a target is active.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !target) {
+        // isCanvas is checked first in EVERY effect below with a global
+        // listener, timer, or per-frame loop — none of them have any real
+        // target/page to act on at design time, and leaving them running
+        // was a measured cause of a sluggish/unresponsive Framer canvas
+        // (this one specifically: a rAF loop re-measuring the DOM every
+        // single frame, for as long as any instance — active defaults to
+        // true — sat on a page, open or not).
+        if (isCanvas || !active || !isMyTurn || !target) {
             rectRef.current = null
             setRect(null)
             return
@@ -456,32 +477,36 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             cancelAnimationFrame(rafId)
         }
-    }, [active, isMyTurn, target])
+    }, [isCanvas, active, isMyTurn, target])
 
     // Timer-driven glow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !showGlow) return
+        if (isCanvas || !active || !isMyTurn || !showGlow) return
         const t = setTimeout(
             () => setGlowShown(true),
             Math.max(glowDelaySeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, showGlow, glowDelaySeconds])
+    }, [isCanvas, active, isMyTurn, showGlow, glowDelaySeconds])
 
     // Timer-driven arrow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !showArrow) return
+        if (isCanvas || !active || !isMyTurn || !showArrow) return
         const t = setTimeout(
             () => setArrowShown(true),
             Math.max(arrowDelaySeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, showArrow, arrowDelaySeconds])
+    }, [isCanvas, active, isMyTurn, showArrow, arrowDelaySeconds])
 
     // Optional timer-driven navigation to the next page — for a pure
-    // "watch this" beat that needs no tap at all.
+    // "watch this" beat that needs no tap at all. isCanvas is checked
+    // first here for an extra reason beyond the general note above: this
+    // one calls window.location.href — letting it fire inside Framer's
+    // own editor would navigate the canvas itself away, not a preview.
     React.useEffect(() => {
         if (
+            isCanvas ||
             !active ||
             !isMyTurn ||
             !autoAdvanceAfterSeconds ||
@@ -495,18 +520,18 @@ export default function TutorialOverlay(props: Props) {
             Math.max(autoAdvanceAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
+    }, [isCanvas, active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
 
     // Optional timer-driven hand-off to the next step on THIS page —
     // independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !nextStepAfterSeconds) return
+        if (isCanvas || !active || !isMyTurn || !nextStepAfterSeconds) return
         const t = setTimeout(
             advanceStep,
             Math.max(nextStepAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, nextStepAfterSeconds, advanceStep])
+    }, [isCanvas, active, isMyTurn, nextStepAfterSeconds, advanceStep])
 
     // Explicit click-blocking. Replaces relying on clip-path to exclude
     // the hole from hit-testing — clip-path reliably PAINTS the hole, but
@@ -520,7 +545,12 @@ export default function TutorialOverlay(props: Props) {
     // if this overlay weren't in the DOM at all. Clicks on this overlay's
     // own UI (skip/exit buttons) are always excluded from blocking.
     React.useEffect(() => {
-        if (!active || !isMyTurn) return
+        // isCanvas is critical here specifically: on canvas there is no
+        // real target element, so `rect` never resolves and `insideHole`
+        // below is always false — meaning, ungated, this would capture
+        // and block EVERY click anywhere on the page at design time,
+        // including inside Framer's own editor chrome.
+        if (isCanvas || !active || !isMyTurn) return
         function blockOutsideHole(e: PointerEvent | MouseEvent) {
             const eventTarget = e.target as HTMLElement | null
             // Also exempt any other full-screen "system" overlay (e.g.
@@ -555,14 +585,14 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("pointerdown", blockOutsideHole, true)
             window.removeEventListener("click", blockOutsideHole, true)
         }
-    }, [active, isMyTurn])
+    }, [isCanvas, active, isMyTurn])
 
     // Click-driven hand-off — a non-blocking capture listener that
     // watches for a real tap landing inside this step's hole. It never
     // calls preventDefault/stopPropagation, so the real element
     // underneath still gets the real click; we just also notice it.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !clickAdvancesStep) return
+        if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
         function onPointerDown(e: PointerEvent) {
             const r = rectRef.current
             if (
@@ -578,7 +608,7 @@ export default function TutorialOverlay(props: Props) {
         window.addEventListener("pointerdown", onPointerDown, true)
         return () =>
             window.removeEventListener("pointerdown", onPointerDown, true)
-    }, [active, isMyTurn, clickAdvancesStep, advanceStep])
+    }, [isCanvas, active, isMyTurn, clickAdvancesStep, advanceStep])
 
     // Scroll-driven hand-off — for a beat like "scroll down to see your
     // other accounts" (scrollDirection "down") or "scroll up to see the
@@ -596,7 +626,7 @@ export default function TutorialOverlay(props: Props) {
     // of native scrollTop/scroll events — there's nothing native to
     // listen to once a container's scrolling has been taken over.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !scrollAdvancesStep) return
+        if (isCanvas || !active || !isMyTurn || !scrollAdvancesStep) return
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (virtual) {
             function checkVirtual() {
@@ -632,6 +662,7 @@ export default function TutorialOverlay(props: Props) {
         el.addEventListener("scroll", checkScroll, { passive: true })
         return () => el.removeEventListener("scroll", checkScroll)
     }, [
+        isCanvas,
         active,
         isMyTurn,
         scrollAdvancesStep,
@@ -659,7 +690,12 @@ export default function TutorialOverlay(props: Props) {
     // non-virtualized container) cost main-thread contention, and made
     // the debounced correction unreliable when the two disagreed.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !lockScrollWhileActive) return
+        // isCanvas is critical here too: scrollContainerTarget resolves
+        // to `window` itself when its target isn't found — as it never
+        // is on canvas — so ungated this would attach a real, non-passive
+        // wheel/touchmove listener straight onto the editor's own window.
+        if (isCanvas || !active || !isMyTurn || !lockScrollWhileActive)
+            return
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (virtual) {
             virtual.lockFloorHere()
@@ -710,7 +746,7 @@ export default function TutorialOverlay(props: Props) {
             el.removeEventListener("scroll", onScroll)
             if (settleTimer) clearTimeout(settleTimer)
         }
-    }, [active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
+    }, [isCanvas, active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
 
     // Undoes an earlier lockScrollWhileActive step's floor on a
     // VirtualScroll container, so a later step needing to scroll back up
@@ -725,9 +761,11 @@ export default function TutorialOverlay(props: Props) {
     // local variable scoped to that effect's own run, already gone the
     // moment lockScrollWhileActive next reads false.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !releaseScrollLockWhileActive) return
+        if (isCanvas || !active || !isMyTurn || !releaseScrollLockWhileActive)
+            return
         getVirtualScroll(scrollContainerTarget)?.releaseFloor()
     }, [
+        isCanvas,
         active,
         isMyTurn,
         releaseScrollLockWhileActive,
@@ -750,20 +788,38 @@ export default function TutorialOverlay(props: Props) {
     // same wheel/touchmove veto that costs main-thread jank, which
     // VirtualScroll exists specifically to avoid.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !freezeScrollWhileActive) return
+        if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive)
+            return
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (!virtual) return
         virtual.freezeHere()
         return () => virtual.unfreeze()
-    }, [active, isMyTurn, freezeScrollWhileActive, scrollContainerTarget])
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        freezeScrollWhileActive,
+        scrollContainerTarget,
+    ])
 
     // Let scroll/drag gestures reach the real UI even though we're
     // visually on top and blocking real clicks everywhere but the hole.
     // Attached to window (capture), not the dim div — that div is now
     // pointerEvents:"none" (see above), so it never receives wheel/touch
     // events itself; window-level listeners don't depend on that at all.
+    //
+    // isMyTurn matters here for more than the usual reason: this was the
+    // one listener in the file NOT scoped to it, so on an 8-step page
+    // (this component's own doc mentions pages with several steps) all 8
+    // instances stayed mounted and EACH attached this same window-level
+    // listener — meaning a single wheel tick got redirected onto the
+    // real target and applied via scrollByOn up to 8 times over, once
+    // per instance, not just once. Scoping to isMyTurn (matching every
+    // sibling listener-effect above) fixes both that real scroll-speed
+    // bug and, combined with isCanvas, the redundant listener pile-up
+    // that was making an 8-step page's design-time canvas heavy.
     React.useEffect(() => {
-        if (!active) return
+        if (isCanvas || !active || !isMyTurn) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
         function onWheel(e: WheelEvent) {
@@ -801,7 +857,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("touchstart", onTouchStart, true)
             window.removeEventListener("touchmove", onTouchMove, true)
         }
-    }, [active])
+    }, [isCanvas, active, isMyTurn])
 
     // isMyTurn only matters for the real runtime handoff between steps —
     // on the canvas nothing is actually advancing the shared pageGroup

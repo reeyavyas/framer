@@ -54,8 +54,14 @@ export default function TutorialCongratsGate(props: Props) {
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
     // Timer-driven redirect — independent of any tap, uncapped delay.
+    // isCanvas is checked first for the same reason as every timer in
+    // TutorialOverlay.tsx that calls window.location.href: ungated, this
+    // fired inside Framer's own editor five seconds after the layer
+    // mounted (the defaults are active:true, 5s, "/tutorials") — not a
+    // preview navigating, the canvas itself.
     React.useEffect(() => {
-        if (!active || !autoRedirectAfterSeconds || !exitLink) return
+        if (isCanvas || !active || !autoRedirectAfterSeconds || !exitLink)
+            return
         const t = setTimeout(
             () => {
                 window.location.href = exitLink
@@ -63,19 +69,39 @@ export default function TutorialCongratsGate(props: Props) {
             Math.max(autoRedirectAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, autoRedirectAfterSeconds, exitLink])
+    }, [isCanvas, active, autoRedirectAfterSeconds, exitLink])
 
+    // A placeholder, not a live render of `content`, on canvas — unlike
+    // TutorialOverlay.tsx's arrow preview (cheap static SVG with no real
+    // dependency), "Congrats content" here is whatever animation you
+    // built, e.g. a confetti particle simulation, which is expensive to
+    // run continuously and was a real, measured source of canvas
+    // sluggishness when left mounted at design time. It only needs to
+    // exist for real in Preview/Published, where it's supposed to play
+    // once and finish. Same convention as TutorialCongrats.tsx's own
+    // canvas view below.
     if (isCanvas) {
         return (
             <div
                 style={{
                     ...style,
                     position: "relative",
-                    outline: "2px dashed rgba(255,90,90,0.7)",
-                    outlineOffset: -2,
+                    minHeight: 200,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px dashed rgba(255,90,90,0.7)",
+                    background: "rgba(255,90,90,0.08)",
+                    fontFamily: "monospace",
+                    fontSize: 10,
+                    color: "rgba(200,50,50,0.9)",
+                    textAlign: "center",
+                    padding: 4,
                 }}
             >
-                {content}
+                Congrats gate
+                <br />
+                (plays "Congrats content" full-screen in Preview)
             </div>
         )
     }

@@ -24,7 +24,20 @@ anywhere else on the page.
   out the target area
 - `TutorialOverlay.tsx` — the per-step instruction card + hole + glow
   (one instance per tutorial beat, configured entirely from the
-  Properties panel)
+  Properties panel). Every effect that starts a timer, a
+  `requestAnimationFrame` loop, or a global `window` listener checks
+  `RenderTarget.current() === RenderTarget.canvas` FIRST — on an 8-step
+  page (this file's own doc mentions pages with several steps) that's
+  up to 8 mounted instances at once, and before this check existed all
+  of those effects also ran at design time: a rAF loop re-measuring the
+  DOM every frame, global click-blocking that ate every click in
+  Framer's own editor (no real target exists on canvas, so its
+  "clicked inside the hole" check was always false), and a non-passive
+  wheel/touchmove hijack on `window` that — being the one listener not
+  scoped to whichever step is actually active — was ALSO applying a
+  single scroll gesture once per mounted instance in real
+  Preview/Published, not just once. Keep any new effect following the
+  same `isCanvas ||` first-check convention.
 - `PageStepState.tsx` — the shared same-page step counter
   `TutorialOverlay.tsx`'s own steps hand off between themselves, pulled
   out into its own small, dependency-free file so `TutorialCongrats.tsx`
@@ -79,6 +92,18 @@ anywhere else on the page.
   instead of navigating to a separate one — dropped once the page
   moved to this dedicated-page approach.) See the file's own
   top-of-file comment for the exact wiring.
+
+  Two canvas-heaviness fixes here specifically: the auto-redirect timer
+  checks `isCanvas` first (it used to fire `window.location.href`
+  straight out of Framer's own editor five seconds after the layer
+  mounted — the defaults are active/5s/`/tutorials`), and the canvas
+  view no longer live-renders "Congrats content" at all — it's a plain
+  placeholder box now, since a real animation (a confetti particle
+  simulation, in the case this was built for) running continuously at
+  design time is expensive, and likely wasn't even visibly firing there
+  in the first place (a "plays when visible" effect's own visibility
+  check often doesn't consider Framer's canvas "visible" the way a real
+  browser viewport is).
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without
