@@ -73,36 +73,46 @@ anywhere else on the page.
   can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
   instead of waiting for the exit button tap. See the file's own
   top-of-file comment for the exact wiring.
-- `TutorialCongratsGate.tsx` — an OVERRIDE (`withCongratsGate`, not a
-  Code Component) for a DEDICATED congrats page whose finish screen is
-  a custom-built Frame (e.g. a third-party confetti component plus a
-  keyframe pulse, assembled on the canvas) instead of
+- `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
+  shape as `FingerprintDelayedNavigation`, a plain function returning a
+  props patch — not the wrap-the-whole-component style tried twice
+  before for this same job) for a DEDICATED congrats page whose finish
+  screen is a custom-built Frame (e.g. a third-party confetti component
+  plus a keyframe pulse, assembled on the canvas) instead of
   `TutorialCongrats.tsx`'s own built-in look. Attach it directly to that
-  same Frame's own Code Override slot — do not create a separate layer
-  referencing it. It draws an "X" button that jumps to a redirect link,
-  and auto-redirects there after a delay; both are plain constants at
-  the top of the file (no property panel — Overrides don't get one).
-  Getting the user TO this page is the tutorial step's own job, not
-  this override's — a `TutorialOverlay.tsx` step already does real page
-  navigation (a tap on its real target, or its own
+  Frame's own Code Override slot. It fires `window.location.href` to
+  `EXIT_LINK` after `AUTO_REDIRECT_SECONDS` (plain constants at the top
+  of the file — Overrides don't get a property panel), timed via a
+  `useEffect` called inside the override function (Framer's classic
+  Override runtime supports calling hooks this way) rather than by
+  wrapping/re-rendering the layer. Returns `{}` — it never touches the
+  layer's own props or children, so there's nothing to reference, wrap,
+  or break. No "X"/skip button here: a classic Override can only patch
+  props onto the ONE layer it's attached to, it can't add a sibling
+  element — draw the skip button as a real layer instead (any shape + a
+  native Framer Link to the same exit path), on top of the animation on
+  the canvas. Getting the user TO this page is the tutorial step's own
+  job, not this override's — a `TutorialOverlay.tsx` step already does
+  real page navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
   this, then move on" beat pointed at this page's path); no
   `pageGroup`/step coordination is needed here, since arriving at the
   page IS the trigger.
 
-  This was originally a Code Component taking the custom Frame as a
-  `ControlType.ComponentInstance` property on a separate wrapper layer.
-  That crashed Framer's canvas the instant the property was assigned —
-  before any of this file's own code even ran. This project has hit
-  that exact class of bug before: see `TutorialOverlay.tsx`'s own top
-  comment on why its arrow is hand-built SVG rather than an embedded
-  ComponentInstance, and this repo's git history (deleted
-  `OverlayPortal.tsx` / `OverlayOverride.tsx`) — Framer's lazy-loading /
-  Suspense machinery for a component referenced that way isn't reliably
-  available outside Framer's own normal render tree. Rewriting this as
-  an Override attached to the real layer directly — the same safe
-  mechanism `TutorialTargets.tsx` uses — sidesteps the whole class of
-  problem rather than working around it.
+  Two earlier, now-abandoned versions of this same job, kept here as a
+  record of what NOT to repeat: a Code Component taking the custom
+  Frame as a `ControlType.ComponentInstance` property on a separate
+  wrapper layer (crashed Framer's canvas the instant the property was
+  assigned, before any of that file's own code even ran — this project
+  has hit that exact class of bug before, see `TutorialOverlay.tsx`'s
+  own top comment on why its arrow is hand-built SVG rather than an
+  embedded ComponentInstance, and this repo's git history — deleted
+  `OverlayPortal.tsx` / `OverlayOverride.tsx`); then a wrap-the-component
+  Override (`withCongratsGate`, attached directly to the real layer,
+  avoiding the crash) that fixed that specific bug but still re-rendered
+  the whole Frame through `<Component {...props} />`, adding an
+  unnecessary layer of indirection this file's plain props-patch
+  approach doesn't need at all.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without
