@@ -326,7 +326,16 @@ export function subscribePageStep(groupId: string, onChange: () => void) {
         pageStepListeners.set(groupId, new Set())
     const listeners = pageStepListeners.get(groupId)!
     listeners.add(onChange)
-    return () => listeners.delete(onChange)
+    // Block body, not `() => listeners.delete(onChange)` — Set.delete()
+    // returns boolean, and a useEffect cleanup must return exactly void.
+    // An inline arrow function literal returned directly from an effect
+    // gets a TS carve-out that voids a non-void expression automatically;
+    // a function value handed back from elsewhere (like this one, used
+    // as `return subscribePageStep(...)` in an effect) does not, and
+    // fails type-checking wherever it's imported and used that way.
+    return () => {
+        listeners.delete(onChange)
+    }
 }
 
 // Resolves a scrollContainerTarget id (tagged via TutorialTargets.tsx,
