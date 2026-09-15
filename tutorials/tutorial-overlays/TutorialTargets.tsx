@@ -197,17 +197,25 @@ export function CardAlertsToggleTarget3(
     return withTutorialTarget("card-alerts-toggle-3")(Component)
 }
 
-// Card Alerts Tutorial Page "Save" button — unlike CardAlertsToggleTarget1
-// /2/3 above, this one is meant to stack ALONGSIDE the Save button's
-// existing functional override (withCardAlertsSaveTutorial from
-// card-controls/card-alerts/CardAlertsSave.tsx), not replace it: apply
-// both Code Overrides to the same layer. withTutorialTarget only adds
-// the data-tutorial-target attribute — it doesn't touch style or
-// onClick, so it can't interfere with withCardAlertsSaveTutorial's own
-// enabled styling/navigation the way reusing withCardAlertsToggleReportN
-// would have for the toggles.
+// Card Alerts Tutorial Page "Save" button — Framer doesn't allow
+// stacking two Code Overrides on one layer, so this can't go directly
+// on the Save button alongside its own withCardAlertsSaveTutorial
+// (from card-controls/card-alerts/CardAlertsSave.tsx). It goes on a
+// separate, empty, absolutely-positioned marker frame stacked ON TOP
+// of the real Save button instead — same category as
+// TravelStart/TravelEnd/TravelDestinations/TravelSave above, so this
+// uses withTutorialMarker (forces pointer-events:none), not the plain
+// withTutorialTarget CardAlertsToggleTarget1/2/3 use. Getting this
+// wrong is exactly the bug those exports' own comment warns about:
+// without pointer-events:none, the marker frame itself receives every
+// tap (the browser resolves a click via hit-testing at that point,
+// TutorialOverlay's own click-blocking only checks the hole's
+// coordinates, it never un-does the browser already having handed the
+// event to whichever element is visually on top) and the real Save
+// button underneath never sees the tap at all — which also means its
+// onClick, and therefore setSavingOverlayVisible(true), never fires.
 export function CardAlertsSaveTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withTutorialTarget("card-alerts-save")(Component)
+    return withTutorialMarker("card-alerts-save")(Component)
 }
