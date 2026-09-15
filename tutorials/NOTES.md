@@ -28,10 +28,11 @@ anywhere else on the page.
 - `PageStepState.tsx` — the shared same-page step counter
   `TutorialOverlay.tsx`'s own steps hand off between themselves, pulled
   out into its own small, dependency-free file so `TutorialCongrats.tsx`
-  and `TutorialCongratsGate.tsx` can read/subscribe to it without
-  importing all of `TutorialOverlay.tsx` (a large, animation-heavy file)
-  just to reach two functions — that was making Framer's canvas
-  noticeably heavy. Everything that touches the step counter, including
+  (its own `pageGroup` option — see below) can read/subscribe to it
+  without importing all of `TutorialOverlay.tsx` (a large,
+  animation-heavy file) just to reach two functions — that was making
+  Framer's canvas noticeably heavy. Everything that touches the step
+  counter, including
   `TutorialOverlay.tsx` itself, imports from here now.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
@@ -59,18 +60,25 @@ anywhere else on the page.
   can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
   instead of waiting for the exit button tap. See the file's own
   top-of-file comment for the exact wiring.
-- `TutorialCongratsGate.tsx` — same auto-show/auto-redirect timing as
-  `TutorialCongrats.tsx` above, but for a page whose finish screen is a
-  custom-built Frame (e.g. a third-party confetti component plus a
-  keyframe pulse, assembled on the canvas) instead of that file's own
-  built-in look. Takes the custom Frame as a `ControlType.ComponentInstance`
-  ("Congrats content") and only mounts it once the shared `pageGroup`
-  step counter reaches `showAtStep` — a full mount, not a CSS visibility
-  toggle, so anything inside keyed to its own mount/visibility (a
-  confetti burst that fires itself on load, e.g.
-  https://framer.university/resources/confetti-component-for-framer)
-  fires fresh at the right moment. See the file's own top-of-file
-  comment for the exact wiring.
+- `TutorialCongratsGate.tsx` — for a DEDICATED congrats page whose
+  finish screen is a custom-built Frame (e.g. a third-party confetti
+  component plus a keyframe pulse, assembled on the canvas) instead of
+  `TutorialCongrats.tsx`'s own built-in look. Takes the custom Frame as
+  a `ControlType.ComponentInstance` ("Congrats content"), auto-redirects
+  to `exitLink` after `autoRedirectAfterSeconds`, and draws an optional
+  "X" button (`showCloseButton`) to skip straight to `exitLink`. Getting
+  the user TO this page is the tutorial step's own job, not this
+  component's — a `TutorialOverlay.tsx` step already does real page
+  navigation (a tap on its real target, or its own
+  `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
+  this, then move on" beat pointed at this page's path); no
+  `pageGroup`/step coordination is needed here, since arriving at the
+  page IS the trigger. (An earlier revision of this file gated on the
+  same in-page `pageGroup` step counter as `TutorialCongrats.tsx`
+  below, for showing a congrats overlay ON the same page as the step
+  instead of navigating to a separate one — dropped once the page
+  moved to this dedicated-page approach.) See the file's own
+  top-of-file comment for the exact wiring.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without
