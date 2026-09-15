@@ -51,6 +51,18 @@ anywhere else on the page.
   can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
   instead of waiting for the exit button tap. See the file's own
   top-of-file comment for the exact wiring.
+- `TutorialCongratsGate.tsx` — same auto-show/auto-redirect timing as
+  `TutorialCongrats.tsx` above, but for a page whose finish screen is a
+  custom-built Frame (e.g. a third-party confetti component plus a
+  keyframe pulse, assembled on the canvas) instead of that file's own
+  built-in look. Takes the custom Frame as a `ControlType.ComponentInstance`
+  ("Congrats content") and only mounts it once the shared `pageGroup`
+  step counter reaches `showAtStep` — a full mount, not a CSS visibility
+  toggle, so anything inside keyed to its own mount/visibility (a
+  confetti burst that fires itself on load, e.g.
+  https://framer.university/resources/confetti-component-for-framer)
+  fires fresh at the right moment. See the file's own top-of-file
+  comment for the exact wiring.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without

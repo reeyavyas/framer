@@ -44,6 +44,7 @@ tutorials/               The tutorial system
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongrats.tsx       Full-screen "you did it" finish screen for a tutorial
+    TutorialCongratsGate.tsx   Same auto-show/redirect timing, for a custom-built congrats Frame
   NOTES.md
 ```
 
