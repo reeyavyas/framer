@@ -105,8 +105,22 @@ export default function TutorialCongratsGate(props: Props) {
     if (!isActive) return null
 
     return (
-        <div style={{ position: "fixed", inset: 0, zIndex: 90000 }}>
-            {content}
+        <div
+            style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 90000,
+                overflow: "hidden",
+            }}
+        >
+            {/* Forces "Congrats content" to fill this wrapper even if
+                that Frame's own Size is set to Fixed on the canvas —
+                without this, a fixed-size Frame keeps its own pixel
+                dimensions instead of stretching to the viewport and
+                spills past this wrapper's edges. Still fix the source
+                Frame's Size to Fill in Framer's own properties panel;
+                this is a safety net, not a substitute for that. */}
+            <div style={{ width: "100%", height: "100%" }}>{content}</div>
         </div>
     )
 }
