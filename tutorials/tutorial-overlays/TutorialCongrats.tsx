@@ -181,6 +181,7 @@ TutorialCongrats.defaultProps = {
     message: "You finished this tutorial.",
     accentColor: "rgba(5,147,144,1)",
     exitLabel: "Done",
+    exitLink: "/tutorials",
     autoRedirectAfterSeconds: 0,
 }
 
@@ -234,6 +235,7 @@ addPropertyControls(TutorialCongrats, {
     exitLink: {
         type: ControlType.Link,
         title: "Exit link",
+        defaultValue: "/tutorials",
     },
     autoRedirectAfterSeconds: {
         type: ControlType.Number,

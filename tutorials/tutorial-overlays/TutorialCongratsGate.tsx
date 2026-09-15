@@ -116,6 +116,7 @@ TutorialCongratsGate.defaultProps = {
     pageGroup: "",
     showAtStep: 2,
     autoRedirectAfterSeconds: 0,
+    exitLink: "/tutorials",
 }
 
 addPropertyControls(TutorialCongratsGate, {
@@ -155,6 +156,7 @@ addPropertyControls(TutorialCongratsGate, {
     exitLink: {
         type: ControlType.Link,
         title: "Redirect link",
+        defaultValue: "/tutorials",
         hidden: (props) => !props.autoRedirectAfterSeconds,
     },
 })
