@@ -196,3 +196,18 @@ export function CardAlertsToggleTarget3(
 ): ComponentType<any> {
     return withTutorialTarget("card-alerts-toggle-3")(Component)
 }
+
+// Card Alerts Tutorial Page "Save" button — unlike CardAlertsToggleTarget1
+// /2/3 above, this one is meant to stack ALONGSIDE the Save button's
+// existing functional override (withCardAlertsSaveTutorial from
+// card-controls/card-alerts/CardAlertsSave.tsx), not replace it: apply
+// both Code Overrides to the same layer. withTutorialTarget only adds
+// the data-tutorial-target attribute — it doesn't touch style or
+// onClick, so it can't interfere with withCardAlertsSaveTutorial's own
+// enabled styling/navigation the way reusing withCardAlertsToggleReportN
+// would have for the toggles.
+export function CardAlertsSaveTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-alerts-save")(Component)
+}
