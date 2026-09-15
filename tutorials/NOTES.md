@@ -45,7 +45,12 @@ anywhere else on the page.
   `card-controls-tutorial/NOTES.md`
   for how these three are used.
 - `TutorialCongrats.tsx` — full-screen finish screen for the end of a
-  tutorial
+  tutorial. Can show itself automatically once a page's real step(s)
+  are done (share `pageGroup` with the page's `TutorialOverlay`
+  instance(s) and set `showAtStep` to one past the last real step) and
+  can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
+  instead of waiting for the exit button tap. See the file's own
+  top-of-file comment for the exact wiring.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without

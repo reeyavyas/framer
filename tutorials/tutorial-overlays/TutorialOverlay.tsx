@@ -307,7 +307,12 @@ function cardWrapperStyle(
 const pageStepState = new Map<string, number>()
 const pageStepListeners = new Map<string, Set<() => void>>()
 
-function getPageStep(groupId: string): number {
+// Exported so TutorialCongrats.tsx (a separate file/module) can read and
+// subscribe to the same page group a page's TutorialOverlay step(s) use —
+// lets a congrats screen show itself automatically once the step(s)
+// before it advance past, with no per-page wiring beyond a shared
+// `pageGroup` string. See TutorialCongrats.tsx's `pageGroup`/`showAtStep`.
+export function getPageStep(groupId: string): number {
     return pageStepState.get(groupId) ?? 1
 }
 
@@ -316,7 +321,7 @@ function setPageStep(groupId: string, step: number) {
     pageStepListeners.get(groupId)?.forEach((fn) => fn())
 }
 
-function subscribePageStep(groupId: string, onChange: () => void) {
+export function subscribePageStep(groupId: string, onChange: () => void) {
     if (!pageStepListeners.has(groupId))
         pageStepListeners.set(groupId, new Set())
     const listeners = pageStepListeners.get(groupId)!
