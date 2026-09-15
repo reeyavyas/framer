@@ -413,3 +413,14 @@ export function VirtualScrollCardAlertsContent(
 ): ComponentType<any> {
     return withVirtualScroll("card-alerts-scroll")(Component)
 }
+
+// Card Controls Tutorial Page 1 ("/card-controls-tutorial/card-controls-1")
+// "Scrollable Content" — its own id, same reasoning as
+// VirtualScrollCardAlertsContent above: never reuse another page's id
+// for this, or the two containers race for one registry slot and
+// whichever mounts last silently steals the lock from the other.
+export function VirtualScrollCardControls1Content(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withVirtualScroll("card-controls-1-scroll")(Component)
+}
