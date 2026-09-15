@@ -379,7 +379,33 @@ function withVirtualScroll(id: string) {
                         WebkitOverflowScrolling: "auto",
                     }}
                 >
-                    <motion.div ref={contentRef} style={{ y }}>
+                    <motion.div
+                        ref={contentRef}
+                        style={{
+                            // Mirrors the container's own layout props
+                            // (Framer Stacks set display/flexDirection/
+                            // gap/alignItems directly on the frame) onto
+                            // this wrapper. Flex context only reaches a
+                            // container's DIRECT children — once this
+                            // div sits between the Stack and its rows,
+                            // the rows are no longer direct children of
+                            // the flex frame, so any child relying on
+                            // Framer's "Fill" sizing (itself implemented
+                            // via flex) has nothing to size against and
+                            // can collapse to zero. Re-declaring the
+                            // same flex properties here keeps the rows'
+                            // sizing context intact instead of just
+                            // adding an invisible non-flex layer between
+                            // them and their real parent.
+                            display: props.style?.display,
+                            flexDirection: props.style?.flexDirection,
+                            alignItems: props.style?.alignItems,
+                            justifyContent: props.style?.justifyContent,
+                            gap: props.style?.gap,
+                            width: "100%",
+                            y,
+                        }}
+                    >
                         {props.children}
                     </motion.div>
                 </Component>

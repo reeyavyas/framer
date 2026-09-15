@@ -203,13 +203,34 @@ export function withCardAlertsSavingOverlay(
 ): ComponentType<any> {
     return function CardAlertsSavingOverlay(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+        // Local state, not a direct read of the module-level
+        // savingOverlayVisible flag — that flag only ever flips true
+        // from a real Save tap, but nothing ever resets it back to
+        // false on a fresh mount of THIS component, so it renders
+        // whatever value happens to already be sitting in module state
+        // at mount time. That's fine the first time a page's JS
+        // evaluates from scratch (a hard navigation always starts it
+        // at its `let ... = false` default), but Framer's internal
+        // client-side routing between pages can keep this module alive
+        // across a soft navigation, so a flag left true by an earlier
+        // Save tap (on this page or a shared instance of this same
+        // override elsewhere) was showing up as "already visible" the
+        // instant this component next mounted, with no tap involved.
+        // Starting local state at false unconditionally, then syncing
+        // FROM the module flag only in response to real changes below,
+        // means a mount can never inherit stale visibility.
+        const [visible, setVisible] = React.useState(false)
 
         React.useEffect(() => {
             if (isCanvas) return
-            savingOverlayListeners.add(forceUpdate)
+            savingOverlayVisible = false
+            setVisible(false)
+            function onChange() {
+                setVisible(savingOverlayVisible)
+            }
+            savingOverlayListeners.add(onChange)
             return () => {
-                savingOverlayListeners.delete(forceUpdate)
+                savingOverlayListeners.delete(onChange)
             }
         }, [isCanvas])
 
@@ -220,11 +241,9 @@ export function withCardAlertsSavingOverlay(
                 {...props}
                 style={{
                     ...props.style,
-                    opacity: savingOverlayVisible ? 1 : 0,
-                    pointerEvents: savingOverlayVisible ? "auto" : "none",
-                    display: savingOverlayVisible
-                        ? props.style?.display
-                        : "none",
+                    opacity: visible ? 1 : 0,
+                    pointerEvents: visible ? "auto" : "none",
+                    display: visible ? props.style?.display : "none",
                 }}
             />
         )
