@@ -11,26 +11,32 @@ import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
  *
  *  - withCardAlertsSave / withCardAlertsSaveTutorial — apply one of
  *    these to a Save button's own frame, depending on which Set Card
- *    Alerts page it's on: the base page's Save uses withCardAlertsSave
- *    (navigates to CARD_CONTROLS_LINK), the tutorial-overlay duplicate
- *    page's Save uses withCardAlertsSaveTutorial (navigates to
- *    CARD_CONTROLS_TUTORIAL_LINK) — everything else about the two is
- *    identical, so both are thin wrappers around the shared
- *    renderCardAlertsSave below rather than two copies of the same
- *    component. Both are plain top-level `function` exports rather
- *    than a factory-produced `const` — Framer's Code Override picker
- *    only lists exports shaped exactly like
- *    `function name(Component) {...}` at the top level of the file; a
- *    `const` assigned from a factory call's return value (what an
- *    earlier version of this file did) doesn't get recognized and
- *    silently disappears from the dropdown. Each reads
- *    CardAlertsToggleReport's shared on-count (is any toggle on?) to
- *    switch between enabled/disabled visuals, the same isValid-driven
- *    styling SetTravelNotice.tsx uses for its own Save link. Tapping it
- *    while enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit
- *    the constant directly — same convention as TravelNoticeToast.tsx's
+ *    Alerts page it's on. withCardAlertsSave (base page, navigates to
+ *    CARD_CONTROLS_LINK) reads CardAlertsToggleReport's shared on-count
+ *    (is any toggle on?) to switch between enabled/disabled visuals,
+ *    the same isValid-driven styling SetTravelNotice.tsx uses for its
+ *    own Save link — real validation, since the base page's toggles
+ *    really do call into that shared on-count via
+ *    withCardAlertsToggleReportN. withCardAlertsSaveTutorial (tutorial
+ *    page, navigates to CARD_CONTROLS_TUTORIAL_LINK) is NOT a thin
+ *    wrapper around the same body: the tutorial page's 3 tappable
+ *    toggles deliberately don't use withCardAlertsToggleReportN (see
+ *    tutorials/card-controls-tutorial/NOTES.md, "Card Alerts flow"),
+ *    so anyToggleOn() can never go true there — gating on it would
+ *    leave Save permanently muted. It renders unconditionally enabled
+ *    instead, same reasoning as SetTravelNoticeTutorial.tsx's frozen
+ *    Save: nothing real to validate on a walkthrough step. Both are
+ *    plain top-level `function` exports rather than a factory-produced
+ *    `const` — Framer's Code Override picker only lists exports shaped
+ *    exactly like `function name(Component) {...}` at the top level of
+ *    the file; a `const` assigned from a factory call's return value
+ *    (what an earlier version of this file did) doesn't get recognized
+ *    and silently disappears from the dropdown. Tapping either while
+ *    enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit the
+ *    constant directly — same convention as TravelNoticeToast.tsx's
  *    VISIBLE_MS/FADE_MS), sets the one-shot toast flag, then navigates
- *    to its own destination. Tapping while disabled does nothing.
+ *    to its own destination. Tapping withCardAlertsSave while disabled
+ *    does nothing.
  *
  *    IMPORTANT — remove any native Link set on either Save layer in
  *    Framer's Properties panel. A native Link navigates on tap through
@@ -192,10 +198,49 @@ export function withCardAlertsSave(
     return renderCardAlertsSave(Component, CARD_CONTROLS_LINK)
 }
 
+// NOT renderCardAlertsSave — that body gates `enabled` on anyToggleOn(),
+// which only ever changes inside handleToggleTap, called exclusively by
+// the 20 numbered withCardAlertsToggleReportN overrides. The tutorial
+// page's 3 tappable toggles deliberately have that override removed and
+// replaced with TutorialTargets.tsx's CardAlertsToggleTarget1/2/3 (see
+// tutorials/card-controls-tutorial/NOTES.md, "Card Alerts flow") so
+// tapping them doesn't contaminate the real page's shared on-count —
+// but that also means they never touch onCount at all, so anyToggleOn()
+// can never go true here and Save stayed muted forever, regardless of
+// how many switches were tapped. This is a frozen walkthrough step, the
+// same reasoning SetTravelNoticeTutorial.tsx's Save already used: no
+// real "is anything on?" state to validate, so just render enabled.
 export function withCardAlertsSaveTutorial(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return renderCardAlertsSave(Component, CARD_CONTROLS_TUTORIAL_LINK)
+    return function CardAlertsSaveTutorial(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        if (isCanvas) return <Component {...props} />
+
+        return (
+            <Component
+                {...props}
+                style={{
+                    ...props.style,
+                    background: ENABLED_BACKGROUND,
+                    color: ENABLED_TEXT,
+                    cursor: "pointer",
+                }}
+                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                    e.preventDefault()
+                    setSavingOverlayVisible(true)
+                    scrollCardAlertsToTop()
+                    window.setTimeout(() => {
+                        window.sessionStorage.setItem(
+                            STORAGE_TOAST_FLAG_KEY,
+                            "1"
+                        )
+                        window.location.href = CARD_CONTROLS_TUTORIAL_LINK
+                    }, SAVE_DELAY_MS)
+                }}
+            />
+        )
+    }
 }
 
 export function withCardAlertsSavingOverlay(

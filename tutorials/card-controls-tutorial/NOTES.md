@@ -90,6 +90,13 @@ switch already animates its own on/off visual on tap with no override
 involved, and — same call `SetTravelNoticeTutorial.tsx`'s Save already
 made — a frozen walkthrough's Save button can just be hardcoded enabled
 rather than replicating real "is anything on?" validation.
+`withCardAlertsSaveTutorial` in `CardAlertsSave.tsx` implements this —
+it's its own render body, not a thin wrapper sharing the base page's
+`anyToggleOn()`-gated one. It wasn't always: an earlier version had it
+sharing that body, which left the tutorial Save permanently muted since
+none of these three toggles ever touch `onCount` — see the header
+comment on `withCardAlertsSaveTutorial` for the full failure chain if
+this regresses again.
 
 So, per toggle the tutorial wants the user to tap:
 
