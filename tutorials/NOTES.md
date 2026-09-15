@@ -73,37 +73,36 @@ anywhere else on the page.
   can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
   instead of waiting for the exit button tap. See the file's own
   top-of-file comment for the exact wiring.
-- `TutorialCongratsGate.tsx` — for a DEDICATED congrats page whose
-  finish screen is a custom-built Frame (e.g. a third-party confetti
-  component plus a keyframe pulse, assembled on the canvas) instead of
-  `TutorialCongrats.tsx`'s own built-in look. Takes the custom Frame as
-  a `ControlType.ComponentInstance` ("Congrats content"), auto-redirects
-  to `exitLink` after `autoRedirectAfterSeconds`, and draws an optional
-  "X" button (`showCloseButton`) to skip straight to `exitLink`. Getting
-  the user TO this page is the tutorial step's own job, not this
-  component's — a `TutorialOverlay.tsx` step already does real page
+- `TutorialCongratsGate.tsx` — an OVERRIDE (`withCongratsGate`, not a
+  Code Component) for a DEDICATED congrats page whose finish screen is
+  a custom-built Frame (e.g. a third-party confetti component plus a
+  keyframe pulse, assembled on the canvas) instead of
+  `TutorialCongrats.tsx`'s own built-in look. Attach it directly to that
+  same Frame's own Code Override slot — do not create a separate layer
+  referencing it. It draws an "X" button that jumps to a redirect link,
+  and auto-redirects there after a delay; both are plain constants at
+  the top of the file (no property panel — Overrides don't get one).
+  Getting the user TO this page is the tutorial step's own job, not
+  this override's — a `TutorialOverlay.tsx` step already does real page
   navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
   this, then move on" beat pointed at this page's path); no
   `pageGroup`/step coordination is needed here, since arriving at the
-  page IS the trigger. (An earlier revision of this file gated on the
-  same in-page `pageGroup` step counter as `TutorialCongrats.tsx`
-  below, for showing a congrats overlay ON the same page as the step
-  instead of navigating to a separate one — dropped once the page
-  moved to this dedicated-page approach.) See the file's own
-  top-of-file comment for the exact wiring.
+  page IS the trigger.
 
-  Two canvas-heaviness fixes here specifically: the auto-redirect timer
-  checks `isCanvas` first (it used to fire `window.location.href`
-  straight out of Framer's own editor five seconds after the layer
-  mounted — the defaults are active/5s/`/tutorials`), and the canvas
-  view no longer live-renders "Congrats content" at all — it's a plain
-  placeholder box now, since a real animation (a confetti particle
-  simulation, in the case this was built for) running continuously at
-  design time is expensive, and likely wasn't even visibly firing there
-  in the first place (a "plays when visible" effect's own visibility
-  check often doesn't consider Framer's canvas "visible" the way a real
-  browser viewport is).
+  This was originally a Code Component taking the custom Frame as a
+  `ControlType.ComponentInstance` property on a separate wrapper layer.
+  That crashed Framer's canvas the instant the property was assigned —
+  before any of this file's own code even ran. This project has hit
+  that exact class of bug before: see `TutorialOverlay.tsx`'s own top
+  comment on why its arrow is hand-built SVG rather than an embedded
+  ComponentInstance, and this repo's git history (deleted
+  `OverlayPortal.tsx` / `OverlayOverride.tsx`) — Framer's lazy-loading /
+  Suspense machinery for a component referenced that way isn't reliably
+  available outside Framer's own normal render tree. Rewriting this as
+  an Override attached to the real layer directly — the same safe
+  mechanism `TutorialTargets.tsx` uses — sidesteps the whole class of
+  problem rather than working around it.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance one-way
   scroll lock (native scroll + a JS veto can't give that without
