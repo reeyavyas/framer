@@ -77,6 +77,16 @@ anywhere else on the page.
   `nextButtonFont`'s default is Proxima Nova Semibold at 36px/1.2 line
   height, baked in as the default rather than something to reset on
   every instance — the Font control still lets a given step override it.
+  Its `defaultValue.fontFamily`/`fontWeight` alone weren't enough to
+  make the control actually default to Proxima Nova — the sibling
+  `defaultFontType: "sans-serif"` (used on every other Font control in
+  this file, but only ever alongside a `defaultValue` that has NO
+  explicit `fontFamily` of its own) appears to take priority over an
+  explicit `fontFamily` when both are present, so it's left off this
+  control specifically. Proxima Nova is registered as one family with a
+  Semibold weight variant, not a separate "Proxima Nova Semibold"
+  family — confirmed against the live Framer project's font picker,
+  not assumed.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,

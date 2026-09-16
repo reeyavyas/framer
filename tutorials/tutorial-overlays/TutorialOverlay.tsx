@@ -1748,7 +1748,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Font,
         title: "Next button font",
         controls: "extended",
-        defaultFontType: "sans-serif",
         defaultValue: {
             fontFamily: "Proxima Nova",
             fontWeight: 600,
