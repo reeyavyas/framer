@@ -96,21 +96,12 @@ export function TravelScroll(
     return withTutorialTarget("travel-scroll")(Component)
 }
 
-// Card Alerts Tutorial Page Scrollable Content has no plain
-// withTutorialTarget export here (unlike TravelScroll above) — this
-// page's Scrollable Content frame needs VirtualScroll.tsx's
-// VirtualScrollCardAlertsContent instead, for the toggle steps'
-// freeze behavior. A CardAlertsScroll export used to exist for
-// this same id ("card-alerts-scroll") but Framer doesn't allow
-// stacking two Code Overrides on one layer, and TutorialOverlay's
-// scroll functions (scrollAdvancesStep, freezeScrollWhileActive, etc.)
-// already check getVirtualScroll(scrollContainerTarget) FIRST — a pure
-// registry lookup keyed by the same id string, independent of any DOM
-// attribute — before ever falling back to
-// document.querySelector('[data-tutorial-target="..."]'). So once
-// VirtualScrollCardAlertsContent is applied and scrollContainerTarget
-// is set to "card-alerts-scroll", the fallback this export existed for
-// never runs; it was dead weight on a page that can't apply it anyway.
+//Card Controls Page "Set Card Alerts"
+export function SetCardAlerts(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("set-card-alerts")(Component)
+}
 
 // Marker layers for SetTravelNoticeTutorial.tsx's (and potentially
 // SetTravelNotice.tsx's) individual fields — Start Date, End Date,
@@ -143,6 +134,13 @@ export function TravelDestinations(
 //Travel Notice Page "Save" Button
 export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-save")(Component)
+}
+
+//Card Controls 2 Page that shows TravelNoticeSectionTutorial component
+export function TravelNoticeShown(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("travel-notice-shown")(Component)
 }
 
 // Card Alerts Tutorial page — one export per toggle layer the tutorial

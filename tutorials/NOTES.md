@@ -46,22 +46,20 @@ anywhere else on the page.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
-  `CardToggle`, `TravelNotice`, `TravelScroll`, `TravelStart`,
-  `TravelEnd`, `TravelDestinations`, `TravelSave`), added directly in
-  Framer's own code editor and pulled back into this repo's copy — plus
-  `CardAlertsToggleTarget1`/`2`/`3` and `CardAlertsSaveTarget` (see
-  `card-controls-tutorial/NOTES.md`, "Card Alerts flow"), authored here
-  first and not yet applied to any layer in the live Framer project —
-  verify against the live Framer project before trusting this as the
-  source of truth either direction. The four
-  field-marker exports (`TravelStart`/`TravelEnd`/`TravelDestinations`/
-  `TravelSave`) go through a separate `withTutorialMarker` helper that
-  forces `pointer-events: none`, since each sits on top of a real field
-  inside `SetTravelNoticeTutorial.tsx`'s own render rather than being a
-  separately tappable layer — without it, the marker itself would
-  swallow the tap meant for the real field/button underneath. See
-  `card-controls-tutorial/NOTES.md`
-  for how these three are used.
+  `CardToggle`, `TravelNotice`, `TravelScroll`, `SetCardAlerts`,
+  `TravelStart`, `TravelEnd`, `TravelDestinations`, `TravelSave`,
+  `TravelNoticeShown`, `CardAlertsToggleTarget1`/`2`/`3`,
+  `CardAlertsSaveTarget`), added directly in Framer's own code editor
+  and pulled back into this repo's copy — verify against the live
+  Framer project before trusting this as the source of truth either
+  direction. The marker exports (`TravelStart`/`TravelEnd`/
+  `TravelDestinations`/`TravelSave`/`TravelNoticeShown`/
+  `CardAlertsSaveTarget`) go through a separate `withTutorialMarker`
+  helper that forces `pointer-events: none`, since each sits on top of
+  a real field/button rather than being a separately tappable layer —
+  without it, the marker itself would swallow the tap meant for the
+  real element underneath. See `card-controls-tutorial/NOTES.md` for
+  how the field markers and Card Alerts toggles/save are used.
 - `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
   shape as `FingerprintDelayedNavigation`, a plain function returning a
   props patch — not the wrap-the-whole-component style tried twice
