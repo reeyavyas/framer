@@ -1474,8 +1474,8 @@ TutorialOverlay.defaultProps = {
     nextButtonTextColor: "#11232D",
     nextButtonBackgroundColor: "#FFCC40",
     nextButtonFont: {
-        fontFamily: "Proxima Nova",
-        fontWeight: 600,
+        fontFamily: "Area Normal",
+        fontWeight: 700,
         fontSize: 36,
         lineHeight: 1.2,
     },
@@ -1748,9 +1748,19 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Font,
         title: "Next button font",
         controls: "extended",
+        // A custom/uploaded project font (Area Normal, like Proxima Nova
+        // before it) doesn't reliably pre-select from a fontFamily string
+        // in code the way a Google Font would — Framer needs to link the
+        // actual font asset, which so far has only worked by picking it
+        // once by hand in this control. defaultFontType is kept so this
+        // control shows a real default (correctly sized/weighted, just
+        // not yet the right family) rather than a blank field either way;
+        // fontWeight/fontSize/lineHeight below still apply regardless of
+        // which family ends up selected.
+        defaultFontType: "sans-serif",
         defaultValue: {
-            fontFamily: "Proxima Nova",
-            fontWeight: 600,
+            fontFamily: "Area Normal",
+            fontWeight: 700,
             fontSize: 36,
             lineHeight: 1.2,
         },

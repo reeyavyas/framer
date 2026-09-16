@@ -74,19 +74,23 @@ anywhere else on the page.
   element it's about, not the wrapper's flex `gap` (which would apply
   uniformly to every pair of children in the wrapper, not just this one
   relationship).
-  `nextButtonFont`'s default is Proxima Nova Semibold at 36px/1.2 line
+  `nextButtonFont`'s default is Area Normal Bold at 36px/1.2 line
   height, baked in as the default rather than something to reset on
   every instance — the Font control still lets a given step override it.
-  Its `defaultValue.fontFamily`/`fontWeight` alone weren't enough to
-  make the control actually default to Proxima Nova — the sibling
-  `defaultFontType: "sans-serif"` (used on every other Font control in
-  this file, but only ever alongside a `defaultValue` that has NO
-  explicit `fontFamily` of its own) appears to take priority over an
-  explicit `fontFamily` when both are present, so it's left off this
-  control specifically. Proxima Nova is registered as one family with a
-  Semibold weight variant, not a separate "Proxima Nova Semibold"
-  family — confirmed against the live Framer project's font picker,
-  not assumed.
+  Getting a specific family to actually take as the default fought back
+  at every combination tried: `defaultValue.fontFamily` set to Proxima
+  Nova alongside `defaultFontType: "sans-serif"` (the pattern every
+  other Font control in this file uses, but only ever with a
+  `defaultValue` that has no `fontFamily` of its own) rendered some
+  other generic font, not Proxima Nova; dropping `defaultFontType`
+  entirely left the control's font field blank instead of fixing it.
+  Likely cause: a custom/uploaded project font (commercial, not one of
+  Framer's built-in Google Fonts) can't be pre-selected purely from a
+  family-name string in code — Framer needs to link the actual font
+  asset, which so far has only worked by picking it once by hand in the
+  panel. `defaultFontType` is kept either way so the control shows a
+  real, correctly sized/weighted default rather than a blank field
+  regardless of which family ends up selected.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
