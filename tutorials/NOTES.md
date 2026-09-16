@@ -88,7 +88,7 @@ anywhere else on the page.
   string — that's what finally worked for the family itself.
 
   Font size is a SEPARATE `nextButtonFontSize` (`ControlType.Number`,
-  default 36) rather than living inside `nextButtonFont`'s own size
+  default 34) rather than living inside `nextButtonFont`'s own size
   sub-field — that sub-field didn't reliably hold onto a set value once
   a real font family actually resolved (kept reverting to some other
   size on its own, even after the family itself was fixed). Applied in
@@ -154,6 +154,11 @@ anywhere else on the page.
   `"center"` (confirmed as the intended no-target default) so they
   agree, and a repo-wide sweep turned up no other Boolean/Enum/Number
   control with this same defaultProps-vs-control mismatch.
+
+  `glowDelaySeconds` (and the `glowShown` state/timer effect that only
+  existed to support it) was removed as unused — the glow now just
+  shows immediately whenever `showGlow` is on, same as it always did
+  once its delay elapsed, just without a delay to configure at all.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,

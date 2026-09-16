@@ -130,7 +130,6 @@ interface Props {
     glowVariant: "static" | "breathing" | "ripple"
     glowColor: string
     glowIntensity: number
-    glowDelaySeconds: number // 0 = as soon as the hole appears. Uncapped.
 
     showArrow: boolean
     arrowVariant: "curve" | "bounce"
@@ -454,7 +453,6 @@ export default function TutorialOverlay(props: Props) {
         glowVariant,
         glowColor,
         glowIntensity,
-        glowDelaySeconds,
         showArrow,
         arrowVariant,
         arrowColor,
@@ -481,7 +479,6 @@ export default function TutorialOverlay(props: Props) {
     const [mounted, setMounted] = React.useState(false)
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
-    const [glowShown, setGlowShown] = React.useState(false)
     const [arrowShown, setArrowShown] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
@@ -507,7 +504,6 @@ export default function TutorialOverlay(props: Props) {
     }, [pageGroup, stepNumber])
 
     React.useEffect(() => setMounted(true), [])
-    React.useEffect(() => setGlowShown(false), [target])
     React.useEffect(() => setArrowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
@@ -570,16 +566,6 @@ export default function TutorialOverlay(props: Props) {
             cancelAnimationFrame(rafId)
         }
     }, [isCanvas, active, isMyTurn, target])
-
-    // Timer-driven glow reveal — independent of any click, uncapped delay.
-    React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !showGlow) return
-        const t = setTimeout(
-            () => setGlowShown(true),
-            Math.max(glowDelaySeconds, 0) * 1000
-        )
-        return () => clearTimeout(t)
-    }, [isCanvas, active, isMyTurn, showGlow, glowDelaySeconds])
 
     // Timer-driven arrow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
@@ -1268,7 +1254,7 @@ export default function TutorialOverlay(props: Props) {
                 dimmed area around it. Ripple's expanding rings are left
                 outward-growing on purpose — that's a different "ping"
                 idiom, not the glow being asked about here. */}
-            {showGlow && glowShown && rect && (
+            {showGlow && rect && (
                 <>
                     <style>{`
                         @keyframes tutorial-glow-breathe {
@@ -1524,12 +1510,11 @@ TutorialOverlay.defaultProps = {
         fontWeight: 700,
         lineHeight: 1.2,
     },
-    nextButtonFontSize: 36,
+    nextButtonFontSize: 34,
     showGlow: true,
     glowVariant: "breathing",
     glowColor: "rgba(5,147,144,1)",
     glowIntensity: 2,
-    glowDelaySeconds: 0,
     showArrow: false,
     arrowVariant: "curve",
     arrowColor: "rgba(5,147,144,1)",
@@ -1816,7 +1801,7 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Number,
         title: "Next button font size",
         min: 1,
-        defaultValue: 36,
+        defaultValue: 34,
         hidden: (props) => !props.showNextButton,
     },
     nextButtonLink: {
@@ -1852,14 +1837,6 @@ addPropertyControls(TutorialOverlay, {
         max: 5,
         step: 1,
         defaultValue: 2,
-        hidden: (props) => !props.showGlow,
-    },
-    glowDelaySeconds: {
-        type: ControlType.Number,
-        title: "Glow delay (sec)",
-        min: 0,
-        step: 0.1,
-        defaultValue: 0,
         hidden: (props) => !props.showGlow,
     },
     showArrow: {
