@@ -1481,7 +1481,7 @@ TutorialOverlay.defaultProps = {
     cardBodyColor: "rgba(255,255,255,0.8)",
     cardBodyFont: { fontSize: 30 },
     cardAnchorX: "center",
-    cardAnchorY: "top",
+    cardAnchorY: "center",
     cardOffsetX: 0,
     cardOffsetY: 0,
     showProgressBar: false,
@@ -1699,7 +1699,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Card position Y",
         options: ["top", "center", "bottom"],
         optionTitles: ["Above target", "Centered on target", "Below target"],
-        defaultValue: "bottom",
+        defaultValue: "center",
     },
     cardOffsetX: {
         type: ControlType.Number,

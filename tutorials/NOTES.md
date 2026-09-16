@@ -131,6 +131,24 @@ anywhere else on the page.
   viewport as a whole. The `"right"` anchor above already avoids this
   same class of bug on purpose — see its own comment — this just hadn't
   been applied to `"center"` or the no-target case yet.
+
+  There's no Y-axis version of that same bug: `height: auto` for a
+  block element doesn't have the shrink-to-fit "available space"
+  ambiguity `width: auto` does, and the `"center"` `cardAnchorY`'s
+  `translateY(-50%)` is computed against the element's real rendered
+  height after layout, not before it — so it isn't vulnerable to the
+  same trick. A "card sits farther down than expected even at
+  cardOffsetY: 0" report traced to something else instead: `cardAnchorY`
+  had two disagreeing defaults — `TutorialOverlay.defaultProps` said
+  `"top"`, but the actual property control (the one that governs what a
+  freshly-dropped Framer instance actually gets, same lesson as
+  `nextButtonFont`'s font-resolution saga above) said `"bottom"`. At the
+  real default of `"bottom"`, `cardOffsetY: 0` correctly parked the card
+  90px above the screen's bottom edge — exactly the "bottom" anchor's
+  job, just not what was expected of a 0 offset. Both now say
+  `"center"` (confirmed as the intended no-target default) so they
+  agree, and a repo-wide sweep turned up no other Boolean/Enum/Number
+  control with this same defaultProps-vs-control mismatch.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
