@@ -95,6 +95,20 @@ anywhere else on the page.
   the button's style AFTER the `...nextButtonFont` spread so it always
   wins regardless of whatever that object's own (untrusted) `fontSize`
   might be.
+
+  `cardWrapperStyle()` positions the card two different ways depending
+  on whether a target `rect` was actually measured. With one, it's
+  target-relative: `cardAnchorX`/`cardAnchorY` anchor to the target's
+  edges (with a `CARD_TARGET_GAP` of 24px for top/bottom), and
+  `cardOffsetX`/`cardOffsetY` nudge from there. With none (`target` left
+  blank, or not found — e.g. a closing "all set" card with no hole),
+  it falls back to screen-relative: `cardAnchorY` still anchors to a
+  fixed point (100px from the top, 90px from the bottom, or vertically
+  centered), but `cardAnchorX` is now ignored — the card is always
+  horizontally centered, since there's no target to anchor left/right
+  against. `cardOffsetX`/`cardOffsetY` keep meaning the same thing in
+  both modes: a plain nudge (positive X right, positive Y down) from
+  wherever the anchor would otherwise place the card.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,

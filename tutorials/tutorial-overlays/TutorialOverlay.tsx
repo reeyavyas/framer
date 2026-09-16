@@ -298,12 +298,11 @@ function cardWrapperStyle(
         return style
     }
 
-    if (anchorX === "left") style.left = 40 + offsetX
-    else if (anchorX === "right") style.right = 40 - offsetX
-    else {
-        style.left = `calc(50% + ${offsetX}px)`
-        translateX = "-50%"
-    }
+    // No target to anchor left/right against, so cardAnchorX is ignored
+    // here and the card is always horizontally centered — cardOffsetX
+    // still nudges it left/right from that centered position.
+    style.left = `calc(50% + ${offsetX}px)`
+    translateX = "-50%"
 
     if (anchorY === "top") style.top = 100 + offsetY
     else if (anchorY === "bottom") style.bottom = 90 - offsetY
