@@ -51,15 +51,23 @@ anywhere else on the page.
   meant to always be visible; the button itself (and `exitLink`) stays.
   In their place: `showProgressBar`/`progressBarColor`/
   `progressBarTrackColor` — a linear bar that fills over
-  `nextStepAfterSeconds` (purely visual, driven by a `framer-motion`
-  `transition.duration` matching that same number, not a second timer —
-  the actual hand-off to the next step is still the existing
-  `nextStepAfterSeconds` `setTimeout` effect) — and `showNextButton`/
+  `progressBarDurationSeconds`, a derived value (computed once, just
+  before the render return) equal to `nextStepAfterSeconds` when that's
+  set, else `autoAdvanceAfterSeconds` — whichever timer is actually
+  driving this step's advance. Originally only read
+  `nextStepAfterSeconds` and was gated on `pageGroup` being set, so it
+  never appeared on a single-step page (no `pageGroup`) that
+  auto-advances to a different page via `autoAdvanceAfterSeconds` +
+  `autoAdvanceLink` instead — a real gap, not intentional scoping, since
+  from the person looking at the bar there's no difference between the
+  two timers. Purely visual either way, driven by a `framer-motion`
+  `transition.duration` matching whichever number applies, not a second
+  timer — the actual hand-off is still whichever of the two existing
+  `setTimeout` effects (`nextStepAfterSeconds`'s or
+  `autoAdvanceAfterSeconds`'s) is the one actually running. `showNextButton`/
   `nextButtonLabel`/`nextButtonTextColor`/`nextButtonBackgroundColor`/
-  `nextButtonFont` for a real tappable button inside the card. The
-  progress bar is gated on `pageGroup` being set (like every other
-  step-behavior control), since it visualizes progress toward the next
-  step in a group. The Next button isn't: it calls the same
+  `nextButtonFont` is a real tappable button inside the card, unrelated
+  to which timer (if any) is running. The Next button calls the same
   `advanceStep()` a click/scroll/timer hand-off does when
   `nextButtonLink` is blank, but when `nextButtonLink` is set it
   navigates there instead — same optional-link convention as

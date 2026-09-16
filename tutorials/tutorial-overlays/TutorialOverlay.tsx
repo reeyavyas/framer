@@ -114,7 +114,7 @@ interface Props {
     cardOffsetX: number
     cardOffsetY: number
 
-    showProgressBar: boolean // fills over nextStepAfterSeconds, so it only means anything on a timed step
+    showProgressBar: boolean // fills over nextStepAfterSeconds (same-page-group hand-off) or, if that's 0, autoAdvanceAfterSeconds (cross-page hand-off) — whichever timer is actually driving this step's advance
     progressBarColor: string
     progressBarTrackColor: string
 
@@ -841,6 +841,17 @@ export default function TutorialOverlay(props: Props) {
     if (!active) return null
     if (!isCanvas && !isMyTurn) return null
 
+    // Whichever timer is actually driving this step's advance — the
+    // same-page-group nextStepAfterSeconds, or (for a single-step page
+    // with no pageGroup at all, advancing via autoAdvanceLink instead)
+    // autoAdvanceAfterSeconds. The progress bar visualizes whichever one
+    // applies, since both are just "how long until this step moves on
+    // by itself" from the person looking at the bar's point of view.
+    const progressBarDurationSeconds =
+        nextStepAfterSeconds > 0
+            ? nextStepAfterSeconds
+            : autoAdvanceAfterSeconds
+
     const clipPath =
         rect && viewport.w
             ? `path(evenodd, "M0,0 H${viewport.w} V${viewport.h} H0 Z ${buildHolePath(
@@ -1039,7 +1050,7 @@ export default function TutorialOverlay(props: Props) {
             {(cardTitleLine1 ||
                 cardTitleLine2 ||
                 cardBody ||
-                (showProgressBar && nextStepAfterSeconds > 0) ||
+                (showProgressBar && progressBarDurationSeconds > 0) ||
                 showNextButton) && (
                 <div
                     style={{
@@ -1150,7 +1161,7 @@ export default function TutorialOverlay(props: Props) {
                                 the wrapper. */}
                             {(showNextButton ||
                                 (showProgressBar &&
-                                    nextStepAfterSeconds > 0)) && (
+                                    progressBarDurationSeconds > 0)) && (
                                 <div
                                     style={{
                                         display: "flex",
@@ -1187,7 +1198,7 @@ export default function TutorialOverlay(props: Props) {
                                         </button>
                                     )}
                                     {showProgressBar &&
-                                        nextStepAfterSeconds > 0 && (
+                                        progressBarDurationSeconds > 0 && (
                                             <div
                                                 style={{
                                                     width: "100%",
@@ -1199,16 +1210,18 @@ export default function TutorialOverlay(props: Props) {
                                                 }}
                                             >
                                                 {/* Purely visual — the
-                                                    actual hand-off to the
-                                                    next step is the
+                                                    actual hand-off is the
                                                     separate
                                                     nextStepAfterSeconds
+                                                    or autoAdvanceAfterSeconds
                                                     setTimeout effect
-                                                    above; this just
-                                                    animates over the same
-                                                    duration so the two
-                                                    stay in sync without a
-                                                    second timer driving
+                                                    (whichever applies),
+                                                    this just animates
+                                                    over the same
+                                                    progressBarDurationSeconds
+                                                    so the two stay in
+                                                    sync without a second
+                                                    timer driving
                                                     anything. Remounts
                                                     fresh every time this
                                                     step becomes active
@@ -1223,10 +1236,8 @@ export default function TutorialOverlay(props: Props) {
                                                         width: "100%",
                                                     }}
                                                     transition={{
-                                                        duration: Math.max(
-                                                            nextStepAfterSeconds,
-                                                            0
-                                                        ),
+                                                        duration:
+                                                            progressBarDurationSeconds,
                                                         ease: "linear",
                                                     }}
                                                     style={{
@@ -1730,15 +1741,15 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
-        hidden: (props) => !props.pageGroup || !props.nextStepAfterSeconds,
+        hidden: (props) =>
+            !props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds,
     },
     progressBarColor: {
         type: ControlType.Color,
         title: "Progress bar color",
         defaultValue: "#ffffff",
         hidden: (props) =>
-            !props.pageGroup ||
-            !props.nextStepAfterSeconds ||
+            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
             !props.showProgressBar,
     },
     progressBarTrackColor: {
@@ -1746,8 +1757,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Progress bar track color",
         defaultValue: "rgba(255,255,255,0.25)",
         hidden: (props) =>
-            !props.pageGroup ||
-            !props.nextStepAfterSeconds ||
+            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
             !props.showProgressBar,
     },
     showNextButton: {
