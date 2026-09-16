@@ -34,17 +34,15 @@ anywhere else on the page.
   scoped to whichever step is actually active — was ALSO applying a
   single scroll gesture once per mounted instance in real
   Preview/Published, not just once. Keep any new effect following the
-  same `isCanvas ||` first-check convention.
-- `PageStepState.tsx` — the shared same-page step counter
-  `TutorialOverlay.tsx`'s own steps hand off between themselves, pulled
-  out into its own small, dependency-free file so anything needing it
-  doesn't have to import all of `TutorialOverlay.tsx` (a large,
-  animation-heavy file) just to reach two functions — that was making
-  Framer's canvas noticeably heavy. `TutorialOverlay.tsx` itself
-  imports from here now. (Originally also pulled out for
-  `TutorialCongrats.tsx`'s own `pageGroup` option — that file has since
-  been removed as unused; see the note under
-  `TutorialCongratsAutoRedirect.tsx` below.)
+  same `isCanvas ||` first-check convention. Also owns the shared
+  same-page step counter (`pageGroup`/`stepNumber` handoff between
+  several instances on one page) directly in this file — this briefly
+  lived split out in its own `PageStepState.tsx` so `TutorialCongrats.tsx`
+  could reach it without importing all of this file, but that component
+  was removed as unused (see the note under
+  `TutorialCongratsAutoRedirect.tsx` below), leaving `TutorialOverlay.tsx`
+  as the step counter's only consumer again — so it moved back to one
+  file rather than keep a split that no longer served a purpose.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,

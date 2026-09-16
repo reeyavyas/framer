@@ -2,7 +2,6 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { getPageStep, setPageStep, subscribePageStep } from "./PageStepState.tsx"
 import { getVirtualScroll } from "./VirtualScroll.tsx"
 
 /**
@@ -311,6 +310,48 @@ function cardWrapperStyle(
 
     style.transform = `translate(${translateX}, ${translateY})`
     return style
+}
+
+// ---------------------------------------------------------------------
+// Shared same-page step coordination. Multiple TutorialOverlay
+// instances sharing one `pageGroup` take turns — only the instance
+// whose stepNumber matches the group's current step renders itself.
+// Same module-level-Map coordination technique CircleOverrides.tsx
+// already uses to keep its several circle instances in sync.
+//
+// This briefly lived in its own PageStepState.tsx file so an external
+// consumer (TutorialCongrats.tsx's own pageGroup option) could reach it
+// without importing all of this file. That component has since been
+// removed as unused, leaving TutorialOverlay.tsx as the only consumer
+// again, so it's back here as one file.
+// ---------------------------------------------------------------------
+const pageStepState = new Map<string, number>()
+const pageStepListeners = new Map<string, Set<() => void>>()
+
+function getPageStep(groupId: string): number {
+    return pageStepState.get(groupId) ?? 1
+}
+
+function setPageStep(groupId: string, step: number) {
+    pageStepState.set(groupId, step)
+    pageStepListeners.get(groupId)?.forEach((fn) => fn())
+}
+
+function subscribePageStep(groupId: string, onChange: () => void) {
+    if (!pageStepListeners.has(groupId))
+        pageStepListeners.set(groupId, new Set())
+    const listeners = pageStepListeners.get(groupId)!
+    listeners.add(onChange)
+    // Block body, not `() => listeners.delete(onChange)` — Set.delete()
+    // returns boolean, and a useEffect cleanup must return exactly void.
+    // An inline arrow function literal returned directly from an effect
+    // gets a TS carve-out that voids a non-void expression automatically;
+    // a function value handed back from elsewhere (like this one, used
+    // as `return subscribePageStep(...)` in an effect) does not, and
+    // fails type-checking wherever it's imported and used that way.
+    return () => {
+        listeners.delete(onChange)
+    }
 }
 
 // Resolves a scrollContainerTarget id (tagged via TutorialTargets.tsx,

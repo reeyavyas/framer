@@ -39,7 +39,6 @@ tutorials/               The tutorial system
     CurvedCarouselV2.tsx      Curved card carousel (flip-card stack)
   tutorial-overlays/        Droppable on top of any page to turn it into a tutorial
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
-    PageStepState.tsx          Shared same-page step counter (small/dependency-free, on purpose)
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
   NOTES.md
