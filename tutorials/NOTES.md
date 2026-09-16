@@ -19,9 +19,6 @@ left completely untouched — these components dim/spotlight it and
 restrict taps to one target at a time instead of letting the user click
 anywhere else on the page.
 
-- `FocusGuide.tsx` — "click here" glow drawn over one specific layer
-- `SpotlightOverlay.tsx` — dims/blurs the rest of the screen, cutting
-  out the target area
 - `TutorialOverlay.tsx` — the per-step instruction card + hole + glow
   (one instance per tutorial beat, configured entirely from the
   Properties panel). Every effect that starts a timer, a
@@ -171,6 +168,15 @@ property value, most likely `Active`, desyncing between draft and
 published state). Not yet resolved. Next untested step: toggle
 `Active` off, then on, then republish, to force Framer to re-commit
 that instance's actual saved value.
+
+### Archived: `FocusGuide.tsx` / `SpotlightOverlay.tsx`
+
+Not currently used on any tutorial page — moved to
+`archived/tutorial-overlays/`. See `archived/NOTES.md` for what each
+did and, importantly, a noted future need: a "show which elements are
+clickable" affordance for the free-exploration base pages, which
+neither file solves as-is but which `FocusGuide`'s glow technique is
+the likely starting point for.
 
 ## `card-controls-tutorial/`
 

@@ -36,15 +36,18 @@ main/                    Site-wide, page-agnostic pieces
 
 tutorials/               The tutorial system
   tutorials-main-page/      Builds the Tutorials landing page
-    CurvedCarousel.tsx        Curved card carousel (flip-card stack)
-    CurvedCarouselV2.tsx      Newer carousel revision (fixes front-card reset mid-drag)
+    CurvedCarouselV2.tsx      Curved card carousel (flip-card stack)
   tutorial-overlays/        Droppable on top of any page to turn it into a tutorial
-    FocusGuide.tsx             "Click here" glow overlay for a specific layer
-    SpotlightOverlay.tsx       Dims/blurs the screen except a cut-out target area
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     PageStepState.tsx          Shared same-page step counter (small/dependency-free, on purpose)
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
+  NOTES.md
+
+archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing
+  circle-physics-experiments/  Earlier attempts superseded by money-management/CircleOverrides.tsx
+  tutorials-main-page/      CurvedCarousel.tsx (V1, superseded by CurvedCarouselV2.tsx above)
+  tutorial-overlays/        FocusGuide.tsx / SpotlightOverlay.tsx (not currently used by any page)
   NOTES.md
 ```
 

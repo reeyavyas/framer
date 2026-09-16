@@ -176,7 +176,8 @@ function bezierEndAngleDeg(
 }
 
 // ---------------------------------------------------------------------
-// Geometry helpers (same clip-path evenodd hole trick as SpotlightOverlay)
+// Geometry helpers (same clip-path evenodd hole trick as the archived
+// SpotlightOverlay.tsx — see archived/tutorial-overlays/)
 // ---------------------------------------------------------------------
 function roundedRectPath(
     x: number,
