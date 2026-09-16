@@ -40,13 +40,14 @@ anywhere else on the page.
   same `isCanvas ||` first-check convention.
 - `PageStepState.tsx` — the shared same-page step counter
   `TutorialOverlay.tsx`'s own steps hand off between themselves, pulled
-  out into its own small, dependency-free file so `TutorialCongrats.tsx`
-  (its own `pageGroup` option — see below) can read/subscribe to it
-  without importing all of `TutorialOverlay.tsx` (a large,
+  out into its own small, dependency-free file so anything needing it
+  doesn't have to import all of `TutorialOverlay.tsx` (a large,
   animation-heavy file) just to reach two functions — that was making
-  Framer's canvas noticeably heavy. Everything that touches the step
-  counter, including
-  `TutorialOverlay.tsx` itself, imports from here now.
+  Framer's canvas noticeably heavy. `TutorialOverlay.tsx` itself
+  imports from here now. (Originally also pulled out for
+  `TutorialCongrats.tsx`'s own `pageGroup` option — that file has since
+  been removed as unused; see the note under
+  `TutorialCongratsAutoRedirect.tsx` below.)
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
@@ -66,21 +67,13 @@ anywhere else on the page.
   swallow the tap meant for the real field/button underneath. See
   `card-controls-tutorial/NOTES.md`
   for how these three are used.
-- `TutorialCongrats.tsx` — full-screen finish screen for the end of a
-  tutorial. Can show itself automatically once a page's real step(s)
-  are done (share `pageGroup` with the page's `TutorialOverlay`
-  instance(s) and set `showAtStep` to one past the last real step) and
-  can auto-redirect to `exitLink` after `autoRedirectAfterSeconds`
-  instead of waiting for the exit button tap. See the file's own
-  top-of-file comment for the exact wiring.
 - `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
   shape as `FingerprintDelayedNavigation`, a plain function returning a
   props patch — not the wrap-the-whole-component style tried twice
   before for this same job) for a DEDICATED congrats page whose finish
   screen is a custom-built Frame (e.g. a third-party confetti component
-  plus a keyframe pulse, assembled on the canvas) instead of
-  `TutorialCongrats.tsx`'s own built-in look. Attach it directly to that
-  Frame's own Code Override slot. It fires `window.location.href` to
+  plus a keyframe pulse, assembled on the canvas). Attach it directly
+  to that Frame's own Code Override slot. It fires `window.location.href` to
   `EXIT_LINK` after `AUTO_REDIRECT_SECONDS` (plain constants at the top
   of the file — Overrides don't get a property panel), timed via a
   `useEffect` called inside the override function (Framer's classic

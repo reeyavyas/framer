@@ -44,7 +44,6 @@ tutorials/               The tutorial system
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     PageStepState.tsx          Shared same-page step counter (small/dependency-free, on purpose)
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
-    TutorialCongrats.tsx       Full-screen "you did it" finish screen for a tutorial
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
   NOTES.md
 ```
