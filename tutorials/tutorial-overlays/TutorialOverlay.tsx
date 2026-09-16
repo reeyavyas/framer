@@ -118,11 +118,12 @@ interface Props {
     progressBarColor: string
     progressBarTrackColor: string
 
-    showNextButton: boolean // a real tappable button that calls the same advanceStep() a click/scroll/timer hand-off does
+    showNextButton: boolean // a real tappable button that calls the same advanceStep() a click/scroll/timer hand-off does — or navigates to nextButtonLink instead, when this is the last step in its page group
     nextButtonLabel: string
     nextButtonTextColor: string
     nextButtonBackgroundColor: string
     nextButtonFont: React.CSSProperties
+    nextButtonLink?: string // blank = advance within this page group (same as every other hand-off trigger); set = navigate here instead, for the last step of a group or a single-step page
 
     showGlow: boolean
     glowVariant: "static" | "breathing" | "ripple"
@@ -403,6 +404,7 @@ export default function TutorialOverlay(props: Props) {
         nextButtonTextColor,
         nextButtonBackgroundColor,
         nextButtonFont,
+        nextButtonLink,
         showGlow,
         glowVariant,
         glowColor,
@@ -1142,7 +1144,12 @@ export default function TutorialOverlay(props: Props) {
                             {showNextButton && (
                                 <button
                                     type="button"
-                                    onClick={advanceStep}
+                                    onClick={() =>
+                                        nextButtonLink
+                                            ? (window.location.href =
+                                                  nextButtonLink)
+                                            : advanceStep()
+                                    }
                                     style={{
                                         pointerEvents: "auto",
                                         cursor: "pointer",
@@ -1669,25 +1676,24 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
-        hidden: (props) => !props.pageGroup,
     },
     nextButtonLabel: {
         type: ControlType.String,
         title: "Next button label",
         defaultValue: "Next",
-        hidden: (props) => !props.pageGroup || !props.showNextButton,
+        hidden: (props) => !props.showNextButton,
     },
     nextButtonTextColor: {
         type: ControlType.Color,
         title: "Next button text color",
         defaultValue: "#11232D",
-        hidden: (props) => !props.pageGroup || !props.showNextButton,
+        hidden: (props) => !props.showNextButton,
     },
     nextButtonBackgroundColor: {
         type: ControlType.Color,
         title: "Next button color",
         defaultValue: "#FFCC40",
-        hidden: (props) => !props.pageGroup || !props.showNextButton,
+        hidden: (props) => !props.showNextButton,
     },
     nextButtonFont: {
         type: ControlType.Font,
@@ -1695,7 +1701,12 @@ addPropertyControls(TutorialOverlay, {
         controls: "extended",
         defaultFontType: "sans-serif",
         defaultValue: { fontSize: 30, fontWeight: 500, lineHeight: 1.2 },
-        hidden: (props) => !props.pageGroup || !props.showNextButton,
+        hidden: (props) => !props.showNextButton,
+    },
+    nextButtonLink: {
+        type: ControlType.Link,
+        title: "Next button link",
+        hidden: (props) => !props.showNextButton,
     },
     showGlow: {
         type: ControlType.Boolean,

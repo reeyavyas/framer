@@ -56,10 +56,17 @@ anywhere else on the page.
   the actual hand-off to the next step is still the existing
   `nextStepAfterSeconds` `setTimeout` effect) — and `showNextButton`/
   `nextButtonLabel`/`nextButtonTextColor`/`nextButtonBackgroundColor`/
-  `nextButtonFont` for a real tappable button inside the card that calls
-  the same `advanceStep()` a click/scroll/timer hand-off does. Both are
-  gated on `pageGroup` being set (like every other step-behavior
-  control) since advancing only means anything inside a step group.
+  `nextButtonFont` for a real tappable button inside the card. The
+  progress bar is gated on `pageGroup` being set (like every other
+  step-behavior control), since it visualizes progress toward the next
+  step in a group. The Next button isn't: it calls the same
+  `advanceStep()` a click/scroll/timer hand-off does when
+  `nextButtonLink` is blank, but when `nextButtonLink` is set it
+  navigates there instead — same optional-link convention as
+  `autoAdvanceLink` below — so the same button works as "advance within
+  this page group" on every step but the last, and "go to the next
+  page" on the last step of a group or on a single-step page with no
+  `pageGroup` at all.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
