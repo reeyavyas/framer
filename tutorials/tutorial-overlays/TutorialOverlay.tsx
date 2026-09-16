@@ -301,8 +301,24 @@ function cardWrapperStyle(
     // No target to anchor left/right against, so cardAnchorX is ignored
     // here and the card is always horizontally centered — cardOffsetX
     // still nudges it left/right from that centered position.
-    style.left = `calc(50% + ${offsetX}px)`
-    translateX = "-50%"
+    //
+    // Centered via display:flex + justifyContent, NOT the common
+    // left:50% + translateX(-50%) trick — that trick silently breaks a
+    // shrink-to-fit (width:auto, e.g. this card's own maxWidth) child.
+    // For a fixed-position box with only `left` set (no `right`), the
+    // browser computes ITS shrink-to-fit "available width" as
+    // (containing block width - left), with no knowledge that a later
+    // transform will shift it back — so at left ~50% that's only ever
+    // HALF the viewport, regardless of the child's own maxWidth. The
+    // card's text was wrapping against half the screen, not against its
+    // actual maxWidth. Spanning the full width instead (left:0, right:0)
+    // and centering the child with flex gives its shrink-to-fit
+    // calculation the real full viewport to work with.
+    style.left = 0
+    style.right = 0
+    style.display = "flex"
+    style.justifyContent = "center"
+    style.alignItems = "flex-start"
 
     if (anchorY === "top") style.top = 100 + offsetY
     else if (anchorY === "bottom") style.bottom = 90 - offsetY
@@ -311,7 +327,7 @@ function cardWrapperStyle(
         translateY = "-50%"
     }
 
-    style.transform = `translate(${translateX}, ${translateY})`
+    style.transform = `translate(${offsetX}px, ${translateY})`
     return style
 }
 

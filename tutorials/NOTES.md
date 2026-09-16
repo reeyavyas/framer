@@ -109,6 +109,28 @@ anywhere else on the page.
   against. `cardOffsetX`/`cardOffsetY` keep meaning the same thing in
   both modes: a plain nudge (positive X right, positive Y down) from
   wherever the anchor would otherwise place the card.
+
+  The no-target centering is `display:flex` + `justifyContent:center`
+  on a full-width (`left:0, right:0`) wrapper, NOT the common
+  `left:50%` + `translateX(-50%)` trick — that trick silently breaks a
+  shrink-to-fit (`width:auto`, e.g. the card's own `maxWidth`) child.
+  For a fixed-position box with only `left` set (no `right`), the
+  browser computes its shrink-to-fit "available width" as (containing
+  block width − `left`), with no idea a later `transform` will shift it
+  back — so at `left` ≈ 50% that's only ever HALF the viewport,
+  regardless of the child's actual `maxWidth`. A no-target card was
+  wrapping its text against half the screen, not against its real
+  `maxWidth: 900`, which read as "way too much empty side padding" with
+  room for visibly more words per line. The target-relative `"center"`
+  x-anchor above (`rect.left + rect.width/2 + offsetX` +
+  `translateX(-50%)`) has the same underlying issue — its available
+  width is capped by however far the target's center sits from the
+  left edge — but wasn't touched here since it wasn't reported broken,
+  and the flex/full-width fix doesn't translate directly to something
+  that has to stay anchored to a specific point rather than the
+  viewport as a whole. The `"right"` anchor above already avoids this
+  same class of bug on purpose — see its own comment — this just hadn't
+  been applied to `"center"` or the no-target case yet.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
