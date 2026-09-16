@@ -1104,14 +1104,19 @@ export default function TutorialOverlay(props: Props) {
                             )}
                             {/* Next button above, progress bar below it —
                                 grouped in their own wrapper (rather than
-                                relying on the card's own 24px gap) so the
-                                gap below the button can match the gap
-                                above it exactly: 24px from the card's own
-                                gap (between cardBody and this wrapper) +
-                                this wrapper's own 8px marginTop = 32px
-                                above, so the wrapper's own internal gap
-                                (button to bar) is also set to 32 rather
-                                than reusing the card's tighter 24. */}
+                                relying on the card's own 24px gap). Space
+                                above the button is the card's own 24px
+                                gap (between cardBody and this wrapper)
+                                plus this wrapper's own 8px marginTop =
+                                32px. Space below the button, before the
+                                bar, is set explicitly as the button's own
+                                marginBottom (32px, matching the above) —
+                                deliberately a real margin here rather than
+                                the wrapper's flex `gap`, so it's an
+                                unambiguous, directly-inspectable rule on
+                                the one element it's about, not a value
+                                shared across every pair of children in
+                                the wrapper. */}
                             {(showNextButton ||
                                 (showProgressBar &&
                                     nextStepAfterSeconds > 0)) && (
@@ -1120,7 +1125,6 @@ export default function TutorialOverlay(props: Props) {
                                         display: "flex",
                                         flexDirection: "column",
                                         alignItems: "center",
-                                        gap: 32,
                                         marginTop: 8,
                                         width: "100%",
                                     }}
@@ -1139,6 +1143,7 @@ export default function TutorialOverlay(props: Props) {
                                                 cursor: "pointer",
                                                 border: "none",
                                                 padding: "24px 48px",
+                                                marginBottom: 32,
                                                 borderRadius: 999,
                                                 background:
                                                     nextButtonBackgroundColor,
