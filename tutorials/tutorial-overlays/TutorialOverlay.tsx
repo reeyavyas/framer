@@ -1102,67 +1102,103 @@ export default function TutorialOverlay(props: Props) {
                                     {cardBody}
                                 </div>
                             )}
-                            {showProgressBar && nextStepAfterSeconds > 0 && (
+                            {/* Next button above, progress bar below it —
+                                grouped in their own wrapper (rather than
+                                relying on the card's own 24px gap) so
+                                there's a bit of extra breathing room
+                                between the text above and this pair, and a
+                                tighter gap between the button and its own
+                                bar than between title/body. */}
+                            {(showNextButton ||
+                                (showProgressBar &&
+                                    nextStepAfterSeconds > 0)) && (
                                 <div
                                     style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        gap: 12,
+                                        marginTop: 8,
                                         width: "100%",
-                                        height: 6,
-                                        borderRadius: 999,
-                                        background: progressBarTrackColor,
-                                        overflow: "hidden",
                                     }}
                                 >
-                                    {/* Purely visual — the actual hand-off
-                                        to the next step is the separate
-                                        nextStepAfterSeconds setTimeout
-                                        effect above; this just animates
-                                        over the same duration so the two
-                                        stay in sync without a second timer
-                                        driving anything. Remounts fresh
-                                        every time this step becomes active
-                                        (isMyTurn flipping false->true makes
-                                        the whole card subtree remount), so
-                                        it always restarts at 0%. */}
-                                    <motion.div
-                                        initial={{ width: "0%" }}
-                                        animate={{ width: "100%" }}
-                                        transition={{
-                                            duration: Math.max(
-                                                nextStepAfterSeconds,
-                                                0
-                                            ),
-                                            ease: "linear",
-                                        }}
-                                        style={{
-                                            height: "100%",
-                                            background: progressBarColor,
-                                            borderRadius: 999,
-                                        }}
-                                    />
+                                    {showNextButton && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                nextButtonLink
+                                                    ? (window.location.href =
+                                                          nextButtonLink)
+                                                    : advanceStep()
+                                            }
+                                            style={{
+                                                pointerEvents: "auto",
+                                                cursor: "pointer",
+                                                border: "none",
+                                                padding: "24px 48px",
+                                                borderRadius: 999,
+                                                background:
+                                                    nextButtonBackgroundColor,
+                                                color: nextButtonTextColor,
+                                                ...nextButtonFont,
+                                            }}
+                                        >
+                                            {nextButtonLabel}
+                                        </button>
+                                    )}
+                                    {showProgressBar &&
+                                        nextStepAfterSeconds > 0 && (
+                                            <div
+                                                style={{
+                                                    width: "100%",
+                                                    height: 6,
+                                                    borderRadius: 999,
+                                                    background:
+                                                        progressBarTrackColor,
+                                                    overflow: "hidden",
+                                                }}
+                                            >
+                                                {/* Purely visual — the
+                                                    actual hand-off to the
+                                                    next step is the
+                                                    separate
+                                                    nextStepAfterSeconds
+                                                    setTimeout effect
+                                                    above; this just
+                                                    animates over the same
+                                                    duration so the two
+                                                    stay in sync without a
+                                                    second timer driving
+                                                    anything. Remounts
+                                                    fresh every time this
+                                                    step becomes active
+                                                    (isMyTurn flipping
+                                                    false->true makes the
+                                                    whole card subtree
+                                                    remount), so it always
+                                                    restarts at 0%. */}
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    animate={{
+                                                        width: "100%",
+                                                    }}
+                                                    transition={{
+                                                        duration: Math.max(
+                                                            nextStepAfterSeconds,
+                                                            0
+                                                        ),
+                                                        ease: "linear",
+                                                    }}
+                                                    style={{
+                                                        height: "100%",
+                                                        background:
+                                                            progressBarColor,
+                                                        borderRadius: 999,
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                 </div>
-                            )}
-                            {showNextButton && (
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        nextButtonLink
-                                            ? (window.location.href =
-                                                  nextButtonLink)
-                                            : advanceStep()
-                                    }
-                                    style={{
-                                        pointerEvents: "auto",
-                                        cursor: "pointer",
-                                        border: "none",
-                                        padding: "24px 48px",
-                                        borderRadius: 999,
-                                        background: nextButtonBackgroundColor,
-                                        color: nextButtonTextColor,
-                                        ...nextButtonFont,
-                                    }}
-                                >
-                                    {nextButtonLabel}
-                                </button>
                             )}
                         </motion.div>
                     </AnimatePresence>
@@ -1429,7 +1465,12 @@ TutorialOverlay.defaultProps = {
     nextButtonLabel: "Next",
     nextButtonTextColor: "#11232D",
     nextButtonBackgroundColor: "#FFCC40",
-    nextButtonFont: { fontSize: 30, fontWeight: 500, lineHeight: 1.2 },
+    nextButtonFont: {
+        fontFamily: "Proxima Nova",
+        fontWeight: 600,
+        fontSize: 36,
+        lineHeight: 1.2,
+    },
     showGlow: true,
     glowVariant: "breathing",
     glowColor: "rgba(5,147,144,1)",
@@ -1700,7 +1741,12 @@ addPropertyControls(TutorialOverlay, {
         title: "Next button font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 30, fontWeight: 500, lineHeight: 1.2 },
+        defaultValue: {
+            fontFamily: "Proxima Nova",
+            fontWeight: 600,
+            fontSize: 36,
+            lineHeight: 1.2,
+        },
         hidden: (props) => !props.showNextButton,
     },
     nextButtonLink: {
