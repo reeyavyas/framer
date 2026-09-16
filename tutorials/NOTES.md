@@ -110,27 +110,32 @@ anywhere else on the page.
   both modes: a plain nudge (positive X right, positive Y down) from
   wherever the anchor would otherwise place the card.
 
-  The no-target centering is `display:flex` + `justifyContent:center`
-  on a full-width (`left:0, right:0`) wrapper, NOT the common
-  `left:50%` + `translateX(-50%)` trick — that trick silently breaks a
-  shrink-to-fit (`width:auto`, e.g. the card's own `maxWidth`) child.
-  For a fixed-position box with only `left` set (no `right`), the
-  browser computes its shrink-to-fit "available width" as (containing
-  block width − `left`), with no idea a later `transform` will shift it
-  back — so at `left` ≈ 50% that's only ever HALF the viewport,
-  regardless of the child's actual `maxWidth`. A no-target card was
-  wrapping its text against half the screen, not against its real
-  `maxWidth: 900`, which read as "way too much empty side padding" with
-  room for visibly more words per line. The target-relative `"center"`
-  x-anchor above (`rect.left + rect.width/2 + offsetX` +
-  `translateX(-50%)`) has the same underlying issue — its available
-  width is capped by however far the target's center sits from the
-  left edge — but wasn't touched here since it wasn't reported broken,
-  and the flex/full-width fix doesn't translate directly to something
-  that has to stay anchored to a specific point rather than the
-  viewport as a whole. The `"right"` anchor above already avoids this
-  same class of bug on purpose — see its own comment — this just hadn't
-  been applied to `"center"` or the no-target case yet.
+  Both the no-target case and the target-relative `"center"` x-anchor
+  share `CARD_MAX_WIDTH` (900, the card's own `maxWidth` — now a shared
+  constant instead of a number hardcoded separately in the card's own
+  style) and the same underlying fix for the same bug: a fixed-position
+  box with only `left` set (no `right`) has its shrink-to-fit
+  "available width" computed as (containing block width − `left`), with
+  no idea a later `transform: translateX(-50%)` will shift it back — so
+  `left:50%` (no target) or `left: <target's center>` (with one, for
+  `"center"`) caps the box's width well below `CARD_MAX_WIDTH` whenever
+  that point isn't near the left edge, regardless of how much the
+  content actually wants or how much room is really on screen. The
+  no-target case fixes it by spanning the full viewport
+  (`left:0, right:0`) and centering the card within that with
+  `display:flex` + `justifyContent:center`. The target-relative
+  `"center"` case can't span the full viewport — it has to stay
+  anchored to the target's position, not the screen's center — so it
+  sets `left`/`right` symmetrically around the target's own center
+  point instead (clamped to 0 past either edge, same clamp the
+  `"right"` anchor already uses), which gives the browser a real,
+  non-ambiguous width to resolve directly with no shrink-to-fit or
+  transform involved; `display:flex` + `justifyContent:center` then
+  centers the card WITHIN that now-fixed-width span, since the span
+  itself no longer shrinks to the card's actual content size. The
+  `"right"` anchor above already avoided this same class of bug on
+  purpose from the start — see its own comment — it just hadn't been
+  applied to either `"center"` case yet.
 
   There's no Y-axis version of that same bug: `height: auto` for a
   block element doesn't have the shrink-to-fit "available space"

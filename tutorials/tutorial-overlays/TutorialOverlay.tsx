@@ -253,6 +253,7 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // back to the old screen-relative behavior when there's no target (a
 // step with no hole, e.g. a closing "all set" card).
 const CARD_TARGET_GAP = 24
+const CARD_MAX_WIDTH = 900
 
 function cardWrapperStyle(
     anchorX: "left" | "center" | "right",
@@ -280,8 +281,35 @@ function cardWrapperStyle(
             // which has plenty of room for a target near the right side.
             style.right = Math.max(0, viewportW - rect.right - offsetX)
         } else {
-            style.left = rect.left + rect.width / 2 + offsetX
-            translateX = "-50%"
+            // Same shrink-to-fit bug as the no-target case below (see
+            // its comment for the full explanation) — a fixed-position
+            // box with only `left` set computes its available width as
+            // (viewport width - left), with no idea a translateX(-50%)
+            // will shift it back afterward. For a target whose center
+            // isn't near the left edge, that could cap the card's width
+            // well below CARD_MAX_WIDTH even though there's room on
+            // BOTH sides of the target to use — the card would look
+            // narrower the further right (or the more centered) the
+            // target sits, for no reason related to actual available
+            // screen space. Fixed the same way: `left` and `right` set
+            // symmetrically around the target's own center (assuming up
+            // to CARD_MAX_WIDTH of span, clamped to 0 past either edge —
+            // same clamp the `right` branch above already uses) gives
+            // the browser a real, non-ambiguous width to resolve
+            // directly, no shrink-to-fit or transform involved.
+            // display:flex + justifyContent centers the card WITHIN that
+            // span, since the span itself is now a fixed width
+            // regardless of how much of it the card's own content
+            // actually needs.
+            const centerX = rect.left + rect.width / 2 + offsetX
+            style.left = Math.max(0, centerX - CARD_MAX_WIDTH / 2)
+            style.right = Math.max(
+                0,
+                viewportW - centerX - CARD_MAX_WIDTH / 2
+            )
+            style.display = "flex"
+            style.justifyContent = "center"
+            style.alignItems = "flex-start"
         }
 
         if (anchorY === "top") {
@@ -1071,7 +1099,7 @@ export default function TutorialOverlay(props: Props) {
                                 padding: "40px 60px",
                                 borderRadius: 24,
                                 background: cardBackgroundColor,
-                                maxWidth: 900,
+                                maxWidth: CARD_MAX_WIDTH,
                                 textAlign: "center",
                                 pointerEvents: "none",
                             }}
