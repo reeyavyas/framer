@@ -122,7 +122,8 @@ interface Props {
     nextButtonLabel: string
     nextButtonTextColor: string
     nextButtonBackgroundColor: string
-    nextButtonFont: React.CSSProperties
+    nextButtonFont: React.CSSProperties // family/weight/style only — fontSize is NOT trusted from here, see nextButtonFontSize
+    nextButtonFontSize: number // separate plain Number control — the Font control's own size sub-field didn't reliably hold onto a set value once a real family resolved, so size is driven from here instead, applied after the nextButtonFont spread so it always wins
     nextButtonLink?: string // blank = advance within this page group (same as every other hand-off trigger); set = navigate here instead, for the last step of a group or a single-step page
 
     showGlow: boolean
@@ -404,6 +405,7 @@ export default function TutorialOverlay(props: Props) {
         nextButtonTextColor,
         nextButtonBackgroundColor,
         nextButtonFont,
+        nextButtonFontSize,
         nextButtonLink,
         showGlow,
         glowVariant,
@@ -1149,6 +1151,7 @@ export default function TutorialOverlay(props: Props) {
                                                     nextButtonBackgroundColor,
                                                 color: nextButtonTextColor,
                                                 ...nextButtonFont,
+                                                fontSize: nextButtonFontSize,
                                             }}
                                         >
                                             {nextButtonLabel}
@@ -1476,9 +1479,9 @@ TutorialOverlay.defaultProps = {
     nextButtonFont: {
         fontFamily: "Inter",
         fontWeight: 700,
-        fontSize: 36,
         lineHeight: 1.2,
     },
+    nextButtonFontSize: 36,
     showGlow: true,
     glowVariant: "breathing",
     glowColor: "rgba(5,147,144,1)",
@@ -1748,20 +1751,29 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Font,
         title: "Next button font",
         controls: "extended",
-        // Inter is a Google Font (the project's own default font),
-        // unlike Area Normal/Proxima Nova before it — those are
-        // custom/uploaded project fonts, which didn't reliably
-        // pre-select from a fontFamily string in code the way a Google
-        // Font does; Framer can resolve Inter directly. defaultFontType
-        // is kept anyway so this control still shows a real default even
-        // if that ever stops resolving for any reason.
+        // Family/weight/style only — its own size sub-field didn't
+        // reliably hold onto a set value once a real family resolved
+        // (kept reverting to some other size on its own), so fontSize is
+        // controlled separately below instead. Inter is a Google Font
+        // (the project's own default font), unlike Area Normal/Proxima
+        // Nova before it — those are custom/uploaded project fonts,
+        // which didn't reliably pre-select from a fontFamily string in
+        // code the way a Google Font does; Framer can resolve Inter
+        // directly. defaultFontType is kept anyway so this control still
+        // shows a real default even if that ever stops resolving.
         defaultFontType: "sans-serif",
         defaultValue: {
             fontFamily: "Inter",
             fontWeight: 700,
-            fontSize: 36,
             lineHeight: 1.2,
         },
+        hidden: (props) => !props.showNextButton,
+    },
+    nextButtonFontSize: {
+        type: ControlType.Number,
+        title: "Next button font size",
+        min: 1,
+        defaultValue: 36,
         hidden: (props) => !props.showNextButton,
     },
     nextButtonLink: {

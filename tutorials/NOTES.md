@@ -74,18 +74,27 @@ anywhere else on the page.
   element it's about, not the wrapper's flex `gap` (which would apply
   uniformly to every pair of children in the wrapper, not just this one
   relationship).
-  `nextButtonFont`'s default is Inter Bold at 36px/1.2 line height,
-  baked in as the default rather than something to reset on every
-  instance — the Font control still lets a given step override it.
-  Getting a specific family to actually take as the default fought back
-  hard before landing here: `defaultValue.fontFamily` set to Proxima
-  Nova, then Area Normal — both custom/uploaded project fonts, not one
-  of Framer's built-in Google Fonts — never actually took as the
-  control's shown default (some other generic font rendered instead
-  with `defaultFontType: "sans-serif"` also set; the field went blank
-  with it removed). Inter is the project's own default font AND a
-  Google Font, which Framer can resolve directly from a plain
-  `fontFamily` string — that's what finally worked.
+  `nextButtonFont` defaults to Inter Bold, baked in as the default
+  rather than something to reset on every instance — the Font control
+  still lets a given step override the family/weight/style. Getting a
+  specific family to actually take as the default fought back hard
+  before landing here: `defaultValue.fontFamily` set to Proxima Nova,
+  then Area Normal — both custom/uploaded project fonts, not one of
+  Framer's built-in Google Fonts — never actually took as the control's
+  shown default (some other generic font rendered instead with
+  `defaultFontType: "sans-serif"` also set; the field went blank with
+  it removed). Inter is the project's own default font AND a Google
+  Font, which Framer can resolve directly from a plain `fontFamily`
+  string — that's what finally worked for the family itself.
+
+  Font size is a SEPARATE `nextButtonFontSize` (`ControlType.Number`,
+  default 36) rather than living inside `nextButtonFont`'s own size
+  sub-field — that sub-field didn't reliably hold onto a set value once
+  a real font family actually resolved (kept reverting to some other
+  size on its own, even after the family itself was fixed). Applied in
+  the button's style AFTER the `...nextButtonFont` spread so it always
+  wins regardless of whatever that object's own (untrusted) `fontSize`
+  might be.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
