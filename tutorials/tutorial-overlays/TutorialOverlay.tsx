@@ -114,9 +114,15 @@ interface Props {
     cardOffsetX: number
     cardOffsetY: number
 
-    showProgressDots: boolean
-    progressIndex: number
-    progressTotal: number
+    showProgressBar: boolean // fills over nextStepAfterSeconds, so it only means anything on a timed step
+    progressBarColor: string
+    progressBarTrackColor: string
+
+    showNextButton: boolean // a real tappable button that calls the same advanceStep() a click/scroll/timer hand-off does
+    nextButtonLabel: string
+    nextButtonTextColor: string
+    nextButtonBackgroundColor: string
+    nextButtonFont: React.CSSProperties
 
     showGlow: boolean
     glowVariant: "static" | "breathing" | "ripple"
@@ -140,13 +146,11 @@ interface Props {
     autoAdvanceLink?: string
 
     dimColor: string
-    blurAmount: number // backdrop-filter blur applied to the card's own background, not the full-screen dim layer
     accentColor: string
 
     showSkipButton: boolean
     skipLabel: string
     skipLink?: string
-    showExitButton: boolean
     exitLink?: string
 
     style?: React.CSSProperties
@@ -391,9 +395,14 @@ export default function TutorialOverlay(props: Props) {
         cardAnchorY,
         cardOffsetX,
         cardOffsetY,
-        showProgressDots,
-        progressIndex,
-        progressTotal,
+        showProgressBar,
+        progressBarColor,
+        progressBarTrackColor,
+        showNextButton,
+        nextButtonLabel,
+        nextButtonTextColor,
+        nextButtonBackgroundColor,
+        nextButtonFont,
         showGlow,
         glowVariant,
         glowColor,
@@ -413,12 +422,10 @@ export default function TutorialOverlay(props: Props) {
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
-        blurAmount,
         accentColor,
         showSkipButton,
         skipLabel,
         skipLink,
-        showExitButton,
         exitLink,
         style,
     } = props
@@ -976,10 +983,7 @@ export default function TutorialOverlay(props: Props) {
                 hole but wasn't reliably excluding it from real clicks — a
                 correctly-linked real element under the hole wasn't
                 receiving taps. This div still shows the dim/hole visually;
-                it just no longer decides what's clickable. Deliberately no
-                blur here — blurAmount is applied on the card's own
-                container below instead, so only what's directly behind the
-                card gets blurred, not the whole screen. */}
+                it just no longer decides what's clickable. */}
             <div
                 ref={overlayRef}
                 style={{
@@ -996,12 +1000,14 @@ export default function TutorialOverlay(props: Props) {
             {/* instruction card — appears/disappears on its own, never clicked.
                 Positioning lives on this plain wrapper; the motion.div inside
                 only ever animates opacity/y, so the two transforms never
-                fight. Dots only render when showProgressDots is on; the card
-                itself shows whenever there's a title/body, dots or not. */}
+                fight. The progress bar and Next button only render when
+                their own toggles are on; the card itself shows whenever
+                there's a title/body/bar/button, any combination of them. */}
             {(cardTitleLine1 ||
                 cardTitleLine2 ||
                 cardBody ||
-                (showProgressDots && progressTotal > 0)) && (
+                (showProgressBar && nextStepAfterSeconds > 0) ||
+                showNextButton) && (
                 <div
                     style={{
                         ...cardWrapperStyle(
@@ -1046,8 +1052,6 @@ export default function TutorialOverlay(props: Props) {
                                 padding: "40px 60px",
                                 borderRadius: 24,
                                 background: cardBackgroundColor,
-                                backdropFilter: `blur(${blurAmount}px)`,
-                                WebkitBackdropFilter: `blur(${blurAmount}px)`,
                                 maxWidth: 900,
                                 textAlign: "center",
                                 pointerEvents: "none",
@@ -1096,30 +1100,62 @@ export default function TutorialOverlay(props: Props) {
                                     {cardBody}
                                 </div>
                             )}
-                            {showProgressDots && progressTotal > 0 && (
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    {Array.from({ length: progressTotal }).map(
-                                        (_, i) => (
-                                            <div
-                                                key={i}
-                                                style={{
-                                                    width:
-                                                        i === progressIndex
-                                                            ? 28
-                                                            : 10,
-                                                    height: 10,
-                                                    borderRadius: 999,
-                                                    background:
-                                                        i <= progressIndex
-                                                            ? accentColor
-                                                            : "rgba(255,255,255,0.3)",
-                                                    transition:
-                                                        "width 0.3s ease, background 0.3s ease",
-                                                }}
-                                            />
-                                        )
-                                    )}
+                            {showProgressBar && nextStepAfterSeconds > 0 && (
+                                <div
+                                    style={{
+                                        width: "100%",
+                                        height: 6,
+                                        borderRadius: 999,
+                                        background: progressBarTrackColor,
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {/* Purely visual — the actual hand-off
+                                        to the next step is the separate
+                                        nextStepAfterSeconds setTimeout
+                                        effect above; this just animates
+                                        over the same duration so the two
+                                        stay in sync without a second timer
+                                        driving anything. Remounts fresh
+                                        every time this step becomes active
+                                        (isMyTurn flipping false->true makes
+                                        the whole card subtree remount), so
+                                        it always restarts at 0%. */}
+                                    <motion.div
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: "100%" }}
+                                        transition={{
+                                            duration: Math.max(
+                                                nextStepAfterSeconds,
+                                                0
+                                            ),
+                                            ease: "linear",
+                                        }}
+                                        style={{
+                                            height: "100%",
+                                            background: progressBarColor,
+                                            borderRadius: 999,
+                                        }}
+                                    />
                                 </div>
+                            )}
+                            {showNextButton && (
+                                <button
+                                    type="button"
+                                    onClick={advanceStep}
+                                    style={{
+                                        pointerEvents: "auto",
+                                        cursor: "pointer",
+                                        border: "none",
+                                        padding: "24px 48px",
+                                        borderRadius: 999,
+                                        background: nextButtonBackgroundColor,
+                                        color: nextButtonTextColor,
+                                        ...nextButtonFont,
+                                    }}
+                                >
+                                    {nextButtonLabel}
+                                </button>
                             )}
                         </motion.div>
                     </AnimatePresence>
@@ -1222,7 +1258,9 @@ export default function TutorialOverlay(props: Props) {
                 </div>
             )}
 
-            {/* skip / exit — the only other clickable surfaces in the overlay */}
+            {/* skip / exit — the only other clickable surfaces in the
+                overlay besides the Next button above (which lives inside
+                the card, styled separately up there) */}
             {showSkipButton && (
                 <a
                     href={skipLink || undefined}
@@ -1245,31 +1283,29 @@ export default function TutorialOverlay(props: Props) {
                     {skipLabel}
                 </a>
             )}
-            {showExitButton && (
-                <a
-                    href={exitLink || undefined}
-                    onClick={(e) => !exitLink && e.preventDefault()}
-                    aria-label="Exit tutorial"
-                    style={{
-                        position: "fixed",
-                        top: 60,
-                        left: 40,
-                        zIndex: 8500,
-                        pointerEvents: "auto",
-                        width: 110,
-                        height: 110,
-                        borderRadius: "50%",
-                        background: accentColor,
-                        color: "#fff",
-                        fontSize: 44,
-                        lineHeight: "110px",
-                        textAlign: "center",
-                        textDecoration: "none",
-                    }}
-                >
-                    {"✕"}
-                </a>
-            )}
+            <a
+                href={exitLink || undefined}
+                onClick={(e) => !exitLink && e.preventDefault()}
+                aria-label="Exit tutorial"
+                style={{
+                    position: "fixed",
+                    top: 60,
+                    left: 40,
+                    zIndex: 8500,
+                    pointerEvents: "auto",
+                    width: 110,
+                    height: 110,
+                    borderRadius: "50%",
+                    background: accentColor,
+                    color: "#fff",
+                    fontSize: 44,
+                    lineHeight: "110px",
+                    textAlign: "center",
+                    textDecoration: "none",
+                }}
+            >
+                {"✕"}
+            </a>
         </div>
     )
 
@@ -1379,9 +1415,14 @@ TutorialOverlay.defaultProps = {
     cardAnchorY: "top",
     cardOffsetX: 0,
     cardOffsetY: 0,
-    showProgressDots: true,
-    progressIndex: 1,
-    progressTotal: 4,
+    showProgressBar: false,
+    progressBarColor: "#ffffff",
+    progressBarTrackColor: "rgba(255,255,255,0.25)",
+    showNextButton: false,
+    nextButtonLabel: "Next",
+    nextButtonTextColor: "#11232D",
+    nextButtonBackgroundColor: "#FFCC40",
+    nextButtonFont: { fontSize: 30, fontWeight: 500, lineHeight: 1.2 },
     showGlow: true,
     glowVariant: "breathing",
     glowColor: "rgba(5,147,144,1)",
@@ -1400,11 +1441,9 @@ TutorialOverlay.defaultProps = {
     arrowOffsetY: -100,
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
-    blurAmount: 8,
     accentColor: "rgba(5,147,144,1)",
     showSkipButton: true,
     skipLabel: "Skip",
-    showExitButton: true,
 }
 
 addPropertyControls(TutorialOverlay, {
@@ -1598,28 +1637,65 @@ addPropertyControls(TutorialOverlay, {
         title: "Card offset Y",
         defaultValue: 0,
     },
-    showProgressDots: {
+    showProgressBar: {
         type: ControlType.Boolean,
-        title: "Progress dots",
-        defaultValue: true,
+        title: "Progress bar",
+        defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
+        hidden: (props) => !props.pageGroup || !props.nextStepAfterSeconds,
     },
-    progressIndex: {
-        type: ControlType.Number,
-        title: "Dot index",
-        min: 0,
-        step: 1,
-        defaultValue: 0,
-        hidden: (props) => !props.showProgressDots,
+    progressBarColor: {
+        type: ControlType.Color,
+        title: "Progress bar color",
+        defaultValue: "#ffffff",
+        hidden: (props) =>
+            !props.pageGroup ||
+            !props.nextStepAfterSeconds ||
+            !props.showProgressBar,
     },
-    progressTotal: {
-        type: ControlType.Number,
-        title: "Dot total",
-        min: 0,
-        step: 1,
-        defaultValue: 4,
-        hidden: (props) => !props.showProgressDots,
+    progressBarTrackColor: {
+        type: ControlType.Color,
+        title: "Progress bar track color",
+        defaultValue: "rgba(255,255,255,0.25)",
+        hidden: (props) =>
+            !props.pageGroup ||
+            !props.nextStepAfterSeconds ||
+            !props.showProgressBar,
+    },
+    showNextButton: {
+        type: ControlType.Boolean,
+        title: "Next button",
+        defaultValue: false,
+        enabledTitle: "Show",
+        disabledTitle: "Hide",
+        hidden: (props) => !props.pageGroup,
+    },
+    nextButtonLabel: {
+        type: ControlType.String,
+        title: "Next button label",
+        defaultValue: "Next",
+        hidden: (props) => !props.pageGroup || !props.showNextButton,
+    },
+    nextButtonTextColor: {
+        type: ControlType.Color,
+        title: "Next button text color",
+        defaultValue: "#11232D",
+        hidden: (props) => !props.pageGroup || !props.showNextButton,
+    },
+    nextButtonBackgroundColor: {
+        type: ControlType.Color,
+        title: "Next button color",
+        defaultValue: "#FFCC40",
+        hidden: (props) => !props.pageGroup || !props.showNextButton,
+    },
+    nextButtonFont: {
+        type: ControlType.Font,
+        title: "Next button font",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 30, fontWeight: 500, lineHeight: 1.2 },
+        hidden: (props) => !props.pageGroup || !props.showNextButton,
     },
     showGlow: {
         type: ControlType.Boolean,
@@ -1753,14 +1829,6 @@ addPropertyControls(TutorialOverlay, {
         title: "Dim color",
         defaultValue: "rgba(10, 10, 20, 0.55)",
     },
-    blurAmount: {
-        type: ControlType.Number,
-        title: "Card background blur (px)",
-        min: 0,
-        max: 30,
-        step: 1,
-        defaultValue: 8,
-    },
     accentColor: {
         type: ControlType.Color,
         title: "Accent color",
@@ -1783,13 +1851,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Link,
         title: "Skip link",
         hidden: (props) => !props.showSkipButton,
-    },
-    showExitButton: {
-        type: ControlType.Boolean,
-        title: "Exit (X) button",
-        defaultValue: true,
-        enabledTitle: "Show",
-        disabledTitle: "Hide",
     },
     exitLink: {
         type: ControlType.Link,

@@ -43,6 +43,23 @@ anywhere else on the page.
   `TutorialCongratsAutoRedirect.tsx` below), leaving `TutorialOverlay.tsx`
   as the step counter's only consumer again — so it moved back to one
   file rather than keep a split that no longer served a purpose.
+
+  Progress dots (`showProgressDots`/`progressIndex`/`progressTotal`) and
+  the card background blur (`blurAmount`) were removed as unused —
+  neither was reached for on any real tutorial step. The Exit (X)
+  button's `showExitButton` on/off toggle was also removed since it's
+  meant to always be visible; the button itself (and `exitLink`) stays.
+  In their place: `showProgressBar`/`progressBarColor`/
+  `progressBarTrackColor` — a linear bar that fills over
+  `nextStepAfterSeconds` (purely visual, driven by a `framer-motion`
+  `transition.duration` matching that same number, not a second timer —
+  the actual hand-off to the next step is still the existing
+  `nextStepAfterSeconds` `setTimeout` effect) — and `showNextButton`/
+  `nextButtonLabel`/`nextButtonTextColor`/`nextButtonBackgroundColor`/
+  `nextButtonFont` for a real tappable button inside the card that calls
+  the same `advanceStep()` a click/scroll/timer hand-off does. Both are
+  gated on `pageGroup` being set (like every other step-behavior
+  control) since advancing only means anything inside a step group.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Carries the full live export
   list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
