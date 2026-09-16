@@ -97,9 +97,7 @@ interface Props {
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
-    lockScrollWhileActive: boolean // ratchets scrollContainerTarget so it can only move forward while this step is showing, never back
-    releaseScrollLockWhileActive: boolean // undoes an earlier step's lockScrollWhileActive on the same scrollContainerTarget (VirtualScroll only — see the effect for why)
-    freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — unlike the lock above, resumes normally once the step ends
+    freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — resumes normally once the step ends
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -378,8 +376,6 @@ export default function TutorialOverlay(props: Props) {
         scrollDirection,
         scrollThresholdPercent,
         scrollContainerTarget,
-        lockScrollWhileActive,
-        releaseScrollLockWhileActive,
         freezeScrollWhileActive,
         cardTitleLine1,
         cardTitleLine1Color,
@@ -714,121 +710,16 @@ export default function TutorialOverlay(props: Props) {
         advanceStep,
     ])
 
-    // One-way scroll lock — for a card anchored to a target that only
-    // reads correctly at or past a certain scroll position (e.g. it sits
-    // right above the target and gets clipped by fixed chrome like a
-    // bottom nav if the target scrolls back down toward it). Ratchets
-    // scrollContainerTarget so its position can only move forward while
-    // this step is showing, never back past where it already was.
-    //
-    // If scrollContainerTarget is a VirtualScroll.tsx container, this is
-    // trivial — VirtualScroll owns its position completely, so "never
-    // below the floor" is just a clamp it applies to every update
-    // itself; there's no second party fighting over the value, so
-    // there's no jank/reliability trade-off to make here at all. This is
-    // the reason VirtualScroll exists: native scroll + a JS veto are two
-    // authorities racing for the same value, which is what made the
-    // real-time wheel/touchmove block (still below, for any
-    // non-virtualized container) cost main-thread contention, and made
-    // the debounced correction unreliable when the two disagreed.
-    React.useEffect(() => {
-        // isCanvas is critical here too: scrollContainerTarget resolves
-        // to `window` itself when its target isn't found — as it never
-        // is on canvas — so ungated this would attach a real, non-passive
-        // wheel/touchmove listener straight onto the editor's own window.
-        if (isCanvas || !active || !isMyTurn || !lockScrollWhileActive)
-            return
-        const virtual = getVirtualScroll(scrollContainerTarget)
-        if (virtual) {
-            virtual.lockFloorHere()
-            return
-        }
-        const el = resolveScrollTarget(scrollContainerTarget)
-        const getPos = () =>
-            el === window ? window.scrollY : (el as HTMLElement).scrollTop
-        const setPos = (v: number) => {
-            const target = el === window ? window : (el as HTMLElement)
-            target.scrollTo({ top: v, behavior: "smooth" })
-        }
-
-        let floor = getPos()
-        let settleTimer: ReturnType<typeof setTimeout> | undefined
-        let touchStartY = 0
-
-        function onWheel(e: Event) {
-            if ((e as WheelEvent).deltaY < 0 && getPos() <= floor)
-                e.preventDefault()
-        }
-        function onTouchStart(e: Event) {
-            touchStartY = (e as TouchEvent).touches[0].clientY
-        }
-        function onTouchMove(e: Event) {
-            // Dragging the finger down scrolls content up (scrollTop
-            // decreases) — a positive deltaY here is that gesture.
-            const deltaY = (e as TouchEvent).touches[0].clientY - touchStartY
-            if (deltaY > 0 && getPos() <= floor) e.preventDefault()
-        }
-        function onScroll() {
-            const current = getPos()
-            if (current > floor) floor = current
-            if (settleTimer) clearTimeout(settleTimer)
-            settleTimer = setTimeout(() => {
-                if (getPos() < floor) setPos(floor)
-            }, 100)
-        }
-
-        el.addEventListener("wheel", onWheel, { passive: false })
-        el.addEventListener("touchstart", onTouchStart, { passive: true })
-        el.addEventListener("touchmove", onTouchMove, { passive: false })
-        el.addEventListener("scroll", onScroll, { passive: true })
-        return () => {
-            el.removeEventListener("wheel", onWheel)
-            el.removeEventListener("touchstart", onTouchStart)
-            el.removeEventListener("touchmove", onTouchMove)
-            el.removeEventListener("scroll", onScroll)
-            if (settleTimer) clearTimeout(settleTimer)
-        }
-    }, [isCanvas, active, isMyTurn, lockScrollWhileActive, scrollContainerTarget])
-
-    // Undoes an earlier lockScrollWhileActive step's floor on a
-    // VirtualScroll container, so a later step needing to scroll back up
-    // past it isn't stuck forever. Only meaningful for VirtualScroll:
-    // lockFloorHere() there is a ratchet stored on the container itself
-    // (it outlives the step that set it, on purpose, so the lock holds
-    // while the user is still filling out the form it protects) —
-    // nothing else ever lowers it again, so a later "scroll up to see
-    // what you just saved" step sharing the same scrollContainerTarget
-    // would otherwise hit that same floor and go no further. The
-    // native-scroll lock branch above doesn't need this: its floor is a
-    // local variable scoped to that effect's own run, already gone the
-    // moment lockScrollWhileActive next reads false.
-    React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !releaseScrollLockWhileActive)
-            return
-        getVirtualScroll(scrollContainerTarget)?.releaseFloor()
-    }, [
-        isCanvas,
-        active,
-        isMyTurn,
-        releaseScrollLockWhileActive,
-        scrollContainerTarget,
-    ])
-
     // Freezes a VirtualScroll container completely — neither direction
     // moves — for exactly as long as THIS step is active, then resumes
-    // normally. Different problem from lockScrollWhileActive above:
-    // that's a one-way ratchet (forward motion still allowed, and it
-    // deliberately outlives the step that set it, for a target that
-    // must never be revisited for the rest of the flow); this is for a
-    // target that needs to hold perfectly still — neither direction —
-    // while the user decides whether to interact with it (e.g. a
-    // toggle inside a scrollable list, where even scrolling further
-    // down would slide the very thing they're being asked to tap out
-    // from under their finger). Scoped to the step's own lifetime via
-    // the cleanup, unlike the lock's floor. VirtualScroll-only, same
-    // reason as the lock: freezing native scroll in real time needs the
-    // same wheel/touchmove veto that costs main-thread jank, which
-    // VirtualScroll exists specifically to avoid.
+    // normally. For a target that needs to hold perfectly still —
+    // neither direction — while the user decides whether to interact
+    // with it (e.g. a toggle inside a scrollable list, where even
+    // scrolling further down would slide the very thing they're being
+    // asked to tap out from under their finger). Scoped to the step's
+    // own lifetime via the cleanup. VirtualScroll-only: freezing native
+    // scroll in real time needs the same wheel/touchmove veto that costs
+    // main-thread jank, which VirtualScroll exists specifically to avoid.
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive)
             return
@@ -1473,8 +1364,6 @@ TutorialOverlay.defaultProps = {
     scrollDirection: "down",
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
-    lockScrollWhileActive: false,
-    releaseScrollLockWhileActive: false,
     freezeScrollWhileActive: false,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
@@ -1612,26 +1501,7 @@ addPropertyControls(TutorialOverlay, {
         placeholder: "blank = whole page",
         hidden: (props) =>
             !props.pageGroup ||
-            (!props.scrollAdvancesStep &&
-                !props.lockScrollWhileActive &&
-                !props.releaseScrollLockWhileActive &&
-                !props.freezeScrollWhileActive),
-    },
-    lockScrollWhileActive: {
-        type: ControlType.Boolean,
-        title: "Lock scroll while active",
-        defaultValue: false,
-        enabledTitle: "On",
-        disabledTitle: "Off",
-        hidden: (props) => !props.pageGroup,
-    },
-    releaseScrollLockWhileActive: {
-        type: ControlType.Boolean,
-        title: "Release scroll lock while active",
-        defaultValue: false,
-        enabledTitle: "On",
-        disabledTitle: "Off",
-        hidden: (props) => !props.pageGroup,
+            (!props.scrollAdvancesStep && !props.freezeScrollWhileActive),
     },
     freezeScrollWhileActive: {
         type: ControlType.Boolean,

@@ -100,10 +100,10 @@ export function TravelScroll(
 // withTutorialTarget export here (unlike TravelScroll above) — this
 // page's Scrollable Content frame needs VirtualScroll.tsx's
 // VirtualScrollCardAlertsContent instead, for the toggle steps'
-// lock/freeze behavior. A CardAlertsScroll export used to exist for
+// freeze behavior. A CardAlertsScroll export used to exist for
 // this same id ("card-alerts-scroll") but Framer doesn't allow
 // stacking two Code Overrides on one layer, and TutorialOverlay's
-// scroll functions (scrollAdvancesStep, lockScrollWhileActive, etc.)
+// scroll functions (scrollAdvancesStep, freezeScrollWhileActive, etc.)
 // already check getVirtualScroll(scrollContainerTarget) FIRST — a pure
 // registry lookup keyed by the same id string, independent of any DOM
 // attribute — before ever falling back to

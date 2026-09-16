@@ -102,31 +102,31 @@ anywhere else on the page.
   unnecessary layer of indirection this file's plain props-patch
   approach doesn't need at all.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
-  JS-owned position, for a step needing a real zero-tolerance one-way
-  scroll lock (native scroll + a JS veto can't give that without
-  jank — see the file's own top comment). One export per container,
-  same convention as `TutorialTargets.tsx`: `VirtualScrollTravelContent`
-  (id `"scrollable-content"`, Travel Notice page) and
+  JS-owned position, for a step needing a real zero-tolerance freeze
+  (native scroll + a JS veto can't give that without jank — see the
+  file's own top comment). One export per container, same convention
+  as `TutorialTargets.tsx`: `VirtualScrollTravelContent` (id
+  `"scrollable-content"`, Travel Notice page) and
   `VirtualScrollCardAlertsContent` (id `"card-alerts-scroll"`, Card
   Alerts tutorial page). **Never apply the same export to a second
   container** — its id keys a single shared registry entry, so two
   containers under the same id race for it and whichever last
-  registers "wins," leaving the other with a lock that was never
-  really applied to IT. This exact mistake (reusing
+  registers "wins," leaving the other with a state change that was
+  never really applied to IT. This exact mistake (reusing
   `VirtualScrollTravelContent` on the Card Alerts page instead of
-  adding a second export) was reported as "still able to scroll up"
-  on a step that should have been locked.
+  adding a second export) was reported as a Card Alerts step not
+  behaving as configured.
 
-  `lockScrollWhileActive`/`releaseFloor` (a one-way ratchet — forward
-  motion always allowed, and it deliberately outlives the step that
-  set it) is a different tool from `TutorialOverlay`'s
-  `freezeScrollWhileActive`/`freezeHere`/`unfreeze` (stops motion in
-  BOTH directions, scoped strictly to the step's own lifetime — undone
-  automatically once the step ends). Reach for freeze when a target
-  needs to hold perfectly still while the user decides whether to
-  interact with it (e.g. a toggle inside a scrollable list, where even
-  continuing to scroll forward would slide it out from under their
-  finger) — lock alone still permits that forward motion.
+  `TutorialOverlay`'s `freezeScrollWhileActive`/`freezeHere`/
+  `unfreeze` stops motion in BOTH directions, scoped strictly to the
+  step's own lifetime — undone automatically once the step ends. Reach
+  for it when a target needs to hold perfectly still while the user
+  decides whether to interact with it (e.g. a toggle inside a
+  scrollable list, where even continuing to scroll forward would slide
+  it out from under their finger). An earlier one-way ratchet
+  (`lockScrollWhileActive`/`releaseScrollLockWhileActive`) that only
+  blocked backward motion was removed as unused — freeze was the only
+  one of the two actually reached for in practice.
 
   `scrollToTop()` animates position back to 0 — used by
   `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the

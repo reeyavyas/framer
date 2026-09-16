@@ -6,38 +6,37 @@ import { animate, motion, useMotionValue } from "framer-motion"
  * VirtualScroll
  *
  * Replaces native browser scrolling on one Frame with a fully
- * JS-owned equivalent, so a one-way scroll lock can be a real,
- * zero-tolerance guarantee (never even a single frame of backward
- * movement) WITHOUT the jank that came from intercepting native
- * scroll with a non-passive wheel/touchmove listener.
+ * JS-owned equivalent, so a step's freeze can be a real, zero-tolerance
+ * guarantee (position holds exactly still, not just "resists" native
+ * momentum) WITHOUT the jank that came from intercepting native scroll
+ * with a non-passive wheel/touchmove listener.
  *
  * The jank in that earlier approach wasn't a bug to fix — it was
  * structural: native scrolling and a JS listener trying to veto it
  * are two separate authorities fighting over the same value
  * (scrollTop) at once. Blocking in real time costs main-thread
- * contention; anything less costs a visible (if brief) backward slip.
- * There's no way to get both from native scroll. Taking over
- * scrolling entirely removes the fight instead of refereeing it:
- * touch/wheel input updates a single owned value, clamped the instant
- * it's set, with nothing else ever touching it.
+ * contention; anything less costs a visible (if brief) slip. There's
+ * no way to get both from native scroll. Taking over scrolling
+ * entirely removes the fight instead of refereeing it: touch/wheel
+ * input updates a single owned value, clamped the instant it's set,
+ * with nothing else ever touching it.
  *
  * First version of this shipped and was reverted: testing found an
- * occasional small backward leak (a few px, not a full escape) rather
- * than the zero-tolerance guarantee this exists for. Root cause was
- * almost certainly the touch handling, not the clamp itself (the
- * clamp is an unconditional Math.max on every write — there was no
- * code path that ever skipped it): a touch gesture interrupted by the
- * OS (an edge-swipe, a second finger, a phone call banner) fires
- * touchcancel instead of touchend, which the old version never
- * listened for. dragRef stayed populated with a stale {startY,
- * startPos} from the aborted gesture, so the NEXT touchmove — even
- * from what looks like a brand new drag — computed its delta against
- * that stale baseline instead of the real one, producing a small
- * garbage jump. Fixed here by (1) handling touchcancel identically to
- * touchend, and (2) tracking the drag by touch `identifier` instead
- * of always trusting `touches[0]`, so a second finger arriving or
- * leaving mid-gesture can't silently swap which contact is driving
- * the position.
+ * occasional small drift (a few px) rather than the zero-tolerance
+ * guarantee this exists for. Root cause was almost certainly the
+ * touch handling, not the clamp itself (the clamp is an unconditional
+ * Math.max/Math.min on every write — there was no code path that ever
+ * skipped it): a touch gesture interrupted by the OS (an edge-swipe, a
+ * second finger, a phone call banner) fires touchcancel instead of
+ * touchend, which the old version never listened for. dragRef stayed
+ * populated with a stale {startY, startPos} from the aborted gesture,
+ * so the NEXT touchmove — even from what looks like a brand new drag —
+ * computed its delta against that stale baseline instead of the real
+ * one, producing a small garbage jump. Fixed here by (1) handling
+ * touchcancel identically to touchend, and (2) tracking the drag by
+ * touch `identifier` instead of always trusting `touches[0]`, so a
+ * second finger arriving or leaving mid-gesture can't silently swap
+ * which contact is driving the position.
  *
  * Also explicitly turns off iOS's native momentum/rubber-band
  * scrolling (-webkit-overflow-scrolling, overscroll-behavior) on this
@@ -47,13 +46,13 @@ import { animate, motion, useMotionValue } from "framer-motion"
  * position to move without going through setPos/clamp at all — belt
  * and suspenders against the exact class of bug above.
  *
- * The clamp keeps a tiny (EDGE_TOLERANCE_PX) allowance below the
- * floor rather than an exact 0. That's not a concession that
- * zero-tolerance can't be done — the Math.max clamp already gives an
- * exact guarantee — it's cheap insurance against sub-pixel rounding
- * noise between this value and whatever CSS transform actually paints,
- * which isn't visually distinguishable from 0 anyway. Set it to 0 if
- * a stricter guarantee is ever needed for a different container.
+ * The clamp keeps a tiny (EDGE_TOLERANCE_PX) allowance above 0 rather
+ * than an exact bound. That's not a concession that zero-tolerance
+ * can't be done — the Math.max clamp already gives an exact guarantee
+ * — it's cheap insurance against sub-pixel rounding noise between this
+ * value and whatever CSS transform actually paints, which isn't
+ * visually distinguishable from 0 anyway. Set it to 0 if a stricter
+ * guarantee is ever needed for a different container.
  *
  * Usage: select the "Scrollable Content" layer on the canvas ->
  * Code (right panel) -> Override -> this file -> pick the export for
@@ -62,13 +61,13 @@ import { animate, motion, useMotionValue } from "framer-motion"
  * does it, since Framer's Override dropdown only picks up top-level
  * exported function declarations.
  *
- * TutorialOverlay.tsx's scrollAdvancesStep and lockScrollWhileActive
+ * TutorialOverlay.tsx's scrollAdvancesStep and freezeScrollWhileActive
  * both check getVirtualScroll(scrollContainerTarget) first and use
  * this instead of native scrollTop/scroll events when it's present,
  * falling back to native handling for any container that isn't
  * virtualized. So this only needs to be applied to containers that
- * actually need the zero-tolerance lock — everything else keeps
- * working exactly as before, untouched.
+ * actually need it — everything else keeps working exactly as before,
+ * untouched.
  *
  * Known limitation, worth testing for: there's no momentum/inertia
  * here on purpose — position follows the finger 1:1 in real time and
@@ -84,46 +83,21 @@ export interface VirtualScrollHandle {
     // 0-100, how far through the scrollable range the content
     // currently is. Used by TutorialOverlay's scrollAdvancesStep.
     getPercent(): number
-    // Locks the floor at the CURRENT position — used by
-    // TutorialOverlay's lockScrollWhileActive the moment that step
-    // engages. Position can then never go below this again while the
-    // container stays mounted. Calling this again later only ever
-    // raises the floor further (to wherever position is AT THAT
-    // point) — it can't lower it, so a step that needs to undo an
-    // earlier lock (e.g. to let the user scroll back up to something
-    // now pinned above where an earlier step's lock ratcheted to)
-    // needs releaseFloor below instead.
-    lockFloorHere(): void
-    // Resets the floor back to 0 (the true top), undoing whatever an
-    // earlier lockFloorHere call set it to. Used by TutorialOverlay's
-    // releaseScrollLockWhileActive — the lock is a deliberate one-way
-    // ratchet for the step that sets it (e.g. stopping a card from
-    // scrolling back down under fixed chrome while filling out a
-    // form), not a permanent property of the container; a later step
-    // in the same flow with different needs (e.g. "scroll up to see
-    // the thing you just saved") should be able to undo it.
-    releaseFloor(): void
-    // Freezes position completely — neither direction moves, not just
-    // "can't go backward" — until unfreeze() is called. Used by
-    // TutorialOverlay's freezeScrollWhileActive for a step whose target
-    // needs to hold perfectly still while the user decides whether to
-    // interact with it (e.g. a toggle inside a scrollable list), rather
-    // than merely being unable to go back to where it was. Distinct
-    // from lockFloorHere/releaseFloor: those still allow forward
-    // motion and are a deliberate ratchet that outlives the step that
-    // set it; this blocks all motion and is meant to be undone by the
-    // same step's own end.
+    // Freezes position completely — neither direction moves — until
+    // unfreeze() is called. Used by TutorialOverlay's
+    // freezeScrollWhileActive for a step whose target needs to hold
+    // perfectly still while the user decides whether to interact with
+    // it (e.g. a toggle inside a scrollable list), scoped to that
+    // step's own lifetime.
     freezeHere(): void
     unfreeze(): void
     // Smoothly animates position back to 0 (the true top). Used by
     // CardAlertsSave.tsx's scrollCardAlertsToTop() the instant its
     // Saving overlay appears, so the page is back at the top by the
     // time the save delay elapses and it navigates away. Deliberately
-    // ignores both the floor (lockFloorHere's ratchet) and frozen
-    // state — by the point Save is tappable, whatever earlier step set
-    // either of those is long over, and the container is about to
-    // unmount anyway on navigation, so there's nothing left for either
-    // one to protect.
+    // ignores frozen state — by the point Save is tappable, whatever
+    // earlier step froze it is long over, and the container is about
+    // to unmount anyway on navigation.
     scrollToTop(): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
@@ -173,7 +147,6 @@ function withVirtualScroll(id: string) {
             const y = useMotionValue(0)
 
             const posRef = React.useRef(0) // 0 = top, increases downward
-            const floorRef = React.useRef(0)
             const maxRef = React.useRef(0)
             const frozenRef = React.useRef(false)
             const dragRef = React.useRef<{
@@ -187,13 +160,11 @@ function withVirtualScroll(id: string) {
                 (v: number) => {
                     // Frozen means frozen — not clamped to a range, not
                     // "no further than this," just entirely unresponsive
-                    // to input until unfrozen. Checked before floor/max
-                    // even apply, so freezing overrides an active
-                    // lockFloorHere ratchet for free (there's no motion
-                    // left for the floor to constrain).
+                    // to input until unfrozen. Checked before the range
+                    // clamp even applies.
                     if (frozenRef.current) return
                     const clamped = Math.min(
-                        Math.max(v, floorRef.current - EDGE_TOLERANCE_PX),
+                        Math.max(v, -EDGE_TOLERANCE_PX),
                         maxRef.current
                     )
                     if (clamped === posRef.current) return
@@ -232,12 +203,6 @@ function withVirtualScroll(id: string) {
                         maxRef.current > 0
                             ? (posRef.current / maxRef.current) * 100
                             : 100,
-                    lockFloorHere: () => {
-                        floorRef.current = posRef.current
-                    },
-                    releaseFloor: () => {
-                        floorRef.current = 0
-                    },
                     freezeHere: () => {
                         frozenRef.current = true
                     },
@@ -424,16 +389,16 @@ export function VirtualScrollTravelContent(
 // Card Alerts Tutorial Page "Scrollable Content" — its OWN id, not a
 // reuse of VirtualScrollTravelContent's "scrollable-content". Applying
 // the same export/id to a second page's container was the actual bug
-// behind a report of still being able to scroll up on the Card Alerts
-// toggle step despite lockScrollWhileActive: the registry above is one
-// shared Map keyed only by this string, so two different containers
-// registered under the same id race for that one slot — whichever
-// mounts/re-registers last "wins" the lookup, and the OTHER container
-// (quite possibly the one actually on screen) is left with a floor
-// lock that was never really applied to IT. Matches this file's own
-// documented convention (see the top-of-file comment): every container
-// gets its own thin export, exactly like TutorialTargets.tsx does per
-// target — this was simply the second one ever needed.
+// behind a report of a Card Alerts step not behaving as configured:
+// the registry above is one shared Map keyed only by this string, so
+// two different containers registered under the same id race for that
+// one slot — whichever mounts/re-registers last "wins" the lookup,
+// and the OTHER container (quite possibly the one actually on screen)
+// is left with a state change that was never really applied to IT.
+// Matches this file's own documented convention (see the top-of-file
+// comment): every container gets its own thin export, exactly like
+// TutorialTargets.tsx does per target — this was simply the second
+// one ever needed.
 export function VirtualScrollCardAlertsContent(
     Component: ComponentType<any>
 ): ComponentType<any> {
