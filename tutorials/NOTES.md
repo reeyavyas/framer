@@ -67,9 +67,9 @@ anywhere else on the page.
   this page group" on every step but the last, and "go to the next
   page" on the last step of a group or on a single-step page with no
   `pageGroup` at all. The button sits above its own progress bar in a
-  shared wrapper (own `gap: 12` between the two, `marginTop: 8` on the
-  wrapper itself for a bit of separation from the title/body text above
-  it) rather than relying on the card's own uniform `gap: 24`.
+  shared wrapper, with the gap below the button (wrapper's own `gap: 32`)
+  matching the gap above it exactly — the card's own `gap: 24` (between
+  `cardBody` and this wrapper) plus the wrapper's own `marginTop: 8`.
   `nextButtonFont`'s default is Proxima Nova Semibold at 36px/1.2 line
   height, baked in as the default rather than something to reset on
   every instance — the Font control still lets a given step override it.

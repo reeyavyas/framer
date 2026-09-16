@@ -1104,11 +1104,14 @@ export default function TutorialOverlay(props: Props) {
                             )}
                             {/* Next button above, progress bar below it —
                                 grouped in their own wrapper (rather than
-                                relying on the card's own 24px gap) so
-                                there's a bit of extra breathing room
-                                between the text above and this pair, and a
-                                tighter gap between the button and its own
-                                bar than between title/body. */}
+                                relying on the card's own 24px gap) so the
+                                gap below the button can match the gap
+                                above it exactly: 24px from the card's own
+                                gap (between cardBody and this wrapper) +
+                                this wrapper's own 8px marginTop = 32px
+                                above, so the wrapper's own internal gap
+                                (button to bar) is also set to 32 rather
+                                than reusing the card's tighter 24. */}
                             {(showNextButton ||
                                 (showProgressBar &&
                                     nextStepAfterSeconds > 0)) && (
@@ -1117,7 +1120,7 @@ export default function TutorialOverlay(props: Props) {
                                         display: "flex",
                                         flexDirection: "column",
                                         alignItems: "center",
-                                        gap: 12,
+                                        gap: 32,
                                         marginTop: 8,
                                         width: "100%",
                                     }}
