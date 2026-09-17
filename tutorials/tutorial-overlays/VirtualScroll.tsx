@@ -57,13 +57,13 @@ import { animate, motion, useMotionValue } from "framer-motion"
  * Usage: select the "Scrollable Content" layer on the canvas ->
  * Code (right panel) -> Override -> this file -> pick the export for
  * that specific container. Most pages should just pick
- * VirtualScrollContent, the shared export below — the registry keys on
- * the current page path as well as the id (see the scoping comment
- * above the registry), so the exact same export works unmodified on any
- * page needing VirtualScroll, no matter how different their content or
- * height, with nothing new to write. Card Alerts is the one exception,
- * kept on its own dedicated export — see the comment on
- * VirtualScrollCardAlertsContent for why.
+ * VirtualScrollCardControls, the shared export below — the registry
+ * keys on the current page path as well as the id (see the scoping
+ * comment above the registry), so the exact same export works
+ * unmodified on any page needing VirtualScroll, no matter how different
+ * their content or height, with nothing new to write. Card Alerts is
+ * the one exception, kept on its own dedicated export — see the comment
+ * on VirtualScrollCardAlertsContent for why.
  *
  * TutorialOverlay.tsx's scrollAdvancesStep and freezeScrollWhileActive
  * both check getVirtualScroll(scrollContainerTarget) first and use
@@ -432,10 +432,14 @@ function withVirtualScroll(id: string) {
     }
 }
 
-// Shared "Scrollable Content" override — apply this same export to the
-// layer on ANY page that needs VirtualScroll (Travel Notice, Card
-// Controls 1, Card Controls 3, and any future page), no matter how
-// different their content or height. Safe to reuse as-is because the
+// Shared "Scrollable Content" override for the Card Controls family of
+// pages — apply this same export to the layer on ANY of them that needs
+// VirtualScroll (Travel Notice, Card Controls 1, Card Controls 3, and
+// any future page), no matter how different their content or height.
+// Travel Notice belongs here too, not just Card Controls 1/3: it lives
+// under card-controls/travel-notice/ and is itself a duplicated Card
+// Controls page (the one with a TravelNoticeSection that appears after
+// tapping Save on SetTravelNotice). Safe to reuse as-is because the
 // registry keys on the current page path as well as this id (see the
 // scoping comment above the registry) — every page picking this same
 // export still lands in its own separate registry slot automatically.
@@ -445,7 +449,7 @@ function withVirtualScroll(id: string) {
 // existed; collapsed into this one now that keeping them distinct was
 // doing no actual work. NOT used by Card Alerts — see that export just
 // below for why it stays separate.
-export function VirtualScrollContent(
+export function VirtualScrollCardControls(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withVirtualScroll("scrollable-content")(Component)
