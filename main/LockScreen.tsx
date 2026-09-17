@@ -1,5 +1,5 @@
 import * as React from "react"
-import { addPropertyControls, ControlType } from "framer"
+import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { motion, useMotionValue, useTransform, animate } from "framer-motion"
 
 // Icons
@@ -32,6 +32,33 @@ function FlashlightGlyph({ size, color }: { size: number; color: string }) {
                 strokeWidth="1.5"
                 strokeLinejoin="round"
                 strokeLinecap="round"
+            />
+        </svg>
+    )
+}
+
+function ChevronUpGlyph({ size, color }: { size: number; color: string }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <path
+                d="M5 15L12 8L19 15"
+                stroke={color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    )
+}
+
+function MessageGlyph({ size, color }: { size: number; color: string }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <path
+                d="M4 5.5C4 4.67 4.67 4 5.5 4H18.5C19.33 4 20 4.67 20 5.5V15.5C20 16.33 19.33 17 18.5 17H9L5 20.5V17H5.5C4.67 17 4 16.33 4 15.5V5.5Z"
+                stroke={color}
+                strokeWidth="1.5"
+                strokeLinejoin="round"
             />
         </svg>
     )
@@ -77,9 +104,52 @@ function rgba(r: number, g: number, b: number, a: number) {
     return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
+// A soft, slowly rotating two-tone gradient wash. Sits behind the glass
+// panel and content so it reads as ambient life in the wallpaper rather
+// than a distinct layer of its own — meant to be subtle, not a feature.
+function AnimatedBackgroundWash({
+    colorA,
+    colorB,
+    opacity,
+    speed,
+}: {
+    colorA: string
+    colorB: string
+    opacity: number
+    speed: number
+}) {
+    return (
+        <div
+            style={{
+                position: "absolute",
+                inset: 0,
+                overflow: "hidden",
+                pointerEvents: "none",
+            }}
+        >
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: speed, repeat: Infinity, ease: "linear" }}
+                style={{
+                    position: "absolute",
+                    left: "-30%",
+                    top: "-30%",
+                    width: "160%",
+                    height: "160%",
+                    background: `radial-gradient(circle at 30% 30%, ${colorA} 0%, transparent 60%), radial-gradient(circle at 70% 70%, ${colorB} 0%, transparent 60%)`,
+                    opacity,
+                    mixBlendMode: "overlay",
+                    filter: "blur(60px)",
+                }}
+            />
+        </div>
+    )
+}
+
 // Component
 export default function LockScreen(props) {
     const {
+        variant = "lockScreen",
         // Flattened Time controls
         useLiveTime,
         customTime,
@@ -93,24 +163,33 @@ export default function LockScreen(props) {
         dateFont,
         dateColor,
         dateOpacity,
+        // Fake Notification
+        notification = {},
         // Flattened Swipe Hint controls
         swipeHintText,
         swipeHintFont,
         swipeHintColor,
         swipeHintOpacity,
         swipeHintGap,
+        swipeHintBounce,
         // Nested Objects remaining
         layout = {},
         icons = {},
         glass = {},
         homeIndicator = {},
+        background = {},
+        // Splash variant
+        splash = {},
         // NEW Event trigger prop
         onSwipeUp,
     } = props
 
+    const isLockScreen = variant !== "splash"
+
     // Live-tick whenever either the clock or the date is set to "live" —
     // otherwise a live date paired with a custom time would never update.
-    const now = useTicker(useLiveTime || useLiveDate)
+    // Disabled entirely on the splash variant, which has no clock at all.
+    const now = useTicker(isLockScreen && (useLiveTime || useLiveDate))
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
 
@@ -159,9 +238,140 @@ export default function LockScreen(props) {
             onSwipeUp()
         }
 
-        // Always spring back to rest — otherwise a drag that doesn't clear
-        // the swipe threshold leaves the panel stuck wherever it was released.
-        animate(dragY, 0, { type: "spring", stiffness: 400, damping: 40 })
+        // Always spring back to rest — a lighter damping than critical gives
+        // it a small, deliberate "jump" on release instead of a flat snap,
+        // whether or not the swipe cleared the trigger threshold.
+        animate(dragY, 0, { type: "spring", stiffness: 300, damping: 22 })
+    }
+
+    // --- Splash variant: logo entrance, then an optional idle pulse ---
+    const [logoEntered, setLogoEntered] = React.useState(false)
+
+    React.useEffect(() => {
+        if (variant !== "splash") return
+        if (typeof window === "undefined") return
+        // Never auto-navigate away while designing on the canvas.
+        if (RenderTarget.current() === RenderTarget.canvas) return
+
+        const delayMs = (splash.redirectDelay ?? 2.5) * 1000
+        const id = window.setTimeout(() => {
+            window.location.href = splash.redirectUrl || "/base-pages/login"
+        }, delayMs)
+        return () => window.clearTimeout(id)
+    }, [variant, splash.redirectDelay, splash.redirectUrl])
+
+    if (variant === "splash") {
+        const logoSize = splash.logoSize || 140
+        return (
+            <div
+                style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: `linear-gradient(160deg, ${
+                        splash.backgroundColorA || "#0B0F1A"
+                    } 0%, ${splash.backgroundColorB || "#1B2340"} 100%)`,
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 28,
+                    }}
+                >
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            scale: splash.animation === "fade" ? 1 : 0.85,
+                        }}
+                        animate={
+                            logoEntered && splash.animation === "pulse"
+                                ? { opacity: 1, scale: [1, 1.05, 1] }
+                                : { opacity: 1, scale: 1 }
+                        }
+                        transition={
+                            logoEntered && splash.animation === "pulse"
+                                ? {
+                                      duration: 2.2,
+                                      repeat: Infinity,
+                                      ease: "easeInOut",
+                                  }
+                                : { duration: 0.7, ease: "easeOut" }
+                        }
+                        onAnimationComplete={() => setLogoEntered(true)}
+                        style={{
+                            width: logoSize,
+                            height: logoSize,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        {splash.logo ? (
+                            <img
+                                src={splash.logo.src}
+                                alt="Logo"
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "contain",
+                                }}
+                            />
+                        ) : (
+                            <div
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    borderRadius: "28%",
+                                    background: "rgba(255,255,255,0.12)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#FFFFFF",
+                                    fontFamily: "-apple-system, sans-serif",
+                                    fontWeight: 700,
+                                    fontSize: logoSize * 0.22,
+                                    textAlign: "center",
+                                    padding: "10%",
+                                    boxSizing: "border-box",
+                                }}
+                            >
+                                {splash.logoPlaceholderText || "LOGO"}
+                            </div>
+                        )}
+                    </motion.div>
+                    {splash.showProgressDots !== false && (
+                        <div style={{ display: "flex", gap: 10 }}>
+                            {[0, 1, 2].map((i) => (
+                                <motion.div
+                                    key={i}
+                                    animate={{ opacity: [0.25, 1, 0.25] }}
+                                    transition={{
+                                        duration: 1.2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                        delay: i * 0.2,
+                                    }}
+                                    style={{
+                                        width: 8,
+                                        height: 8,
+                                        borderRadius: 4,
+                                        background: "#FFFFFF",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -179,6 +389,19 @@ export default function LockScreen(props) {
             }}
             onDragEnd={handleDragEnd}
         >
+            {/* Ambient Animated Background Wash */}
+            {background.enabled !== false && (
+                <AnimatedBackgroundWash
+                    colorA={background.colorA || "#7F9CFF"}
+                    colorB={background.colorB || "#FF9BD2"}
+                    opacity={
+                        background.opacity === undefined
+                            ? 0.16
+                            : background.opacity
+                    }
+                    speed={background.speed || 24}
+                />
+            )}
             {/* Background Panel Glass Layer */}
             <div
                 style={{
@@ -249,6 +472,127 @@ export default function LockScreen(props) {
                         </span>
                     </div>
                 </div>
+                {/* Fake Notification */}
+                {notification.enabled !== false && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            delay:
+                                notification.delaySeconds === undefined
+                                    ? 1.1
+                                    : notification.delaySeconds,
+                            duration: 0.5,
+                            ease: "easeOut",
+                        }}
+                        style={{
+                            marginTop: layout.dateTimeGap,
+                            width: "100%",
+                            maxWidth: 420,
+                            boxSizing: "border-box",
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 12,
+                            padding: 14,
+                            borderRadius:
+                                notification.cornerRadius === undefined
+                                    ? 20
+                                    : notification.cornerRadius,
+                            ...buttonGlassStyle,
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 12,
+                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: "rgba(255,255,255,0.25)",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {notification.icon ? (
+                                <img
+                                    src={notification.icon.src}
+                                    alt=""
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                    }}
+                                />
+                            ) : (
+                                <MessageGlyph size={22} color="#FFFFFF" />
+                            )}
+                        </div>
+                        <div
+                            style={{
+                                flex: 1,
+                                minWidth: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 2,
+                                fontFamily: "-apple-system, sans-serif",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 8,
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        fontSize: 13,
+                                        letterSpacing: 0.2,
+                                        textTransform: "uppercase",
+                                        color: "rgba(255,255,255,0.85)",
+                                    }}
+                                >
+                                    {notification.appName || "Messages"}
+                                </span>
+                                <span
+                                    style={{
+                                        fontSize: 13,
+                                        color: "rgba(255,255,255,0.7)",
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    {notification.timeLabel || "now"}
+                                </span>
+                            </div>
+                            <div
+                                style={{
+                                    fontWeight: 600,
+                                    fontSize: 15,
+                                    color: "#FFFFFF",
+                                }}
+                            >
+                                {notification.title || "Alex"}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 14,
+                                    color: "rgba(255,255,255,0.85)",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                }}
+                            >
+                                {notification.message ||
+                                    "Don't forget practice starts at 6!"}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
                 {/* Spacer pushes context rows downward */}
                 <div style={{ flex: 1 }} />
                 {/* Quick Action Icon Row */}
@@ -335,8 +679,18 @@ export default function LockScreen(props) {
                         )}
                     </div>
                 </div>
-                {/* Unlock Hint Text */}
-                <div
+                {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
+                <motion.div
+                    animate={swipeHintBounce ? { y: [0, -10, 0] } : { y: 0 }}
+                    transition={
+                        swipeHintBounce
+                            ? {
+                                  duration: 1.6,
+                                  repeat: Infinity,
+                                  ease: "easeInOut",
+                              }
+                            : { duration: 0 }
+                    }
                     style={{
                         position: "absolute",
                         bottom:
@@ -344,20 +698,30 @@ export default function LockScreen(props) {
                             (homeIndicator.height || 0) +
                             (swipeHintGap || 0),
                         left: "50%",
-                        transform: "translateX(-50%)",
-                        width: "max-content",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
+                        x: "-50%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 4,
                         pointerEvents: "none",
-                        ...swipeHintFont,
-                        color: swipeHintColor,
-                        opacity: swipeHintOpacity,
-                        textShadow: "0 1px 6px rgba(0,0,0,0.3)",
-                        marginRight: trailingSpacingFix(swipeHintFont),
                     }}
                 >
-                    {swipeHintText}
-                </div>
+                    <ChevronUpGlyph size={18} color={swipeHintColor} />
+                    <div
+                        style={{
+                            width: "max-content",
+                            textAlign: "center",
+                            whiteSpace: "nowrap",
+                            ...swipeHintFont,
+                            color: swipeHintColor,
+                            opacity: swipeHintOpacity,
+                            textShadow: "0 1px 6px rgba(0,0,0,0.3)",
+                            marginRight: trailingSpacingFix(swipeHintFont),
+                        }}
+                    >
+                        {swipeHintText}
+                    </div>
+                </motion.div>
                 {/* Home Indicator Interactive Bar */}
                 <div
                     style={{
@@ -380,6 +744,7 @@ export default function LockScreen(props) {
 
 // Default Setup Canvas Configuration
 LockScreen.defaultProps = {
+    variant: "lockScreen",
     useLiveTime: true,
     use24Hour: false,
     customTime: "9:41",
@@ -401,6 +766,15 @@ LockScreen.defaultProps = {
     },
     dateColor: "#FFFFFF",
     dateOpacity: 1,
+    notification: {
+        enabled: true,
+        appName: "Messages",
+        title: "Alex",
+        message: "Don't forget practice starts at 6!",
+        timeLabel: "now",
+        cornerRadius: 20,
+        delaySeconds: 1.1,
+    },
     layout: {
         topInset: 110,
         sideInset: 48,
@@ -435,6 +809,13 @@ LockScreen.defaultProps = {
         opacity: 0.9,
         bottomOffset: 26,
     },
+    background: {
+        enabled: true,
+        colorA: "#7F9CFF",
+        colorB: "#FF9BD2",
+        opacity: 0.16,
+        speed: 24,
+    },
     swipeHintText: "Swipe up to open",
     swipeHintFont: {
         fontSize: 30,
@@ -445,14 +826,33 @@ LockScreen.defaultProps = {
     swipeHintColor: "#FFFFFF",
     swipeHintOpacity: 0.8,
     swipeHintGap: 28,
+    swipeHintBounce: true,
+    splash: {
+        logoSize: 140,
+        logoPlaceholderText: "LOGO",
+        animation: "scaleIn",
+        backgroundColorA: "#0B0F1A",
+        backgroundColorB: "#1B2340",
+        showProgressDots: true,
+        redirectUrl: "/base-pages/login",
+        redirectDelay: 2.5,
+    },
 }
 
 // Property Controls Panel Definition
 addPropertyControls(LockScreen, {
+    variant: {
+        type: ControlType.Enum,
+        title: "Variant",
+        options: ["lockScreen", "splash"],
+        optionTitles: ["Lock Screen", "Splash"],
+        defaultValue: "lockScreen",
+    },
     // NEW Framer Action Link Handler Control
     onSwipeUp: {
         type: ControlType.EventHandler,
         title: "On Swipe Up",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveTime: {
         type: ControlType.Boolean,
@@ -460,17 +860,19 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     customTime: {
         type: ControlType.String,
         title: "Custom Time",
         defaultValue: "9:41",
-        hidden: (p) => p.useLiveTime,
+        hidden: (p) => p.variant !== "lockScreen" || p.useLiveTime,
     },
     use24Hour: {
         type: ControlType.Boolean,
         title: "24-Hour",
         defaultValue: false,
+        hidden: (p) => p.variant !== "lockScreen",
     },
     timeFont: {
         type: ControlType.Font,
@@ -483,11 +885,13 @@ addPropertyControls(LockScreen, {
             letterSpacing: "-2px",
             variant: "Semibold",
         },
+        hidden: (p) => p.variant !== "lockScreen",
     },
     timeColor: {
         type: ControlType.Color,
         title: "Time Color",
         defaultValue: "#FFFFFF",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     clockOpacity: {
         type: ControlType.Number,
@@ -496,6 +900,7 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
+        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveDate: {
         type: ControlType.Boolean,
@@ -503,12 +908,13 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     customDate: {
         type: ControlType.String,
         title: "Custom Date",
         defaultValue: "Tue 7 Jul",
-        hidden: (p) => p.useLiveDate,
+        hidden: (p) => p.variant !== "lockScreen" || p.useLiveDate,
     },
     dateFont: {
         type: ControlType.Font,
@@ -521,11 +927,13 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0.3px",
             variant: "Semibold",
         },
+        hidden: (p) => p.variant !== "lockScreen",
     },
     dateColor: {
         type: ControlType.Color,
         title: "Date Color",
         defaultValue: "#FFFFFF",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     dateOpacity: {
         type: ControlType.Number,
@@ -534,10 +942,66 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
+        hidden: (p) => p.variant !== "lockScreen",
+    },
+    notification: {
+        type: ControlType.Object,
+        title: "Fake Notification",
+        hidden: (p) => p.variant !== "lockScreen",
+        controls: {
+            enabled: {
+                type: ControlType.Boolean,
+                title: "Show",
+                defaultValue: true,
+                enabledTitle: "On",
+                disabledTitle: "Off",
+            },
+            icon: {
+                type: ControlType.ResponsiveImage,
+                title: "Icon",
+            },
+            appName: {
+                type: ControlType.String,
+                title: "App Name",
+                defaultValue: "Messages",
+            },
+            title: {
+                type: ControlType.String,
+                title: "Title",
+                defaultValue: "Alex",
+            },
+            message: {
+                type: ControlType.String,
+                title: "Message",
+                defaultValue: "Don't forget practice starts at 6!",
+            },
+            timeLabel: {
+                type: ControlType.String,
+                title: "Time Label",
+                defaultValue: "now",
+            },
+            cornerRadius: {
+                type: ControlType.Number,
+                title: "Corner Radius",
+                defaultValue: 20,
+                min: 0,
+                max: 40,
+                step: 1,
+            },
+            delaySeconds: {
+                type: ControlType.Number,
+                title: "Appear Delay (s)",
+                defaultValue: 1.1,
+                min: 0,
+                max: 8,
+                step: 0.1,
+            },
+        },
     },
     layout: {
         type: ControlType.Object,
         title: "Layout & Insets",
+        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             topInset: {
                 type: ControlType.Number,
@@ -576,6 +1040,7 @@ addPropertyControls(LockScreen, {
     icons: {
         type: ControlType.Object,
         title: "Icons",
+        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             buttonSize: {
                 type: ControlType.Number,
@@ -611,6 +1076,7 @@ addPropertyControls(LockScreen, {
     glass: {
         type: ControlType.Object,
         title: "Glass Panel",
+        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             cornerRadius: {
                 type: ControlType.Number,
@@ -705,6 +1171,7 @@ addPropertyControls(LockScreen, {
     homeIndicator: {
         type: ControlType.Object,
         title: "Home Indicator",
+        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             width: {
                 type: ControlType.Number,
@@ -753,10 +1220,51 @@ addPropertyControls(LockScreen, {
             },
         },
     },
+    background: {
+        type: ControlType.Object,
+        title: "Animated Background",
+        hidden: (p) => p.variant !== "lockScreen",
+        controls: {
+            enabled: {
+                type: ControlType.Boolean,
+                title: "Enabled",
+                defaultValue: true,
+                enabledTitle: "On",
+                disabledTitle: "Off",
+            },
+            colorA: {
+                type: ControlType.Color,
+                title: "Color A",
+                defaultValue: "#7F9CFF",
+            },
+            colorB: {
+                type: ControlType.Color,
+                title: "Color B",
+                defaultValue: "#FF9BD2",
+            },
+            opacity: {
+                type: ControlType.Number,
+                title: "Opacity",
+                defaultValue: 0.16,
+                min: 0,
+                max: 0.6,
+                step: 0.01,
+            },
+            speed: {
+                type: ControlType.Number,
+                title: "Speed (s/loop)",
+                defaultValue: 24,
+                min: 6,
+                max: 60,
+                step: 1,
+            },
+        },
+    },
     swipeHintText: {
         type: ControlType.String,
         title: "Swipe Hint Text",
         defaultValue: "Swipe up to open",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintFont: {
         type: ControlType.Font,
@@ -769,11 +1277,13 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0px",
             variant: "Regular",
         },
+        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintColor: {
         type: ControlType.Color,
         title: "Swipe Hint Color",
         defaultValue: "#FFFFFF",
+        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintOpacity: {
         type: ControlType.Number,
@@ -782,6 +1292,7 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
+        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintGap: {
         type: ControlType.Number,
@@ -790,5 +1301,75 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 150,
         step: 1,
+        hidden: (p) => p.variant !== "lockScreen",
+    },
+    swipeHintBounce: {
+        type: ControlType.Boolean,
+        title: "Swipe Hint Bounce",
+        defaultValue: true,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (p) => p.variant !== "lockScreen",
+    },
+    splash: {
+        type: ControlType.Object,
+        title: "Splash",
+        hidden: (p) => p.variant !== "splash",
+        controls: {
+            logo: {
+                type: ControlType.ResponsiveImage,
+                title: "Logo",
+            },
+            logoPlaceholderText: {
+                type: ControlType.String,
+                title: "Placeholder Text",
+                defaultValue: "LOGO",
+            },
+            logoSize: {
+                type: ControlType.Number,
+                title: "Logo Size",
+                defaultValue: 140,
+                min: 40,
+                max: 400,
+                step: 1,
+            },
+            animation: {
+                type: ControlType.Enum,
+                title: "Animation",
+                options: ["fade", "scaleIn", "pulse"],
+                optionTitles: ["Fade In", "Scale In", "Pulse Loop"],
+                defaultValue: "scaleIn",
+            },
+            backgroundColorA: {
+                type: ControlType.Color,
+                title: "Background Color A",
+                defaultValue: "#0B0F1A",
+            },
+            backgroundColorB: {
+                type: ControlType.Color,
+                title: "Background Color B",
+                defaultValue: "#1B2340",
+            },
+            showProgressDots: {
+                type: ControlType.Boolean,
+                title: "Progress Dots",
+                defaultValue: true,
+                enabledTitle: "On",
+                disabledTitle: "Off",
+            },
+            redirectUrl: {
+                type: ControlType.String,
+                title: "Redirect URL",
+                defaultValue: "/base-pages/login",
+            },
+            redirectDelay: {
+                type: ControlType.Number,
+                title: "Redirect Delay (s)",
+                defaultValue: 2.5,
+                min: 0.5,
+                max: 15,
+                step: 0.1,
+            },
+        },
     },
 })
