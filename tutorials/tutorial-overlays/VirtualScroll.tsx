@@ -434,12 +434,14 @@ function withVirtualScroll(id: string) {
 }
 
 // The general-purpose "Scrollable Content" override — the default pick
-// going forward for most pages needing VirtualScroll (currently Travel
-// Notice, Card Controls 1, Card Controls 3), no matter how different
-// their content or height. Safe to reuse as-is on any new page too, no
-// new export needed: the registry keys on the current page path as well
-// as this id (see the scoping comment above the registry), so every
-// page picking this same export still lands in its own separate
+// going forward for most pages needing VirtualScroll, project-wide, not
+// just the card-controls-tutorial family. Currently applied to Travel
+// Notice, Card Controls 1, and Card Controls 3, but nothing about it is
+// specific to those — any page anywhere in the project can pick this
+// same export as-is, no matter how different their content or height,
+// with no new export needed: the registry keys on the current page path
+// as well as this id (see the scoping comment above the registry), so
+// every page picking this same export still lands in its own separate
 // registry slot automatically. Formerly three separate exports
 // (VirtualScrollTravelContent, VirtualScrollCardControls1Content,
 // VirtualScrollCardControls3Content), each with its own id purely out
