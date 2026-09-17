@@ -136,8 +136,8 @@ interface Props {
     arrowStrokeWidth: number
     arrowSize: number
     arrowRotation: number // degrees, rotates the whole grouped line+arrowhead together
-    arrowReflect: boolean
-    arrowReflectAngle: number // degrees — the axis to mirror across. 0 = horizontal flip, 90 = vertical flip.
+    arrowReflectX: boolean // mirror horizontally
+    arrowReflectY: boolean // mirror vertically
     arrowDelaySeconds: number // uncapped
     arrowOffsetX: number
     arrowOffsetY: number
@@ -461,8 +461,8 @@ export default function TutorialOverlay(props: Props) {
         arrowStrokeWidth,
         arrowSize,
         arrowRotation,
-        arrowReflect,
-        arrowReflectAngle,
+        arrowReflectX,
+        arrowReflectY,
         arrowDelaySeconds,
         arrowOffsetX,
         arrowOffsetY,
@@ -984,9 +984,9 @@ export default function TutorialOverlay(props: Props) {
         </svg>
     )
 
-    const arrowTransform = arrowReflect
-        ? `rotate(${arrowRotation}deg) rotate(${arrowReflectAngle}deg) scaleY(-1) rotate(${-arrowReflectAngle}deg)`
-        : `rotate(${arrowRotation}deg)`
+    const arrowTransform = `rotate(${arrowRotation}deg) scale(${
+        arrowReflectX ? -1 : 1
+    }, ${arrowReflectY ? -1 : 1})`
 
     const content = (
         // pointerEvents:"none" here is the actual fix for clicks not
@@ -1532,8 +1532,8 @@ TutorialOverlay.defaultProps = {
     arrowStrokeWidth: 8,
     arrowSize: 90,
     arrowRotation: 0,
-    arrowReflect: false,
-    arrowReflectAngle: 0,
+    arrowReflectX: false,
+    arrowReflectY: false,
     arrowDelaySeconds: 1.2,
     arrowOffsetX: 0,
     arrowOffsetY: -100,
@@ -1881,20 +1881,21 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: 0,
         hidden: (props) => !props.showArrow,
     },
-    arrowReflect: {
+    arrowReflectX: {
         type: ControlType.Boolean,
-        title: "Arrow reflect",
+        title: "Reflect X",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
         hidden: (props) => !props.showArrow,
     },
-    arrowReflectAngle: {
-        type: ControlType.Number,
-        title: "Reflect axis (°)",
-        step: 1,
-        defaultValue: 0,
-        hidden: (props) => !props.showArrow || !props.arrowReflect,
+    arrowReflectY: {
+        type: ControlType.Boolean,
+        title: "Reflect Y",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.showArrow,
     },
     arrowDelaySeconds: {
         type: ControlType.Number,
