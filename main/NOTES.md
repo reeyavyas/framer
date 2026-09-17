@@ -9,6 +9,11 @@ Site-wide, page-agnostic components — not owned by any single feature.
   shows a countdown and then automatically redirects back to the
   homepage, so the next person at the kiosk never inherits a stranger's
   left-open session.
+- `LockScreen.tsx` — iOS-style lock screen (live/custom clock + date,
+  frosted-glass flashlight/camera buttons, home indicator, swipe-up
+  gesture). Dragging the panel up past a distance/velocity threshold
+  fires the `onSwipeUp` event control; otherwise it springs back to
+  rest on release.
 
 ## Removed
 
