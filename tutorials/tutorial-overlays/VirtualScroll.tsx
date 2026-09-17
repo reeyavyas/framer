@@ -456,15 +456,20 @@ export function VirtualScrollCardAlertsContent(
 }
 
 // Card Controls Tutorial Page 1 ("/card-controls-tutorial/card-controls-1")
-// "Scrollable Content". Its id no longer has to be unique across pages
-// for correctness (see the registry-scoping comment above) — kept as
-// its own export mainly so the existing canvas Override selection on
-// this page doesn't need to change. A future page can just as safely
-// reuse this exact export instead of getting a new one of its own.
+// "Scrollable Content". Deliberately reuses VirtualScrollTravelContent's
+// exact id ("scrollable-content") rather than its own — under the
+// registry's page-scoping (see the comment above it), an id no longer
+// has to be unique across pages for correctness, since the current page
+// path is already part of the registry key. Kept as its own separate
+// EXPORT anyway, purely so the existing canvas Override selection on
+// this page doesn't need to change (Framer's Override picker keys off
+// the export name, never the id string inside it). A future page can
+// just as safely reuse this exact export instead of getting a new one
+// of its own.
 export function VirtualScrollCardControls1Content(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withVirtualScroll("card-controls-1-scroll")(Component)
+    return withVirtualScroll("scrollable-content")(Component)
 }
 
 // Card Controls Tutorial Page 3 ("/card-controls-tutorial/card-controls-3")
@@ -473,5 +478,5 @@ export function VirtualScrollCardControls1Content(
 export function VirtualScrollCardControls3Content(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withVirtualScroll("card-controls-3-scroll")(Component)
+    return withVirtualScroll("scrollable-content")(Component)
 }
