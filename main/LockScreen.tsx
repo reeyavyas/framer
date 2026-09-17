@@ -104,48 +104,6 @@ function rgba(r: number, g: number, b: number, a: number) {
     return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
-// A soft, slowly rotating two-tone gradient wash. Sits behind the glass
-// panel and content so it reads as ambient life in the wallpaper rather
-// than a distinct layer of its own — meant to be subtle, not a feature.
-function AnimatedBackgroundWash({
-    colorA,
-    colorB,
-    opacity,
-    speed,
-}: {
-    colorA: string
-    colorB: string
-    opacity: number
-    speed: number
-}) {
-    return (
-        <div
-            style={{
-                position: "absolute",
-                inset: 0,
-                overflow: "hidden",
-                pointerEvents: "none",
-            }}
-        >
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: speed, repeat: Infinity, ease: "linear" }}
-                style={{
-                    position: "absolute",
-                    left: "-30%",
-                    top: "-30%",
-                    width: "160%",
-                    height: "160%",
-                    background: `radial-gradient(circle at 30% 30%, ${colorA} 0%, transparent 60%), radial-gradient(circle at 70% 70%, ${colorB} 0%, transparent 60%)`,
-                    opacity,
-                    mixBlendMode: "overlay",
-                    filter: "blur(60px)",
-                }}
-            />
-        </div>
-    )
-}
-
 // Component
 /**
  * Fixed to the kiosk's native resolution — same convention as
@@ -187,7 +145,6 @@ export default function LockScreen(props) {
         icons = {},
         glass = {},
         homeIndicator = {},
-        background = {},
         // Splash variant
         splash = {},
         // NEW Event trigger prop
@@ -399,19 +356,6 @@ export default function LockScreen(props) {
             }}
             onDragEnd={handleDragEnd}
         >
-            {/* Ambient Animated Background Wash */}
-            {background.enabled !== false && (
-                <AnimatedBackgroundWash
-                    colorA={background.colorA || "#7F9CFF"}
-                    colorB={background.colorB || "#FF9BD2"}
-                    opacity={
-                        background.opacity === undefined
-                            ? 0.16
-                            : background.opacity
-                    }
-                    speed={background.speed || 24}
-                />
-            )}
             {/* Background Panel Glass Layer */}
             <div
                 style={{
@@ -819,13 +763,6 @@ LockScreen.defaultProps = {
         opacity: 0.9,
         bottomOffset: 26,
     },
-    background: {
-        enabled: true,
-        colorA: "#7F9CFF",
-        colorB: "#FF9BD2",
-        opacity: 0.16,
-        speed: 24,
-    },
     swipeHintText: "Swipe up to open",
     swipeHintFont: {
         fontSize: 30,
@@ -1226,46 +1163,6 @@ addPropertyControls(LockScreen, {
                 defaultValue: 26,
                 min: 0,
                 max: 150,
-                step: 1,
-            },
-        },
-    },
-    background: {
-        type: ControlType.Object,
-        title: "Animated Background",
-        hidden: (p) => p.variant !== "lockScreen",
-        controls: {
-            enabled: {
-                type: ControlType.Boolean,
-                title: "Enabled",
-                defaultValue: true,
-                enabledTitle: "On",
-                disabledTitle: "Off",
-            },
-            colorA: {
-                type: ControlType.Color,
-                title: "Color A",
-                defaultValue: "#7F9CFF",
-            },
-            colorB: {
-                type: ControlType.Color,
-                title: "Color B",
-                defaultValue: "#FF9BD2",
-            },
-            opacity: {
-                type: ControlType.Number,
-                title: "Opacity",
-                defaultValue: 0.16,
-                min: 0,
-                max: 0.6,
-                step: 0.01,
-            },
-            speed: {
-                type: ControlType.Number,
-                title: "Speed (s/loop)",
-                defaultValue: 24,
-                min: 6,
-                max: 60,
                 step: 1,
             },
         },
