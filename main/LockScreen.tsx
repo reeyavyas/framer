@@ -147,6 +147,16 @@ function AnimatedBackgroundWash({
 }
 
 // Component
+/**
+ * Fixed to the kiosk's native resolution — same convention as
+ * InactivityOverlay.tsx — so dropping either variant onto the canvas
+ * defaults to the real screen size instead of an arbitrary frame.
+ *
+ * @framerSupportedLayoutWidth fixed
+ * @framerSupportedLayoutHeight fixed
+ * @framerIntrinsicWidth 1080
+ * @framerIntrinsicHeight 1920
+ */
 export default function LockScreen(props) {
     const {
         variant = "lockScreen",
