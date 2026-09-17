@@ -56,10 +56,12 @@ import { animate, motion, useMotionValue } from "framer-motion"
  *
  * Usage: select the "Scrollable Content" layer on the canvas ->
  * Code (right panel) -> Override -> this file -> pick the export for
- * that specific container (e.g. VirtualScrollTravelContent). Each
- * container needs its own thin export the same way TutorialTargets.tsx
- * does it, since Framer's Override dropdown only picks up top-level
- * exported function declarations.
+ * that specific container (e.g. VirtualScrollTravelContent). The
+ * existing exports below each still carry their own id purely by
+ * convention now (see the registry scoping comment above the registry
+ * itself) — nothing stops a brand new page from reusing any one of
+ * them as-is, with no new export needed, since the registry no longer
+ * relies on the id alone to tell containers apart.
  *
  * TutorialOverlay.tsx's scrollAdvancesStep and freezeScrollWhileActive
  * both check getVirtualScroll(scrollContainerTarget) first and use
@@ -106,10 +108,49 @@ export interface VirtualScrollHandle {
 
 const registry = new Map<string, VirtualScrollHandle>()
 
+// Registry keys are scoped by page, not just by id: `${pathname}::${id}`
+// instead of the bare id. This project publishes as a client-routed SPA
+// (Framer's own page transitions, not full reloads), and the registry
+// above lives for the whole visitor session — so a bare id was really
+// naming "at most one container across the ENTIRE site," not "at most
+// one container per page" the way it reads. That's exactly what already
+// caused a real bug (Card Alerts vs Travel Notice both using
+// "scrollable-content"): duplicating a page in Framer carries its
+// VirtualScroll override, and its id, forward unchanged, so forgetting
+// to give the duplicate a new id let it silently steal the original's
+// registry slot.
+//
+// Scoping by the current path removes the failure mode instead of just
+// relying on every export always remembering a unique id: two
+// containers using the identical id string on two different pages now
+// land in two different slots automatically, because the path is part
+// of the key. This is a real guarantee for any page that isn't ALSO
+// mounted at the same path as another VirtualScroll container — the
+// per-export ids below stay as they are (kept explicit rather than
+// collapsed to one shared export) mainly for Card Alerts, whose id is
+// also hand-typed as a constant in card-controls/card-alerts/
+// CardAlertsSave.tsx and needs to keep matching that exactly.
+//
+// One assumption this leans on, not independently verified against
+// Framer's own transitions specifically (flagged as open in this
+// project's tutorials/NOTES.md): that the browser's URL updates
+// before or together with the incoming page's components mounting
+// during a transition, not after. That's standard client-side-routing
+// behavior, but if it ever turns out to lag behind mounting on this
+// specific host, a container could briefly register under the
+// OUTGOING page's still-current path during the overlap window.
+function scopedKey(id: string): string {
+    // Defensive, not load-bearing today — every real caller of this
+    // reaches it from inside a useEffect, which never runs during SSR
+    // — but cheap insurance against a future caller that isn't.
+    if (typeof window === "undefined") return id
+    return `${window.location.pathname}::${id}`
+}
+
 export function getVirtualScroll(
     id: string
 ): VirtualScrollHandle | undefined {
-    return id ? registry.get(id) : undefined
+    return id ? registry.get(scopedKey(id)) : undefined
 }
 
 // Also exposed on window, not just as an ES export: card-controls/card-
@@ -198,6 +239,16 @@ function withVirtualScroll(id: string) {
             }, [setPos])
 
             React.useEffect(() => {
+                // Computed once per mount and reused for both the set
+                // below and the cleanup's lookup — NOT recomputed inside
+                // the cleanup itself. If it were recomputed there, a
+                // pathname that changed between this mount and its
+                // eventual unmount (e.g. a transition that doesn't tear
+                // this component down immediately) could make the
+                // cleanup compute a different key than the one this
+                // effect actually registered under, leaving a stale
+                // entry behind instead of removing it.
+                const key = scopedKey(id)
                 const handle: VirtualScrollHandle = {
                     getPercent: () =>
                         maxRef.current > 0
@@ -232,21 +283,21 @@ function withVirtualScroll(id: string) {
                         }
                     },
                 }
-                registry.set(id, handle)
+                registry.set(key, handle)
                 return () => {
                     // Only remove OWN registration, never someone else's
-                    // that may have since taken over this id — the same
-                    // id applied to two containers (e.g. by mistake, or
-                    // briefly during a page transition where both are
-                    // mounted at once) would otherwise let whichever one
-                    // unmounts/re-runs LAST silently delete the other's
-                    // live entry out from under it, even though that
-                    // other container is the one actually on screen.
-                    // registry is keyed by a developer-chosen string with
-                    // no other uniqueness guarantee, so this equality
-                    // check is the only thing enforcing "an id names AT
-                    // MOST one live container" instead of just assuming it.
-                    if (registry.get(id) === handle) registry.delete(id)
+                    // that may have since taken over this key — two
+                    // containers landing on the same key (e.g. a
+                    // same-page id typo, or briefly during a page
+                    // transition where both are mounted at once — see
+                    // the scoping comment above the registry) would
+                    // otherwise let whichever one unmounts/re-runs LAST
+                    // silently delete the other's live entry out from
+                    // under it, even though that other container is the
+                    // one actually on screen. This equality check is the
+                    // only thing enforcing "a key names AT MOST one live
+                    // container" instead of just assuming it.
+                    if (registry.get(key) === handle) registry.delete(key)
                 }
             }, [])
 
@@ -386,19 +437,18 @@ export function VirtualScrollTravelContent(
     return withVirtualScroll("scrollable-content")(Component)
 }
 
-// Card Alerts Tutorial Page "Scrollable Content" — its OWN id, not a
-// reuse of VirtualScrollTravelContent's "scrollable-content". Applying
-// the same export/id to a second page's container was the actual bug
-// behind a report of a Card Alerts step not behaving as configured:
-// the registry above is one shared Map keyed only by this string, so
-// two different containers registered under the same id race for that
-// one slot — whichever mounts/re-registers last "wins" the lookup,
-// and the OTHER container (quite possibly the one actually on screen)
-// is left with a state change that was never really applied to IT.
-// Matches this file's own documented convention (see the top-of-file
-// comment): every container gets its own thin export, exactly like
-// TutorialTargets.tsx does per target — this was simply the second
-// one ever needed.
+// Card Alerts Tutorial Page "Scrollable Content" — kept as its own
+// dedicated export/id rather than folded into a shared one, even though
+// the registry's page-scoping (see the comment above it) would no
+// longer let this collide with another page's container regardless of
+// id. Left distinct on purpose: card-controls/card-alerts/
+// CardAlertsSave.tsx reaches into this id by hand as its own
+// VIRTUAL_SCROLL_ID constant (via window.__getVirtualScroll, since it
+// can't statically import across this project's top-level folders — see
+// that file), to scroll the Card Alerts tutorial page back to top the
+// instant its Saving overlay appears. Renaming or reusing this id for
+// another page's container would silently break that lookup unless
+// CardAlertsSave.tsx's constant were updated to match.
 export function VirtualScrollCardAlertsContent(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -406,16 +456,20 @@ export function VirtualScrollCardAlertsContent(
 }
 
 // Card Controls Tutorial Page 1 ("/card-controls-tutorial/card-controls-1")
-// "Scrollable Content" — its own id, same reasoning as
-// VirtualScrollCardAlertsContent above: never reuse another page's id
-// for this, or the two containers race for one registry slot and
-// whichever mounts last silently steals the lock from the other.
+// "Scrollable Content". Its id no longer has to be unique across pages
+// for correctness (see the registry-scoping comment above) — kept as
+// its own export mainly so the existing canvas Override selection on
+// this page doesn't need to change. A future page can just as safely
+// reuse this exact export instead of getting a new one of its own.
 export function VirtualScrollCardControls1Content(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withVirtualScroll("card-controls-1-scroll")(Component)
 }
 
+// Card Controls Tutorial Page 3 ("/card-controls-tutorial/card-controls-3")
+// "Scrollable Content" — same situation as VirtualScrollCardControls1Content
+// above.
 export function VirtualScrollCardControls3Content(
     Component: ComponentType<any>
 ): ComponentType<any> {

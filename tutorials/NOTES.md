@@ -264,7 +264,52 @@ anywhere else on the page.
   remain the normal, safe way to reach this file — `window` is only for
   reaching it from a different top-level folder.
 
-### Open design question: VirtualScroll's registry has no page-scoping
+### Resolved: VirtualScroll's registry now has page-scoping (Option A)
+
+Implemented directly in `VirtualScroll.tsx` (not a new file — the
+existing one, so the current canvas Override selections on every page
+keep working unchanged). Registry keys are now `${window.location.
+pathname}::${id}` instead of the bare id, computed by a `scopedKey`
+helper used in both `getVirtualScroll` and the registration effect's
+`registry.set`/cleanup. See the comment directly above the registry in
+`VirtualScroll.tsx` for the full reasoning, including the one still-
+unverified assumption this leans on (URL-before-mount timing during a
+Framer page transition — unchanged from the discussion below, just
+shipped anyway on the standard-client-routing assumption).
+
+Each page's export (`VirtualScrollTravelContent`,
+`VirtualScrollCardAlertsContent`, `VirtualScrollCardControls1Content`,
+`VirtualScrollCardControls3Content`) still carries its own id string —
+that's no longer required for correctness, but was kept as-is rather
+than collapsed to one shared export, mainly so no existing canvas
+Override selection needs to change. Card Alerts' id in particular stays
+its own dedicated one on purpose: `CardAlertsSave.tsx` hand-types that
+same id as `VIRTUAL_SCROLL_ID` to reach it via `window.__getVirtualScroll`
+for its Saving-overlay scroll-to-top, and that lookup depends on the id
+matching exactly — collapsing it into a shared id would've meant keeping
+that constant in sync with whatever the shared id became, which is the
+same 3-way manual-sync problem already described below, just relocated.
+That 3-way duplication itself (Card Alerts' id hand-typed in its own
+export, the tutorial step's `scrollContainerTarget` field, and
+`CardAlertsSave.tsx`'s constant) is still unresolved — page-scoping
+doesn't touch it, since it's a same-page string-matching problem, not
+the cross-page collision problem this section originally covered.
+
+The base Card Controls page (real, non-tutorial) was deliberately left
+untouched — it still uses native scrolling via
+`withCardAlertsScrollContainer`, not VirtualScroll at all. Page-scoping
+means that if it's ever converted to VirtualScroll later, it's already
+safe from colliding with the tutorial-duplicate page's id, without
+needing a new id invented at that point.
+
+Practical effect going forward: a brand new page's "Scrollable Content"
+layer no longer needs a new export written for it. Any existing export
+above (e.g. `VirtualScrollTravelContent`) can be applied to a new page's
+layer as-is in Framer's Override picker — the id no longer needs to be
+unique per page, so there's nothing left to forget to change.
+
+<details>
+<summary>Original discussion (superseded above)</summary>
 
 Discussed at length, nothing implemented — a design decision for a future
 session, not a bug fix in progress. The registry (`VirtualScroll.tsx`'s
@@ -343,6 +388,8 @@ later regardless of which option (if any) gets picked here.
 Leaning conclusion, not a decision: Option A is the better fit given
 how often pages get duplicated in this project, but wasn't committed
 to since the URL-timing assumption above wasn't independently verified.
+
+</details>
 
 ### Known issue: TutorialOverlay can render null on Published while working in Preview
 
