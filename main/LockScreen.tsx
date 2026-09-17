@@ -170,22 +170,6 @@ export default function LockScreen(props) {
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
 
-    const frameGlassStyle: React.CSSProperties = {
-        background: glassBackground,
-        backdropFilter: glassBlurFilter,
-        WebkitBackdropFilter: glassBlurFilter,
-        borderLeft: `${glass.borderWidth}px solid ${glassBorderColor}`,
-        borderRight: `${glass.borderWidth}px solid ${glassBorderColor}`,
-        borderBottom: `${glass.borderWidth}px solid ${glassBorderColor}`,
-        borderTop: "none",
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-        borderBottomLeftRadius: glass.cornerRadius,
-        borderBottomRightRadius: glass.cornerRadius,
-        boxShadow: glassShadow,
-        opacity: glass.panelOpacity,
-    }
-
     const buttonGlassStyle: React.CSSProperties = {
         background: glassBackground,
         backdropFilter: glassBlurFilter,
@@ -356,15 +340,6 @@ export default function LockScreen(props) {
             }}
             onDragEnd={handleDragEnd}
         >
-            {/* Background Panel Glass Layer */}
-            <div
-                style={{
-                    position: "absolute",
-                    inset: 0,
-                    pointerEvents: "none",
-                    ...frameGlassStyle,
-                }}
-            />
             {/* Content Layer */}
             <motion.div
                 style={{
@@ -743,7 +718,6 @@ LockScreen.defaultProps = {
         cameraImage: null,
     },
     glass: {
-        cornerRadius: 56,
         panelOpacity: 1,
         tintOpacity: 0.14,
         borderOpacity: 0.35,
@@ -1025,14 +999,6 @@ addPropertyControls(LockScreen, {
         title: "Glass Panel",
         hidden: (p) => p.variant !== "lockScreen",
         controls: {
-            cornerRadius: {
-                type: ControlType.Number,
-                title: "Bottom Corner Radius",
-                defaultValue: 56,
-                min: 0,
-                max: 200,
-                step: 1,
-            },
             panelOpacity: {
                 type: ControlType.Number,
                 title: "Panel Opacity",

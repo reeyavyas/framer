@@ -13,7 +13,9 @@ Site-wide, page-agnostic components — not owned by any single feature.
   lock → splash → login flow:
   - **Lock Screen** — live/custom clock + date, a fake notification
     banner (slides in a beat after mount), a bouncing swipe-up hint,
-    frosted-glass flashlight/camera buttons, and home indicator.
+    frosted-glass flashlight/camera buttons, and home indicator. Has
+    no background fill of its own — drop your own wallpaper/gradient
+    layer underneath it in Framer and it shows through untouched.
     Dragging the panel up past a distance/velocity threshold fires the
     `onSwipeUp` event control; every release springs back to rest with
     a little overshoot, whether or not the swipe cleared the threshold.
