@@ -204,6 +204,10 @@ export default function LockScreen(props) {
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
+    // A softer shadow just for the notification card — the shared glass
+    // shadow (tuned for the small, high-contrast flashlight/camera
+    // buttons) read as too harsh on a wide, low-contrast card.
+    const notificationShadow = `0 6px 20px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
 
     const buttonGlassStyle: React.CSSProperties = {
         background: glassBackground,
@@ -458,7 +462,7 @@ export default function LockScreen(props) {
                             style={{
                                 marginTop: layout.dateTimeGap,
                                 width: "100%",
-                                maxWidth: 760,
+                                maxWidth: 900,
                                 boxSizing: "border-box",
                                 display: "flex",
                                 alignItems: "flex-start",
@@ -470,6 +474,7 @@ export default function LockScreen(props) {
                                         ? 36
                                         : activeNotification.cornerRadius,
                                 ...buttonGlassStyle,
+                                boxShadow: notificationShadow,
                             }}
                         >
                             <div
@@ -654,23 +659,18 @@ export default function LockScreen(props) {
                 </div>
                 {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
                 <motion.div
-                    animate={
-                        swipeHintBounce
-                            ? { y: [0, -26, 0, -10, 0] }
-                            : { y: 0 }
-                    }
+                    animate={swipeHintBounce ? { y: [0, -18, 0] } : { y: 0 }}
                     transition={
                         swipeHintBounce
                             ? {
-                                  duration: 1.3,
-                                  times: [0, 0.35, 0.55, 0.8, 1],
+                                  duration: 1.5,
                                   repeat: Infinity,
-                                  ease: [
-                                      "easeOut",
-                                      "easeIn",
-                                      "easeOut",
-                                      "easeIn",
-                                  ],
+                                  // A gentle "back" easing overshoots the
+                                  // target slightly at the top of the rise
+                                  // and again on the landing — a light
+                                  // springiness on top of the float,
+                                  // short of the earlier full double-hop.
+                                  ease: [0.34, 1.56, 0.64, 1],
                               }
                             : { duration: 0 }
                     }
