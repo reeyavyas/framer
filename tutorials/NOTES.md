@@ -264,6 +264,86 @@ anywhere else on the page.
   remain the normal, safe way to reach this file — `window` is only for
   reaching it from a different top-level folder.
 
+### Open design question: VirtualScroll's registry has no page-scoping
+
+Discussed at length, nothing implemented — a design decision for a future
+session, not a bug fix in progress. The registry (`VirtualScroll.tsx`'s
+module-level `Map`) keys purely on the bare id string passed to
+`withVirtualScroll(id)`, with zero concept of which page that id
+"belongs to." It survives for the whole visitor session, across every
+page navigated to, since Framer publishes as a client-side-routed,
+hydrated SPA rather than full page reloads. This is exactly what
+already caused the real Card Alerts/Travel Notice id-collision bug
+described above. Three options were weighed:
+
+- **Current (do nothing)** — simplest, but has one already-confirmed
+  failure and zero structural defense against it recurring, especially
+  since duplicating a page (common in this project) carries its
+  `VirtualScroll` override forward with the SAME id, and it's easy to
+  forget the follow-up step of giving the duplicate its own export.
+- **Option A** — auto-derive the registry key from
+  `${window.location.pathname}::${id}` instead of the bare id, computed
+  inside `withVirtualScroll`'s registration effect and
+  `getVirtualScroll`'s lookup. Needs zero changes anywhere else — every
+  existing export, every `TutorialOverlay`'s Scroll container ID field,
+  and `CardAlertsSave.tsx`'s own lookup all keep working unmodified.
+  Specifically protects the duplication case for free, since a
+  duplicated page gets a new pathname automatically. Risk: only as
+  sound as the assumption that `window.location.pathname` correctly
+  reflects which page a container belongs to at the moment it
+  registers.
+- **Option B** — bake an explicit page name into each export at
+  author time instead of inferring it. Immune to any runtime-timing
+  question, but doesn't actually solve the motivating problem: a
+  duplicated page carries the hardcoded name forward *unchanged*, so
+  the duplicate would silently keep claiming its original page's scope
+  until someone remembers to edit it by hand — the same class of
+  mistake the current system already has, just relocated.
+
+Research (see chat, not re-derived here in full) confirmed via
+Framer's own materials that page transitions genuinely mount the
+incoming page's components while the outgoing page is still present
+(`framerwebsites.com/blog/framer-page-transitions-guide`), which
+matches how the original collision could actually happen — but also
+that Framer's own link prefetching is code-only and does NOT pre-mount
+components ahead of a click (`framer.com/performance/`), ruling out
+the scarier "a page mounts and its timers start before you ever
+navigate to it" version of the worry. What's NOT confirmed from public
+material: whether the browser's URL updates before or after the
+incoming page's components mount during that transition-overlap
+window — Option A only holds up under the overlap if it updates before
+(or with) mounting, which is standard client-side-routing behavior but
+wasn't found written down anywhere specific to Framer. That's easy to
+verify directly (watch the address bar during a transition on the
+published site) but wasn't checked this session.
+
+Separately (and confirmed by actually reading the code, not
+speculation): the same id also has to be manually kept in sync across
+independent files with nothing enforcing that — for Card Alerts
+specifically, three places: `VirtualScrollCardAlertsContent`'s export,
+whatever `TutorialOverlay`'s Scroll container ID references it, and
+`CardAlertsSave.tsx`'s own `VIRTUAL_SCROLL_ID` constant (needed because
+its "Saving" overlay has to reach the container from a different
+top-level folder before navigating away). A repo-wide grep confirmed
+this three-way duplication is specific to Card Alerts' save-then-
+scroll-then-navigate flow, not a pattern repeating across every
+container — Travel Notice's and Card Controls 1's containers only have
+the ordinary two-way pairing. This is a genuinely separate problem
+from the scoping question above (a same-page string-matching problem,
+not a cross-page collision problem) and isn't addressed by any of the
+three options — would need its own fix if it's ever worth closing.
+
+Also confirmed: none of this interacts with redirects one way or the
+other. A redirect (hosting-level or a page doing
+`window.location.href` itself) fully resolves before the destination
+page's own components ever mount, so whatever scoping approach is
+chosen only ever sees the real, final page — safe to set up redirects
+later regardless of which option (if any) gets picked here.
+
+Leaning conclusion, not a decision: Option A is the better fit given
+how often pages get duplicated in this project, but wasn't committed
+to since the URL-timing assumption above wasn't independently verified.
+
 ### Known issue: TutorialOverlay can render null on Published while working in Preview
 
 Seen on the card-controls travel-notice tutorial's "Scroll Down" step
