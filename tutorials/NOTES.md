@@ -95,14 +95,13 @@ anywhere else on the page.
   Font, which Framer can resolve directly from a plain `fontFamily`
   string — that's what finally worked for the family itself.
 
-  Font size is a SEPARATE `nextButtonFontSize` (`ControlType.Number`,
-  default 34) rather than living inside `nextButtonFont`'s own size
-  sub-field — that sub-field didn't reliably hold onto a set value once
-  a real font family actually resolved (kept reverting to some other
-  size on its own, even after the family itself was fixed). Applied in
-  the button's style AFTER the `...nextButtonFont` spread so it always
-  wins regardless of whatever that object's own (untrusted) `fontSize`
-  might be.
+  Font size lives back inside `nextButtonFont`'s own size sub-field
+  (`fontSize: 34` in its `defaultValue`) at the user's request, after an
+  earlier version split it into a separate `nextButtonFontSize` Number
+  control — that sub-field had been observed not reliably holding onto
+  a set value once a real font family resolved (reverting to some other
+  size on its own). If that resurfaces, re-splitting it out is the known
+  fix; see git history for `nextButtonFontSize`.
 
   `cardWrapperStyle()` positions the card two different ways depending
   on whether a target `rect` was actually measured. With one, it's
