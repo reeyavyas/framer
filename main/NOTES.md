@@ -26,6 +26,15 @@ Site-wide, page-agnostic components — not owned by any single feature.
     canvas so designing it doesn't navigate you away.
   Wire `onSwipeUp` on the Lock Screen instance to navigate to the page
   holding the Splash instance, which then auto-advances to login.
+- `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
+  wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
+  `line3`, each a plain SVG path `d` string), along each of which a
+  glowing pulse travels continuously and loops. The 3 default paths
+  are a visual approximation of the wallpaper's curves traced from a
+  screenshot, not an exact match — paste the real `d` data from the
+  wallpaper's source vector art (Figma/Illustrator/AE export) into a
+  line's "SVG Path" field for a pixel-perfect trace. Drop it on top of
+  the wallpaper layer, behind the LockScreen component.
 
 ## Removed
 
