@@ -413,20 +413,6 @@ function resolveScrollTarget(containerId: string): HTMLElement | Window {
     return container instanceof HTMLElement ? container : window
 }
 
-// Debug readout is opt-in via a URL query param, not a property
-// control — nothing to remember to switch off before publishing. It's
-// invisible to every real visitor by default and only shows up for
-// whoever deliberately appends ?tutorialDebug to the page URL while
-// checking a step's positioning on the real published site.
-const TUTORIAL_DEBUG_PARAM = "tutorialDebug"
-
-function isTutorialDebugMode(): boolean {
-    if (typeof window === "undefined") return false
-    return new URLSearchParams(window.location.search).has(
-        TUTORIAL_DEBUG_PARAM
-    )
-}
-
 export default function TutorialOverlay(props: Props) {
     const {
         active,
@@ -491,7 +477,6 @@ export default function TutorialOverlay(props: Props) {
     } = props
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
-    const debugMode = !isCanvas && isTutorialDebugMode()
     const [mounted, setMounted] = React.useState(false)
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
@@ -1415,47 +1400,6 @@ export default function TutorialOverlay(props: Props) {
             >
                 {"✕"}
             </a>
-
-            {/* debug readout — only ever present when ?tutorialDebug is
-                in the URL (see isTutorialDebugMode above), so it's
-                invisible on the real published site by default and
-                needs no property to remember to switch off. Shows the
-                real measured target rect plus the current position
-                props side by side, so a single publish + reload gives
-                exact numbers instead of "closer/further" guesswork. */}
-            {debugMode && (
-                <div
-                    style={{
-                        position: "fixed",
-                        bottom: 20,
-                        left: 20,
-                        zIndex: 8500,
-                        pointerEvents: "none",
-                        background: "rgba(0,0,0,0.8)",
-                        color: "#5CFFB0",
-                        fontFamily: "monospace",
-                        fontSize: 13,
-                        lineHeight: 1.6,
-                        padding: "12px 16px",
-                        borderRadius: 8,
-                        whiteSpace: "pre",
-                    }}
-                >
-                    {`target: ${target || "(none)"}${pageGroup ? `  ${pageGroup} step ${stepNumber}` : ""}
-rect: ${
-                        rect
-                            ? `left ${Math.round(rect.left)} top ${Math.round(rect.top)} w ${Math.round(rect.width)} h ${Math.round(rect.height)}`
-                            : "not found"
-                    }
-viewport: ${viewport.w} x ${viewport.h}
-cardAnchor: ${cardAnchorX}/${cardAnchorY}  cardOffset: ${cardOffsetX}, ${cardOffsetY}
-arrowOffset: ${arrowOffsetX}, ${arrowOffsetY}${
-                        arrowAnchor
-                            ? `  arrowAnchor: ${Math.round(arrowAnchor.x)}, ${Math.round(arrowAnchor.y)}`
-                            : ""
-                    }`}
-                </div>
-            )}
         </div>
     )
 
