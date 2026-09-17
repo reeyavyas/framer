@@ -147,7 +147,6 @@ interface Props {
     autoAdvanceLink?: string
 
     dimColor: string
-    accentColor: string
 
     showSkipButton: boolean
     skipLabel: string
@@ -253,6 +252,11 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // step with no hole, e.g. a closing "all set" card).
 const CARD_TARGET_GAP = 24
 const CARD_MAX_WIDTH = 900
+
+// Skip/exit are the overlay's own system chrome, not per-step tutorial
+// content — kept as a fixed brand color rather than a per-instance
+// property control, since they don't vary step to step.
+const SKIP_EXIT_COLOR = "rgba(5,147,144,1)"
 
 function cardWrapperStyle(
     anchorX: "left" | "center" | "right",
@@ -467,7 +471,6 @@ export default function TutorialOverlay(props: Props) {
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
-        accentColor,
         showSkipButton,
         skipLabel,
         skipLink,
@@ -1367,7 +1370,7 @@ export default function TutorialOverlay(props: Props) {
                         pointerEvents: "auto",
                         padding: "30px 40px",
                         borderRadius: 999,
-                        background: accentColor,
+                        background: SKIP_EXIT_COLOR,
                         color: "#fff",
                         fontSize: 44,
                         fontWeight: 500,
@@ -1390,7 +1393,7 @@ export default function TutorialOverlay(props: Props) {
                     width: 110,
                     height: 110,
                     borderRadius: "50%",
-                    background: accentColor,
+                    background: SKIP_EXIT_COLOR,
                     color: "#fff",
                     fontSize: 44,
                     lineHeight: "110px",
@@ -1539,7 +1542,6 @@ TutorialOverlay.defaultProps = {
     arrowOffsetY: -100,
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
-    accentColor: "rgba(5,147,144,1)",
     showSkipButton: true,
     skipLabel: "Skip",
 }
@@ -1942,11 +1944,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Color,
         title: "Dim color",
         defaultValue: "rgba(10, 10, 20, 0.55)",
-    },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent color",
-        defaultValue: "rgba(5,147,144,1)",
     },
     showSkipButton: {
         type: ControlType.Boolean,
