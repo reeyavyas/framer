@@ -137,11 +137,14 @@ export default function LockScreen(props) {
         dateFont,
         dateColor,
         dateOpacity,
-        // Fake Notifications — cycles through whichever of these two are
-        // enabled, one at a time, on a loop.
+        // Fake Notifications — cycles through whichever of these are
+        // enabled, one at a time, on a loop. Each has its own stay
+        // duration (holdSeconds).
         notification1 = {},
         notification2 = {},
-        notificationCycleSeconds,
+        notification3 = {},
+        notification4 = {},
+        notification5 = {},
         // Flattened Swipe Hint controls
         swipeHintText,
         swipeHintFont,
@@ -171,29 +174,40 @@ export default function LockScreen(props) {
 
     // Cycle through whichever notifications are enabled, one at a time.
     // With only one enabled it just stays put; with zero, nothing renders.
-    const enabledNotifications = [notification1, notification2].filter(
-        (n) => n && n.enabled !== false
-    )
+    const enabledNotifications = [
+        notification1,
+        notification2,
+        notification3,
+        notification4,
+        notification5,
+    ].filter((n) => n && n.enabled !== false)
     const [notificationIndex, setNotificationIndex] = React.useState(0)
     // Counts actual cycles (not the index, which wraps back to 0) so the
     // one-time "just arrived" entrance delay doesn't reapply every time
     // the loop comes back around to the first notification.
     const notificationCycleCountRef = React.useRef(0)
-    React.useEffect(() => {
-        if (!isLockScreen || enabledNotifications.length < 2) return
-        const seconds = notificationCycleSeconds || 4.5
-        const id = window.setInterval(() => {
-            notificationCycleCountRef.current += 1
-            setNotificationIndex((i) => (i + 1) % enabledNotifications.length)
-        }, seconds * 1000)
-        return () => window.clearInterval(id)
-    }, [isLockScreen, enabledNotifications.length, notificationCycleSeconds])
     const activeNotification =
         enabledNotifications.length > 0
             ? enabledNotifications[
                   notificationIndex % enabledNotifications.length
               ]
             : null
+
+    // Re-arms itself on every index change (rather than one fixed-period
+    // interval) so each notification can stay up for its own duration
+    // instead of all sharing a single cycle length.
+    React.useEffect(() => {
+        if (!isLockScreen || enabledNotifications.length < 2) return
+        const holdSeconds =
+            activeNotification?.holdSeconds === undefined
+                ? 4.5
+                : activeNotification.holdSeconds
+        const id = window.setTimeout(() => {
+            notificationCycleCountRef.current += 1
+            setNotificationIndex((i) => (i + 1) % enabledNotifications.length)
+        }, holdSeconds * 1000)
+        return () => window.clearTimeout(id)
+    }, [isLockScreen, enabledNotifications.length, notificationIndex])
 
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
@@ -462,7 +476,7 @@ export default function LockScreen(props) {
                             style={{
                                 marginTop:
                                     layout.notificationGap === undefined
-                                        ? 40
+                                        ? 72
                                         : layout.notificationGap,
                                 width: "100%",
                                 maxWidth: 900,
@@ -760,6 +774,7 @@ LockScreen.defaultProps = {
         timeLabel: "now",
         cornerRadius: 36,
         delaySeconds: 1.1,
+        holdSeconds: 4.5,
     },
     notification2: {
         enabled: true,
@@ -769,14 +784,44 @@ LockScreen.defaultProps = {
         timeLabel: "2m",
         cornerRadius: 36,
         delaySeconds: 1.1,
+        holdSeconds: 4.5,
     },
-    notificationCycleSeconds: 4.5,
+    notification3: {
+        enabled: true,
+        appName: "Calendar",
+        title: "Team Practice",
+        message: "Starts in 15 minutes at the gym",
+        timeLabel: "5m",
+        cornerRadius: 36,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    },
+    notification4: {
+        enabled: true,
+        appName: "Weather",
+        title: "72° and Sunny",
+        message: "Great day to be outside",
+        timeLabel: "8m",
+        cornerRadius: 36,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    },
+    notification5: {
+        enabled: true,
+        appName: "Mail",
+        title: "Coach Lee",
+        message: "Check your inbox for the updated schedule",
+        timeLabel: "12m",
+        cornerRadius: 36,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    },
     layout: {
         topInset: 110,
         sideInset: 48,
         bottomInset: 140,
         dateTimeGap: 16,
-        notificationGap: 40,
+        notificationGap: 72,
     },
     icons: {
         buttonSize: 128,
@@ -884,6 +929,14 @@ function notificationControl(title: string, defaults: any) {
                 min: 0,
                 max: 8,
                 step: 0.1,
+            },
+            holdSeconds: {
+                type: ControlType.Number,
+                title: "Stay Duration (s)",
+                defaultValue: defaults.holdSeconds,
+                min: 1,
+                max: 20,
+                step: 0.5,
             },
         },
     }
@@ -1002,15 +1055,18 @@ addPropertyControls(LockScreen, {
         "Fake Notification 2",
         LockScreen.defaultProps.notification2
     ),
-    notificationCycleSeconds: {
-        type: ControlType.Number,
-        title: "Notification Cycle (s)",
-        defaultValue: 4.5,
-        min: 1,
-        max: 15,
-        step: 0.5,
-        hidden: (p) => p.variant !== "lockScreen",
-    },
+    notification3: notificationControl(
+        "Fake Notification 3",
+        LockScreen.defaultProps.notification3
+    ),
+    notification4: notificationControl(
+        "Fake Notification 4",
+        LockScreen.defaultProps.notification4
+    ),
+    notification5: notificationControl(
+        "Fake Notification 5",
+        LockScreen.defaultProps.notification5
+    ),
     layout: {
         type: ControlType.Object,
         title: "Layout & Insets",
@@ -1051,9 +1107,9 @@ addPropertyControls(LockScreen, {
             notificationGap: {
                 type: ControlType.Number,
                 title: "Time-Notification Gap",
-                defaultValue: 40,
+                defaultValue: 72,
                 min: 0,
-                max: 200,
+                max: 250,
                 step: 1,
             },
         },
