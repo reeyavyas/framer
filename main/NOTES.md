@@ -11,14 +11,19 @@ Site-wide, page-agnostic components — not owned by any single feature.
   left-open session.
 - `LockScreen.tsx` — one code component, two `variant`s, for the
   lock → splash → login flow:
-  - **Lock Screen** — live/custom clock + date, a fake notification
-    banner (slides in a beat after mount), a bouncing swipe-up hint,
-    frosted-glass flashlight/camera buttons, and home indicator. Has
-    no background fill of its own — drop your own wallpaper/gradient
-    layer underneath it in Framer and it shows through untouched.
-    Dragging the panel up past a distance/velocity threshold fires the
-    `onSwipeUp` event control; every release springs back to rest with
-    a little overshoot, whether or not the swipe cleared the threshold.
+  - **Lock Screen** — live/custom clock + date, up to two fake
+    notification banners (`notification1`/`notification2`, each a
+    full app/title/message/icon/timestamp) that cycle one at a time
+    on a loop (pop in, hold, pop out, next) whenever both are
+    enabled — with only one enabled it just stays put. A bouncing
+    swipe-up hint (a real decaying two-hop bounce, not a smooth
+    float), frosted-glass flashlight/camera buttons, and home
+    indicator. Has no background fill of its own — drop your own
+    wallpaper/gradient layer underneath it in Framer and it shows
+    through untouched. Dragging the panel up past a distance/velocity
+    threshold fires the `onSwipeUp` event control; every release
+    springs back to rest with a little overshoot, whether or not the
+    swipe cleared the threshold.
   - **Splash** — full-bleed gradient background, a logo that fades/
     scales/pulses in, optional loading dots, and a timed auto-redirect
     (`window.location.href`) to a configurable URL (defaults to

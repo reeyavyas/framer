@@ -1,6 +1,12 @@
 import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { motion, useMotionValue, useTransform, animate } from "framer-motion"
+import {
+    motion,
+    useMotionValue,
+    useTransform,
+    animate,
+    AnimatePresence,
+} from "framer-motion"
 
 // Icons
 function CameraGlyph({ size, color }: { size: number; color: string }) {
@@ -131,8 +137,11 @@ export default function LockScreen(props) {
         dateFont,
         dateColor,
         dateOpacity,
-        // Fake Notification
-        notification = {},
+        // Fake Notifications — cycles through whichever of these two are
+        // enabled, one at a time, on a loop.
+        notification1 = {},
+        notification2 = {},
+        notificationCycleSeconds,
         // Flattened Swipe Hint controls
         swipeHintText,
         swipeHintFont,
@@ -159,6 +168,32 @@ export default function LockScreen(props) {
     const now = useTicker(isLockScreen && (useLiveTime || useLiveDate))
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
+
+    // Cycle through whichever notifications are enabled, one at a time.
+    // With only one enabled it just stays put; with zero, nothing renders.
+    const enabledNotifications = [notification1, notification2].filter(
+        (n) => n && n.enabled !== false
+    )
+    const [notificationIndex, setNotificationIndex] = React.useState(0)
+    // Counts actual cycles (not the index, which wraps back to 0) so the
+    // one-time "just arrived" entrance delay doesn't reapply every time
+    // the loop comes back around to the first notification.
+    const notificationCycleCountRef = React.useRef(0)
+    React.useEffect(() => {
+        if (!isLockScreen || enabledNotifications.length < 2) return
+        const seconds = notificationCycleSeconds || 4.5
+        const id = window.setInterval(() => {
+            notificationCycleCountRef.current += 1
+            setNotificationIndex((i) => (i + 1) % enabledNotifications.length)
+        }, seconds * 1000)
+        return () => window.clearInterval(id)
+    }, [isLockScreen, enabledNotifications.length, notificationCycleSeconds])
+    const activeNotification =
+        enabledNotifications.length > 0
+            ? enabledNotifications[
+                  notificationIndex % enabledNotifications.length
+              ]
+            : null
 
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
@@ -401,127 +436,136 @@ export default function LockScreen(props) {
                         </span>
                     </div>
                 </div>
-                {/* Fake Notification */}
-                {notification.enabled !== false && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            delay:
-                                notification.delaySeconds === undefined
-                                    ? 1.1
-                                    : notification.delaySeconds,
-                            duration: 0.5,
-                            ease: "easeOut",
-                        }}
-                        style={{
-                            marginTop: layout.dateTimeGap,
-                            width: "100%",
-                            maxWidth: 420,
-                            boxSizing: "border-box",
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 12,
-                            padding: 14,
-                            borderRadius:
-                                notification.cornerRadius === undefined
-                                    ? 20
-                                    : notification.cornerRadius,
-                            ...buttonGlassStyle,
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 12,
-                                flexShrink: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: "rgba(255,255,255,0.25)",
-                                overflow: "hidden",
+                {/* Fake Notifications — cycles between whichever are enabled */}
+                <AnimatePresence mode="wait">
+                    {activeNotification && (
+                        <motion.div
+                            key={notificationIndex}
+                            initial={{ opacity: 0, y: -28, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                            transition={{
+                                delay:
+                                    notificationCycleCountRef.current === 0
+                                        ? activeNotification.delaySeconds ===
+                                          undefined
+                                            ? 1.1
+                                            : activeNotification.delaySeconds
+                                        : 0,
+                                duration: 0.5,
+                                ease: "easeOut",
                             }}
-                        >
-                            {notification.icon ? (
-                                <img
-                                    src={notification.icon.src}
-                                    alt=""
-                                    style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                    }}
-                                />
-                            ) : (
-                                <MessageGlyph size={22} color="#FFFFFF" />
-                            )}
-                        </div>
-                        <div
                             style={{
-                                flex: 1,
-                                minWidth: 0,
+                                marginTop: layout.dateTimeGap,
+                                width: "100%",
+                                maxWidth: 760,
+                                boxSizing: "border-box",
                                 display: "flex",
-                                flexDirection: "column",
-                                gap: 2,
-                                fontFamily: "-apple-system, sans-serif",
+                                alignItems: "flex-start",
+                                gap: 20,
+                                padding: 28,
+                                borderRadius:
+                                    activeNotification.cornerRadius ===
+                                    undefined
+                                        ? 36
+                                        : activeNotification.cornerRadius,
+                                ...buttonGlassStyle,
                             }}
                         >
                             <div
                                 style={{
+                                    width: 88,
+                                    height: 88,
+                                    borderRadius: 22,
+                                    flexShrink: 0,
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 8,
+                                    justifyContent: "center",
+                                    background: "rgba(255,255,255,0.25)",
+                                    overflow: "hidden",
                                 }}
                             >
-                                <span
+                                {activeNotification.icon ? (
+                                    <img
+                                        src={activeNotification.icon.src}
+                                        alt=""
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                        }}
+                                    />
+                                ) : (
+                                    <MessageGlyph size={44} color="#FFFFFF" />
+                                )}
+                            </div>
+                            <div
+                                style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 6,
+                                    fontFamily: "-apple-system, sans-serif",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 12,
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontWeight: 600,
+                                            fontSize: 22,
+                                            letterSpacing: 0.4,
+                                            textTransform: "uppercase",
+                                            color: "rgba(255,255,255,0.85)",
+                                        }}
+                                    >
+                                        {activeNotification.appName ||
+                                            "Messages"}
+                                    </span>
+                                    <span
+                                        style={{
+                                            fontSize: 22,
+                                            color: "rgba(255,255,255,0.7)",
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {activeNotification.timeLabel || "now"}
+                                    </span>
+                                </div>
+                                <div
                                     style={{
                                         fontWeight: 600,
-                                        fontSize: 13,
-                                        letterSpacing: 0.2,
-                                        textTransform: "uppercase",
-                                        color: "rgba(255,255,255,0.85)",
+                                        fontSize: 30,
+                                        color: "#FFFFFF",
                                     }}
                                 >
-                                    {notification.appName || "Messages"}
-                                </span>
-                                <span
+                                    {activeNotification.title || "Alex"}
+                                </div>
+                                <div
                                     style={{
-                                        fontSize: 13,
-                                        color: "rgba(255,255,255,0.7)",
-                                        flexShrink: 0,
+                                        fontSize: 26,
+                                        color: "rgba(255,255,255,0.85)",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: "vertical",
                                     }}
                                 >
-                                    {notification.timeLabel || "now"}
-                                </span>
+                                    {activeNotification.message ||
+                                        "Don't forget practice starts at 6!"}
+                                </div>
                             </div>
-                            <div
-                                style={{
-                                    fontWeight: 600,
-                                    fontSize: 15,
-                                    color: "#FFFFFF",
-                                }}
-                            >
-                                {notification.title || "Alex"}
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: 14,
-                                    color: "rgba(255,255,255,0.85)",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                }}
-                            >
-                                {notification.message ||
-                                    "Don't forget practice starts at 6!"}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 {/* Spacer pushes context rows downward */}
                 <div style={{ flex: 1 }} />
                 {/* Quick Action Icon Row */}
@@ -705,15 +749,25 @@ LockScreen.defaultProps = {
     },
     dateColor: "#FFFFFF",
     dateOpacity: 1,
-    notification: {
+    notification1: {
         enabled: true,
         appName: "Messages",
         title: "Alex",
         message: "Don't forget practice starts at 6!",
         timeLabel: "now",
-        cornerRadius: 20,
+        cornerRadius: 36,
         delaySeconds: 1.1,
     },
+    notification2: {
+        enabled: false,
+        appName: "Reminders",
+        title: "Pack water bottle",
+        message: "For today's practice",
+        timeLabel: "2m",
+        cornerRadius: 36,
+        delaySeconds: 1.1,
+    },
+    notificationCycleSeconds: 4.5,
     layout: {
         topInset: 110,
         sideInset: 48,
@@ -768,6 +822,67 @@ LockScreen.defaultProps = {
         redirectUrl: "/base-pages/login",
         redirectDelay: 2.5,
     },
+}
+
+// Fixed slots instead of an Array control, matching the convention used
+// elsewhere in this codebase — each slot keeps its own defaultValue, so
+// "reset to default" on one notification doesn't collapse both onto a
+// single shared default.
+function notificationControl(title: string, defaults: any) {
+    return {
+        type: ControlType.Object,
+        title,
+        hidden: (p) => p.variant !== "lockScreen",
+        controls: {
+            enabled: {
+                type: ControlType.Boolean,
+                title: "Show",
+                defaultValue: defaults.enabled,
+                enabledTitle: "On",
+                disabledTitle: "Off",
+            },
+            icon: {
+                type: ControlType.ResponsiveImage,
+                title: "Icon",
+            },
+            appName: {
+                type: ControlType.String,
+                title: "App Name",
+                defaultValue: defaults.appName,
+            },
+            title: {
+                type: ControlType.String,
+                title: "Title",
+                defaultValue: defaults.title,
+            },
+            message: {
+                type: ControlType.String,
+                title: "Message",
+                defaultValue: defaults.message,
+            },
+            timeLabel: {
+                type: ControlType.String,
+                title: "Time Label",
+                defaultValue: defaults.timeLabel,
+            },
+            cornerRadius: {
+                type: ControlType.Number,
+                title: "Corner Radius",
+                defaultValue: defaults.cornerRadius,
+                min: 0,
+                max: 60,
+                step: 1,
+            },
+            delaySeconds: {
+                type: ControlType.Number,
+                title: "Appear Delay (s)",
+                defaultValue: defaults.delaySeconds,
+                min: 0,
+                max: 8,
+                step: 0.1,
+            },
+        },
+    }
 }
 
 // Property Controls Panel Definition
@@ -875,59 +990,22 @@ addPropertyControls(LockScreen, {
         step: 0.01,
         hidden: (p) => p.variant !== "lockScreen",
     },
-    notification: {
-        type: ControlType.Object,
-        title: "Fake Notification",
+    notification1: notificationControl(
+        "Fake Notification 1",
+        LockScreen.defaultProps.notification1
+    ),
+    notification2: notificationControl(
+        "Fake Notification 2",
+        LockScreen.defaultProps.notification2
+    ),
+    notificationCycleSeconds: {
+        type: ControlType.Number,
+        title: "Notification Cycle (s)",
+        defaultValue: 4.5,
+        min: 1,
+        max: 15,
+        step: 0.5,
         hidden: (p) => p.variant !== "lockScreen",
-        controls: {
-            enabled: {
-                type: ControlType.Boolean,
-                title: "Show",
-                defaultValue: true,
-                enabledTitle: "On",
-                disabledTitle: "Off",
-            },
-            icon: {
-                type: ControlType.ResponsiveImage,
-                title: "Icon",
-            },
-            appName: {
-                type: ControlType.String,
-                title: "App Name",
-                defaultValue: "Messages",
-            },
-            title: {
-                type: ControlType.String,
-                title: "Title",
-                defaultValue: "Alex",
-            },
-            message: {
-                type: ControlType.String,
-                title: "Message",
-                defaultValue: "Don't forget practice starts at 6!",
-            },
-            timeLabel: {
-                type: ControlType.String,
-                title: "Time Label",
-                defaultValue: "now",
-            },
-            cornerRadius: {
-                type: ControlType.Number,
-                title: "Corner Radius",
-                defaultValue: 20,
-                min: 0,
-                max: 40,
-                step: 1,
-            },
-            delaySeconds: {
-                type: ControlType.Number,
-                title: "Appear Delay (s)",
-                defaultValue: 1.1,
-                min: 0,
-                max: 8,
-                step: 0.1,
-            },
-        },
     },
     layout: {
         type: ControlType.Object,
