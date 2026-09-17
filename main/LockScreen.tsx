@@ -610,13 +610,23 @@ export default function LockScreen(props) {
                 </div>
                 {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
                 <motion.div
-                    animate={swipeHintBounce ? { y: [0, -10, 0] } : { y: 0 }}
+                    animate={
+                        swipeHintBounce
+                            ? { y: [0, -26, 0, -10, 0] }
+                            : { y: 0 }
+                    }
                     transition={
                         swipeHintBounce
                             ? {
-                                  duration: 1.6,
+                                  duration: 1.3,
+                                  times: [0, 0.35, 0.55, 0.8, 1],
                                   repeat: Infinity,
-                                  ease: "easeInOut",
+                                  ease: [
+                                      "easeOut",
+                                      "easeIn",
+                                      "easeOut",
+                                      "easeIn",
+                                  ],
                               }
                             : { duration: 0 }
                     }
