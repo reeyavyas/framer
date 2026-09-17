@@ -759,7 +759,7 @@ LockScreen.defaultProps = {
         delaySeconds: 1.1,
     },
     notification2: {
-        enabled: false,
+        enabled: true,
         appName: "Reminders",
         title: "Pack water bottle",
         message: "For today's practice",
