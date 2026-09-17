@@ -496,9 +496,9 @@ export default function LockScreen(props) {
                         >
                             <div
                                 style={{
-                                    width: 88,
-                                    height: 88,
-                                    borderRadius: 22,
+                                    width: 120,
+                                    height: 120,
+                                    borderRadius: 30,
                                     flexShrink: 0,
                                     display: "flex",
                                     alignItems: "center",
@@ -518,16 +518,20 @@ export default function LockScreen(props) {
                                         }}
                                     />
                                 ) : (
-                                    <MessageGlyph size={44} color="#FFFFFF" />
+                                    <MessageGlyph size={60} color="#FFFFFF" />
                                 )}
                             </div>
+                            {/* Fixed to the icon's own height, with its 3
+                                lines spread evenly across it, so the text
+                                block and the (square) icon always match. */}
                             <div
                                 style={{
                                     flex: 1,
                                     minWidth: 0,
+                                    height: 120,
                                     display: "flex",
                                     flexDirection: "column",
-                                    gap: 6,
+                                    justifyContent: "space-between",
                                     fontFamily: "-apple-system, sans-serif",
                                 }}
                             >
@@ -542,7 +546,7 @@ export default function LockScreen(props) {
                                     <span
                                         style={{
                                             fontWeight: 600,
-                                            fontSize: 22,
+                                            fontSize: 28,
                                             letterSpacing: 0.4,
                                             textTransform: "uppercase",
                                             color: "rgba(255,255,255,0.85)",
@@ -553,7 +557,7 @@ export default function LockScreen(props) {
                                     </span>
                                     <span
                                         style={{
-                                            fontSize: 22,
+                                            fontSize: 28,
                                             color: "rgba(255,255,255,0.7)",
                                             flexShrink: 0,
                                         }}
@@ -564,21 +568,22 @@ export default function LockScreen(props) {
                                 <div
                                     style={{
                                         fontWeight: 600,
-                                        fontSize: 30,
+                                        fontSize: 40,
                                         color: "#FFFFFF",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        textOverflow: "ellipsis",
                                     }}
                                 >
                                     {activeNotification.title || "Alex"}
                                 </div>
                                 <div
                                     style={{
-                                        fontSize: 26,
+                                        fontSize: 32,
                                         color: "rgba(255,255,255,0.85)",
                                         overflow: "hidden",
+                                        whiteSpace: "nowrap",
                                         textOverflow: "ellipsis",
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: "vertical",
                                     }}
                                 >
                                     {activeNotification.message ||
