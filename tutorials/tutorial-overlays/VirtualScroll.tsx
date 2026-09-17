@@ -415,3 +415,9 @@ export function VirtualScrollCardControls1Content(
 ): ComponentType<any> {
     return withVirtualScroll("card-controls-1-scroll")(Component)
 }
+
+export function VirtualScrollCardControls3Content(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withVirtualScroll("card-controls-3-scroll")(Component)
+}
