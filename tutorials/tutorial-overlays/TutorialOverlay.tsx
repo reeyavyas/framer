@@ -721,28 +721,20 @@ export default function TutorialOverlay(props: Props) {
         }
         const el = resolveScrollTarget(scrollContainerTarget)
         function checkScroll() {
-            let max: number
-            let scrolled: number
+            let percent: number
             if (el === window) {
                 const doc = document.documentElement
-                max = doc.scrollHeight - doc.clientHeight
-                scrolled = window.scrollY
+                const max = doc.scrollHeight - doc.clientHeight
+                percent = max > 0 ? (window.scrollY / max) * 100 : 100
             } else {
                 const node = el as HTMLElement
-                max = node.scrollHeight - node.clientHeight
-                scrolled = node.scrollTop
+                const max = node.scrollHeight - node.clientHeight
+                percent = max > 0 ? (node.scrollTop / max) * 100 : 100
             }
-            // max <= 0 means there's nothing to scroll — e.g. on a tall
-            // kiosk viewport (1080x1920) where content that overflows a
-            // shorter preview window fits without overflowing here at
-            // all. That must never count as "crossed" in either
-            // direction, or the step advances itself the instant it
-            // mounts, before the user ever scrolls.
             const crossed =
-                max > 0 &&
-                (scrollDirection === "up"
-                    ? (scrolled / max) * 100 <= scrollThresholdPercent
-                    : (scrolled / max) * 100 >= scrollThresholdPercent)
+                scrollDirection === "up"
+                    ? percent <= scrollThresholdPercent
+                    : percent >= scrollThresholdPercent
             if (crossed) advanceStep()
         }
         checkScroll()
