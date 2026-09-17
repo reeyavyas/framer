@@ -66,6 +66,54 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
   directly. Don't add a tutorial copy of this file unless its behavior
   actually needs to diverge.
 
+## Card Alerts flow — tapping specific toggles on
+
+Card Alerts is different from travel notice: there's no single custom
+code component to duplicate (`<Component>Tutorial.tsx`) — the real Set
+Card Alerts page is built from ~20 native Framer toggle switch layers on
+canvas, each with its own instance of a numbered
+`withCardAlertsToggleReportN` override from
+`card-controls/card-alerts/CardAlertsToggleReport.tsx`. "Duplicating the
+page" here means duplicating the canvas frame itself in Framer, which
+carries each layer's existing Code Override along with it.
+
+That's the trap: `withCardAlertsToggleReportN`'s on/off flag
+(`isOn1`, `isOn2`, ...) is a MODULE-LEVEL variable per number, shared by
+every layer using that same numbered export — it exists to let
+`CardAlertsSave.tsx` know whether *any* toggle on the real page is on.
+If the tutorial-duplicate page's toggles keep that same override after
+duplication, tapping one in the tutorial flips the exact same flag the
+real page uses, contaminating a real user's actual alert settings.
+
+The tutorial doesn't need that override at all: the native Framer
+switch already animates its own on/off visual on tap with no override
+involved, and — same call `SetTravelNoticeTutorial.tsx`'s Save already
+made — a frozen walkthrough's Save button can just be hardcoded enabled
+rather than replicating real "is anything on?" validation.
+`withCardAlertsSaveTutorial` in `CardAlertsSave.tsx` implements this —
+it's its own render body, not a thin wrapper sharing the base page's
+`anyToggleOn()`-gated one. It wasn't always: an earlier version had it
+sharing that body, which left the tutorial Save permanently muted since
+none of these three toggles ever touch `onCount` — see the header
+comment on `withCardAlertsSaveTutorial` for the full failure chain if
+this regresses again.
+
+So, per toggle the tutorial wants the user to tap:
+
+1. On the tutorial-duplicate page, remove that toggle's copied-over
+   `withCardAlertsToggleReportN` override entirely.
+2. Apply one of `TutorialTargets.tsx`'s `CardAlertsToggleTarget1` /
+   `CardAlertsToggleTarget2` / `CardAlertsToggleTarget3` (add more the
+   same way if needed) instead — plain `withTutorialTarget`, not the
+   marker variant, since the toggle itself is the real tappable element
+   here (same category as `CardToggle`/`TravelScroll`), not something
+   sitting on top of a separate real element.
+3. Drop a `TutorialOverlay` instance targeting that id, `stepNumber` in
+   sequence with the rest of the flow, `clickAdvancesStep: true`, one
+   toggle spotlighted per step — matches how `TravelSave` etc. already
+   work, just without the click-through concern those needed (this
+   marker doesn't sit over anything else).
+
 ## Wiring a TutorialOverlay step to a field inside one of these components
 
 `TutorialOverlay.tsx` finds its target with
@@ -85,14 +133,17 @@ Two approaches ended up in play for the travel-notice tutorial —
    Start Date row in `SetTravelNoticeTutorial.tsx` carries
    `data-tutorial-target="start-date"` directly in its JSX.
 2. **Separate marker layers** (what actually ended up wired up live, in
-   Framer): three empty, invisible Framer layers —
-   `travel-start`, `travel-end`, `travel-save` — positioned on the
-   canvas over the Start Date field, End Date field, and Save button
-   respectively, each tagged via its own `TutorialTargets.tsx` Code
-   Override export (`TravelStart`/`TravelEnd`/`TravelSave`). These
-   exports were added directly in Framer's code editor and, as of this
-   writing, have **not** been pulled into this repo's copy of
-   `TutorialTargets.tsx` — see the flag in `tutorials/NOTES.md`.
+   Framer): four empty, invisible Framer layers —
+   `travel-start`, `travel-end`, `travel-destinations`, `travel-save` —
+   positioned on the canvas over the Start Date field, End Date field,
+   Destinations field, and Save button respectively, each tagged via
+   its own `TutorialTargets.tsx` Code Override export
+   (`TravelStart`/`TravelEnd`/`TravelDestinations`/`TravelSave`). These
+   exports were originally added directly in Framer's code editor and
+   have since been pulled into this repo's copy of `TutorialTargets.tsx`
+   — each goes through the `withTutorialMarker` helper there, which
+   forces `pointer-events: none` on the marker so it can't swallow the
+   tap meant for the real field/button it sits on top of.
 
 Since approach 2 is what's actually live, prefer `target: "travel-start"`
 / `"travel-end"` / `"travel-save"` on real `TutorialOverlay` instances

@@ -51,7 +51,32 @@ Card-level account actions a user manages from settings.
     the same picker-visibility reason as `CardAlertsToggleReport.tsx`
     above. Everything else (toggle counting, the overlay, the toast) is
     identical either way and needs no duplicating — only the destination
-    differs.
+    differs. `withCardAlertsScrollContainer` — apply to the BASE page's
+    "Scrollable Content" frame only — captures a ref in module state so
+    `scrollCardAlertsToTop()` has a native element to call `scrollTo()`
+    on. The tutorial duplicate's Scrollable Content frame instead
+    carries `tutorials/tutorial-overlays/VirtualScroll.tsx`'s
+    `VirtualScrollCardAlertsContent` (it already needs that for the
+    toggle step's lock/freeze behavior — see
+    `tutorials/card-controls-tutorial/NOTES.md`), and
+    `scrollCardAlertsToTop()` checks `window.__getVirtualScroll("card-
+    alerts-scroll")` first for exactly that reason: native `scrollTo()`
+    is a no-op on a VirtualScroll container, since it disables real
+    overflow scrolling and owns position via its own transform instead.
+    **Reached via `window`, not a static import of `VirtualScroll.tsx`**
+    — this file lives under `card-controls/`, that one under
+    `tutorials/tutorial-overlays/`, and a cross-folder import between
+    them doesn't reliably resolve against Framer's actual project file
+    tree; when it doesn't, the whole importing file's exports silently
+    vanish from the Override picker, not just the one that used the
+    import (this actually happened once — every export in
+    `CardAlertsSave.tsx`, including totally unrelated ones like
+    `withCardAlertsSave`, disappeared). Same-folder imports (like
+    `TutorialOverlay.tsx`'s own `./VirtualScroll.tsx`) are fine; only
+    cross-folder ones are the risk. Either way, the Save handler calls
+    `scrollCardAlertsToTop()` the instant the Saving overlay appears, so
+    the page is back at the top by the time
+    `SAVE_DELAY_MS` elapses and it navigates away.
   - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
     Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
     separate storage key.

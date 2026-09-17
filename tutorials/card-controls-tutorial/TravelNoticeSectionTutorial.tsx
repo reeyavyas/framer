@@ -394,6 +394,7 @@ export default function TravelNoticeSectionTutorial(props: Props) {
         detailPaddingX,
         detailPaddingY,
         style,
+        ...rest
     } = props
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
@@ -442,6 +443,14 @@ export default function TravelNoticeSectionTutorial(props: Props) {
 
     return (
         <div
+            // Forwards whatever a TutorialTargets.tsx Code Override
+            // injects (data-tutorial-target) onto the actual DOM node.
+            // Without this, TutorialOverlay's querySelector for that
+            // attribute never finds anything: this is a custom code
+            // component, not a native Frame/Stack/Text layer, so unlike
+            // those, nothing forwards unrecognized props to the DOM
+            // automatically — this component has to do it itself.
+            {...rest}
             style={{
                 ...style,
                 width: "100%",

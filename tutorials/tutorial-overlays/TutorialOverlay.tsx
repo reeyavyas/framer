@@ -2,6 +2,7 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
+import { getVirtualScroll } from "./VirtualScroll.tsx"
 
 /**
  * TutorialOverlay
@@ -63,6 +64,20 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * arrowhead live inside ONE <g> together, so arrowRotation rotates
  * them as a single rigid unit — there's no way for the two pieces to
  * drift out of alignment with each other.
+ *
+ * Every effect below that starts a timer, a requestAnimationFrame loop,
+ * or a global window listener checks `isCanvas` FIRST, before `active`
+ * or `isMyTurn`. This isn't style — a page with several steps (up to 8
+ * on some pages) means that many mounted instances at once, and every
+ * one of these effects used to run at design time too: a rAF loop
+ * re-measuring the DOM every frame, global click-blocking that (with no
+ * real target on canvas) ate every click in Framer's own editor, and a
+ * non-passive wheel/touchmove hijack on `window`. Together, on an
+ * 8-step page, that's what was making the canvas sluggish/unresponsive.
+ * Keep new effects following the same `isCanvas ||` first-check
+ * convention — it's the only thing standing between "this component
+ * runs in Preview/Published" and "this component also runs, pointlessly
+ * and expensively, wherever it merely sits on the canvas."
  */
 
 type HoleShape = "rectangle" | "circle" | "pill"
@@ -79,8 +94,10 @@ interface Props {
     clickAdvancesStep: boolean // tapping the real target hands off to stepNumber + 1
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
-    scrollThresholdPercent: number // 0-100, how far down before it counts as "scrolled"
+    scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
+    scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
+    freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — resumes normally once the step ends
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -97,15 +114,21 @@ interface Props {
     cardOffsetX: number
     cardOffsetY: number
 
-    showProgressDots: boolean
-    progressIndex: number
-    progressTotal: number
+    showProgressBar: boolean // fills over nextStepAfterSeconds (same-page-group hand-off) or, if that's 0, autoAdvanceAfterSeconds (cross-page hand-off) — whichever timer is actually driving this step's advance
+    progressBarColor: string
+    progressBarTrackColor: string
+
+    showNextButton: boolean // a real tappable button that calls the same advanceStep() a click/scroll/timer hand-off does — or navigates to nextButtonLink instead, when this is the last step in its page group
+    nextButtonLabel: string
+    nextButtonTextColor: string
+    nextButtonBackgroundColor: string
+    nextButtonFont: React.CSSProperties // family/weight/style/size, all from the one Font control
+    nextButtonLink?: string // blank = advance within this page group (same as every other hand-off trigger); set = navigate here instead, for the last step of a group or a single-step page
 
     showGlow: boolean
     glowVariant: "static" | "breathing" | "ripple"
     glowColor: string
     glowIntensity: number
-    glowDelaySeconds: number // 0 = as soon as the hole appears. Uncapped.
 
     showArrow: boolean
     arrowVariant: "curve" | "bounce"
@@ -113,8 +136,8 @@ interface Props {
     arrowStrokeWidth: number
     arrowSize: number
     arrowRotation: number // degrees, rotates the whole grouped line+arrowhead together
-    arrowReflect: boolean
-    arrowReflectAngle: number // degrees — the axis to mirror across. 0 = horizontal flip, 90 = vertical flip.
+    arrowReflectX: boolean // mirror horizontally
+    arrowReflectY: boolean // mirror vertically
     arrowDelaySeconds: number // uncapped
     arrowOffsetX: number
     arrowOffsetY: number
@@ -123,13 +146,10 @@ interface Props {
     autoAdvanceLink?: string
 
     dimColor: string
-    blurAmount: number // backdrop-filter blur applied to the card's own background, not the full-screen dim layer
-    accentColor: string
 
     showSkipButton: boolean
     skipLabel: string
     skipLink?: string
-    showExitButton: boolean
     exitLink?: string
 
     style?: React.CSSProperties
@@ -156,7 +176,8 @@ function bezierEndAngleDeg(
 }
 
 // ---------------------------------------------------------------------
-// Geometry helpers (same clip-path evenodd hole trick as SpotlightOverlay)
+// Geometry helpers (same clip-path evenodd hole trick as the archived
+// SpotlightOverlay.tsx — see archived/tutorial-overlays/)
 // ---------------------------------------------------------------------
 function roundedRectPath(
     x: number,
@@ -229,6 +250,12 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // back to the old screen-relative behavior when there's no target (a
 // step with no hole, e.g. a closing "all set" card).
 const CARD_TARGET_GAP = 24
+const CARD_MAX_WIDTH = 900
+
+// Skip/exit are the overlay's own system chrome, not per-step tutorial
+// content — kept as a fixed brand color rather than a per-instance
+// property control, since they don't vary step to step.
+const SKIP_EXIT_COLOR = "rgba(5,147,144,1)"
 
 function cardWrapperStyle(
     anchorX: "left" | "center" | "right",
@@ -256,8 +283,35 @@ function cardWrapperStyle(
             // which has plenty of room for a target near the right side.
             style.right = Math.max(0, viewportW - rect.right - offsetX)
         } else {
-            style.left = rect.left + rect.width / 2 + offsetX
-            translateX = "-50%"
+            // Same shrink-to-fit bug as the no-target case below (see
+            // its comment for the full explanation) — a fixed-position
+            // box with only `left` set computes its available width as
+            // (viewport width - left), with no idea a translateX(-50%)
+            // will shift it back afterward. For a target whose center
+            // isn't near the left edge, that could cap the card's width
+            // well below CARD_MAX_WIDTH even though there's room on
+            // BOTH sides of the target to use — the card would look
+            // narrower the further right (or the more centered) the
+            // target sits, for no reason related to actual available
+            // screen space. Fixed the same way: `left` and `right` set
+            // symmetrically around the target's own center (assuming up
+            // to CARD_MAX_WIDTH of span, clamped to 0 past either edge —
+            // same clamp the `right` branch above already uses) gives
+            // the browser a real, non-ambiguous width to resolve
+            // directly, no shrink-to-fit or transform involved.
+            // display:flex + justifyContent centers the card WITHIN that
+            // span, since the span itself is now a fixed width
+            // regardless of how much of it the card's own content
+            // actually needs.
+            const centerX = rect.left + rect.width / 2 + offsetX
+            style.left = Math.max(0, centerX - CARD_MAX_WIDTH / 2)
+            style.right = Math.max(
+                0,
+                viewportW - centerX - CARD_MAX_WIDTH / 2
+            )
+            style.display = "flex"
+            style.justifyContent = "center"
+            style.alignItems = "flex-start"
         }
 
         if (anchorY === "top") {
@@ -274,12 +328,27 @@ function cardWrapperStyle(
         return style
     }
 
-    if (anchorX === "left") style.left = 40 + offsetX
-    else if (anchorX === "right") style.right = 40 - offsetX
-    else {
-        style.left = `calc(50% + ${offsetX}px)`
-        translateX = "-50%"
-    }
+    // No target to anchor left/right against, so cardAnchorX is ignored
+    // here and the card is always horizontally centered — cardOffsetX
+    // still nudges it left/right from that centered position.
+    //
+    // Centered via display:flex + justifyContent, NOT the common
+    // left:50% + translateX(-50%) trick — that trick silently breaks a
+    // shrink-to-fit (width:auto, e.g. this card's own maxWidth) child.
+    // For a fixed-position box with only `left` set (no `right`), the
+    // browser computes ITS shrink-to-fit "available width" as
+    // (containing block width - left), with no knowledge that a later
+    // transform will shift it back — so at left ~50% that's only ever
+    // HALF the viewport, regardless of the child's own maxWidth. The
+    // card's text was wrapping against half the screen, not against its
+    // actual maxWidth. Spanning the full width instead (left:0, right:0)
+    // and centering the child with flex gives its shrink-to-fit
+    // calculation the real full viewport to work with.
+    style.left = 0
+    style.right = 0
+    style.display = "flex"
+    style.justifyContent = "center"
+    style.alignItems = "flex-start"
 
     if (anchorY === "top") style.top = 100 + offsetY
     else if (anchorY === "bottom") style.bottom = 90 - offsetY
@@ -288,7 +357,7 @@ function cardWrapperStyle(
         translateY = "-50%"
     }
 
-    style.transform = `translate(${translateX}, ${translateY})`
+    style.transform = `translate(${offsetX}px, ${translateY})`
     return style
 }
 
@@ -298,6 +367,12 @@ function cardWrapperStyle(
 // whose stepNumber matches the group's current step renders itself.
 // Same module-level-Map coordination technique CircleOverrides.tsx
 // already uses to keep its several circle instances in sync.
+//
+// This briefly lived in its own PageStepState.tsx file so an external
+// consumer (TutorialCongrats.tsx's own pageGroup option) could reach it
+// without importing all of this file. That component has since been
+// removed as unused, leaving TutorialOverlay.tsx as the only consumer
+// again, so it's back here as one file.
 // ---------------------------------------------------------------------
 const pageStepState = new Map<string, number>()
 const pageStepListeners = new Map<string, Set<() => void>>()
@@ -316,7 +391,26 @@ function subscribePageStep(groupId: string, onChange: () => void) {
         pageStepListeners.set(groupId, new Set())
     const listeners = pageStepListeners.get(groupId)!
     listeners.add(onChange)
-    return () => listeners.delete(onChange)
+    // Block body, not `() => listeners.delete(onChange)` — Set.delete()
+    // returns boolean, and a useEffect cleanup must return exactly void.
+    // An inline arrow function literal returned directly from an effect
+    // gets a TS carve-out that voids a non-void expression automatically;
+    // a function value handed back from elsewhere (like this one, used
+    // as `return subscribePageStep(...)` in an effect) does not, and
+    // fails type-checking wherever it's imported and used that way.
+    return () => {
+        listeners.delete(onChange)
+    }
+}
+
+// Resolves a scrollContainerTarget id (tagged via TutorialTargets.tsx,
+// same as any other target) to the element it names, or window when
+// blank or not found — the whole page.
+function resolveScrollTarget(containerId: string): HTMLElement | Window {
+    const container = containerId
+        ? document.querySelector(`[data-tutorial-target="${containerId}"]`)
+        : null
+    return container instanceof HTMLElement ? container : window
 }
 
 export default function TutorialOverlay(props: Props) {
@@ -330,8 +424,10 @@ export default function TutorialOverlay(props: Props) {
         clickAdvancesStep,
         nextStepAfterSeconds,
         scrollAdvancesStep,
+        scrollDirection,
         scrollThresholdPercent,
         scrollContainerTarget,
+        freezeScrollWhileActive,
         cardTitleLine1,
         cardTitleLine1Color,
         cardTitleLine1Font,
@@ -346,34 +442,36 @@ export default function TutorialOverlay(props: Props) {
         cardAnchorY,
         cardOffsetX,
         cardOffsetY,
-        showProgressDots,
-        progressIndex,
-        progressTotal,
+        showProgressBar,
+        progressBarColor,
+        progressBarTrackColor,
+        showNextButton,
+        nextButtonLabel,
+        nextButtonTextColor,
+        nextButtonBackgroundColor,
+        nextButtonFont,
+        nextButtonLink,
         showGlow,
         glowVariant,
         glowColor,
         glowIntensity,
-        glowDelaySeconds,
         showArrow,
         arrowVariant,
         arrowColor,
         arrowStrokeWidth,
         arrowSize,
         arrowRotation,
-        arrowReflect,
-        arrowReflectAngle,
+        arrowReflectX,
+        arrowReflectY,
         arrowDelaySeconds,
         arrowOffsetX,
         arrowOffsetY,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         dimColor,
-        blurAmount,
-        accentColor,
         showSkipButton,
         skipLabel,
         skipLink,
-        showExitButton,
         exitLink,
         style,
     } = props
@@ -382,7 +480,6 @@ export default function TutorialOverlay(props: Props) {
     const [mounted, setMounted] = React.useState(false)
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
-    const [glowShown, setGlowShown] = React.useState(false)
     const [arrowShown, setArrowShown] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
@@ -408,7 +505,6 @@ export default function TutorialOverlay(props: Props) {
     }, [pageGroup, stepNumber])
 
     React.useEffect(() => setMounted(true), [])
-    React.useEffect(() => setGlowShown(false), [target])
     React.useEffect(() => setArrowShown(false), [target])
 
     // Measure the target, tracking it continuously (targets can move —
@@ -426,7 +522,14 @@ export default function TutorialOverlay(props: Props) {
     // don't trigger a re-render — the rAF loop itself is the only
     // per-frame cost while a step with a target is active.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !target) {
+        // isCanvas is checked first in EVERY effect below with a global
+        // listener, timer, or per-frame loop — none of them have any real
+        // target/page to act on at design time, and leaving them running
+        // was a measured cause of a sluggish/unresponsive Framer canvas
+        // (this one specifically: a rAF loop re-measuring the DOM every
+        // single frame, for as long as any instance — active defaults to
+        // true — sat on a page, open or not).
+        if (isCanvas || !active || !isMyTurn || !target) {
             rectRef.current = null
             setRect(null)
             return
@@ -463,32 +566,26 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             cancelAnimationFrame(rafId)
         }
-    }, [active, isMyTurn, target])
-
-    // Timer-driven glow reveal — independent of any click, uncapped delay.
-    React.useEffect(() => {
-        if (!active || !isMyTurn || !showGlow) return
-        const t = setTimeout(
-            () => setGlowShown(true),
-            Math.max(glowDelaySeconds, 0) * 1000
-        )
-        return () => clearTimeout(t)
-    }, [active, isMyTurn, showGlow, glowDelaySeconds])
+    }, [isCanvas, active, isMyTurn, target])
 
     // Timer-driven arrow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !showArrow) return
+        if (isCanvas || !active || !isMyTurn || !showArrow) return
         const t = setTimeout(
             () => setArrowShown(true),
             Math.max(arrowDelaySeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, showArrow, arrowDelaySeconds])
+    }, [isCanvas, active, isMyTurn, showArrow, arrowDelaySeconds])
 
     // Optional timer-driven navigation to the next page — for a pure
-    // "watch this" beat that needs no tap at all.
+    // "watch this" beat that needs no tap at all. isCanvas is checked
+    // first here for an extra reason beyond the general note above: this
+    // one calls window.location.href — letting it fire inside Framer's
+    // own editor would navigate the canvas itself away, not a preview.
     React.useEffect(() => {
         if (
+            isCanvas ||
             !active ||
             !isMyTurn ||
             !autoAdvanceAfterSeconds ||
@@ -502,18 +599,18 @@ export default function TutorialOverlay(props: Props) {
             Math.max(autoAdvanceAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
+    }, [isCanvas, active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
 
     // Optional timer-driven hand-off to the next step on THIS page —
     // independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !nextStepAfterSeconds) return
+        if (isCanvas || !active || !isMyTurn || !nextStepAfterSeconds) return
         const t = setTimeout(
             advanceStep,
             Math.max(nextStepAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [active, isMyTurn, nextStepAfterSeconds, advanceStep])
+    }, [isCanvas, active, isMyTurn, nextStepAfterSeconds, advanceStep])
 
     // Explicit click-blocking. Replaces relying on clip-path to exclude
     // the hole from hit-testing — clip-path reliably PAINTS the hole, but
@@ -527,7 +624,12 @@ export default function TutorialOverlay(props: Props) {
     // if this overlay weren't in the DOM at all. Clicks on this overlay's
     // own UI (skip/exit buttons) are always excluded from blocking.
     React.useEffect(() => {
-        if (!active || !isMyTurn) return
+        // isCanvas is critical here specifically: on canvas there is no
+        // real target element, so `rect` never resolves and `insideHole`
+        // below is always false — meaning, ungated, this would capture
+        // and block EVERY click anywhere on the page at design time,
+        // including inside Framer's own editor chrome.
+        if (isCanvas || !active || !isMyTurn) return
         function blockOutsideHole(e: PointerEvent | MouseEvent) {
             const eventTarget = e.target as HTMLElement | null
             // Also exempt any other full-screen "system" overlay (e.g.
@@ -562,14 +664,14 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("pointerdown", blockOutsideHole, true)
             window.removeEventListener("click", blockOutsideHole, true)
         }
-    }, [active, isMyTurn])
+    }, [isCanvas, active, isMyTurn])
 
     // Click-driven hand-off — a non-blocking capture listener that
     // watches for a real tap landing inside this step's hole. It never
     // calls preventDefault/stopPropagation, so the real element
     // underneath still gets the real click; we just also notice it.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !clickAdvancesStep) return
+        if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
         function onPointerDown(e: PointerEvent) {
             const r = rectRef.current
             if (
@@ -585,45 +687,101 @@ export default function TutorialOverlay(props: Props) {
         window.addEventListener("pointerdown", onPointerDown, true)
         return () =>
             window.removeEventListener("pointerdown", onPointerDown, true)
-    }, [active, isMyTurn, clickAdvancesStep, advanceStep])
+    }, [isCanvas, active, isMyTurn, clickAdvancesStep, advanceStep])
 
     // Scroll-driven hand-off — for a beat like "scroll down to see your
-    // other accounts" that has no tap target at all. Listens on the real
-    // scrollable container (tag it the same way as any other target, via
+    // other accounts" (scrollDirection "down") or "scroll up to see the
+    // card you just created" (scrollDirection "up", e.g. a target pinned
+    // at the top of the page that an earlier step scrolled away from)
+    // that has no tap target at all. Listens on the real scrollable
+    // container (tag it the same way as any other target, via
     // TutorialTargets.tsx) or the whole page if scrollContainerTarget is
-    // blank, and hands off once the user has scrolled past the threshold.
+    // blank, and hands off once the user has crossed the threshold in
+    // that direction.
+    //
+    // If scrollContainerTarget has been handed over to VirtualScroll.tsx
+    // (a container needing a real zero-tolerance one-way lock elsewhere
+    // on the same page), reads percent from its owned position instead
+    // of native scrollTop/scroll events — there's nothing native to
+    // listen to once a container's scrolling has been taken over.
     React.useEffect(() => {
-        if (!active || !isMyTurn || !scrollAdvancesStep) return
-        const container = scrollContainerTarget
-            ? document.querySelector(
-                  `[data-tutorial-target="${scrollContainerTarget}"]`
-              )
-            : null
-        const el: HTMLElement | Window =
-            container instanceof HTMLElement ? container : window
+        if (isCanvas || !active || !isMyTurn || !scrollAdvancesStep) return
+        const virtual = getVirtualScroll(scrollContainerTarget)
+        if (virtual) {
+            function checkVirtual() {
+                const percent = virtual!.getPercent()
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                if (crossed) advanceStep()
+            }
+            checkVirtual()
+            return virtual.subscribe(checkVirtual)
+        }
+        const el = resolveScrollTarget(scrollContainerTarget)
         function checkScroll() {
-            let percent: number
+            let max: number
+            let scrolled: number
             if (el === window) {
                 const doc = document.documentElement
-                const max = doc.scrollHeight - doc.clientHeight
-                percent = max > 0 ? (window.scrollY / max) * 100 : 100
+                max = doc.scrollHeight - doc.clientHeight
+                scrolled = window.scrollY
             } else {
                 const node = el as HTMLElement
-                const max = node.scrollHeight - node.clientHeight
-                percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+                max = node.scrollHeight - node.clientHeight
+                scrolled = node.scrollTop
             }
-            if (percent >= scrollThresholdPercent) advanceStep()
+            // max <= 0 means there's nothing to scroll — e.g. on a tall
+            // kiosk viewport (1080x1920) where content that overflows a
+            // shorter preview window fits without overflowing here at
+            // all. That must never count as "crossed" in either
+            // direction, or the step advances itself the instant it
+            // mounts, before the user ever scrolls.
+            const crossed =
+                max > 0 &&
+                (scrollDirection === "up"
+                    ? (scrolled / max) * 100 <= scrollThresholdPercent
+                    : (scrolled / max) * 100 >= scrollThresholdPercent)
+            if (crossed) advanceStep()
         }
         checkScroll()
         el.addEventListener("scroll", checkScroll, { passive: true })
         return () => el.removeEventListener("scroll", checkScroll)
     }, [
+        isCanvas,
         active,
         isMyTurn,
         scrollAdvancesStep,
+        scrollDirection,
         scrollContainerTarget,
         scrollThresholdPercent,
         advanceStep,
+    ])
+
+    // Freezes a VirtualScroll container completely — neither direction
+    // moves — for exactly as long as THIS step is active, then resumes
+    // normally. For a target that needs to hold perfectly still —
+    // neither direction — while the user decides whether to interact
+    // with it (e.g. a toggle inside a scrollable list, where even
+    // scrolling further down would slide the very thing they're being
+    // asked to tap out from under their finger). Scoped to the step's
+    // own lifetime via the cleanup. VirtualScroll-only: freezing native
+    // scroll in real time needs the same wheel/touchmove veto that costs
+    // main-thread jank, which VirtualScroll exists specifically to avoid.
+    React.useEffect(() => {
+        if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive)
+            return
+        const virtual = getVirtualScroll(scrollContainerTarget)
+        if (!virtual) return
+        virtual.freezeHere()
+        return () => virtual.unfreeze()
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        freezeScrollWhileActive,
+        scrollContainerTarget,
     ])
 
     // Let scroll/drag gestures reach the real UI even though we're
@@ -631,8 +789,19 @@ export default function TutorialOverlay(props: Props) {
     // Attached to window (capture), not the dim div — that div is now
     // pointerEvents:"none" (see above), so it never receives wheel/touch
     // events itself; window-level listeners don't depend on that at all.
+    //
+    // isMyTurn matters here for more than the usual reason: this was the
+    // one listener in the file NOT scoped to it, so on an 8-step page
+    // (this component's own doc mentions pages with several steps) all 8
+    // instances stayed mounted and EACH attached this same window-level
+    // listener — meaning a single wheel tick got redirected onto the
+    // real target and applied via scrollByOn up to 8 times over, once
+    // per instance, not just once. Scoping to isMyTurn (matching every
+    // sibling listener-effect above) fixes both that real scroll-speed
+    // bug and, combined with isCanvas, the redundant listener pile-up
+    // that was making an 8-step page's design-time canvas heavy.
     React.useEffect(() => {
-        if (!active) return
+        if (isCanvas || !active || !isMyTurn) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
         function onWheel(e: WheelEvent) {
@@ -670,7 +839,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("touchstart", onTouchStart, true)
             window.removeEventListener("touchmove", onTouchMove, true)
         }
-    }, [active])
+    }, [isCanvas, active, isMyTurn])
 
     // isMyTurn only matters for the real runtime handoff between steps —
     // on the canvas nothing is actually advancing the shared pageGroup
@@ -680,6 +849,17 @@ export default function TutorialOverlay(props: Props) {
     // regardless of pageGroup/stepNumber.
     if (!active) return null
     if (!isCanvas && !isMyTurn) return null
+
+    // Whichever timer is actually driving this step's advance — the
+    // same-page-group nextStepAfterSeconds, or (for a single-step page
+    // with no pageGroup at all, advancing via autoAdvanceLink instead)
+    // autoAdvanceAfterSeconds. The progress bar visualizes whichever one
+    // applies, since both are just "how long until this step moves on
+    // by itself" from the person looking at the bar's point of view.
+    const progressBarDurationSeconds =
+        nextStepAfterSeconds > 0
+            ? nextStepAfterSeconds
+            : autoAdvanceAfterSeconds
 
     const clipPath =
         rect && viewport.w
@@ -812,9 +992,9 @@ export default function TutorialOverlay(props: Props) {
         </svg>
     )
 
-    const arrowTransform = arrowReflect
-        ? `rotate(${arrowRotation}deg) rotate(${arrowReflectAngle}deg) scaleY(-1) rotate(${-arrowReflectAngle}deg)`
-        : `rotate(${arrowRotation}deg)`
+    const arrowTransform = `rotate(${arrowRotation}deg) scale(${
+        arrowReflectX ? -1 : 1
+    }, ${arrowReflectY ? -1 : 1})`
 
     const content = (
         // pointerEvents:"none" here is the actual fix for clicks not
@@ -856,10 +1036,7 @@ export default function TutorialOverlay(props: Props) {
                 hole but wasn't reliably excluding it from real clicks — a
                 correctly-linked real element under the hole wasn't
                 receiving taps. This div still shows the dim/hole visually;
-                it just no longer decides what's clickable. Deliberately no
-                blur here — blurAmount is applied on the card's own
-                container below instead, so only what's directly behind the
-                card gets blurred, not the whole screen. */}
+                it just no longer decides what's clickable. */}
             <div
                 ref={overlayRef}
                 style={{
@@ -876,12 +1053,14 @@ export default function TutorialOverlay(props: Props) {
             {/* instruction card — appears/disappears on its own, never clicked.
                 Positioning lives on this plain wrapper; the motion.div inside
                 only ever animates opacity/y, so the two transforms never
-                fight. Dots only render when showProgressDots is on; the card
-                itself shows whenever there's a title/body, dots or not. */}
+                fight. The progress bar and Next button only render when
+                their own toggles are on; the card itself shows whenever
+                there's a title/body/bar/button, any combination of them. */}
             {(cardTitleLine1 ||
                 cardTitleLine2 ||
                 cardBody ||
-                (showProgressDots && progressTotal > 0)) && (
+                (showProgressBar && progressBarDurationSeconds > 0) ||
+                showNextButton) && (
                 <div
                     style={{
                         ...cardWrapperStyle(
@@ -926,9 +1105,7 @@ export default function TutorialOverlay(props: Props) {
                                 padding: "40px 60px",
                                 borderRadius: 24,
                                 background: cardBackgroundColor,
-                                backdropFilter: `blur(${blurAmount}px)`,
-                                WebkitBackdropFilter: `blur(${blurAmount}px)`,
-                                maxWidth: 900,
+                                maxWidth: CARD_MAX_WIDTH,
                                 textAlign: "center",
                                 pointerEvents: "none",
                             }}
@@ -976,29 +1153,110 @@ export default function TutorialOverlay(props: Props) {
                                     {cardBody}
                                 </div>
                             )}
-                            {showProgressDots && progressTotal > 0 && (
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    {Array.from({ length: progressTotal }).map(
-                                        (_, i) => (
+                            {/* Next button above, progress bar below it —
+                                grouped in their own wrapper (rather than
+                                relying on the card's own 24px gap). Space
+                                above the button is the card's own 24px
+                                gap (between cardBody and this wrapper)
+                                plus this wrapper's own 8px marginTop =
+                                32px. Space below the button, before the
+                                bar, is set explicitly as the button's own
+                                marginBottom (32px, matching the above) —
+                                deliberately a real margin here rather than
+                                the wrapper's flex `gap`, so it's an
+                                unambiguous, directly-inspectable rule on
+                                the one element it's about, not a value
+                                shared across every pair of children in
+                                the wrapper. */}
+                            {(showNextButton ||
+                                (showProgressBar &&
+                                    progressBarDurationSeconds > 0)) && (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        marginTop: 8,
+                                        width: "100%",
+                                    }}
+                                >
+                                    {showNextButton && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                nextButtonLink
+                                                    ? (window.location.href =
+                                                          nextButtonLink)
+                                                    : advanceStep()
+                                            }
+                                            style={{
+                                                pointerEvents: "auto",
+                                                cursor: "pointer",
+                                                border: "none",
+                                                padding: "24px 48px",
+                                                marginBottom: 32,
+                                                borderRadius: 999,
+                                                background:
+                                                    nextButtonBackgroundColor,
+                                                color: nextButtonTextColor,
+                                                ...nextButtonFont,
+                                            }}
+                                        >
+                                            {nextButtonLabel}
+                                        </button>
+                                    )}
+                                    {showProgressBar &&
+                                        progressBarDurationSeconds > 0 && (
                                             <div
-                                                key={i}
                                                 style={{
-                                                    width:
-                                                        i === progressIndex
-                                                            ? 28
-                                                            : 10,
-                                                    height: 10,
+                                                    width: "100%",
+                                                    height: 6,
                                                     borderRadius: 999,
                                                     background:
-                                                        i <= progressIndex
-                                                            ? accentColor
-                                                            : "rgba(255,255,255,0.3)",
-                                                    transition:
-                                                        "width 0.3s ease, background 0.3s ease",
+                                                        progressBarTrackColor,
+                                                    overflow: "hidden",
                                                 }}
-                                            />
-                                        )
-                                    )}
+                                            >
+                                                {/* Purely visual — the
+                                                    actual hand-off is the
+                                                    separate
+                                                    nextStepAfterSeconds
+                                                    or autoAdvanceAfterSeconds
+                                                    setTimeout effect
+                                                    (whichever applies),
+                                                    this just animates
+                                                    over the same
+                                                    progressBarDurationSeconds
+                                                    so the two stay in
+                                                    sync without a second
+                                                    timer driving
+                                                    anything. Remounts
+                                                    fresh every time this
+                                                    step becomes active
+                                                    (isMyTurn flipping
+                                                    false->true makes the
+                                                    whole card subtree
+                                                    remount), so it always
+                                                    restarts at 0%. */}
+                                                <motion.div
+                                                    initial={{ width: "0%" }}
+                                                    animate={{
+                                                        width: "100%",
+                                                    }}
+                                                    transition={{
+                                                        duration:
+                                                            progressBarDurationSeconds,
+                                                        ease: "linear",
+                                                    }}
+                                                    style={{
+                                                        height: "100%",
+                                                        background:
+                                                            progressBarColor,
+                                                        borderRadius: 999,
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                 </div>
                             )}
                         </motion.div>
@@ -1015,7 +1273,7 @@ export default function TutorialOverlay(props: Props) {
                 dimmed area around it. Ripple's expanding rings are left
                 outward-growing on purpose — that's a different "ping"
                 idiom, not the glow being asked about here. */}
-            {showGlow && glowShown && rect && (
+            {showGlow && rect && (
                 <>
                     <style>{`
                         @keyframes tutorial-glow-breathe {
@@ -1102,7 +1360,9 @@ export default function TutorialOverlay(props: Props) {
                 </div>
             )}
 
-            {/* skip / exit — the only other clickable surfaces in the overlay */}
+            {/* skip / exit — the only other clickable surfaces in the
+                overlay besides the Next button above (which lives inside
+                the card, styled separately up there) */}
             {showSkipButton && (
                 <a
                     href={skipLink || undefined}
@@ -1115,7 +1375,7 @@ export default function TutorialOverlay(props: Props) {
                         pointerEvents: "auto",
                         padding: "30px 40px",
                         borderRadius: 999,
-                        background: accentColor,
+                        background: SKIP_EXIT_COLOR,
                         color: "#fff",
                         fontSize: 44,
                         fontWeight: 500,
@@ -1125,31 +1385,29 @@ export default function TutorialOverlay(props: Props) {
                     {skipLabel}
                 </a>
             )}
-            {showExitButton && (
-                <a
-                    href={exitLink || undefined}
-                    onClick={(e) => !exitLink && e.preventDefault()}
-                    aria-label="Exit tutorial"
-                    style={{
-                        position: "fixed",
-                        top: 60,
-                        left: 40,
-                        zIndex: 8500,
-                        pointerEvents: "auto",
-                        width: 110,
-                        height: 110,
-                        borderRadius: "50%",
-                        background: accentColor,
-                        color: "#fff",
-                        fontSize: 44,
-                        lineHeight: "110px",
-                        textAlign: "center",
-                        textDecoration: "none",
-                    }}
-                >
-                    {"✕"}
-                </a>
-            )}
+            <a
+                href={exitLink || undefined}
+                onClick={(e) => !exitLink && e.preventDefault()}
+                aria-label="Exit tutorial"
+                style={{
+                    position: "fixed",
+                    top: 60,
+                    left: 40,
+                    zIndex: 8500,
+                    pointerEvents: "auto",
+                    width: 110,
+                    height: 110,
+                    borderRadius: "50%",
+                    background: SKIP_EXIT_COLOR,
+                    color: "#fff",
+                    fontSize: 44,
+                    lineHeight: "110px",
+                    textAlign: "center",
+                    textDecoration: "none",
+                }}
+            >
+                {"✕"}
+            </a>
         </div>
     )
 
@@ -1241,8 +1499,10 @@ TutorialOverlay.defaultProps = {
     clickAdvancesStep: false,
     nextStepAfterSeconds: 0,
     scrollAdvancesStep: false,
+    scrollDirection: "down",
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
+    freezeScrollWhileActive: false,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
     cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
@@ -1254,35 +1514,41 @@ TutorialOverlay.defaultProps = {
     cardBodyColor: "rgba(255,255,255,0.8)",
     cardBodyFont: { fontSize: 30 },
     cardAnchorX: "center",
-    cardAnchorY: "top",
+    cardAnchorY: "center",
     cardOffsetX: 0,
     cardOffsetY: 0,
-    showProgressDots: true,
-    progressIndex: 1,
-    progressTotal: 4,
+    showProgressBar: false,
+    progressBarColor: "#ffffff",
+    progressBarTrackColor: "rgba(255,255,255,0.25)",
+    showNextButton: false,
+    nextButtonLabel: "Next",
+    nextButtonTextColor: "#11232D",
+    nextButtonBackgroundColor: "#FFCC40",
+    nextButtonFont: {
+        fontFamily: "Inter",
+        fontWeight: 700,
+        fontSize: 34,
+        lineHeight: 1.2,
+    },
     showGlow: true,
     glowVariant: "breathing",
     glowColor: "rgba(5,147,144,1)",
     glowIntensity: 2,
-    glowDelaySeconds: 0,
     showArrow: false,
     arrowVariant: "curve",
     arrowColor: "rgba(5,147,144,1)",
     arrowStrokeWidth: 8,
     arrowSize: 90,
     arrowRotation: 0,
-    arrowReflect: false,
-    arrowReflectAngle: 0,
+    arrowReflectX: false,
+    arrowReflectY: false,
     arrowDelaySeconds: 1.2,
     arrowOffsetX: 0,
     arrowOffsetY: -100,
     autoAdvanceAfterSeconds: 0,
     dimColor: "rgba(10, 10, 20, 0.55)",
-    blurAmount: 8,
-    accentColor: "rgba(5,147,144,1)",
     showSkipButton: true,
     skipLabel: "Skip",
-    showExitButton: true,
 }
 
 addPropertyControls(TutorialOverlay, {
@@ -1352,6 +1618,17 @@ addPropertyControls(TutorialOverlay, {
         disabledTitle: "Off",
         hidden: (props) => !props.pageGroup,
     },
+    scrollDirection: {
+        type: ControlType.Enum,
+        title: "Scroll direction",
+        options: ["down", "up"],
+        optionTitles: [
+            "Down — advance past the threshold",
+            "Up — advance back below the threshold",
+        ],
+        defaultValue: "down",
+        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+    },
     scrollThresholdPercent: {
         type: ControlType.Number,
         title: "Scroll threshold %",
@@ -1366,7 +1643,17 @@ addPropertyControls(TutorialOverlay, {
         title: "Scroll container ID",
         defaultValue: "",
         placeholder: "blank = whole page",
-        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+        hidden: (props) =>
+            !props.pageGroup ||
+            (!props.scrollAdvancesStep && !props.freezeScrollWhileActive),
+    },
+    freezeScrollWhileActive: {
+        type: ControlType.Boolean,
+        title: "Freeze scroll while active",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.pageGroup,
     },
     cardTitleLine1: {
         type: ControlType.String,
@@ -1443,7 +1730,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Card position Y",
         options: ["top", "center", "bottom"],
         optionTitles: ["Above target", "Centered on target", "Below target"],
-        defaultValue: "bottom",
+        defaultValue: "center",
     },
     cardOffsetX: {
         type: ControlType.Number,
@@ -1455,28 +1742,80 @@ addPropertyControls(TutorialOverlay, {
         title: "Card offset Y",
         defaultValue: 0,
     },
-    showProgressDots: {
+    showProgressBar: {
         type: ControlType.Boolean,
-        title: "Progress dots",
-        defaultValue: true,
+        title: "Progress bar",
+        defaultValue: false,
+        enabledTitle: "Show",
+        disabledTitle: "Hide",
+        hidden: (props) =>
+            !props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds,
+    },
+    progressBarColor: {
+        type: ControlType.Color,
+        title: "Progress bar color",
+        defaultValue: "#ffffff",
+        hidden: (props) =>
+            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
+            !props.showProgressBar,
+    },
+    progressBarTrackColor: {
+        type: ControlType.Color,
+        title: "Progress bar track color",
+        defaultValue: "rgba(255,255,255,0.25)",
+        hidden: (props) =>
+            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
+            !props.showProgressBar,
+    },
+    showNextButton: {
+        type: ControlType.Boolean,
+        title: "Next button",
+        defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
     },
-    progressIndex: {
-        type: ControlType.Number,
-        title: "Dot index",
-        min: 0,
-        step: 1,
-        defaultValue: 0,
-        hidden: (props) => !props.showProgressDots,
+    nextButtonLabel: {
+        type: ControlType.String,
+        title: "Next button label",
+        defaultValue: "Next",
+        hidden: (props) => !props.showNextButton,
     },
-    progressTotal: {
-        type: ControlType.Number,
-        title: "Dot total",
-        min: 0,
-        step: 1,
-        defaultValue: 4,
-        hidden: (props) => !props.showProgressDots,
+    nextButtonTextColor: {
+        type: ControlType.Color,
+        title: "Next button text color",
+        defaultValue: "#11232D",
+        hidden: (props) => !props.showNextButton,
+    },
+    nextButtonBackgroundColor: {
+        type: ControlType.Color,
+        title: "Next button color",
+        defaultValue: "#FFCC40",
+        hidden: (props) => !props.showNextButton,
+    },
+    nextButtonFont: {
+        type: ControlType.Font,
+        title: "Next button font",
+        controls: "extended",
+        // Inter is a Google Font (the project's own default font),
+        // unlike Area Normal/Proxima Nova before it — those are
+        // custom/uploaded project fonts, which didn't reliably
+        // pre-select from a fontFamily string in code the way a Google
+        // Font does; Framer can resolve Inter directly. defaultFontType
+        // is kept anyway so this control still shows a real default even
+        // if that ever stops resolving for any reason.
+        defaultFontType: "sans-serif",
+        defaultValue: {
+            fontFamily: "Inter",
+            fontWeight: 700,
+            fontSize: 34,
+            lineHeight: 1.2,
+        },
+        hidden: (props) => !props.showNextButton,
+    },
+    nextButtonLink: {
+        type: ControlType.Link,
+        title: "Next button link",
+        hidden: (props) => !props.showNextButton,
     },
     showGlow: {
         type: ControlType.Boolean,
@@ -1506,14 +1845,6 @@ addPropertyControls(TutorialOverlay, {
         max: 5,
         step: 1,
         defaultValue: 2,
-        hidden: (props) => !props.showGlow,
-    },
-    glowDelaySeconds: {
-        type: ControlType.Number,
-        title: "Glow delay (sec)",
-        min: 0,
-        step: 0.1,
-        defaultValue: 0,
         hidden: (props) => !props.showGlow,
     },
     showArrow: {
@@ -1558,20 +1889,21 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: 0,
         hidden: (props) => !props.showArrow,
     },
-    arrowReflect: {
+    arrowReflectX: {
         type: ControlType.Boolean,
-        title: "Arrow reflect",
+        title: "Reflect X",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
         hidden: (props) => !props.showArrow,
     },
-    arrowReflectAngle: {
-        type: ControlType.Number,
-        title: "Reflect axis (°)",
-        step: 1,
-        defaultValue: 0,
-        hidden: (props) => !props.showArrow || !props.arrowReflect,
+    arrowReflectY: {
+        type: ControlType.Boolean,
+        title: "Reflect Y",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props) => !props.showArrow,
     },
     arrowDelaySeconds: {
         type: ControlType.Number,
@@ -1610,19 +1942,6 @@ addPropertyControls(TutorialOverlay, {
         title: "Dim color",
         defaultValue: "rgba(10, 10, 20, 0.55)",
     },
-    blurAmount: {
-        type: ControlType.Number,
-        title: "Card background blur (px)",
-        min: 0,
-        max: 30,
-        step: 1,
-        defaultValue: 8,
-    },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent color",
-        defaultValue: "rgba(5,147,144,1)",
-    },
     showSkipButton: {
         type: ControlType.Boolean,
         title: "Skip button",
@@ -1640,13 +1959,6 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Link,
         title: "Skip link",
         hidden: (props) => !props.showSkipButton,
-    },
-    showExitButton: {
-        type: ControlType.Boolean,
-        title: "Exit (X) button",
-        defaultValue: true,
-        enabledTitle: "Show",
-        disabledTitle: "Hide",
     },
     exitLink: {
         type: ControlType.Link,
