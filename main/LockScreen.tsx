@@ -460,14 +460,17 @@ export default function LockScreen(props) {
                                 ease: "easeOut",
                             }}
                             style={{
-                                marginTop: layout.dateTimeGap,
+                                marginTop:
+                                    layout.notificationGap === undefined
+                                        ? 40
+                                        : layout.notificationGap,
                                 width: "100%",
                                 maxWidth: 900,
                                 boxSizing: "border-box",
                                 display: "flex",
                                 alignItems: "flex-start",
                                 gap: 20,
-                                padding: 28,
+                                padding: 40,
                                 borderRadius:
                                     activeNotification.cornerRadius ===
                                     undefined
@@ -773,6 +776,7 @@ LockScreen.defaultProps = {
         sideInset: 48,
         bottomInset: 140,
         dateTimeGap: 16,
+        notificationGap: 40,
     },
     icons: {
         buttonSize: 128,
@@ -1042,6 +1046,14 @@ addPropertyControls(LockScreen, {
                 defaultValue: 16,
                 min: 0,
                 max: 150,
+                step: 1,
+            },
+            notificationGap: {
+                type: ControlType.Number,
+                title: "Time-Notification Gap",
+                defaultValue: 40,
+                min: 0,
+                max: 200,
                 step: 1,
             },
         },
