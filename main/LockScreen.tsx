@@ -635,7 +635,7 @@ export default function LockScreen(props) {
                         pointerEvents: "none",
                     }}
                 >
-                    <ChevronUpGlyph size={34} color={swipeHintColor} />
+                    <ChevronUpGlyph size={48} color={swipeHintColor} />
                     <div
                         style={{
                             width: "max-content",
