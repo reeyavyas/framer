@@ -56,12 +56,14 @@ import { animate, motion, useMotionValue } from "framer-motion"
  *
  * Usage: select the "Scrollable Content" layer on the canvas ->
  * Code (right panel) -> Override -> this file -> pick the export for
- * that specific container (e.g. VirtualScrollTravelContent). The
- * existing exports below each still carry their own id purely by
- * convention now (see the registry scoping comment above the registry
- * itself) — nothing stops a brand new page from reusing any one of
- * them as-is, with no new export needed, since the registry no longer
- * relies on the id alone to tell containers apart.
+ * that specific container. Most pages should just pick
+ * VirtualScrollContent, the shared export below — the registry keys on
+ * the current page path as well as the id (see the scoping comment
+ * above the registry), so the exact same export works unmodified on any
+ * page needing VirtualScroll, no matter how different their content or
+ * height, with nothing new to write. Card Alerts is the one exception,
+ * kept on its own dedicated export — see the comment on
+ * VirtualScrollCardAlertsContent for why.
  *
  * TutorialOverlay.tsx's scrollAdvancesStep and freezeScrollWhileActive
  * both check getVirtualScroll(scrollContainerTarget) first and use
@@ -430,8 +432,20 @@ function withVirtualScroll(id: string) {
     }
 }
 
-//Travel Notice Page "Scrollable Content"
-export function VirtualScrollTravelContent(
+// Shared "Scrollable Content" override — apply this same export to the
+// layer on ANY page that needs VirtualScroll (Travel Notice, Card
+// Controls 1, Card Controls 3, and any future page), no matter how
+// different their content or height. Safe to reuse as-is because the
+// registry keys on the current page path as well as this id (see the
+// scoping comment above the registry) — every page picking this same
+// export still lands in its own separate registry slot automatically.
+// Formerly three separate exports (VirtualScrollTravelContent,
+// VirtualScrollCardControls1Content, VirtualScrollCardControls3Content),
+// each with its own id purely out of habit from before page-scoping
+// existed; collapsed into this one now that keeping them distinct was
+// doing no actual work. NOT used by Card Alerts — see that export just
+// below for why it stays separate.
+export function VirtualScrollContent(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withVirtualScroll("scrollable-content")(Component)
@@ -455,28 +469,3 @@ export function VirtualScrollCardAlertsContent(
     return withVirtualScroll("card-alerts-scroll")(Component)
 }
 
-// Card Controls Tutorial Page 1 ("/card-controls-tutorial/card-controls-1")
-// "Scrollable Content". Deliberately reuses VirtualScrollTravelContent's
-// exact id ("scrollable-content") rather than its own — under the
-// registry's page-scoping (see the comment above it), an id no longer
-// has to be unique across pages for correctness, since the current page
-// path is already part of the registry key. Kept as its own separate
-// EXPORT anyway, purely so the existing canvas Override selection on
-// this page doesn't need to change (Framer's Override picker keys off
-// the export name, never the id string inside it). A future page can
-// just as safely reuse this exact export instead of getting a new one
-// of its own.
-export function VirtualScrollCardControls1Content(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withVirtualScroll("scrollable-content")(Component)
-}
-
-// Card Controls Tutorial Page 3 ("/card-controls-tutorial/card-controls-3")
-// "Scrollable Content" — same situation as VirtualScrollCardControls1Content
-// above.
-export function VirtualScrollCardControls3Content(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withVirtualScroll("scrollable-content")(Component)
-}
