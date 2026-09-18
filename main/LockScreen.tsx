@@ -526,13 +526,17 @@ export default function LockScreen(props) {
                         </span>
                     </div>
                 </div>
-                {/* Fake Notifications — stack like the real lock screen:
-                    whichever are enabled arrive one at a time and stay up
-                    together, newest at the top pushing the rest down. */}
+                {/* Spacer pushes context rows downward */}
+                <div style={{ flex: 1 }} />
+                {/* Fake Notifications — stack low, near the icon row: the
+                    first one to arrive sits closest to the icons/swipe
+                    hint, and each new arrival stacks above it, growing the
+                    pile upward away from the icons rather than down from
+                    the clock. */}
                 {enabledNotifications.length > 0 && (
                     <div
                         style={{
-                            marginTop:
+                            marginBottom:
                                 layout.notificationGap === undefined
                                     ? 72
                                     : layout.notificationGap,
@@ -545,7 +549,12 @@ export default function LockScreen(props) {
                             marginLeft: -(layout.sideInset - 20),
                             marginRight: -(layout.sideInset - 20),
                             display: "flex",
-                            flexDirection: "column",
+                            // column-reverse lays items out from the
+                            // bottom up: the first DOM child (oldest
+                            // arrival, array index 0) sits at the bottom,
+                            // closest to the icon row, and later arrivals
+                            // stack progressively higher above it.
+                            flexDirection: "column-reverse",
                             gap: 25,
                         }}
                     >
@@ -553,7 +562,6 @@ export default function LockScreen(props) {
                             {enabledNotifications
                                 .map((n, slot) => ({ n, slot }))
                                 .slice(0, visibleCount)
-                                .reverse()
                                 .map(({ n, slot }) => {
                                     const cornerRadius =
                                         n.cornerRadius === undefined
@@ -860,8 +868,6 @@ export default function LockScreen(props) {
                         </AnimatePresence>
                     </div>
                 )}
-                {/* Spacer pushes context rows downward */}
-                <div style={{ flex: 1 }} />
                 {/* Quick Action Icon Row */}
                 <div
                     style={{
@@ -1389,7 +1395,7 @@ addPropertyControls(LockScreen, {
             },
             notificationGap: {
                 type: ControlType.Number,
-                title: "Time-Notification Gap",
+                title: "Notification-Icon Gap",
                 defaultValue: 72,
                 min: 0,
                 max: 250,
