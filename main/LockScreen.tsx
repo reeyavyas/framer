@@ -610,20 +610,29 @@ export default function LockScreen(props) {
                                             // with — the card renders sharp
                                             // and the blur visibly catches
                                             // up a beat later. Transform-only
-                                            // motion (scale) composites as
+                                            // motion (y/scale) composites as
                                             // a cheap bitmap transform
                                             // instead, so the blur is
                                             // already correct on the first
-                                            // frame it's visible.
+                                            // frame it's visible. The y here
+                                            // is small on purpose (-14, not
+                                            // the old -32) — big enough to
+                                            // read as a settle, small
+                                            // enough relative to the
+                                            // sibling's ~200px `layout`
+                                            // reflow that it doesn't
+                                            // meaningfully reintroduce the
+                                            // overlap the larger offset
+                                            // caused.
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
-                                                    : { scale: 0.96 }
+                                                    : { y: -14, scale: 0.9 }
                                             }
                                             animate={
                                                 prefersReducedMotion
                                                     ? { opacity: 1 }
-                                                    : { scale: 1 }
+                                                    : { y: 0, scale: 1 }
                                             }
                                             // Exit doesn't have the cold-
                                             // layer problem above — by the
@@ -666,10 +675,27 @@ export default function LockScreen(props) {
                                                               stiffness: 420,
                                                               damping: 32,
                                                           },
+                                                          // This card's own
+                                                          // y/scale no longer
+                                                          // shares vertical
+                                                          // space with the
+                                                          // `layout` reflow
+                                                          // (it's a tiny -14
+                                                          // offset next to a
+                                                          // ~200px reflow),
+                                                          // so it's free to
+                                                          // use a softer,
+                                                          // slightly slower
+                                                          // spring for a
+                                                          // more graceful
+                                                          // settle instead
+                                                          // of matching
+                                                          // layout's snappier
+                                                          // one.
                                                           default: {
                                                               type: "spring",
-                                                              stiffness: 420,
-                                                              damping: 32,
+                                                              stiffness: 300,
+                                                              damping: 26,
                                                           },
                                                       }
                                             }
