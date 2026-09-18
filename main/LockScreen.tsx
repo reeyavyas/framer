@@ -614,20 +614,23 @@ export default function LockScreen(props) {
                                             // a cheap bitmap transform
                                             // instead, so the blur is
                                             // already correct on the first
-                                            // frame it's visible. The y here
-                                            // is small on purpose (-14, not
-                                            // the old -32) — big enough to
-                                            // read as a settle, small
-                                            // enough relative to the
-                                            // sibling's ~200px `layout`
-                                            // reflow that it doesn't
-                                            // meaningfully reintroduce the
-                                            // overlap the larger offset
-                                            // caused.
+                                            // frame it's visible. The y is
+                                            // positive — the card rises up
+                                            // into place from just below its
+                                            // resting position, rather than
+                                            // dropping down from above.
+                                            // Small on purpose (14, not the
+                                            // old 32) — big enough to read
+                                            // as a settle, small enough
+                                            // relative to the sibling's
+                                            // ~200px `layout` reflow that it
+                                            // doesn't meaningfully
+                                            // reintroduce the overlap a
+                                            // larger offset caused.
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
-                                                    : { y: -14, scale: 0.9 }
+                                                    : { y: 14, scale: 0.9 }
                                             }
                                             animate={
                                                 prefersReducedMotion
