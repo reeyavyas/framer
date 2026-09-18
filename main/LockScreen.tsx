@@ -534,8 +534,14 @@ export default function LockScreen(props) {
                                 layout.notificationGap === undefined
                                     ? 72
                                     : layout.notificationGap,
-                            width: "100%",
-                            maxWidth: 900,
+                            // Break out of the content layer's side inset —
+                            // notifications should sit close to the actual
+                            // screen edges (10pt each side) rather than
+                            // sharing the narrower inset used by the
+                            // clock/date/icon row.
+                            width: `calc(100% + ${2 * (layout.sideInset - 10)}px)`,
+                            marginLeft: -(layout.sideInset - 10),
+                            marginRight: -(layout.sideInset - 10),
                             display: "flex",
                             flexDirection: "column",
                             gap: 16,
