@@ -234,19 +234,23 @@ export default function LockScreen(props) {
     const dragY = useMotionValue(0)
     const opacityTransform = useTransform(dragY, [-150, 0], [0, 1])
 
-    // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a tight
-    // specular glint near the top-left, where light catches the material,
-    // over a flat tint — rather than the old diagonal sheen washed across
-    // the whole surface. A bright top rim plus a faint dark underside rim
-    // reads as physical edge thickness/refraction instead of a flat border.
+    // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
+    // centered top-lit glow, contained close to the top edge, over a flat
+    // tint — rather than the old diagonal sheen washed across the whole
+    // surface. Centered (not offset to one side) because real Apple
+    // material highlights read as lit from directly above, symmetrically —
+    // an off-axis blob reads oddly once the surface gets wide and short,
+    // like the notification card. A bright top rim plus a faint dark
+    // underside rim reads as physical edge thickness instead of a flat
+    // border.
     const glassTint = rgba(255, 255, 255, glass.tintOpacity)
     const glassGlint = rgba(
         255,
         255,
         255,
-        Math.min(glass.tintOpacity + 0.55, 0.95)
+        Math.min(glass.tintOpacity + 0.35, 0.9)
     )
-    const glassBackground = `radial-gradient(120% 65% at 28% -12%, ${glassGlint} 0%, rgba(255,255,255,0) 58%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
+    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
