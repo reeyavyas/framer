@@ -90,6 +90,19 @@ function formatTime(d: Date, use24h: boolean) {
     return `${h}:${m}`
 }
 
+function usePrefersReducedMotion() {
+    const [reduced, setReduced] = React.useState(false)
+    React.useEffect(() => {
+        if (typeof window === "undefined" || !window.matchMedia) return
+        const query = window.matchMedia("(prefers-reduced-motion: reduce)")
+        setReduced(query.matches)
+        const listener = (e: MediaQueryListEvent) => setReduced(e.matches)
+        query.addEventListener("change", listener)
+        return () => query.removeEventListener("change", listener)
+    }, [])
+    return reduced
+}
+
 function formatDate(d: Date) {
     const day = d.toLocaleDateString(undefined, { weekday: "short" })
     const month = d.toLocaleDateString(undefined, { month: "short" })
@@ -166,6 +179,7 @@ export default function LockScreen(props) {
     } = props
 
     const isLockScreen = variant !== "splash"
+    const prefersReducedMotion = usePrefersReducedMotion()
 
     // Live-tick whenever either the clock or the date is set to "live" —
     // otherwise a live date paired with a custom time would never update.
@@ -258,14 +272,33 @@ export default function LockScreen(props) {
         const swipeVelocity = info.velocity.y
 
         // Triggers if they drag up more than 30px OR if they flick upward quickly (negative velocity)
-        if ((swipeDistance < -30 || swipeVelocity < -300) && onSwipeUp) {
+        const unlocked = (swipeDistance < -30 || swipeVelocity < -300) && !!onSwipeUp
+
+        if (unlocked) {
+            // Commit to the unlock instead of springing back to rest first —
+            // continue off-screen at the release velocity, so the gesture
+            // and the transition it triggers read as one motion rather than
+            // visibly resetting to the start before navigating away.
+            animate(dragY, -1920, {
+                type: "spring",
+                stiffness: 260,
+                damping: 30,
+                velocity: swipeVelocity,
+            })
             onSwipeUp()
+            return
         }
 
-        // Always spring back to rest — a lighter damping than critical gives
-        // it a small, deliberate "jump" on release instead of a flat snap,
-        // whether or not the swipe cleared the trigger threshold.
-        animate(dragY, 0, { type: "spring", stiffness: 300, damping: 22 })
+        // Spring back to rest, handing off the release velocity so an
+        // aborted flick continues smoothly into the settle instead of
+        // visually resetting to a dead stop — a lighter-than-critical
+        // damping still gives it a small, deliberate overshoot on arrival.
+        animate(dragY, 0, {
+            type: "spring",
+            stiffness: 300,
+            damping: 22,
+            velocity: swipeVelocity,
+        })
     }
 
     // --- Splash variant: logo entrance, then an optional idle pulse ---
@@ -316,12 +349,16 @@ export default function LockScreen(props) {
                             scale: splash.animation === "fade" ? 1 : 0.85,
                         }}
                         animate={
-                            logoEntered && splash.animation === "pulse"
+                            logoEntered &&
+                            splash.animation === "pulse" &&
+                            !prefersReducedMotion
                                 ? { opacity: 1, scale: [1, 1.05, 1] }
                                 : { opacity: 1, scale: 1 }
                         }
                         transition={
-                            logoEntered && splash.animation === "pulse"
+                            logoEntered &&
+                            splash.animation === "pulse" &&
+                            !prefersReducedMotion
                                 ? {
                                       duration: 2.2,
                                       repeat: Infinity,
@@ -512,37 +549,55 @@ export default function LockScreen(props) {
                                         <motion.div
                                             key={slot}
                                             layout
-                                            initial={{
-                                                opacity: 0,
-                                                y: -32,
-                                                scale: 0.96,
-                                            }}
-                                            animate={{
-                                                opacity: 1,
-                                                y: 0,
-                                                scale: 1,
-                                            }}
-                                            exit={{
-                                                opacity: 0,
-                                                scale: 0.97,
-                                            }}
-                                            transition={{
-                                                layout: {
-                                                    type: "spring",
-                                                    stiffness: 420,
-                                                    damping: 32,
-                                                },
-                                                // A real notification banner drops in and
-                                                // settles with a light physical bounce, not
-                                                // an eased tween — same spring family as the
-                                                // layout reflow so an arrival and the push-
-                                                // down it causes move as one motion.
-                                                default: {
-                                                    type: "spring",
-                                                    stiffness: 420,
-                                                    damping: 30,
-                                                },
-                                            }}
+                                            initial={
+                                                prefersReducedMotion
+                                                    ? { opacity: 0 }
+                                                    : {
+                                                          opacity: 0,
+                                                          y: -32,
+                                                          scale: 0.96,
+                                                      }
+                                            }
+                                            animate={
+                                                prefersReducedMotion
+                                                    ? { opacity: 1 }
+                                                    : {
+                                                          opacity: 1,
+                                                          y: 0,
+                                                          scale: 1,
+                                                      }
+                                            }
+                                            exit={{ opacity: 0 }}
+                                            transition={
+                                                prefersReducedMotion
+                                                    ? {
+                                                          layout: {
+                                                              duration: 0.2,
+                                                              ease: "easeOut",
+                                                          },
+                                                          default: {
+                                                              duration: 0.2,
+                                                              ease: "easeOut",
+                                                          },
+                                                      }
+                                                    : {
+                                                          layout: {
+                                                              type: "spring",
+                                                              stiffness: 420,
+                                                              damping: 32,
+                                                          },
+                                                          // A real notification banner drops in and
+                                                          // settles with a light physical bounce, not
+                                                          // an eased tween — same spring family as the
+                                                          // layout reflow so an arrival and the push-
+                                                          // down it causes move as one motion.
+                                                          default: {
+                                                              type: "spring",
+                                                              stiffness: 420,
+                                                              damping: 30,
+                                                          },
+                                                      }
+                                            }
                                             style={{
                                                 width: "100%",
                                                 boxSizing: "border-box",
@@ -757,9 +812,13 @@ export default function LockScreen(props) {
                 </div>
                 {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
                 <motion.div
-                    animate={swipeHintBounce ? { y: [0, -18, 0] } : { y: 0 }}
+                    animate={
+                        swipeHintBounce && !prefersReducedMotion
+                            ? { y: [0, -18, 0] }
+                            : { y: 0 }
+                    }
                     transition={
-                        swipeHintBounce
+                        swipeHintBounce && !prefersReducedMotion
                             ? {
                                   duration: 1.5,
                                   repeat: Infinity,
@@ -834,7 +893,7 @@ LockScreen.defaultProps = {
             '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
         fontSize: 236,
         lineHeight: "1em",
-        letterSpacing: "-2px",
+        letterSpacing: "-6px",
         variant: "Semibold",
     },
     timeColor: "#FFFFFF",
@@ -1071,7 +1130,7 @@ addPropertyControls(LockScreen, {
                 '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
             fontSize: 236,
             lineHeight: "1em",
-            letterSpacing: "-2px",
+            letterSpacing: "-6px",
             variant: "Semibold",
         },
         hidden: (p) => p.variant !== "lockScreen",
