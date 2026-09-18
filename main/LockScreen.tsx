@@ -570,11 +570,31 @@ export default function LockScreen(props) {
                                         <motion.div
                                             key={slot}
                                             layout
+                                            // Non-reduced-motion entrance/exit
+                                            // deliberately never animates
+                                            // opacity on this element (it
+                                            // carries the glass chrome one
+                                            // level down, but the parent's
+                                            // opacity still forces the
+                                            // browser to recomposite that
+                                            // backdrop-filter child through
+                                            // a changing alpha every frame).
+                                            // Animating opacity over a
+                                            // freshly-mounted backdrop-filter
+                                            // subtree is the specific thing
+                                            // Chromium struggles to keep up
+                                            // with — the card renders sharp
+                                            // and the blur visibly catches
+                                            // up a beat later. Transform-only
+                                            // motion (y/scale) composites as
+                                            // a cheap bitmap transform
+                                            // instead, so the blur is
+                                            // already correct on the first
+                                            // frame it's visible.
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
                                                     : {
-                                                          opacity: 0,
                                                           y: -32,
                                                           scale: 0.96,
                                                       }
@@ -583,11 +603,17 @@ export default function LockScreen(props) {
                                                 prefersReducedMotion
                                                     ? { opacity: 1 }
                                                     : {
-                                                          opacity: 1,
                                                           y: 0,
                                                           scale: 1,
                                                       }
                                             }
+                                            // Exit doesn't have the cold-
+                                            // layer problem above — by the
+                                            // time a card leaves, its
+                                            // backdrop-filter layer has been
+                                            // live for seconds, so fading it
+                                            // out here is safe and reads
+                                            // better than an abrupt pop.
                                             exit={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
