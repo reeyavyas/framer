@@ -615,7 +615,7 @@ export default function LockScreen(props) {
                                                 width: "100%",
                                                 boxSizing: "border-box",
                                                 display: "flex",
-                                                alignItems: "flex-start",
+                                                alignItems: "center",
                                                 gap: 20,
                                                 padding: 40,
                                                 borderRadius: cornerRadius,
@@ -625,8 +625,8 @@ export default function LockScreen(props) {
                                         >
                                             <div
                                                 style={{
-                                                    width: 88,
-                                                    height: 88,
+                                                    width: 92,
+                                                    height: 92,
                                                     borderRadius: iconRadius,
                                                     flexShrink: 0,
                                                     display: "flex",
@@ -649,7 +649,7 @@ export default function LockScreen(props) {
                                                     />
                                                 ) : (
                                                     <MessageGlyph
-                                                        size={44}
+                                                        size={46}
                                                         color="#FFFFFF"
                                                     />
                                                 )}
