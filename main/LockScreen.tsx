@@ -137,9 +137,11 @@ export default function LockScreen(props) {
         dateFont,
         dateColor,
         dateOpacity,
-        // Fake Notifications — cycles through whichever of these are
-        // enabled, one at a time, on a loop. Each has its own stay
-        // duration (holdSeconds).
+        // Fake Notifications — stack like real lock-screen notifications:
+        // whichever are enabled arrive one at a time (each using its own
+        // delaySeconds as the gap since the previous arrival) and stay
+        // visible together, newest on top. Once the whole stack has
+        // arrived it holds, then clears and the sequence loops.
         notification1 = {},
         notification2 = {},
         notification3 = {},
@@ -172,8 +174,8 @@ export default function LockScreen(props) {
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
 
-    // Cycle through whichever notifications are enabled, one at a time.
-    // With only one enabled it just stays put; with zero, nothing renders.
+    // Whichever notifications are enabled, in slot order — the arrival
+    // sequence, oldest first. With zero enabled, nothing renders.
     const enabledNotifications = [
         notification1,
         notification2,
@@ -181,55 +183,65 @@ export default function LockScreen(props) {
         notification4,
         notification5,
     ].filter((n) => n && n.enabled !== false)
-    const [notificationIndex, setNotificationIndex] = React.useState(0)
-    // Counts actual cycles (not the index, which wraps back to 0) so the
-    // one-time "just arrived" entrance delay doesn't reapply every time
-    // the loop comes back around to the first notification.
-    const notificationCycleCountRef = React.useRef(0)
-    const activeNotification =
-        enabledNotifications.length > 0
-            ? enabledNotifications[
-                  notificationIndex % enabledNotifications.length
-              ]
-            : null
 
-    // Re-arms itself on every index change (rather than one fixed-period
-    // interval) so each notification can stay up for its own duration
-    // instead of all sharing a single cycle length.
+    // How many of enabledNotifications have arrived and are on-screen.
+    const [visibleCount, setVisibleCount] = React.useState(0)
+
+    // Self-re-arms on every count change (rather than a fixed interval) so
+    // each notification's own appear delay is respected. Once the whole
+    // stack has arrived it holds for the longest stay duration among them,
+    // then clears so the sequence can arrive again from empty.
     React.useEffect(() => {
-        if (!isLockScreen || enabledNotifications.length < 2) return
-        const holdSeconds =
-            activeNotification?.holdSeconds === undefined
-                ? 4.5
-                : activeNotification.holdSeconds
+        if (!isLockScreen || enabledNotifications.length === 0) return
+        const total = enabledNotifications.length
+
+        if (visibleCount < total) {
+            const next = enabledNotifications[visibleCount]
+            const delaySeconds =
+                next.delaySeconds === undefined ? 1.1 : next.delaySeconds
+            const id = window.setTimeout(() => {
+                setVisibleCount((c) => c + 1)
+            }, delaySeconds * 1000)
+            return () => window.clearTimeout(id)
+        }
+
+        const holdSeconds = enabledNotifications.reduce(
+            (max, n) =>
+                Math.max(max, n.holdSeconds === undefined ? 4.5 : n.holdSeconds),
+            0
+        )
         const id = window.setTimeout(() => {
-            notificationCycleCountRef.current += 1
-            setNotificationIndex((i) => (i + 1) % enabledNotifications.length)
+            setVisibleCount(0)
         }, holdSeconds * 1000)
         return () => window.clearTimeout(id)
-    }, [isLockScreen, enabledNotifications.length, notificationIndex])
+    }, [isLockScreen, enabledNotifications.length, visibleCount])
 
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
     const opacityTransform = useTransform(dragY, [-150, 0], [0, 1])
 
-    // CSS Glass System Recipes — a soft diagonal sheen layered over the
-    // flat tint, mimicking Liquid Glass's top-lit, light-catching look
-    // rather than a uniformly flat frosted panel.
-    const glassHighlight = rgba(
+    // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a tight
+    // specular glint near the top-left, where light catches the material,
+    // over a flat tint — rather than the old diagonal sheen washed across
+    // the whole surface. A bright top rim plus a faint dark underside rim
+    // reads as physical edge thickness/refraction instead of a flat border.
+    const glassTint = rgba(255, 255, 255, glass.tintOpacity)
+    const glassGlint = rgba(
         255,
         255,
         255,
-        Math.min(glass.tintOpacity + 0.3, 0.95)
+        Math.min(glass.tintOpacity + 0.55, 0.95)
     )
-    const glassBackground = `linear-gradient(160deg, ${glassHighlight} 0%, ${rgba(255, 255, 255, glass.tintOpacity)} 34%, ${rgba(255, 255, 255, glass.tintOpacity)} 100%)`
+    const glassBackground = `radial-gradient(120% 65% at 28% -12%, ${glassGlint} 0%, rgba(255,255,255,0) 58%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
-    const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
-    // A softer shadow just for the notification card — the shared glass
-    // shadow (tuned for the small, high-contrast flashlight/camera
-    // buttons) read as too harsh on a wide, low-contrast card.
-    const notificationShadow = `0 6px 20px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
+    const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
+    const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), ${glassRim}`
+    // A softer drop shadow just for the notification card — the shared
+    // glass shadow (tuned for the small, high-contrast flashlight/camera
+    // buttons) read as too harsh on a wide, low-contrast card — but the
+    // same rim, so the card still reads as the same material.
+    const notificationShadow = `0 6px 20px rgba(0,0,0,0.14), ${glassRim}`
 
     const buttonGlassStyle: React.CSSProperties = {
         background: glassBackground,
@@ -462,145 +474,195 @@ export default function LockScreen(props) {
                         </span>
                     </div>
                 </div>
-                {/* Fake Notifications — cycles between whichever are enabled */}
-                <AnimatePresence mode="wait">
-                    {activeNotification && (
-                        <motion.div
-                            key={notificationIndex}
-                            initial={{ opacity: 0, y: -28, scale: 0.96 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                            transition={{
-                                delay:
-                                    notificationCycleCountRef.current === 0
-                                        ? activeNotification.delaySeconds ===
-                                          undefined
-                                            ? 1.1
-                                            : activeNotification.delaySeconds
-                                        : 0,
-                                duration: 0.5,
-                                ease: "easeOut",
-                            }}
-                            style={{
-                                marginTop:
-                                    layout.notificationGap === undefined
-                                        ? 72
-                                        : layout.notificationGap,
-                                width: "100%",
-                                maxWidth: 900,
-                                boxSizing: "border-box",
-                                display: "flex",
-                                alignItems: "flex-start",
-                                gap: 20,
-                                padding: 40,
-                                borderRadius:
-                                    activeNotification.cornerRadius ===
-                                    undefined
-                                        ? 36
-                                        : activeNotification.cornerRadius,
-                                ...buttonGlassStyle,
-                                boxShadow: notificationShadow,
-                            }}
-                        >
-                            <div
-                                style={{
-                                    width: 120,
-                                    height: 120,
-                                    borderRadius: 30,
-                                    flexShrink: 0,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    background: "rgba(255,255,255,0.25)",
-                                    overflow: "hidden",
-                                }}
-                            >
-                                {activeNotification.icon ? (
-                                    <img
-                                        src={activeNotification.icon.src}
-                                        alt=""
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                        }}
-                                    />
-                                ) : (
-                                    <MessageGlyph size={60} color="#FFFFFF" />
-                                )}
-                            </div>
-                            {/* Fixed to the icon's own height, with its 3
-                                lines spread evenly across it, so the text
-                                block and the (square) icon always match. */}
-                            <div
-                                style={{
-                                    flex: 1,
-                                    minWidth: 0,
-                                    height: 120,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "space-between",
-                                    fontFamily: "-apple-system, sans-serif",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        gap: 12,
-                                    }}
-                                >
-                                    <span
-                                        style={{
-                                            fontWeight: 600,
-                                            fontSize: 28,
-                                            letterSpacing: 0.4,
-                                            textTransform: "uppercase",
-                                            color: "rgba(255,255,255,0.85)",
-                                        }}
-                                    >
-                                        {activeNotification.appName ||
-                                            "Messages"}
-                                    </span>
-                                    <span
-                                        style={{
-                                            fontSize: 28,
-                                            color: "rgba(255,255,255,0.7)",
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        {activeNotification.timeLabel || "now"}
-                                    </span>
-                                </div>
-                                <div
-                                    style={{
-                                        fontWeight: 600,
-                                        fontSize: 40,
-                                        color: "#FFFFFF",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                    }}
-                                >
-                                    {activeNotification.title || "Alex"}
-                                </div>
-                                <div
-                                    style={{
-                                        fontSize: 32,
-                                        color: "rgba(255,255,255,0.85)",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                    }}
-                                >
-                                    {activeNotification.message ||
-                                        "Don't forget practice starts at 6!"}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Fake Notifications — stack like the real lock screen:
+                    whichever are enabled arrive one at a time and stay up
+                    together, newest at the top pushing the rest down. */}
+                {enabledNotifications.length > 0 && (
+                    <div
+                        style={{
+                            marginTop:
+                                layout.notificationGap === undefined
+                                    ? 72
+                                    : layout.notificationGap,
+                            width: "100%",
+                            maxWidth: 900,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 16,
+                        }}
+                    >
+                        <AnimatePresence initial={false}>
+                            {enabledNotifications
+                                .map((n, slot) => ({ n, slot }))
+                                .slice(0, visibleCount)
+                                .reverse()
+                                .map(({ n, slot }) => {
+                                    const cornerRadius =
+                                        n.cornerRadius === undefined
+                                            ? 36
+                                            : n.cornerRadius
+                                    // Nests the icon's rounding to the
+                                    // card's rather than a fixed value, so
+                                    // they stay visually concentric as the
+                                    // card radius changes.
+                                    const iconRadius = Math.round(
+                                        cornerRadius * 0.8
+                                    )
+                                    return (
+                                        <motion.div
+                                            key={slot}
+                                            layout
+                                            initial={{
+                                                opacity: 0,
+                                                y: -32,
+                                                scale: 0.96,
+                                            }}
+                                            animate={{
+                                                opacity: 1,
+                                                y: 0,
+                                                scale: 1,
+                                            }}
+                                            exit={{
+                                                opacity: 0,
+                                                scale: 0.97,
+                                            }}
+                                            transition={{
+                                                layout: {
+                                                    type: "spring",
+                                                    stiffness: 400,
+                                                    damping: 32,
+                                                },
+                                                default: {
+                                                    duration: 0.4,
+                                                    ease: "easeOut",
+                                                },
+                                            }}
+                                            style={{
+                                                width: "100%",
+                                                boxSizing: "border-box",
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                gap: 20,
+                                                padding: 40,
+                                                borderRadius: cornerRadius,
+                                                ...buttonGlassStyle,
+                                                boxShadow: notificationShadow,
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    width: 120,
+                                                    height: 120,
+                                                    borderRadius: iconRadius,
+                                                    flexShrink: 0,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    background:
+                                                        "rgba(255,255,255,0.25)",
+                                                    overflow: "hidden",
+                                                }}
+                                            >
+                                                {n.icon ? (
+                                                    <img
+                                                        src={n.icon.src}
+                                                        alt=""
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "100%",
+                                                            objectFit: "cover",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <MessageGlyph
+                                                        size={60}
+                                                        color="#FFFFFF"
+                                                    />
+                                                )}
+                                            </div>
+                                            {/* Fixed to the icon's own
+                                                height, with its 3 lines
+                                                spread evenly across it, so
+                                                the text block and the
+                                                (square) icon always match. */}
+                                            <div
+                                                style={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    height: 120,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    justifyContent:
+                                                        "space-between",
+                                                    fontFamily:
+                                                        "-apple-system, sans-serif",
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        gap: 12,
+                                                    }}
+                                                >
+                                                    <span
+                                                        style={{
+                                                            fontWeight: 600,
+                                                            fontSize: 28,
+                                                            letterSpacing: 0.4,
+                                                            textTransform:
+                                                                "uppercase",
+                                                            color: "rgba(255,255,255,0.85)",
+                                                        }}
+                                                    >
+                                                        {n.appName ||
+                                                            "Messages"}
+                                                    </span>
+                                                    <span
+                                                        style={{
+                                                            fontSize: 28,
+                                                            color: "rgba(255,255,255,0.7)",
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >
+                                                        {n.timeLabel || "now"}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontWeight: 600,
+                                                        fontSize: 40,
+                                                        color: "#FFFFFF",
+                                                        overflow: "hidden",
+                                                        whiteSpace: "nowrap",
+                                                        textOverflow:
+                                                            "ellipsis",
+                                                    }}
+                                                >
+                                                    {n.title || "Alex"}
+                                                </div>
+                                                <div
+                                                    style={{
+                                                        fontSize: 32,
+                                                        color: "rgba(255,255,255,0.85)",
+                                                        overflow: "hidden",
+                                                        whiteSpace: "nowrap",
+                                                        textOverflow:
+                                                            "ellipsis",
+                                                    }}
+                                                >
+                                                    {n.message ||
+                                                        "Don't forget practice starts at 6!"}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })}
+                        </AnimatePresence>
+                    </div>
+                )}
                 {/* Spacer pushes context rows downward */}
                 <div style={{ flex: 1 }} />
                 {/* Quick Action Icon Row */}
@@ -848,8 +910,8 @@ LockScreen.defaultProps = {
         tintOpacity: 0.14,
         borderOpacity: 0.35,
         borderWidth: 1,
-        blur: 32,
-        saturation: 180,
+        blur: 30,
+        saturation: 200,
         shadowY: 14,
         shadowBlur: 36,
         shadowOpacity: 0.25,

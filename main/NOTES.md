@@ -13,19 +13,28 @@ Site-wide, page-agnostic components — not owned by any single feature.
   lock → splash → login flow:
   - **Lock Screen** — live/custom clock + date, up to five fake
     notification banners (`notification1`-`notification5`, each a
-    full app/title/message/icon/timestamp, each with its own "Stay
-    Duration") that cycle one at a time on a loop (pop in, hold for
-    its own duration, pop out, next) whenever 2+ are enabled — with
-    only one enabled it just stays put. A bouncing swipe-up hint
+    full app/title/message/icon/timestamp) that stack like a real
+    lock screen instead of cycling: whichever are enabled arrive one
+    at a time (each using its own "Appear Delay" as the gap since
+    the previous arrival), newest on top pushing the rest down, and
+    stay up together. Once the whole stack has arrived it holds for
+    the longest "Stay Duration" among them, then clears and the
+    sequence arrives again from empty. A bouncing swipe-up hint
     (a single rise/fall with a "back" easing overshoot — a middle
     ground between a plain float and a full double-hop bounce),
-    frosted-glass flashlight/camera buttons, and home indicator. Has
-    no background fill of its own — drop your own wallpaper/gradient
-    layer underneath it in Framer and it shows through untouched.
-    Dragging the panel up past a distance/velocity threshold fires
-    the `onSwipeUp` event control; every release springs back to
-    rest with a little overshoot, whether or not the swipe cleared
-    the threshold.
+    frosted-glass flashlight/camera buttons, and home indicator. The
+    glass styling takes a Liquid-Glass-style (iOS 26) pass: a tight
+    specular glint near the top-left rather than a flat diagonal
+    sheen, plus a bright top rim/faint dark underside rim on every
+    glass surface for a sense of physical edge thickness; the
+    notification icon's corner radius scales off the card's own
+    radius instead of a fixed value, so they stay visually nested as
+    it's tuned. Has no background fill of its own — drop your own
+    wallpaper/gradient layer underneath it in Framer and it shows
+    through untouched. Dragging the panel up past a distance/velocity
+    threshold fires the `onSwipeUp` event control; every release
+    springs back to rest with a little overshoot, whether or not the
+    swipe cleared the threshold.
   - **Splash** — full-bleed gradient background, a logo that fades/
     scales/pulses in, optional loading dots, and a timed auto-redirect
     (`window.location.href`) to a configurable URL (defaults to
