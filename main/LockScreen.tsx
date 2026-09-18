@@ -251,6 +251,11 @@ export default function LockScreen(props) {
         Math.min(glass.tintOpacity + 0.35, 0.9)
     )
     const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
+    // The same highlight shaped for a small, roughly circular surface
+    // instead of a wide short one — reusing the card's elongated ellipse
+    // here stretches into a flat bar across the button rather than a
+    // highlight that wraps the button's own curvature.
+    const buttonGlassBackground = `radial-gradient(120% 120% at 50% -18%, ${glassGlint} 0%, rgba(255,255,255,0) 52%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
@@ -751,6 +756,7 @@ export default function LockScreen(props) {
                             alignItems: "center",
                             justifyContent: "center",
                             ...buttonGlassStyle,
+                            background: buttonGlassBackground,
                         }}
                     >
                         {icons.flashlightImage ? (
@@ -787,6 +793,7 @@ export default function LockScreen(props) {
                             alignItems: "center",
                             justifyContent: "center",
                             ...buttonGlassStyle,
+                            background: buttonGlassBackground,
                         }}
                     >
                         {icons.cameraImage ? (
