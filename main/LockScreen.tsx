@@ -625,8 +625,8 @@ export default function LockScreen(props) {
                                         >
                                             <div
                                                 style={{
-                                                    width: 92,
-                                                    height: 92,
+                                                    width: 96,
+                                                    height: 96,
                                                     borderRadius: iconRadius,
                                                     flexShrink: 0,
                                                     display: "flex",
@@ -649,7 +649,7 @@ export default function LockScreen(props) {
                                                     />
                                                 ) : (
                                                     <MessageGlyph
-                                                        size={46}
+                                                        size={48}
                                                         color="#FFFFFF"
                                                     />
                                                 )}
