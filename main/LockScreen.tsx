@@ -263,7 +263,7 @@ export default function LockScreen(props) {
     // glass shadow (tuned for the small, high-contrast flashlight/camera
     // buttons) read as too harsh on a wide, low-contrast card — but the
     // same rim, so the card still reads as the same material.
-    const notificationShadow = `0 6px 20px rgba(0,0,0,0.14), ${glassRim}`
+    const notificationShadow = `0 6px 10px rgba(0,0,0,0.10), ${glassRim}`
 
     const buttonGlassStyle: React.CSSProperties = {
         background: glassBackground,
@@ -645,25 +645,24 @@ export default function LockScreen(props) {
                                                           // settles with a light physical bounce, not
                                                           // an eased tween — same spring family as the
                                                           // layout reflow so an arrival and the push-
-                                                          // down it causes move as one motion. The
-                                                          // short delay isn't part of that physicality
-                                                          // — it's a workaround for a Chromium quirk:
-                                                          // a brand-new backdrop-filter element doesn't
-                                                          // get promoted to its own compositing layer
-                                                          // in time for the very first paint when it's
-                                                          // animating in at the same moment (worse here
-                                                          // since the rest of the stack is also
-                                                          // reflowing that same frame), so the card
-                                                          // pops in sharp and the blur visibly catches
-                                                          // up a beat later. Staying at its invisible
-                                                          // `initial` state for one beat longer gives
-                                                          // the browser time to establish that layer
-                                                          // before the card becomes visible at all.
+                                                          // down it causes move as one motion. No
+                                                          // delay here: the new card's own y/scale
+                                                          // entrance needs to start in lockstep with
+                                                          // the `layout` reflow of the cards below it,
+                                                          // or the two visibly desync — the siblings
+                                                          // are already sliding down before the new
+                                                          // card starts moving, so it lands mid-way
+                                                          // through their settle and briefly overlaps
+                                                          // them. (An earlier delay here was a
+                                                          // workaround for the backdrop-filter blur
+                                                          // lagging behind a fresh card's paint —
+                                                          // removing the opacity animation on entrance
+                                                          // fixed that at its actual source, so this
+                                                          // no longer needs to compensate for it.)
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 420,
                                                               damping: 30,
-                                                              delay: 0.06,
                                                           },
                                                       }
                                             }
