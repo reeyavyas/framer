@@ -626,7 +626,7 @@ export default function LockScreen(props) {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 gap: 20,
-                                                padding: "40px 20px",
+                                                padding: "40px 28px",
                                                 borderRadius: cornerRadius,
                                                 ...buttonGlassStyle,
                                                 boxShadow: notificationShadow,
@@ -790,13 +790,13 @@ export default function LockScreen(props) {
                                     width: icons.iconSize,
                                     height: icons.iconSize,
                                     objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
+                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
                                 }}
                             />
                         ) : (
                             <div
                                 style={{
-                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
+                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
                                 }}
                             >
                                 <FlashlightGlyph
@@ -826,13 +826,13 @@ export default function LockScreen(props) {
                                     width: icons.iconSize,
                                     height: icons.iconSize,
                                     objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
+                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
                                 }}
                             />
                         ) : (
                             <div
                                 style={{
-                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
+                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
                                 }}
                             >
                                 <CameraGlyph
