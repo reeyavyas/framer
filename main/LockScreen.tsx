@@ -213,8 +213,16 @@ export default function LockScreen(props) {
     const dragY = useMotionValue(0)
     const opacityTransform = useTransform(dragY, [-150, 0], [0, 1])
 
-    // CSS Glass System Recipes
-    const glassBackground = rgba(255, 255, 255, glass.tintOpacity)
+    // CSS Glass System Recipes — a soft diagonal sheen layered over the
+    // flat tint, mimicking Liquid Glass's top-lit, light-catching look
+    // rather than a uniformly flat frosted panel.
+    const glassHighlight = rgba(
+        255,
+        255,
+        255,
+        Math.min(glass.tintOpacity + 0.3, 0.95)
+    )
+    const glassBackground = `linear-gradient(160deg, ${glassHighlight} 0%, ${rgba(255, 255, 255, glass.tintOpacity)} 34%, ${rgba(255, 255, 255, glass.tintOpacity)} 100%)`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), inset 0 1px 0 rgba(255,255,255,${glass.innerHighlight})`
