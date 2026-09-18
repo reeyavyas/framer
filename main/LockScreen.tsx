@@ -619,11 +619,25 @@ export default function LockScreen(props) {
                                                           // settles with a light physical bounce, not
                                                           // an eased tween — same spring family as the
                                                           // layout reflow so an arrival and the push-
-                                                          // down it causes move as one motion.
+                                                          // down it causes move as one motion. The
+                                                          // short delay isn't part of that physicality
+                                                          // — it's a workaround for a Chromium quirk:
+                                                          // a brand-new backdrop-filter element doesn't
+                                                          // get promoted to its own compositing layer
+                                                          // in time for the very first paint when it's
+                                                          // animating in at the same moment (worse here
+                                                          // since the rest of the stack is also
+                                                          // reflowing that same frame), so the card
+                                                          // pops in sharp and the blur visibly catches
+                                                          // up a beat later. Staying at its invisible
+                                                          // `initial` state for one beat longer gives
+                                                          // the browser time to establish that layer
+                                                          // before the card becomes visible at all.
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 420,
                                                               damping: 30,
+                                                              delay: 0.06,
                                                           },
                                                       }
                                             }
