@@ -539,7 +539,7 @@ export default function LockScreen(props) {
                             marginRight: -(layout.sideInset - 10),
                             display: "flex",
                             flexDirection: "column",
-                            gap: 16,
+                            gap: 18,
                         }}
                     >
                         <AnimatePresence initial={false}>
@@ -550,7 +550,7 @@ export default function LockScreen(props) {
                                 .map(({ n, slot }) => {
                                     const cornerRadius =
                                         n.cornerRadius === undefined
-                                            ? 36
+                                            ? 25
                                             : n.cornerRadius
                                     // Nests the icon's rounding to the
                                     // card's rather than a fixed value, so
@@ -581,7 +581,15 @@ export default function LockScreen(props) {
                                                           scale: 1,
                                                       }
                                             }
-                                            exit={{ opacity: 0 }}
+                                            exit={
+                                                prefersReducedMotion
+                                                    ? { opacity: 0 }
+                                                    : {
+                                                          opacity: 0,
+                                                          y: -16,
+                                                          scale: 0.92,
+                                                      }
+                                            }
                                             transition={
                                                 prefersReducedMotion
                                                     ? {
@@ -618,7 +626,7 @@ export default function LockScreen(props) {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 gap: 20,
-                                                padding: 40,
+                                                padding: "40px 20px",
                                                 borderRadius: cornerRadius,
                                                 ...buttonGlassStyle,
                                                 boxShadow: notificationShadow,
@@ -941,7 +949,7 @@ LockScreen.defaultProps = {
         title: "Alex",
         message: "Don't forget practice starts at 6!",
         timeLabel: "now",
-        cornerRadius: 36,
+        cornerRadius: 25,
         delaySeconds: 1.1,
         holdSeconds: 4.5,
     },
@@ -951,7 +959,7 @@ LockScreen.defaultProps = {
         title: "Pack water bottle",
         message: "For today's practice",
         timeLabel: "2m",
-        cornerRadius: 36,
+        cornerRadius: 25,
         delaySeconds: 1.1,
         holdSeconds: 4.5,
     },
@@ -961,7 +969,7 @@ LockScreen.defaultProps = {
         title: "Team Practice",
         message: "Starts in 15 minutes at the gym",
         timeLabel: "5m",
-        cornerRadius: 36,
+        cornerRadius: 25,
         delaySeconds: 1.1,
         holdSeconds: 4.5,
     },
@@ -971,7 +979,7 @@ LockScreen.defaultProps = {
         title: "72° and Sunny",
         message: "Great day to be outside",
         timeLabel: "8m",
-        cornerRadius: 36,
+        cornerRadius: 25,
         delaySeconds: 1.1,
         holdSeconds: 4.5,
     },
@@ -981,7 +989,7 @@ LockScreen.defaultProps = {
         title: "Coach Lee",
         message: "Check your inbox for the updated schedule",
         timeLabel: "12m",
-        cornerRadius: 36,
+        cornerRadius: 25,
         delaySeconds: 1.1,
         holdSeconds: 4.5,
     },
