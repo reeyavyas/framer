@@ -569,7 +569,46 @@ export default function LockScreen(props) {
                                     return (
                                         <motion.div
                                             key={slot}
-                                            layout
+                                            // No `layout` prop here — it drove
+                                            // a smooth reflow of the cards
+                                            // below whenever a new one
+                                            // arrived, but that reflow
+                                            // travels a much larger distance
+                                            // (roughly this card's own
+                                            // height + the stack gap) than
+                                            // this card's own small y/scale
+                                            // entrance does. Even with the
+                                            // two springs perfectly matched,
+                                            // a short trip and a long trip
+                                            // sharing the same start time and
+                                            // the same fraction-of-distance
+                                            // curve don't finish covering
+                                            // their own remaining distance at
+                                            // the same wall-clock moment —
+                                            // the short one (this card)
+                                            // reads as "arrived" long before
+                                            // the long one (the card below,
+                                            // making room) does, and for
+                                            // that whole window this card's
+                                            // bottom edge sits below the
+                                            // still-too-high top edge of the
+                                            // card below it. Matching the
+                                            // spring, delaying the start, or
+                                            // enlarging this card's own
+                                            // travel distance to compensate
+                                            // all failed for the same
+                                            // underlying reason. Dropping
+                                            // `layout` makes every card's
+                                            // position purely a function of
+                                            // normal flex flow — sibling
+                                            // repositioning is instant
+                                            // (no animated reflow), which
+                                            // trades away the "existing
+                                            // cards slide down" flourish but
+                                            // removes the two-different-
+                                            // distances race entirely, so
+                                            // there's nothing left to
+                                            // desync.
                                             // Non-reduced-motion entrance/exit
                                             // deliberately never animates
                                             // opacity on this element (it
@@ -626,41 +665,13 @@ export default function LockScreen(props) {
                                             transition={
                                                 prefersReducedMotion
                                                     ? {
-                                                          layout: {
-                                                              duration: 0.2,
-                                                              ease: "easeOut",
-                                                          },
-                                                          default: {
-                                                              duration: 0.2,
-                                                              ease: "easeOut",
-                                                          },
+                                                          duration: 0.2,
+                                                          ease: "easeOut",
                                                       }
                                                     : {
-                                                          // layout (how the cards below reflow to
-                                                          // make room) and default (the new card's
-                                                          // own y/scale entrance) are kept as the
-                                                          // exact same spring — not just started at
-                                                          // the same time, but identical stiffness
-                                                          // AND damping, so they trace the same
-                                                          // position-vs-time curve throughout, not
-                                                          // just at the start/end. Even a small
-                                                          // damping mismatch between the two (this
-                                                          // was 32 vs 30) means the two motions drift
-                                                          // apart mid-animation despite starting
-                                                          // together, which showed up as the new
-                                                          // card's bottom edge briefly overlapping
-                                                          // the top of the card being pushed down
-                                                          // below it.
-                                                          layout: {
-                                                              type: "spring",
-                                                              stiffness: 420,
-                                                              damping: 32,
-                                                          },
-                                                          default: {
-                                                              type: "spring",
-                                                              stiffness: 420,
-                                                              damping: 32,
-                                                          },
+                                                          type: "spring",
+                                                          stiffness: 420,
+                                                          damping: 32,
                                                       }
                                             }
                                             style={{ width: "100%" }}
