@@ -33,35 +33,10 @@ function FlashlightGlyph({ size, color }: { size: number; color: string }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
             <path
-                d="M9.5 4.5H14.5L15.2 8H16C16.55 8 17 8.45 17 9V19.5C17 20.6 16.1 21.5 15 21.5H9C7.9 21.5 7 20.6 7 19.5V9C7 8.45 7.45 8 8 8H8.8L9.5 4.5Z"
+                d="M8.2 2.5H15.8L15 8.3H17.3C17.9 8.3 18.2 9.05 17.75 9.47L9.6 21.2C9.2 21.6 8.55 21.25 8.68 20.7L10.3 13.7H7.9C7.4 13.7 7.05 13.2 7.2 12.72L8.2 2.52"
                 stroke={color}
                 strokeWidth="1.5"
                 strokeLinejoin="round"
-            />
-            <line
-                x1="7"
-                y1="11.5"
-                x2="17"
-                y2="11.5"
-                stroke={color}
-                strokeWidth="1.5"
-            />
-            <path
-                d="M9.5 3L8 1"
-                stroke={color}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-            />
-            <path
-                d="M12 3V1"
-                stroke={color}
-                strokeWidth="1.5"
-                strokeLinecap="round"
-            />
-            <path
-                d="M14.5 3L16 1"
-                stroke={color}
-                strokeWidth="1.5"
                 strokeLinecap="round"
             />
         </svg>
