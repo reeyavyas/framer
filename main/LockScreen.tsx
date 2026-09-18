@@ -272,6 +272,13 @@ export default function LockScreen(props) {
         border: `${glass.borderWidth}px solid ${glassBorderColor}`,
         boxShadow: glassShadow,
         opacity: glass.panelOpacity,
+        // Chromium is slow to promote a freshly-inserted backdrop-filter
+        // element onto its own compositing layer, especially while a
+        // parent is simultaneously animating opacity/transform (exactly
+        // what happens when a notification pops in) — the content paints
+        // first and the blur visibly "catches up" a frame or two later.
+        // will-change tells the browser to allocate that layer up front.
+        willChange: "backdrop-filter",
     }
 
     // Handles the release of the drag gesture
@@ -539,7 +546,7 @@ export default function LockScreen(props) {
                             marginRight: -(layout.sideInset - 20),
                             display: "flex",
                             flexDirection: "column",
-                            gap: 18,
+                            gap: 25,
                         }}
                     >
                         <AnimatePresence initial={false}>
@@ -550,7 +557,7 @@ export default function LockScreen(props) {
                                 .map(({ n, slot }) => {
                                     const cornerRadius =
                                         n.cornerRadius === undefined
-                                            ? 25
+                                            ? 50
                                             : n.cornerRadius
                                     // Nests the icon's rounding to the
                                     // card's rather than a fixed value, so
@@ -644,7 +651,7 @@ export default function LockScreen(props) {
                                                     boxSizing: "border-box",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    gap: 20,
+                                                    gap: 22,
                                                     padding: "40px 28px",
                                                     borderRadius: cornerRadius,
                                                     ...buttonGlassStyle,
