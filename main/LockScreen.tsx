@@ -1004,7 +1004,7 @@ LockScreen.defaultProps = {
         tintOpacity: 0.14,
         borderOpacity: 0.35,
         borderWidth: 1,
-        blur: 18,
+        blur: 24,
         saturation: 200,
         shadowY: 14,
         shadowBlur: 36,
@@ -1362,7 +1362,7 @@ addPropertyControls(LockScreen, {
             blur: {
                 type: ControlType.Number,
                 title: "Blur",
-                defaultValue: 18,
+                defaultValue: 24,
                 min: 0,
                 max: 100,
                 step: 1,
