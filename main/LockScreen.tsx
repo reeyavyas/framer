@@ -529,12 +529,18 @@ export default function LockScreen(props) {
                                             transition={{
                                                 layout: {
                                                     type: "spring",
-                                                    stiffness: 400,
+                                                    stiffness: 420,
                                                     damping: 32,
                                                 },
+                                                // A real notification banner drops in and
+                                                // settles with a light physical bounce, not
+                                                // an eased tween — same spring family as the
+                                                // layout reflow so an arrival and the push-
+                                                // down it causes move as one motion.
                                                 default: {
-                                                    duration: 0.4,
-                                                    ease: "easeOut",
+                                                    type: "spring",
+                                                    stiffness: 420,
+                                                    damping: 30,
                                                 },
                                             }}
                                             style={{
@@ -824,6 +830,8 @@ LockScreen.defaultProps = {
     use24Hour: false,
     customTime: "9:41",
     timeFont: {
+        fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
         fontSize: 236,
         lineHeight: "1em",
         letterSpacing: "-2px",
@@ -834,6 +842,8 @@ LockScreen.defaultProps = {
     useLiveDate: true,
     customDate: "Tue 7 Jul",
     dateFont: {
+        fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
         fontSize: 42,
         lineHeight: "1.2em",
         letterSpacing: "0.3px",
@@ -1058,6 +1068,8 @@ addPropertyControls(LockScreen, {
         controls: "extended",
         defaultFontType: "sans-serif",
         defaultValue: {
+            fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
             fontSize: 236,
             lineHeight: "1em",
             letterSpacing: "-2px",
@@ -1100,6 +1112,8 @@ addPropertyControls(LockScreen, {
         controls: "extended",
         defaultFontType: "sans-serif",
         defaultValue: {
+            fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
             fontSize: 42,
             lineHeight: "1.2em",
             letterSpacing: "0.3px",
