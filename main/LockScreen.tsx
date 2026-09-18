@@ -528,11 +528,12 @@ export default function LockScreen(props) {
                 </div>
                 {/* Spacer pushes context rows downward */}
                 <div style={{ flex: 1 }} />
-                {/* Fake Notifications — stack low, near the icon row: the
-                    first one to arrive sits closest to the icons/swipe
-                    hint, and each new arrival stacks above it, growing the
-                    pile upward away from the icons rather than down from
-                    the clock. */}
+                {/* Fake Notifications — stack low, near the icon row:
+                    whichever one just arrived sits closest to the
+                    icons/swipe hint, and older ones get pushed
+                    progressively higher above it as new ones come in,
+                    growing the pile upward away from the icons rather
+                    than down from the clock. */}
                 {enabledNotifications.length > 0 && (
                     <div
                         style={{
@@ -550,9 +551,11 @@ export default function LockScreen(props) {
                             marginRight: -(layout.sideInset - 20),
                             display: "flex",
                             // column-reverse lays items out from the
-                            // bottom up: the first DOM child (oldest
-                            // arrival, array index 0) sits at the bottom,
-                            // closest to the icon row, and later arrivals
+                            // bottom up: the first DOM child sits at the
+                            // bottom, closest to the icon row. The array
+                            // below is reversed (newest first), so the
+                            // newest arrival is always that bottom-most,
+                            // first DOM child, and older notifications
                             // stack progressively higher above it.
                             flexDirection: "column-reverse",
                             gap: 25,
@@ -562,6 +565,14 @@ export default function LockScreen(props) {
                             {enabledNotifications
                                 .map((n, slot) => ({ n, slot }))
                                 .slice(0, visibleCount)
+                                // Newest first in the array. Combined with
+                                // the container's column-reverse, index 0
+                                // (the newest arrival) lands at the
+                                // bottom — closest to the icons — and each
+                                // older notification gets pushed
+                                // progressively higher as new ones arrive,
+                                // instead of staying pinned at the bottom.
+                                .reverse()
                                 .map(({ n, slot }) => {
                                     const cornerRadius =
                                         n.cornerRadius === undefined
