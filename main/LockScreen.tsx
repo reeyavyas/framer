@@ -636,33 +636,30 @@ export default function LockScreen(props) {
                                                           },
                                                       }
                                                     : {
+                                                          // layout (how the cards below reflow to
+                                                          // make room) and default (the new card's
+                                                          // own y/scale entrance) are kept as the
+                                                          // exact same spring — not just started at
+                                                          // the same time, but identical stiffness
+                                                          // AND damping, so they trace the same
+                                                          // position-vs-time curve throughout, not
+                                                          // just at the start/end. Even a small
+                                                          // damping mismatch between the two (this
+                                                          // was 32 vs 30) means the two motions drift
+                                                          // apart mid-animation despite starting
+                                                          // together, which showed up as the new
+                                                          // card's bottom edge briefly overlapping
+                                                          // the top of the card being pushed down
+                                                          // below it.
                                                           layout: {
                                                               type: "spring",
                                                               stiffness: 420,
                                                               damping: 32,
                                                           },
-                                                          // A real notification banner drops in and
-                                                          // settles with a light physical bounce, not
-                                                          // an eased tween — same spring family as the
-                                                          // layout reflow so an arrival and the push-
-                                                          // down it causes move as one motion. No
-                                                          // delay here: the new card's own y/scale
-                                                          // entrance needs to start in lockstep with
-                                                          // the `layout` reflow of the cards below it,
-                                                          // or the two visibly desync — the siblings
-                                                          // are already sliding down before the new
-                                                          // card starts moving, so it lands mid-way
-                                                          // through their settle and briefly overlaps
-                                                          // them. (An earlier delay here was a
-                                                          // workaround for the backdrop-filter blur
-                                                          // lagging behind a fresh card's paint —
-                                                          // removing the opacity animation on entrance
-                                                          // fixed that at its actual source, so this
-                                                          // no longer needs to compensate for it.)
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 420,
-                                                              damping: 30,
+                                                              damping: 32,
                                                           },
                                                       }
                                             }
