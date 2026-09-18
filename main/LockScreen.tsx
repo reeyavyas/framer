@@ -104,10 +104,10 @@ function usePrefersReducedMotion() {
 }
 
 function formatDate(d: Date) {
-    const weekday = d.toLocaleDateString(undefined, { weekday: "long" })
-    const month = d.toLocaleDateString(undefined, { month: "long" })
+    const weekday = d.toLocaleDateString(undefined, { weekday: "short" })
+    const month = d.toLocaleDateString(undefined, { month: "short" })
     const date = d.getDate()
-    return `${weekday}, ${month} ${date}`
+    return `${weekday} ${month} ${date}`
 }
 
 function trailingSpacingFix(font: any): number {
@@ -244,18 +244,22 @@ export default function LockScreen(props) {
     // underside rim reads as physical edge thickness instead of a flat
     // border.
     const glassTint = rgba(255, 255, 255, glass.tintOpacity)
+    // Real Liquid Glass on the lock screen reads as a soft, largely
+    // uniform frosted surface — barely a hint of brightening right at the
+    // top edge, not a visible glowing patch. Kept subtle and tightly
+    // contained for that reason.
     const glassGlint = rgba(
         255,
         255,
         255,
-        Math.min(glass.tintOpacity + 0.35, 0.9)
+        Math.min(glass.tintOpacity + 0.14, 0.5)
     )
-    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 48%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
+    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
     // The same highlight shaped for a small, roughly circular surface
     // instead of a wide short one — reusing the card's elongated ellipse
     // here stretches into a flat bar across the button rather than a
     // highlight that wraps the button's own curvature.
-    const buttonGlassBackground = `radial-gradient(120% 120% at 50% -18%, ${glassGlint} 0%, rgba(255,255,255,0) 52%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
+    const buttonGlassBackground = `radial-gradient(120% 120% at 50% -18%, ${glassGlint} 0%, rgba(255,255,255,0) 34%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
@@ -650,20 +654,19 @@ export default function LockScreen(props) {
                                                     />
                                                 )}
                                             </div>
-                                            {/* Fixed to the icon's own
-                                                height, with its 3 lines
-                                                spread evenly across it, so
-                                                the text block and the
-                                                (square) icon always match. */}
+                                            {/* Grows naturally with its
+                                                content instead of being
+                                                height-locked to the icon —
+                                                the message can wrap to a
+                                                second line, same as a real
+                                                notification. */}
                                             <div
                                                 style={{
                                                     flex: 1,
                                                     minWidth: 0,
-                                                    height: 120,
                                                     display: "flex",
                                                     flexDirection: "column",
-                                                    justifyContent:
-                                                        "space-between",
+                                                    gap: 8,
                                                     fontFamily:
                                                         "-apple-system, sans-serif",
                                                 }}
@@ -716,9 +719,13 @@ export default function LockScreen(props) {
                                                 <div
                                                     style={{
                                                         fontSize: 32,
+                                                        lineHeight: 1.25,
                                                         color: "rgba(255,255,255,0.85)",
+                                                        display: "-webkit-box",
+                                                        WebkitLineClamp: 2,
+                                                        WebkitBoxOrient:
+                                                            "vertical",
                                                         overflow: "hidden",
-                                                        whiteSpace: "nowrap",
                                                         textOverflow:
                                                             "ellipsis",
                                                     }}
@@ -910,7 +917,7 @@ LockScreen.defaultProps = {
     timeColor: "#FFFFFF",
     clockOpacity: 1,
     useLiveDate: true,
-    customDate: "Tuesday, July 7",
+    customDate: "Tue Jul 7",
     dateFont: {
         fontFamily:
             '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
@@ -1172,7 +1179,7 @@ addPropertyControls(LockScreen, {
     customDate: {
         type: ControlType.String,
         title: "Custom Date",
-        defaultValue: "Tuesday, July 7",
+        defaultValue: "Tue Jul 7",
         hidden: (p) => p.variant !== "lockScreen" || p.useLiveDate,
     },
     dateFont: {
