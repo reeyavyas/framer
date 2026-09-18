@@ -620,135 +620,156 @@ export default function LockScreen(props) {
                                                           },
                                                       }
                                             }
-                                            style={{
-                                                width: "100%",
-                                                boxSizing: "border-box",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 20,
-                                                padding: "40px 28px",
-                                                borderRadius: cornerRadius,
-                                                ...buttonGlassStyle,
-                                                boxShadow: notificationShadow,
-                                            }}
+                                            style={{ width: "100%" }}
                                         >
+                                            {/* Visual chrome (background,
+                                                border, box-shadow, radius)
+                                                lives on a plain inner div,
+                                                not the motion.div carrying
+                                                `layout` — box-shadow and
+                                                border don't get Framer
+                                                Motion's automatic
+                                                border-radius scale
+                                                correction during layout
+                                                projection, so putting them
+                                                on the animated element
+                                                itself warped/clipped the
+                                                shadow (worst on whichever
+                                                card was mid-reflow, e.g.
+                                                the one just pushed down by
+                                                a new arrival). */}
                                             <div
                                                 style={{
-                                                    width: 96,
-                                                    height: 96,
-                                                    borderRadius: iconRadius,
-                                                    flexShrink: 0,
+                                                    width: "100%",
+                                                    boxSizing: "border-box",
                                                     display: "flex",
                                                     alignItems: "center",
-                                                    justifyContent: "center",
-                                                    background:
-                                                        "rgba(255,255,255,0.25)",
-                                                    overflow: "hidden",
-                                                }}
-                                            >
-                                                {n.icon ? (
-                                                    <img
-                                                        src={n.icon.src}
-                                                        alt=""
-                                                        style={{
-                                                            width: "100%",
-                                                            height: "100%",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <MessageGlyph
-                                                        size={48}
-                                                        color="#FFFFFF"
-                                                    />
-                                                )}
-                                            </div>
-                                            {/* Grows naturally with its
-                                                content instead of being
-                                                height-locked to the icon —
-                                                the message can wrap to a
-                                                second line, same as a real
-                                                notification. */}
-                                            <div
-                                                style={{
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: 8,
-                                                    fontFamily:
-                                                        "-apple-system, sans-serif",
+                                                    gap: 20,
+                                                    padding: "40px 28px",
+                                                    borderRadius: cornerRadius,
+                                                    ...buttonGlassStyle,
+                                                    boxShadow:
+                                                        notificationShadow,
                                                 }}
                                             >
                                                 <div
                                                     style={{
+                                                        width: 96,
+                                                        height: 96,
+                                                        borderRadius: iconRadius,
+                                                        flexShrink: 0,
                                                         display: "flex",
                                                         alignItems: "center",
-                                                        justifyContent:
-                                                            "space-between",
-                                                        gap: 12,
+                                                        justifyContent: "center",
+                                                        background:
+                                                            "rgba(255,255,255,0.25)",
+                                                        overflow: "hidden",
                                                     }}
                                                 >
-                                                    <span
+                                                    {n.icon ? (
+                                                        <img
+                                                            src={n.icon.src}
+                                                            alt=""
+                                                            style={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit: "cover",
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <MessageGlyph
+                                                            size={48}
+                                                            color="#FFFFFF"
+                                                        />
+                                                    )}
+                                                </div>
+                                                {/* Grows naturally with its
+                                                    content instead of being
+                                                    height-locked to the icon —
+                                                    the message can wrap to a
+                                                    second line, same as a real
+                                                    notification. */}
+                                                <div
+                                                    style={{
+                                                        flex: 1,
+                                                        minWidth: 0,
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        gap: 8,
+                                                        fontFamily:
+                                                            "-apple-system, sans-serif",
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent:
+                                                                "space-between",
+                                                            gap: 12,
+                                                        }}
+                                                    >
+                                                        <span
+                                                            style={{
+                                                                fontWeight: 600,
+                                                                fontSize: 28,
+                                                                letterSpacing: 0.4,
+                                                                textTransform:
+                                                                    "uppercase",
+                                                                color: "rgba(255,255,255,0.85)",
+                                                                textShadow:
+                                                                    "0 1px 8px rgba(0,0,0,0.35)",
+                                                            }}
+                                                        >
+                                                            {n.appName ||
+                                                                "Messages"}
+                                                        </span>
+                                                        <span
+                                                            style={{
+                                                                fontSize: 28,
+                                                                color: "rgba(255,255,255,0.7)",
+                                                                flexShrink: 0,
+                                                                textShadow:
+                                                                    "0 1px 8px rgba(0,0,0,0.35)",
+                                                            }}
+                                                        >
+                                                            {n.timeLabel || "now"}
+                                                        </span>
+                                                    </div>
+                                                    <div
                                                         style={{
                                                             fontWeight: 600,
-                                                            fontSize: 28,
-                                                            letterSpacing: 0.4,
-                                                            textTransform:
-                                                                "uppercase",
-                                                            color: "rgba(255,255,255,0.85)",
+                                                            fontSize: 40,
+                                                            color: "#FFFFFF",
+                                                            overflow: "hidden",
+                                                            whiteSpace: "nowrap",
+                                                            textOverflow:
+                                                                "ellipsis",
                                                             textShadow:
-                                                                "0 1px 8px rgba(0,0,0,0.35)",
+                                                                "0 2px 18px rgba(0,0,0,0.4)",
                                                         }}
                                                     >
-                                                        {n.appName ||
-                                                            "Messages"}
-                                                    </span>
-                                                    <span
+                                                        {n.title || "Alex"}
+                                                    </div>
+                                                    <div
                                                         style={{
-                                                            fontSize: 28,
-                                                            color: "rgba(255,255,255,0.7)",
-                                                            flexShrink: 0,
+                                                            fontSize: 32,
+                                                            lineHeight: 1.25,
+                                                            color: "rgba(255,255,255,0.85)",
+                                                            display: "-webkit-box",
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient:
+                                                                "vertical",
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
                                                             textShadow:
                                                                 "0 1px 8px rgba(0,0,0,0.35)",
                                                         }}
                                                     >
-                                                        {n.timeLabel || "now"}
-                                                    </span>
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontWeight: 600,
-                                                        fontSize: 40,
-                                                        color: "#FFFFFF",
-                                                        overflow: "hidden",
-                                                        whiteSpace: "nowrap",
-                                                        textOverflow:
-                                                            "ellipsis",
-                                                        textShadow:
-                                                            "0 2px 18px rgba(0,0,0,0.4)",
-                                                    }}
-                                                >
-                                                    {n.title || "Alex"}
-                                                </div>
-                                                <div
-                                                    style={{
-                                                        fontSize: 32,
-                                                        lineHeight: 1.25,
-                                                        color: "rgba(255,255,255,0.85)",
-                                                        display: "-webkit-box",
-                                                        WebkitLineClamp: 2,
-                                                        WebkitBoxOrient:
-                                                            "vertical",
-                                                        overflow: "hidden",
-                                                        textOverflow:
-                                                            "ellipsis",
-                                                        textShadow:
-                                                            "0 1px 8px rgba(0,0,0,0.35)",
-                                                    }}
-                                                >
-                                                    {n.message ||
-                                                        "Don't forget practice starts at 6!"}
+                                                        {n.message ||
+                                                            "Don't forget practice starts at 6!"}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </motion.div>
