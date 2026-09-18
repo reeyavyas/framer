@@ -790,13 +790,13 @@ export default function LockScreen(props) {
                                     width: icons.iconSize,
                                     height: icons.iconSize,
                                     objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 3px rgba(0,0,0,${glass.shadowOpacity}))`,
+                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
                                 }}
                             />
                         ) : (
                             <div
                                 style={{
-                                    filter: `drop-shadow(0 1px 3px rgba(0,0,0,${glass.shadowOpacity}))`,
+                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
                                 }}
                             >
                                 <FlashlightGlyph
@@ -826,13 +826,13 @@ export default function LockScreen(props) {
                                     width: icons.iconSize,
                                     height: icons.iconSize,
                                     objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 3px rgba(0,0,0,${glass.shadowOpacity}))`,
+                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
                                 }}
                             />
                         ) : (
                             <div
                                 style={{
-                                    filter: `drop-shadow(0 1px 3px rgba(0,0,0,${glass.shadowOpacity}))`,
+                                    filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.15))`,
                                 }}
                             >
                                 <CameraGlyph
@@ -1012,7 +1012,7 @@ LockScreen.defaultProps = {
         tintOpacity: 0.14,
         borderOpacity: 0.35,
         borderWidth: 1,
-        blur: 24,
+        blur: 40,
         saturation: 200,
         shadowY: 14,
         shadowBlur: 36,
@@ -1370,7 +1370,7 @@ addPropertyControls(LockScreen, {
             blur: {
                 type: ControlType.Number,
                 title: "Blur",
-                defaultValue: 24,
+                defaultValue: 40,
                 min: 0,
                 max: 100,
                 step: 1,
