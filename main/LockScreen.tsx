@@ -695,14 +695,33 @@ export default function LockScreen(props) {
                                                           layout: {
                                                               type: "spring",
                                                               stiffness: 420,
-                                                              damping: 32,
+                                                              // Softened from
+                                                              // 32 (damping
+                                                              // ratio ~0.78)
+                                                              // to 37 (~0.9)
+                                                              // — still a
+                                                              // little
+                                                              // overshoot,
+                                                              // much less of
+                                                              // it, so the
+                                                              // sibling
+                                                              // reflow is
+                                                              // less likely
+                                                              // to swing past
+                                                              // its resting
+                                                              // spot and
+                                                              // briefly
+                                                              // overlap the
+                                                              // card next to
+                                                              // it.
+                                                              damping: 37,
                                                           },
                                                           // This card's own
                                                           // y/scale no longer
                                                           // shares vertical
                                                           // space with the
                                                           // `layout` reflow
-                                                          // (it's a tiny -14
+                                                          // (it's a tiny 14px
                                                           // offset next to a
                                                           // ~200px reflow),
                                                           // so it's free to
@@ -713,11 +732,15 @@ export default function LockScreen(props) {
                                                           // settle instead
                                                           // of matching
                                                           // layout's snappier
-                                                          // one.
+                                                          // one. Also
+                                                          // softened (damping
+                                                          // ratio ~0.75 ->
+                                                          // ~0.9) for the
+                                                          // same reason.
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 300,
-                                                              damping: 26,
+                                                              damping: 31,
                                                           },
                                                       }
                                             }
