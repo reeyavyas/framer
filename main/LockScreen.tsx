@@ -1012,7 +1012,6 @@ function notificationControl(title: string, defaults: any) {
                 title: "Appear Delay (s)",
                 defaultValue: defaults.delaySeconds,
                 min: 0,
-                max: 8,
                 step: 0.1,
             },
             holdSeconds: {
