@@ -569,46 +569,31 @@ export default function LockScreen(props) {
                                     return (
                                         <motion.div
                                             key={slot}
-                                            // No `layout` prop here — it drove
-                                            // a smooth reflow of the cards
-                                            // below whenever a new one
-                                            // arrived, but that reflow
-                                            // travels a much larger distance
+                                            layout
+                                            // `layout` is back for smooth
+                                            // sibling reflow, but this card
+                                            // no longer has its own `y`
+                                            // travel on entrance — that
+                                            // separate y motion was a much
+                                            // shorter trip than the sibling
+                                            // below has to make via `layout`
                                             // (roughly this card's own
-                                            // height + the stack gap) than
-                                            // this card's own small y/scale
-                                            // entrance does. Even with the
-                                            // two springs perfectly matched,
-                                            // a short trip and a long trip
-                                            // sharing the same start time and
-                                            // the same fraction-of-distance
-                                            // curve don't finish covering
-                                            // their own remaining distance at
-                                            // the same wall-clock moment —
-                                            // the short one (this card)
-                                            // reads as "arrived" long before
-                                            // the long one (the card below,
-                                            // making room) does, and for
-                                            // that whole window this card's
-                                            // bottom edge sits below the
-                                            // still-too-high top edge of the
-                                            // card below it. Matching the
-                                            // spring, delaying the start, or
-                                            // enlarging this card's own
-                                            // travel distance to compensate
-                                            // all failed for the same
-                                            // underlying reason. Dropping
-                                            // `layout` makes every card's
-                                            // position purely a function of
-                                            // normal flex flow — sibling
-                                            // repositioning is instant
-                                            // (no animated reflow), which
-                                            // trades away the "existing
-                                            // cards slide down" flourish but
-                                            // removes the two-different-
-                                            // distances race entirely, so
-                                            // there's nothing left to
-                                            // desync.
+                                            // height + the stack gap), so
+                                            // even with matched springs and
+                                            // synced start times the two
+                                            // finished at different
+                                            // wall-clock moments and briefly
+                                            // overlapped. This card now
+                                            // appears directly at its
+                                            // correct flex position (only
+                                            // scaling in from center, which
+                                            // is symmetric and doesn't
+                                            // drift its edges toward the
+                                            // sibling), so the sibling's
+                                            // `layout` reflow is the only
+                                            // real motion happening — smooth
+                                            // again, with nothing left to
+                                            // desync against.
                                             // Non-reduced-motion entrance/exit
                                             // deliberately never animates
                                             // opacity on this element (it
@@ -625,7 +610,7 @@ export default function LockScreen(props) {
                                             // with — the card renders sharp
                                             // and the blur visibly catches
                                             // up a beat later. Transform-only
-                                            // motion (y/scale) composites as
+                                            // motion (scale) composites as
                                             // a cheap bitmap transform
                                             // instead, so the blur is
                                             // already correct on the first
@@ -633,18 +618,12 @@ export default function LockScreen(props) {
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
-                                                    : {
-                                                          y: -32,
-                                                          scale: 0.96,
-                                                      }
+                                                    : { scale: 0.96 }
                                             }
                                             animate={
                                                 prefersReducedMotion
                                                     ? { opacity: 1 }
-                                                    : {
-                                                          y: 0,
-                                                          scale: 1,
-                                                      }
+                                                    : { scale: 1 }
                                             }
                                             // Exit doesn't have the cold-
                                             // layer problem above — by the
@@ -653,6 +632,13 @@ export default function LockScreen(props) {
                                             // live for seconds, so fading it
                                             // out here is safe and reads
                                             // better than an abrupt pop.
+                                            // It also doesn't have the
+                                            // reflow-distance mismatch: all
+                                            // visible cards clear together
+                                            // (see the visibleCount reset),
+                                            // so there's no sibling making
+                                            // room for this one to race
+                                            // against.
                                             exit={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
@@ -665,13 +651,26 @@ export default function LockScreen(props) {
                                             transition={
                                                 prefersReducedMotion
                                                     ? {
-                                                          duration: 0.2,
-                                                          ease: "easeOut",
+                                                          layout: {
+                                                              duration: 0.2,
+                                                              ease: "easeOut",
+                                                          },
+                                                          default: {
+                                                              duration: 0.2,
+                                                              ease: "easeOut",
+                                                          },
                                                       }
                                                     : {
-                                                          type: "spring",
-                                                          stiffness: 420,
-                                                          damping: 32,
+                                                          layout: {
+                                                              type: "spring",
+                                                              stiffness: 420,
+                                                              damping: 32,
+                                                          },
+                                                          default: {
+                                                              type: "spring",
+                                                              stiffness: 420,
+                                                              damping: 32,
+                                                          },
                                                       }
                                             }
                                             style={{ width: "100%" }}
