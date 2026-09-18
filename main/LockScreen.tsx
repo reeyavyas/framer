@@ -104,10 +104,10 @@ function usePrefersReducedMotion() {
 }
 
 function formatDate(d: Date) {
-    const day = d.toLocaleDateString(undefined, { weekday: "short" })
-    const month = d.toLocaleDateString(undefined, { month: "short" })
+    const weekday = d.toLocaleDateString(undefined, { weekday: "long" })
+    const month = d.toLocaleDateString(undefined, { month: "long" })
     const date = d.getDate()
-    return `${day} ${date} ${month}`
+    return `${weekday}, ${month} ${date}`
 }
 
 function trailingSpacingFix(font: any): number {
@@ -899,7 +899,7 @@ LockScreen.defaultProps = {
     timeColor: "#FFFFFF",
     clockOpacity: 1,
     useLiveDate: true,
-    customDate: "Tue 7 Jul",
+    customDate: "Tuesday, July 7",
     dateFont: {
         fontFamily:
             '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
@@ -1161,7 +1161,7 @@ addPropertyControls(LockScreen, {
     customDate: {
         type: ControlType.String,
         title: "Custom Date",
-        defaultValue: "Tue 7 Jul",
+        defaultValue: "Tuesday, July 7",
         hidden: (p) => p.variant !== "lockScreen" || p.useLiveDate,
     },
     dateFont: {
