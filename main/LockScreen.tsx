@@ -625,8 +625,8 @@ export default function LockScreen(props) {
                                         >
                                             <div
                                                 style={{
-                                                    width: 120,
-                                                    height: 120,
+                                                    width: 88,
+                                                    height: 88,
                                                     borderRadius: iconRadius,
                                                     flexShrink: 0,
                                                     display: "flex",
@@ -649,7 +649,7 @@ export default function LockScreen(props) {
                                                     />
                                                 ) : (
                                                     <MessageGlyph
-                                                        size={60}
+                                                        size={44}
                                                         color="#FFFFFF"
                                                     />
                                                 )}
@@ -997,7 +997,7 @@ LockScreen.defaultProps = {
         tintOpacity: 0.14,
         borderOpacity: 0.35,
         borderWidth: 1,
-        blur: 30,
+        blur: 18,
         saturation: 200,
         shadowY: 14,
         shadowBlur: 36,
@@ -1355,7 +1355,7 @@ addPropertyControls(LockScreen, {
             blur: {
                 type: ControlType.Number,
                 title: "Blur",
-                defaultValue: 32,
+                defaultValue: 18,
                 min: 0,
                 max: 100,
                 step: 1,
@@ -1363,7 +1363,7 @@ addPropertyControls(LockScreen, {
             saturation: {
                 type: ControlType.Number,
                 title: "Saturation",
-                defaultValue: 180,
+                defaultValue: 200,
                 min: 100,
                 max: 250,
                 step: 5,
