@@ -1,8 +1,11 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 
-// A wrapper component — drag your existing vector/path layer INSIDE
-// this component (nest it as a child on canvas), and it reads the
+// A wrapper component — connect your existing vector/path layer via
+// the "Vector Layer" property (a ControlType.ComponentInstance picker:
+// click it, then click your vector layer anywhere on canvas — no
+// nesting required, arbitrary code components don't support dragging
+// other layers inside them the way Frame/Stack do). It then reads the
 // real rendered SVG path(s) straight from the DOM (getTotalLength())
 // instead of requiring path data to be traced and pasted in. Always
 // exact to whatever you actually drew.
@@ -23,9 +26,9 @@ import { addPropertyControls, ControlType } from "framer"
 // paths longer than the one it was tuned against.
 //
 // Renders only the glow on top of your existing artwork (which is
-// still visible underneath via `children`) — it doesn't redraw a
-// duplicate base line, so your real stroke colors/widths are
-// untouched.
+// still visible underneath, rendered via the vectorLayer prop) — it
+// doesn't redraw a duplicate base line, so your real stroke
+// colors/widths are untouched.
 //
 // Two modes:
 // - "sweep": a soft glowing highlight travels continuously along the
@@ -116,15 +119,16 @@ function AnimatedPath({
 }
 
 /**
- * Drag your existing vector/path layer inside this component (nest it
- * as a child) — it auto-reads the real path geometry off it rather
- * than needing path data pasted in.
+ * Connect your existing vector/path layer via the "Vector Layer"
+ * property below — it auto-reads the real path geometry off it rather
+ * than needing path data pasted in or the layer nested inside.
  *
  * @framerSupportedLayoutWidth any
  * @framerSupportedLayoutHeight any
  */
 export default function VectorPathGlow(props) {
     const {
+        vectorLayer,
         mode,
         glowColor,
         glowWidthScale,
@@ -132,7 +136,6 @@ export default function VectorPathGlow(props) {
         sweepPercent,
         speed,
         delay,
-        children,
     } = props
 
     const wrapperRef = React.useRef<HTMLDivElement>(null)
@@ -156,14 +159,14 @@ export default function VectorPathGlow(props) {
             })
             .filter((p): p is PathInfo => !!p)
         setPaths(found)
-    }, [children])
+    }, [vectorLayer])
 
     return (
         <div
             ref={wrapperRef}
             style={{ position: "relative", width: "100%", height: "100%" }}
         >
-            {children}
+            {vectorLayer}
             {paths.length > 0 && (
                 <svg
                     width="100%"
@@ -211,6 +214,10 @@ VectorPathGlow.defaultProps = {
 }
 
 addPropertyControls(VectorPathGlow, {
+    vectorLayer: {
+        type: ControlType.ComponentInstance,
+        title: "Vector Layer",
+    },
     mode: {
         type: ControlType.Enum,
         title: "Mode",
