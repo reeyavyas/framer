@@ -42,6 +42,22 @@ Site-wide, page-agnostic components — not owned by any single feature.
     canvas so designing it doesn't navigate you away.
   Wire `onSwipeUp` on the Lock Screen instance to navigate to the page
   holding the Splash instance, which then auto-advances to login.
+- `SplashProgressBar.tsx` — standalone layer (not baked into
+  LockScreen.tsx) for a gradient-fill loading bar with a shimmer sheen
+  and a glowing dot riding the leading edge, all driven off one shared
+  progress value so they can't drift apart. Drop it onto the Splash
+  (Variant 2) frame and size/position it like any other layer; own
+  color/duration/delay/easing/loop controls, independent of the
+  Splash variant's built-in redirect timer above.
+- `SplashTimedRedirect.tsx` — plain code override (`SplashTimedRedirect`),
+  not a component. Apply it to the **Splash (Variant 2)** instance of
+  the Lock Screen layer specifically — it no-ops unless the layer's
+  `variant` prop reads `"splash"`. Waits 2.3s, then
+  `window.location.href`s to `/base-pages/login`; skipped on canvas.
+  Framer only allows one code override per layer — it can't be
+  stacked with another override on the same instance. It also
+  duplicates the Splash variant's own built-in redirect above (both
+  would fire), so use one or the other on a given instance, not both.
 - `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
   wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
   `line3`, each a plain SVG path `d` string), along each of which a
