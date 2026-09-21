@@ -97,20 +97,26 @@ Site-wide, page-agnostic components — not owned by any single feature.
 - `SplashTimedRedirect.tsx` — plain code override (`SplashTimedRedirect`),
   not a component. **This is the actual redirect mechanism** — apply
   it directly to whatever layer/component is your own splash frame
-  (not to `LockScreen.tsx`, which doesn't have one). It fires purely
-  off that layer mounting, no `variant`/prop check at all: mounting
-  is the "we're showing splash now" signal, since the splash frame
-  only exists in the tree while splash is actually on screen. Waits
-  2.3s, then `window.location.href`s to `/base-pages/login`; skipped
-  on the Framer canvas.
-  Framer only allows one code override per layer, and it applies to
-  the whole component, not to one Framer-native Variant's state
-  within it — so if the splash frame is a Variant *within* a bigger
-  component rather than its own separately-mounted layer, this won't
-  be able to tell when that particular Variant is the active one.
-  (Same reasoning is why the hydration guard above is baked directly
-  into `LockScreen.tsx` instead of left as an external override — it
-  would otherwise eat this component's one override slot.)
+  (not to `LockScreen.tsx`, which doesn't have one).
+  Doesn't rely on mount timing (that only fires correctly if the
+  splash frame is its own separately-mounted layer — it wouldn't
+  catch a Framer-native Variant switch or a Show/Hide toggle inside
+  an already-mounted parent, since nothing unmounts there). Instead
+  it polls actual on-screen visibility every 200ms — walking up from
+  its own DOM node checking `display`/`visibility`/`opacity` at every
+  ancestor — and fires 2.3s after first seen visible, resetting (and
+  re-arming) if it goes hidden again. `window.location.href`s to
+  `/base-pages/login`; skipped on the Framer canvas.
+  This is a best-effort, mechanism-agnostic approach since we don't
+  know exactly how the splash frame's visibility is implemented in
+  the "Phone Lock & Splash" composition — if it turns out to fire at
+  the wrong time (too early/late, or not at all), the likely culprit
+  is `POLL_INTERVAL_MS` or the visibility check itself, both isolated
+  at the top of the file.
+  Framer only allows one code override per layer (this is why the
+  hydration guard above is baked directly into `LockScreen.tsx`
+  instead of left as an external override — it would otherwise eat
+  this component's one override slot).
 - `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
   wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
   `line3`, each a plain SVG path `d` string), along each of which a
