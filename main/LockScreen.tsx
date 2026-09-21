@@ -1340,8 +1340,6 @@ addPropertyControls(LockScreen, {
         controls: "extended",
         defaultFontType: "sans-serif",
         defaultValue: {
-            fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
             fontSize: 236,
             lineHeight: "1em",
             letterSpacing: "-6px",
@@ -1384,8 +1382,6 @@ addPropertyControls(LockScreen, {
         controls: "extended",
         defaultFontType: "sans-serif",
         defaultValue: {
-            fontFamily:
-                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
             fontSize: 42,
             lineHeight: "1.2em",
             letterSpacing: "0.3px",
