@@ -40,13 +40,23 @@ Site-wide, page-agnostic components — not owned by any single feature.
      something else. This is how `LockScreen.tsx` does it (see
      below) — prefer this route for any *new* date/time component
      instead of requiring a separately-applied override.
-- `LockScreen.tsx` — one code component, two `variant`s, for the
-  lock → splash → login flow. Guards its own hydration internally
-  (see **Hydration guard** above): the default export is a thin
-  wrapper (`useIsMounted` + placeholder-or-render), and all the actual
-  variant logic below lives in the un-exported `LockScreenInner`. No
-  external `withHydrationGuard` override needed on this layer anymore
-  — that slot is free.
+- `LockScreen.tsx` — renders the phone lock screen only (clock,
+  notifications, swipe-up hint). It does **not** render a splash
+  screen of its own — an earlier `variant: "splash"` branch (gradient
+  background, animated logo, progress dots, and a redirect timer) was
+  removed once it turned out to be dead code: the actual project nests
+  this component inside a separately-built "Phone Lock & Splash"
+  composition, where the splash screen is its own hand-built frame
+  (native Framer animations, `SplashProgressBar.tsx`, custom glow
+  pulses) — this component was never being switched to a "splash"
+  state to show it. The `variant` prop/enum (`lockScreen`/`splash`)
+  still exists on this component for now but has no splash content
+  behind it; treat `lockScreen` as the only meaningful value. Guards
+  its own hydration internally (see **Hydration guard** above): the
+  default export is a thin wrapper (`useIsMounted` +
+  placeholder-or-render), and all the actual rendering logic lives in
+  the un-exported `LockScreenInner`. No external `withHydrationGuard`
+  override needed on this layer — that slot is free.
   - **Lock Screen** — live/custom clock + date, up to five fake
     notification banners (`notification1`-`notification5`, each a
     full app/title/message/icon/timestamp) that stack like a real
@@ -71,42 +81,36 @@ Site-wide, page-agnostic components — not owned by any single feature.
     threshold fires the `onSwipeUp` event control; every release
     springs back to rest with a little overshoot, whether or not the
     swipe cleared the threshold.
-  - **Splash** — full-bleed gradient background, a logo that fades/
-    scales/pulses in, optional loading dots, and a timed auto-redirect
-    (`window.location.href`) to a configurable URL (defaults to
-    `/base-pages/login`). Skips the redirect while on the Framer
-    canvas so designing it doesn't navigate you away.
-  Wire `onSwipeUp` on the Lock Screen instance to navigate to the page
-  holding the Splash instance, which then auto-advances to login.
-- `SplashProgressBar.tsx` — standalone layer (not baked into
-  LockScreen.tsx) for a gradient-fill loading bar with a shimmer sheen
-  and a glowing dot riding the leading edge, all driven off one shared
-  progress value so they can't drift apart. Drop it onto the Splash
-  (Variant 2) frame and size/position it like any other layer; own
-  color/duration/delay/easing/loop controls, independent of the
-  Splash variant's built-in redirect timer above.
+  Wire `onSwipeUp` on the Lock Screen instance to navigate to whatever
+  page/frame holds your own splash composition.
+- **The Splash screen is hand-built in Framer, not code.** It lives
+  inside the project's own "Phone Lock & Splash" composition as its
+  own frame — its own native Framer animations, plus
+  `SplashProgressBar.tsx` and custom glow-pulse frames — not as a
+  `LockScreen.tsx` variant. `LockScreen.tsx` has no knowledge of it.
+- `SplashProgressBar.tsx` — standalone layer for a gradient-fill
+  loading bar with a shimmer sheen and a glowing dot riding the
+  leading edge, all driven off one shared progress value so they
+  can't drift apart. Drop it onto the splash frame and size/position
+  it like any other layer; own color/duration/delay/easing/loop
+  controls.
 - `SplashTimedRedirect.tsx` — plain code override (`SplashTimedRedirect`),
-  not a component. Currently unused — `LockScreen.tsx`'s own built-in
-  Splash redirect (`splash.redirectDelay`/`splash.redirectUrl`, set on
-  the Splash instance's properties panel) covers this already, no
-  override needed. Kept around as a standalone alternative: if ever
-  applied, it goes on the **Splash (Variant 2)** instance of the Lock
-  Screen layer specifically — it no-ops unless the layer's `variant`
-  prop reads `"splash"`. Waits 2.3s, then `window.location.href`s to
-  `/base-pages/login`; skipped on canvas. Would duplicate the built-in
-  redirect if both ended up applied to the same instance (both would
-  fire) — use one or the other, not both.
-  Framer only allows one code override per layer, and a code override
-  is applied to the *component*, not to one instance's variant setting
-  — applying one to a Lock Screen instance applies it whichever
-  `variant` that instance is on (Lock Screen or Splash alike). There's
-  no way to apply an override to one variant only, which is exactly
-  why this override guards itself internally with
-  `props.variant !== "splash"` instead of relying on Framer to scope
-  it. (This is also why the hydration guard above is baked directly
-  into `LockScreen.tsx` rather than left as an external override —
-  otherwise it would eat the one override slot this component has,
-  which also can't be scoped to just the Lock Screen variant.)
+  not a component. **This is the actual redirect mechanism** — apply
+  it directly to whatever layer/component is your own splash frame
+  (not to `LockScreen.tsx`, which doesn't have one). It fires purely
+  off that layer mounting, no `variant`/prop check at all: mounting
+  is the "we're showing splash now" signal, since the splash frame
+  only exists in the tree while splash is actually on screen. Waits
+  2.3s, then `window.location.href`s to `/base-pages/login`; skipped
+  on the Framer canvas.
+  Framer only allows one code override per layer, and it applies to
+  the whole component, not to one Framer-native Variant's state
+  within it — so if the splash frame is a Variant *within* a bigger
+  component rather than its own separately-mounted layer, this won't
+  be able to tell when that particular Variant is the active one.
+  (Same reasoning is why the hydration guard above is baked directly
+  into `LockScreen.tsx` instead of left as an external override — it
+  would otherwise eat this component's one override slot.)
 - `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
   wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
   `line3`, each a plain SVG path `d` string), along each of which a

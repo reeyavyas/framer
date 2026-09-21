@@ -1,5 +1,5 @@
 import * as React from "react"
-import { addPropertyControls, ControlType, RenderTarget } from "framer"
+import { addPropertyControls, ControlType } from "framer"
 import {
     motion,
     useMotionValue,
@@ -174,8 +174,6 @@ function LockScreenInner(props) {
         icons = {},
         glass = {},
         homeIndicator = {},
-        // Splash variant
-        splash = {},
         // NEW Event trigger prop
         onSwipeUp,
     } = props
@@ -316,140 +314,6 @@ function LockScreenInner(props) {
             damping: 22,
             velocity: swipeVelocity,
         })
-    }
-
-    // --- Splash variant: logo entrance, then an optional idle pulse ---
-    const [logoEntered, setLogoEntered] = React.useState(false)
-
-    React.useEffect(() => {
-        if (variant !== "splash") return
-        if (typeof window === "undefined") return
-        // Never auto-navigate away while designing on the canvas.
-        if (RenderTarget.current() === RenderTarget.canvas) return
-
-        const delayMs = (splash.redirectDelay ?? 2.5) * 1000
-        const id = window.setTimeout(() => {
-            window.location.href = splash.redirectUrl || "/base-pages/login"
-        }, delayMs)
-        return () => window.clearTimeout(id)
-    }, [variant, splash.redirectDelay, splash.redirectUrl])
-
-    if (variant === "splash") {
-        const logoSize = splash.logoSize || 140
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    boxSizing: "border-box",
-                    overflow: "hidden",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: `linear-gradient(160deg, ${
-                        splash.backgroundColorA || "#0B0F1A"
-                    } 0%, ${splash.backgroundColorB || "#1B2340"} 100%)`,
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 28,
-                    }}
-                >
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                            scale: splash.animation === "fade" ? 1 : 0.85,
-                        }}
-                        animate={
-                            logoEntered &&
-                            splash.animation === "pulse" &&
-                            !prefersReducedMotion
-                                ? { opacity: 1, scale: [1, 1.05, 1] }
-                                : { opacity: 1, scale: 1 }
-                        }
-                        transition={
-                            logoEntered &&
-                            splash.animation === "pulse" &&
-                            !prefersReducedMotion
-                                ? {
-                                      duration: 2.2,
-                                      repeat: Infinity,
-                                      ease: "easeInOut",
-                                  }
-                                : { duration: 0.7, ease: "easeOut" }
-                        }
-                        onAnimationComplete={() => setLogoEntered(true)}
-                        style={{
-                            width: logoSize,
-                            height: logoSize,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        {splash.logo ? (
-                            <img
-                                src={splash.logo.src}
-                                alt="Logo"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "contain",
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: "28%",
-                                    background: "rgba(255,255,255,0.12)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#FFFFFF",
-                                    fontFamily: "-apple-system, sans-serif",
-                                    fontWeight: 700,
-                                    fontSize: logoSize * 0.22,
-                                    textAlign: "center",
-                                    padding: "10%",
-                                    boxSizing: "border-box",
-                                }}
-                            >
-                                {splash.logoPlaceholderText || "LOGO"}
-                            </div>
-                        )}
-                    </motion.div>
-                    {splash.showProgressDots !== false && (
-                        <div style={{ display: "flex", gap: 10 }}>
-                            {[0, 1, 2].map((i) => (
-                                <motion.div
-                                    key={i}
-                                    animate={{ opacity: [0.25, 1, 0.25] }}
-                                    transition={{
-                                        duration: 1.2,
-                                        repeat: Infinity,
-                                        ease: "easeInOut",
-                                        delay: i * 0.2,
-                                    }}
-                                    style={{
-                                        width: 8,
-                                        height: 8,
-                                        borderRadius: 4,
-                                        background: "#FFFFFF",
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-        )
     }
 
     return (
@@ -1219,16 +1083,6 @@ LockScreen.defaultProps = {
     swipeHintOpacity: 0.8,
     swipeHintGap: 28,
     swipeHintBounce: true,
-    splash: {
-        logoSize: 140,
-        logoPlaceholderText: "LOGO",
-        animation: "scaleIn",
-        backgroundColorA: "#0B0F1A",
-        backgroundColorB: "#1B2340",
-        showProgressDots: true,
-        redirectUrl: "/base-pages/login",
-        redirectDelay: 2.5,
-    },
 }
 
 // Fixed slots instead of an Array control, matching the convention used
@@ -1696,66 +1550,5 @@ addPropertyControls(LockScreen, {
         enabledTitle: "On",
         disabledTitle: "Off",
         hidden: (p) => p.variant !== "lockScreen",
-    },
-    splash: {
-        type: ControlType.Object,
-        title: "Splash",
-        hidden: (p) => p.variant !== "splash",
-        controls: {
-            logo: {
-                type: ControlType.ResponsiveImage,
-                title: "Logo",
-            },
-            logoPlaceholderText: {
-                type: ControlType.String,
-                title: "Placeholder Text",
-                defaultValue: "LOGO",
-            },
-            logoSize: {
-                type: ControlType.Number,
-                title: "Logo Size",
-                defaultValue: 140,
-                min: 40,
-                max: 400,
-                step: 1,
-            },
-            animation: {
-                type: ControlType.Enum,
-                title: "Animation",
-                options: ["fade", "scaleIn", "pulse"],
-                optionTitles: ["Fade In", "Scale In", "Pulse Loop"],
-                defaultValue: "scaleIn",
-            },
-            backgroundColorA: {
-                type: ControlType.Color,
-                title: "Background Color A",
-                defaultValue: "#0B0F1A",
-            },
-            backgroundColorB: {
-                type: ControlType.Color,
-                title: "Background Color B",
-                defaultValue: "#1B2340",
-            },
-            showProgressDots: {
-                type: ControlType.Boolean,
-                title: "Progress Dots",
-                defaultValue: true,
-                enabledTitle: "On",
-                disabledTitle: "Off",
-            },
-            redirectUrl: {
-                type: ControlType.String,
-                title: "Redirect URL",
-                defaultValue: "/base-pages/login",
-            },
-            redirectDelay: {
-                type: ControlType.Number,
-                title: "Redirect Delay (s)",
-                defaultValue: 2.5,
-                min: 0.5,
-                max: 15,
-                step: 0.1,
-            },
-        },
     },
 })
