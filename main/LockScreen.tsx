@@ -445,47 +445,6 @@ export default function LockScreen(props) {
                             ))}
                         </div>
                     )}
-                    {/* Progress bar — purely visual, its own duration/delay/
-                        loop controls independent of the redirect timer, so
-                        it can be tuned to look right without changing when
-                        the redirect actually fires. Keyed on those three
-                        controls so a canvas edit restarts the fill from 0%
-                        instead of animating from wherever the old timeline
-                        left off. */}
-                    {splash.showProgressBar && (
-                        <div
-                            style={{
-                                width: splash.progressBarWidth || 160,
-                                height: 6,
-                                borderRadius: 999,
-                                background:
-                                    splash.progressBarTrackColor ||
-                                    "rgba(255,255,255,0.25)",
-                                overflow: "hidden",
-                            }}
-                        >
-                            <motion.div
-                                key={`${splash.progressBarDuration}-${splash.progressBarDelay}-${splash.progressBarLoop}`}
-                                initial={{ width: "0%" }}
-                                animate={{ width: "100%" }}
-                                transition={{
-                                    duration: splash.progressBarDuration ?? 2,
-                                    delay: splash.progressBarDelay ?? 0,
-                                    ease: "linear",
-                                    repeat: splash.progressBarLoop
-                                        ? Infinity
-                                        : 0,
-                                    repeatType: "loop",
-                                }}
-                                style={{
-                                    height: "100%",
-                                    background:
-                                        splash.progressBarColor || "#FFFFFF",
-                                    borderRadius: 999,
-                                }}
-                            />
-                        </div>
-                    )}
                 </div>
             </div>
         )
@@ -1229,13 +1188,6 @@ LockScreen.defaultProps = {
         backgroundColorA: "#0B0F1A",
         backgroundColorB: "#1B2340",
         showProgressDots: true,
-        showProgressBar: false,
-        progressBarColor: "#FFFFFF",
-        progressBarTrackColor: "rgba(255,255,255,0.25)",
-        progressBarWidth: 160,
-        progressBarDuration: 2,
-        progressBarDelay: 0,
-        progressBarLoop: false,
         redirectUrl: "/base-pages/login",
         redirectDelay: 2.5,
     },
@@ -1756,60 +1708,6 @@ addPropertyControls(LockScreen, {
                 defaultValue: true,
                 enabledTitle: "On",
                 disabledTitle: "Off",
-            },
-            showProgressBar: {
-                type: ControlType.Boolean,
-                title: "Progress Bar",
-                defaultValue: false,
-                enabledTitle: "On",
-                disabledTitle: "Off",
-            },
-            progressBarColor: {
-                type: ControlType.Color,
-                title: "Bar Color",
-                defaultValue: "#FFFFFF",
-                hidden: (p) => !p.showProgressBar,
-            },
-            progressBarTrackColor: {
-                type: ControlType.Color,
-                title: "Bar Track Color",
-                defaultValue: "rgba(255,255,255,0.25)",
-                hidden: (p) => !p.showProgressBar,
-            },
-            progressBarWidth: {
-                type: ControlType.Number,
-                title: "Bar Width",
-                defaultValue: 160,
-                min: 40,
-                max: 400,
-                step: 1,
-                hidden: (p) => !p.showProgressBar,
-            },
-            progressBarDuration: {
-                type: ControlType.Number,
-                title: "Bar Duration (s)",
-                defaultValue: 2,
-                min: 0.1,
-                max: 15,
-                step: 0.1,
-                hidden: (p) => !p.showProgressBar,
-            },
-            progressBarDelay: {
-                type: ControlType.Number,
-                title: "Bar Delay (s)",
-                defaultValue: 0,
-                min: 0,
-                max: 10,
-                step: 0.1,
-                hidden: (p) => !p.showProgressBar,
-            },
-            progressBarLoop: {
-                type: ControlType.Boolean,
-                title: "Bar Loop",
-                defaultValue: false,
-                enabledTitle: "On",
-                disabledTitle: "Off",
-                hidden: (p) => !p.showProgressBar,
             },
             redirectUrl: {
                 type: ControlType.String,
