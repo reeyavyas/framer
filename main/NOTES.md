@@ -9,8 +9,44 @@ Site-wide, page-agnostic components — not owned by any single feature.
   shows a countdown and then automatically redirects back to the
   homepage, so the next person at the kiosk never inherits a stranger's
   left-open session.
+- **Hydration guard** — any code component rendering live date/time
+  (or other client-only dynamic values, e.g. weather) needs to hide
+  itself until the client has mounted, or the value Framer
+  pre-renders on the server can mismatch the client's first paint —
+  a visible flash of the wrong value, and can throw React error #425.
+  The fix is a `useIsMounted` hook (`useState(false)` flipped to
+  `true` in a `useEffect`) that gates the real render behind an
+  invisible `opacity:0, visibility:hidden` placeholder (sized to
+  `props.width`/`props.height`) until mount:
+  ```tsx
+  function useIsMounted() {
+      const [isMounted, setIsMounted] = useState(false)
+      useEffect(() => setIsMounted(true), [])
+      return isMounted
+  }
+  ```
+  Two ways to apply it — same hook, same effect:
+  1. **As a standalone Framer code override** (`withHydrationGuard`,
+     wraps `Component` from outside) — attach it in the layer's Code
+     panel. This is the general-purpose version for any component
+     that needs it, but it occupies that layer's one available
+     code-override slot (Framer allows only one override per layer —
+     see the Splash Timed Redirect note below).
+  2. **Baked directly into the component's own file** — split the
+     component into a thin default-exported wrapper that calls
+     `useIsMounted()` and either renders the placeholder or the real
+     (renamed, un-exported) implementation component. No override
+     needed, and it leaves that layer's override slot free for
+     something else. This is how `LockScreen.tsx` does it (see
+     below) — prefer this route for any *new* date/time component
+     instead of requiring a separately-applied override.
 - `LockScreen.tsx` — one code component, two `variant`s, for the
-  lock → splash → login flow:
+  lock → splash → login flow. Guards its own hydration internally
+  (see **Hydration guard** above): the default export is a thin
+  wrapper (`useIsMounted` + placeholder-or-render), and all the actual
+  variant logic below lives in the un-exported `LockScreenInner`. No
+  external `withHydrationGuard` override needed on this layer anymore
+  — that slot is free.
   - **Lock Screen** — live/custom clock + date, up to five fake
     notification banners (`notification1`-`notification5`, each a
     full app/title/message/icon/timestamp) that stack like a real
@@ -50,21 +86,27 @@ Site-wide, page-agnostic components — not owned by any single feature.
   color/duration/delay/easing/loop controls, independent of the
   Splash variant's built-in redirect timer above.
 - `SplashTimedRedirect.tsx` — plain code override (`SplashTimedRedirect`),
-  not a component. Apply it to the **Splash (Variant 2)** instance of
-  the Lock Screen layer specifically — it no-ops unless the layer's
-  `variant` prop reads `"splash"`. Waits 2.3s, then
-  `window.location.href`s to `/base-pages/login`; skipped on canvas.
-  Framer only allows one code override per layer — it can't be
-  stacked with another override on the same instance. It also
-  duplicates the Splash variant's own built-in redirect above (both
-  would fire), so use one or the other on a given instance, not both.
-  A Framer code override is applied to the *component*, not to one
-  instance's variant setting — applying one to a Lock Screen instance
-  applies it whichever `variant` that instance is on (Lock Screen or
-  Splash alike). There's no way to apply an override to one variant
-  only, which is exactly why this override guards itself internally
-  with `props.variant !== "splash"` instead of relying on Framer to
-  scope it.
+  not a component. Currently unused — `LockScreen.tsx`'s own built-in
+  Splash redirect (`splash.redirectDelay`/`splash.redirectUrl`, set on
+  the Splash instance's properties panel) covers this already, no
+  override needed. Kept around as a standalone alternative: if ever
+  applied, it goes on the **Splash (Variant 2)** instance of the Lock
+  Screen layer specifically — it no-ops unless the layer's `variant`
+  prop reads `"splash"`. Waits 2.3s, then `window.location.href`s to
+  `/base-pages/login`; skipped on canvas. Would duplicate the built-in
+  redirect if both ended up applied to the same instance (both would
+  fire) — use one or the other, not both.
+  Framer only allows one code override per layer, and a code override
+  is applied to the *component*, not to one instance's variant setting
+  — applying one to a Lock Screen instance applies it whichever
+  `variant` that instance is on (Lock Screen or Splash alike). There's
+  no way to apply an override to one variant only, which is exactly
+  why this override guards itself internally with
+  `props.variant !== "splash"` instead of relying on Framer to scope
+  it. (This is also why the hydration guard above is baked directly
+  into `LockScreen.tsx` rather than left as an external override —
+  otherwise it would eat the one override slot this component has,
+  which also can't be scoped to just the Lock Screen variant.)
 - `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
   wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
   `line3`, each a plain SVG path `d` string), along each of which a

@@ -103,6 +103,19 @@ function usePrefersReducedMotion() {
     return reduced
 }
 
+// Detects once we're safely running on the client (post-hydration).
+// LockScreen renders live date/time, which differs between Framer's
+// server pre-render and the client's first paint — rendering the real
+// component before this flips true risks a flash of mismatched text
+// (and React error #425). See the hydration guard note in NOTES.md.
+function useIsMounted() {
+    const [isMounted, setIsMounted] = React.useState(false)
+    React.useEffect(() => {
+        setIsMounted(true)
+    }, [])
+    return isMounted
+}
+
 function formatDate(d: Date) {
     const weekday = d.toLocaleDateString(undefined, { weekday: "short" })
     const month = d.toLocaleDateString(undefined, { month: "short" })
@@ -123,18 +136,7 @@ function rgba(r: number, g: number, b: number, a: number) {
     return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
-// Component
-/**
- * Fixed to the kiosk's native resolution — same convention as
- * InactivityOverlay.tsx — so dropping either variant onto the canvas
- * defaults to the real screen size instead of an arbitrary frame.
- *
- * @framerSupportedLayoutWidth fixed
- * @framerSupportedLayoutHeight fixed
- * @framerIntrinsicWidth 1080
- * @framerIntrinsicHeight 1920
- */
-export default function LockScreen(props) {
+function LockScreenInner(props) {
     const {
         variant = "lockScreen",
         // Flattened Time controls
@@ -1056,6 +1058,42 @@ export default function LockScreen(props) {
             </motion.div>
         </motion.div>
     )
+}
+
+// Component
+/**
+ * Fixed to the kiosk's native resolution — same convention as
+ * InactivityOverlay.tsx — so dropping either variant onto the canvas
+ * defaults to the real screen size instead of an arbitrary frame.
+ *
+ * @framerSupportedLayoutWidth fixed
+ * @framerSupportedLayoutHeight fixed
+ * @framerIntrinsicWidth 1080
+ * @framerIntrinsicHeight 1920
+ */
+// Hydration guard baked directly into the component instead of relying
+// on a separately-applied Framer code override — LockScreen has live
+// date/time on the lockScreen variant, so it needs this regardless, and
+// keeping it in-file leaves the layer's one available code-override
+// slot free for something else (e.g. a redirect override on the same
+// instance). Renders an invisible placeholder matching the requested
+// size until mounted, then swaps in the real component — identical
+// behavior to the external `withHydrationGuard` override this replaces.
+export default function LockScreen(props) {
+    const isMounted = useIsMounted()
+    if (!isMounted) {
+        return (
+            <div
+                style={{
+                    opacity: 0,
+                    visibility: "hidden",
+                    width: props.width || "100%",
+                    height: props.height || "100%",
+                }}
+            />
+        )
+    }
+    return <LockScreenInner {...props} />
 }
 
 // Default Setup Canvas Configuration
