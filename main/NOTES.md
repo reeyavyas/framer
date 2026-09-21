@@ -84,10 +84,17 @@ Site-wide, page-agnostic components — not owned by any single feature.
   Wire `onSwipeUp` on the Lock Screen instance to navigate to whatever
   page/frame holds your own splash composition.
 - **The Splash screen is hand-built in Framer, not code.** It lives
-  inside the project's own "Phone Lock & Splash" composition as its
-  own frame — its own native Framer animations, plus
-  `SplashProgressBar.tsx` and custom glow-pulse frames — not as a
-  `LockScreen.tsx` variant. `LockScreen.tsx` has no knowledge of it.
+  inside the project's own "Phone Lock & Splash" component as its own
+  frame — not as a `LockScreen.tsx` variant, which has no knowledge of
+  it. Confirmed structure (Base Pages / Lock Screen page): "Phone Lock
+  & Splash" has two Framer-native Variants — "LockScreen" (Primary)
+  and "splash". Each Variant has its own "BG Elements" > "Splash
+  Elements" frame; the one inside the **"splash" Variant** is the real
+  one — it holds `Logo`, `SplashProgressBar` (`SplashProgre...` in the
+  layers list), two `GlowPulseSplash` layers, and the `Splash Stroke
+  Paths` vector group. `SplashTimedRedirect` (see below) is applied to
+  that "Splash Elements" frame specifically, inside the "splash"
+  Variant — not the LockScreen Variant's copy of the same frame name.
 - `SplashProgressBar.tsx` — standalone layer for a gradient-fill
   loading bar with a shimmer sheen and a glowing dot riding the
   leading edge, all driven off one shared progress value so they
@@ -95,9 +102,13 @@ Site-wide, page-agnostic components — not owned by any single feature.
   it like any other layer; own color/duration/delay/easing/loop
   controls.
 - `SplashTimedRedirect.tsx` — plain code override (`SplashTimedRedirect`),
-  not a component. **This is the actual redirect mechanism** — apply
-  it directly to whatever layer/component is your own splash frame
-  (not to `LockScreen.tsx`, which doesn't have one).
+  not a component — exported as `(Component) => Component`, which is
+  what makes Framer list it under a layer's **Code** section rather
+  than as a draggable layer. **Confirmed working**, applied to the
+  "Splash Elements" frame inside the "splash" Variant of "Phone Lock &
+  Splash" (see above) — nothing about the override cares what the
+  layer is named; it only matters that it's attached to the layer
+  that's actually the splash content.
   Doesn't rely on mount timing (that only fires correctly if the
   splash frame is its own separately-mounted layer — it wouldn't
   catch a Framer-native Variant switch or a Show/Hide toggle inside
@@ -107,12 +118,6 @@ Site-wide, page-agnostic components — not owned by any single feature.
   ancestor — and fires 2.3s after first seen visible, resetting (and
   re-arming) if it goes hidden again. `window.location.href`s to
   `/base-pages/login`; skipped on the Framer canvas.
-  This is a best-effort, mechanism-agnostic approach since we don't
-  know exactly how the splash frame's visibility is implemented in
-  the "Phone Lock & Splash" composition — if it turns out to fire at
-  the wrong time (too early/late, or not at all), the likely culprit
-  is `POLL_INTERVAL_MS` or the visibility check itself, both isolated
-  at the top of the file.
   Framer only allows one code override per layer (this is why the
   hydration guard above is baked directly into `LockScreen.tsx`
   instead of left as an external override — it would otherwise eat
