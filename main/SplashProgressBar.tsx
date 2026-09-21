@@ -14,7 +14,7 @@ import { motion } from "framer-motion"
  * @framerIntrinsicWidth 160
  * @framerIntrinsicHeight 6
  */
-export default function ProgressBar(props) {
+export default function SplashProgressBar(props) {
     const {
         barColor,
         trackColor,
@@ -63,7 +63,7 @@ export default function ProgressBar(props) {
     )
 }
 
-ProgressBar.defaultProps = {
+SplashProgressBar.defaultProps = {
     barColor: "#FFFFFF",
     trackColor: "rgba(255,255,255,0.25)",
     cornerRadius: 999,
@@ -74,7 +74,7 @@ ProgressBar.defaultProps = {
     loopPause: 0,
 }
 
-addPropertyControls(ProgressBar, {
+addPropertyControls(SplashProgressBar, {
     barColor: {
         type: ControlType.Color,
         title: "Bar Color",
