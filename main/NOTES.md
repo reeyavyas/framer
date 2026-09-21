@@ -130,7 +130,24 @@ Site-wide, page-agnostic components — not owned by any single feature.
   screenshot, not an exact match — paste the real `d` data from the
   wallpaper's source vector art (Figma/Illustrator/AE export) into a
   line's "SVG Path" field for a pixel-perfect trace. Drop it on top of
-  the wallpaper layer, behind the LockScreen component.
+  the wallpaper layer, behind the LockScreen component. Superseded in
+  practice by `VectorPathGlow.tsx` below for any *new* vector-path
+  glow needs — kept here since it's still in use where it already is.
+- `VectorPathGlow.tsx` — same glowing-path idea as `WingPulseLines.tsx`,
+  but for an existing vector layer instead of a traced/pasted path:
+  drag your actual vector layer **inside** this component (nest it as
+  a child on canvas) and it reads the real rendered SVG path(s)
+  straight off the DOM (`getTotalLength()`), including compound
+  shapes (multiple `<path>`s) — no copying `d` data out, always exact
+  to whatever's actually drawn. Two modes, **Flowing Sweep** (a glow
+  travels continuously along the stroke) and **Soft Breathe** (the
+  whole stroke's glow pulses in place); sweep length is a *percentage*
+  of the path's own measured length rather than a fixed pixel number,
+  so it scales correctly regardless of the path's size — the fixed-
+  pixel pulse in `WingPulseLines.tsx` is what made it look "comically
+  small" on a longer real path. It's a regular drag-and-drop component
+  (not a code override — overrides don't get their own property
+  panel, unlike what an earlier draft of this file assumed).
 
 ## Removed
 
