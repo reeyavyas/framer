@@ -137,17 +137,30 @@ Site-wide, page-agnostic components — not owned by any single feature.
   but for an existing vector layer instead of a traced/pasted path:
   drag your actual vector layer **inside** this component (nest it as
   a child on canvas) and it reads the real rendered SVG path(s)
-  straight off the DOM (`getTotalLength()`), including compound
-  shapes (multiple `<path>`s) — no copying `d` data out, always exact
-  to whatever's actually drawn. Two modes, **Flowing Sweep** (a glow
-  travels continuously along the stroke) and **Soft Breathe** (the
-  whole stroke's glow pulses in place); sweep length is a *percentage*
-  of the path's own measured length rather than a fixed pixel number,
-  so it scales correctly regardless of the path's size — the fixed-
-  pixel pulse in `WingPulseLines.tsx` is what made it look "comically
-  small" on a longer real path. It's a regular drag-and-drop component
-  (not a code override — overrides don't get their own property
-  panel, unlike what an earlier draft of this file assumed).
+  straight off the DOM (`getTotalLength()`) — no copying `d` data out,
+  always exact to whatever's actually drawn. Two modes, **Flowing
+  Sweep** (a glow travels continuously along the stroke) and **Soft
+  Breathe** (the whole stroke's glow pulses in place). It's a regular
+  drag-and-drop component (not a code override — overrides don't get
+  their own property panel, unlike what an earlier draft of this file
+  assumed).
+  Verified against the real wing-lines SVG, which mixes a filled
+  (`fill-opacity:0`) decorative silhouette alongside actual stroked
+  line art at two different weights (6px / 20px) — informed two
+  design choices:
+  - Only `<path>`s with an actual stroke (`getComputedStyle` checked)
+    are picked up; a filled shape with no stroke is skipped rather
+    than glow-swept along its outline.
+  - The glow is an overlay on top of your real, already-rendered
+    artwork — it does **not** redraw a duplicate base line in a
+    picked color/width, so mixed native stroke weights in the source
+    art stay untouched. **Glow Width** is a *multiple* of each path's
+    own native stroke-width rather than one fixed size shared across
+    paths of different weight, and **Sweep Length (%)** is a
+    *percentage* of that path's own measured length rather than a
+    fixed pixel number — both scale correctly regardless of a given
+    path's size/weight, unlike `WingPulseLines.tsx`'s fixed-pixel
+    pulse (what made it look "comically small" on a longer real path).
 
 ## Removed
 
