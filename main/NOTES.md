@@ -58,6 +58,13 @@ Site-wide, page-agnostic components — not owned by any single feature.
   stacked with another override on the same instance. It also
   duplicates the Splash variant's own built-in redirect above (both
   would fire), so use one or the other on a given instance, not both.
+  A Framer code override is applied to the *component*, not to one
+  instance's variant setting — applying one to a Lock Screen instance
+  applies it whichever `variant` that instance is on (Lock Screen or
+  Splash alike). There's no way to apply an override to one variant
+  only, which is exactly why this override guards itself internally
+  with `props.variant !== "splash"` instead of relying on Framer to
+  scope it.
 - `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
   wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
   `line3`, each a plain SVG path `d` string), along each of which a
