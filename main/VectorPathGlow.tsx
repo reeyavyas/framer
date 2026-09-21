@@ -5,13 +5,27 @@ import { addPropertyControls, ControlType } from "framer"
 // this component (nest it as a child on canvas), and it reads the
 // real rendered SVG path(s) straight from the DOM (getTotalLength())
 // instead of requiring path data to be traced and pasted in. Always
-// exact to whatever you actually drew, and works on compound shapes
-// (multiple <path> elements) by animating each one.
+// exact to whatever you actually drew.
 //
-// Sweep/glow size is a PERCENTAGE of each path's own measured length,
-// not a fixed pixel number — WingPulseLines.tsx's fixed-length pulse
-// looked "comically small" on paths longer than the one it was tuned
-// against. A percentage scales correctly regardless of path size.
+// Only picks up paths that actually have a stroke (checked via
+// getComputedStyle) — a filled decorative shape with no stroke (e.g.
+// an invisible fill-opacity:0 silhouette sitting alongside the real
+// line art, as in the wing-lines SVG this was built against) is
+// skipped rather than glow-swept along its outline.
+//
+// Glow width is a MULTIPLE of each path's own native stroke-width,
+// not one fixed size applied to every path — real artwork often mixes
+// weights (e.g. thin guide lines next to one thicker hero stroke), so
+// a single fixed glow width either buries the thin lines or looks too
+// thin against the thick one. Sweep length is likewise a PERCENTAGE
+// of each path's own measured length, not a fixed pixel number —
+// WingPulseLines.tsx's fixed-length pulse looked "comically small" on
+// paths longer than the one it was tuned against.
+//
+// Renders only the glow on top of your existing artwork (which is
+// still visible underneath via `children`) — it doesn't redraw a
+// duplicate base line, so your real stroke colors/widths are
+// untouched.
 //
 // Two modes:
 // - "sweep": a soft glowing highlight travels continuously along the
@@ -19,29 +33,29 @@ import { addPropertyControls, ControlType } from "framer"
 // - "breathe": the whole stroke's glow intensity pulses in place, no
 //   directional motion.
 
+type PathInfo = { d: string; nativeStrokeWidth: number }
+
 function AnimatedPath({
-    d,
+    path,
     mode,
-    color,
     glowColor,
-    strokeWidth,
-    glowWidth,
+    glowWidthScale,
     glowBlur,
     sweepPercent,
     speed,
     delay,
 }: {
-    d: string
+    path: PathInfo
     mode: string
-    color: string
     glowColor: string
-    strokeWidth: number
-    glowWidth: number
+    glowWidthScale: number
     glowBlur: number
     sweepPercent: number
     speed: number
     delay: number
 }) {
+    const { d, nativeStrokeWidth } = path
+    const glowWidth = nativeStrokeWidth * glowWidthScale
     const measureRef = React.useRef<SVGPathElement>(null)
     const [length, setLength] = React.useState(0)
 
@@ -53,13 +67,6 @@ function AnimatedPath({
         return (
             <>
                 <path ref={measureRef} d={d} fill="none" stroke="none" />
-                <path
-                    d={d}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth={strokeWidth}
-                    strokeLinecap="round"
-                />
                 <path
                     d={d}
                     fill="none"
@@ -82,14 +89,6 @@ function AnimatedPath({
     return (
         <>
             <path ref={measureRef} d={d} fill="none" stroke="none" />
-            <path
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeWidth={strokeWidth}
-                strokeOpacity={0.3}
-                strokeLinecap="round"
-            />
             {length > 0 && (
                 <>
                     <style>{`
@@ -127,10 +126,8 @@ function AnimatedPath({
 export default function VectorPathGlow(props) {
     const {
         mode,
-        color,
         glowColor,
-        strokeWidth,
-        glowWidth,
+        glowWidthScale,
         glowBlur,
         sweepPercent,
         speed,
@@ -139,7 +136,7 @@ export default function VectorPathGlow(props) {
     } = props
 
     const wrapperRef = React.useRef<HTMLDivElement>(null)
-    const [paths, setPaths] = React.useState<string[]>([])
+    const [paths, setPaths] = React.useState<PathInfo[]>([])
 
     React.useEffect(() => {
         if (!wrapperRef.current) return
@@ -147,8 +144,17 @@ export default function VectorPathGlow(props) {
             wrapperRef.current.querySelectorAll("path")
         ) as SVGPathElement[]
         const found = nodes
-            .map((n) => n.getAttribute("d"))
-            .filter((d): d is string => !!d)
+            .filter((n) => {
+                const stroke = window.getComputedStyle(n).stroke
+                return stroke && stroke !== "none"
+            })
+            .map((n) => {
+                const d = n.getAttribute("d")
+                const nativeStrokeWidth =
+                    parseFloat(window.getComputedStyle(n).strokeWidth) || 2
+                return d ? { d, nativeStrokeWidth } : null
+            })
+            .filter((p): p is PathInfo => !!p)
         setPaths(found)
     }, [children])
 
@@ -169,15 +175,13 @@ export default function VectorPathGlow(props) {
                         overflow: "visible",
                     }}
                 >
-                    {paths.map((d, i) => (
+                    {paths.map((path, i) => (
                         <AnimatedPath
                             key={i}
-                            d={d}
+                            path={path}
                             mode={mode}
-                            color={color}
                             glowColor={glowColor}
-                            strokeWidth={strokeWidth}
-                            glowWidth={glowWidth}
+                            glowWidthScale={glowWidthScale}
                             glowBlur={glowBlur}
                             sweepPercent={sweepPercent}
                             speed={speed}
@@ -198,10 +202,8 @@ export default function VectorPathGlow(props) {
 
 VectorPathGlow.defaultProps = {
     mode: "sweep",
-    color: "#5EC8FF",
-    glowColor: "#5EC8FF",
-    strokeWidth: 2,
-    glowWidth: 14,
+    glowColor: "#FFFFFF",
+    glowWidthScale: 3,
     glowBlur: 10,
     sweepPercent: 40,
     speed: 4,
@@ -216,31 +218,18 @@ addPropertyControls(VectorPathGlow, {
         optionTitles: ["Flowing Sweep", "Soft Breathe"],
         defaultValue: "sweep",
     },
-    color: {
-        type: ControlType.Color,
-        title: "Base Color",
-        defaultValue: "#5EC8FF",
-    },
     glowColor: {
         type: ControlType.Color,
         title: "Glow Color",
-        defaultValue: "#5EC8FF",
+        defaultValue: "#FFFFFF",
     },
-    strokeWidth: {
+    glowWidthScale: {
         type: ControlType.Number,
-        title: "Base Stroke Width",
-        defaultValue: 2,
-        min: 0,
-        max: 20,
+        title: "Glow Width (× stroke)",
+        defaultValue: 3,
+        min: 1,
+        max: 10,
         step: 0.5,
-    },
-    glowWidth: {
-        type: ControlType.Number,
-        title: "Glow Stroke Width",
-        defaultValue: 14,
-        min: 2,
-        max: 60,
-        step: 1,
     },
     glowBlur: {
         type: ControlType.Number,
