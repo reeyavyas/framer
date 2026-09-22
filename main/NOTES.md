@@ -122,48 +122,16 @@ Site-wide, page-agnostic components — not owned by any single feature.
   hydration guard above is baked directly into `LockScreen.tsx`
   instead of left as an external override — it would otherwise eat
   this component's one override slot).
-- `WingPulseLines.tsx` — transparent SVG overlay for the wing-line
-  wallpaper behind the lock screen: 3 editable curves (`line1`/`line2`/
-  `line3`, each a plain SVG path `d` string), along each of which a
-  glowing pulse travels continuously and loops. The 3 default paths
-  are a visual approximation of the wallpaper's curves traced from a
-  screenshot, not an exact match — paste the real `d` data from the
-  wallpaper's source vector art (Figma/Illustrator/AE export) into a
-  line's "SVG Path" field for a pixel-perfect trace. Drop it on top of
-  the wallpaper layer, behind the LockScreen component. Superseded in
-  practice by `VectorPathGlow.tsx` below for any *new* vector-path
-  glow needs — kept here since it's still in use where it already is.
-- `VectorPathGlow.tsx` — same glowing-path idea as `WingPulseLines.tsx`,
-  but for an existing vector layer instead of a traced/pasted path:
-  drag your actual vector layer **inside** this component (nest it as
-  a child on canvas) and it reads the real rendered SVG path(s)
-  straight off the DOM (`getTotalLength()`) — no copying `d` data out,
-  always exact to whatever's actually drawn. Two modes, **Flowing
-  Sweep** (a glow travels continuously along the stroke) and **Soft
-  Breathe** (the whole stroke's glow pulses in place). It's a regular
-  drag-and-drop component (not a code override — overrides don't get
-  their own property panel, unlike what an earlier draft of this file
-  assumed).
-  Verified against the real wing-lines SVG, which mixes a filled
-  (`fill-opacity:0`) decorative silhouette alongside actual stroked
-  line art at two different weights (6px / 20px) — informed two
-  design choices:
-  - Only `<path>`s with an actual stroke (`getComputedStyle` checked)
-    are picked up; a filled shape with no stroke is skipped rather
-    than glow-swept along its outline.
-  - The glow is an overlay on top of your real, already-rendered
-    artwork — it does **not** redraw a duplicate base line in a
-    picked color/width, so mixed native stroke weights in the source
-    art stay untouched. **Glow Width** is a *multiple* of each path's
-    own native stroke-width rather than one fixed size shared across
-    paths of different weight, and **Sweep Length (%)** is a
-    *percentage* of that path's own measured length rather than a
-    fixed pixel number — both scale correctly regardless of a given
-    path's size/weight, unlike `WingPulseLines.tsx`'s fixed-pixel
-    pulse (what made it look "comically small" on a longer real path).
-
 ## Removed
 
+- `WingPulseLines.tsx` / `VectorPathGlow.tsx` — both were attempts at
+  a glowing-pulse-along-a-vector-path effect (first via traced/pasted
+  path data, then via a `ControlType.ComponentInstance` picker reading
+  the real path off an existing layer). Not being used at all — the
+  glow pulses on the splash screen are instead hand-built in Framer
+  itself (`GlowPulseSplash` layers, per the Splash screen note above).
+  Deleted from this branch; the git history still has both if this
+  direction ever comes back up.
 - `backgrounds/` — three animated gradient presets
   (`NeatGradient1.tsx`, `bluemotionbackgeound.tsx`,
   `bluemotionbackground2.tsx`, via
