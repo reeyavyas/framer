@@ -982,6 +982,13 @@ export function BillsCircle(
 // button (two separate top-level components) with no add-on needed.
 const BUDGETS_VARIANT_EVENT = "budgets:variant2"
 
+// One physical tap reaches all three handlers below (pointerdown, then
+// Framer's onTap, then the browser's click). All three stay wired so the
+// bridge still fires whichever of them Framer reliably delivers, but only
+// the first within this window actually sends the event: one signal per
+// tap instead of three.
+const BRIDGE_DEDUPE_MS = 500
+
 // Apply to the Save button. Fires the bridge event on click, then calls
 // through to whatever onClick/onTap Framer's own interactions already
 // attached (e.g. Close Overlay) so this doesn't replace that behavior.
@@ -989,35 +996,33 @@ export function withBudgetsVariantTrigger(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const fire = useCallback(
-            (event: any, source: string) => {
-                console.log(`[budgets-bridge] ${source} fired on trigger`)
-                if (typeof window !== "undefined") {
-                    window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
-                    console.log("[budgets-bridge] dispatched", BUDGETS_VARIANT_EVENT)
-                }
-            },
-            []
-        )
+        const lastFiredAtRef = useRef(0)
+        const fire = useCallback(() => {
+            if (typeof window === "undefined") return
+            const now = Date.now()
+            if (now - lastFiredAtRef.current < BRIDGE_DEDUPE_MS) return
+            lastFiredAtRef.current = now
+            window.dispatchEvent(new CustomEvent(BUDGETS_VARIANT_EVENT))
+        }, [])
 
         const handleClick = useCallback(
             (event: any) => {
                 props.onClick?.(event)
-                fire(event, "onClick")
+                fire()
             },
             [props, fire]
         )
         const handleTap = useCallback(
             (event: any, info: any) => {
                 props.onTap?.(event, info)
-                fire(event, "onTap")
+                fire()
             },
             [props, fire]
         )
         const handlePointerDown = useCallback(
             (event: any) => {
                 props.onPointerDown?.(event)
-                fire(event, "onPointerDown")
+                fire()
             },
             [props, fire]
         )
