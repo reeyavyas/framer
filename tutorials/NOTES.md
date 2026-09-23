@@ -195,6 +195,14 @@ anywhere else on the page.
   that a simulated tap flips the Card Controls card toggle and all
   three Card Alerts toggles and advances their steps.
 
+  While `AppInactivityOverlay`'s "Are you still there?" box is open
+  (`window.__systemOverlayOpen` / `system-overlay-change`), the active
+  step pauses: its `nextStepAfterSeconds`/`autoAdvanceAfterSeconds`
+  timers stop, scrolling doesn't advance it, and scroll gestures are
+  swallowed instead of moving the page behind the box. On "YES, I'M
+  HERE" the timers restart from their full duration and the progress
+  bar restarts with them (`resumeCount` key).
+
   `glowDelaySeconds` (and the `glowShown` state/timer effect that only
   existed to support it) was removed as unused — the glow now just
   shows immediately whenever `showGlow` is on, same as it always did

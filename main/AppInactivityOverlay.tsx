@@ -4,7 +4,7 @@ import { RenderTarget } from "framer"
 
 // Edit these two values directly — they're shared by every instance of
 // this component across every page, with no per-page property to manage.
-const INACTIVITY_MINUTES = 3 // ~6 seconds — TEMP for testing, set back to 5 after
+const INACTIVITY_MINUTES = 3
 const COUNTDOWN_SECONDS = 30
 
 /**
@@ -161,6 +161,27 @@ export default function AppInactivityOverlay() {
             goHome()
         }
     }, [isCanvas, countdown, isVisible, clearCountdownInterval, goHome])
+
+    // Announce open/closed to the rest of the page, so a tutorial step
+    // (TutorialOverlay.tsx) can pause underneath while this is up — its
+    // timers, scroll hand-off and scroll redirection would otherwise keep
+    // running behind the "Are you still there?" box. A window flag (for a
+    // step that mounts while this is already open) plus an event (for
+    // steps already mounted), not an import: this file and
+    // TutorialOverlay.tsx live in different top-level folders, and a
+    // cross-folder import doesn't resolve reliably in Framer (see
+    // tutorials/NOTES.md). Cleared on unmount too, so a page navigation
+    // while open can't leave the flag stuck on.
+    React.useEffect(() => {
+        if (isCanvas || !isVisible) return
+        const w = window as any
+        w.__systemOverlayOpen = true
+        window.dispatchEvent(new Event("system-overlay-change"))
+        return () => {
+            w.__systemOverlayOpen = false
+            window.dispatchEvent(new Event("system-overlay-change"))
+        }
+    }, [isCanvas, isVisible])
 
     // Cleanup on unmount.
     React.useEffect(() => {

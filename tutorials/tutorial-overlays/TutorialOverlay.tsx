@@ -510,6 +510,30 @@ export default function TutorialOverlay(props: Props) {
         if (pageGroup) setPageStep(pageGroup, stepNumber + 1)
     }, [pageGroup, stepNumber])
 
+    // Paused while AppInactivityOverlay's "Are you still there?" box is
+    // up (it sets window.__systemOverlayOpen and fires
+    // "system-overlay-change" — see that file). While paused this step's
+    // timers stop, scrolling doesn't advance it, and scroll gestures go
+    // nowhere instead of moving the page behind the box. On resume
+    // ("YES, I'M HERE") the timers start over from the full duration
+    // rather than resuming mid-way, and resumeCount remounts the progress
+    // bar so it starts over in step with them.
+    const [systemPaused, setSystemPaused] = React.useState(false)
+    const [resumeCount, setResumeCount] = React.useState(0)
+    const systemPausedRef = React.useRef(false)
+    React.useEffect(() => {
+        if (isCanvas) return
+        function sync() {
+            const open = !!(window as any).__systemOverlayOpen
+            if (systemPausedRef.current && !open) setResumeCount((c) => c + 1)
+            systemPausedRef.current = open
+            setSystemPaused(open)
+        }
+        sync()
+        window.addEventListener("system-overlay-change", sync)
+        return () => window.removeEventListener("system-overlay-change", sync)
+    }, [isCanvas])
+
     React.useEffect(() => setMounted(true), [])
     React.useEffect(() => setArrowShown(false), [target])
 
@@ -620,6 +644,7 @@ export default function TutorialOverlay(props: Props) {
             isCanvas ||
             !active ||
             !isMyTurn ||
+            systemPaused ||
             !autoAdvanceAfterSeconds ||
             !autoAdvanceLink
         )
@@ -631,18 +656,39 @@ export default function TutorialOverlay(props: Props) {
             Math.max(autoAdvanceAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [isCanvas, active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        systemPaused,
+        autoAdvanceAfterSeconds,
+        autoAdvanceLink,
+    ])
 
     // Optional timer-driven hand-off to the next step on THIS page —
     // independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !nextStepAfterSeconds) return
+        if (
+            isCanvas ||
+            !active ||
+            !isMyTurn ||
+            systemPaused ||
+            !nextStepAfterSeconds
+        )
+            return
         const t = setTimeout(
             advanceStep,
             Math.max(nextStepAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [isCanvas, active, isMyTurn, nextStepAfterSeconds, advanceStep])
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        systemPaused,
+        nextStepAfterSeconds,
+        advanceStep,
+    ])
 
     // Skip moves the user on to the next step, wherever it is — same page
     // or the next one — by doing whatever this step's own advance
@@ -913,7 +959,14 @@ export default function TutorialOverlay(props: Props) {
     // of native scrollTop/scroll events — there's nothing native to
     // listen to once a container's scrolling has been taken over.
     React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !scrollAdvancesStep) return
+        if (
+            isCanvas ||
+            !active ||
+            !isMyTurn ||
+            systemPaused ||
+            !scrollAdvancesStep
+        )
+            return
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (virtual) {
             function checkVirtual() {
@@ -952,6 +1005,7 @@ export default function TutorialOverlay(props: Props) {
         isCanvas,
         active,
         isMyTurn,
+        systemPaused,
         scrollAdvancesStep,
         scrollDirection,
         scrollContainerTarget,
@@ -1004,7 +1058,14 @@ export default function TutorialOverlay(props: Props) {
         if (isCanvas || !active || !isMyTurn) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
+        // While paused (see systemPausedRef), swallow scroll gestures
+        // instead of redirecting them, so the page behind the "Are you
+        // still there?" box stays put.
         function onWheel(e: WheelEvent) {
+            if (systemPausedRef.current) {
+                e.preventDefault()
+                return
+            }
             scrollTarget = findScrollableAt(e.clientX, e.clientY)
             scrollByOn(scrollTarget, e.deltaY, e.deltaX)
             e.preventDefault()
@@ -1017,6 +1078,10 @@ export default function TutorialOverlay(props: Props) {
             )
         }
         function onTouchMove(e: TouchEvent) {
+            if (systemPausedRef.current) {
+                e.preventDefault()
+                return
+            }
             const y = e.touches[0].clientY
             scrollByOn(scrollTarget, lastY - y)
             lastY = y
@@ -1440,6 +1505,7 @@ export default function TutorialOverlay(props: Props) {
                                                     remount), so it always
                                                     restarts at 0%. */}
                                                 <motion.div
+                                                    key={resumeCount}
                                                     initial={{ width: "0%" }}
                                                     animate={{
                                                         width: "100%",

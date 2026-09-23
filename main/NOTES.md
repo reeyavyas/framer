@@ -12,7 +12,10 @@ Site-wide, page-agnostic components — not owned by any single feature.
   through `goHome`, the one place the redirect path lives. Its
   backdrop blur is skipped on pages with the `CurvedCarouselV2` flip
   cards: on Windows Chrome/Edge the blur paints a stray rectangular
-  shadow on the centered card.
+  shadow on the centered card. While open it sets
+  `window.__systemOverlayOpen` and fires a `system-overlay-change`
+  event, which `TutorialOverlay.tsx` uses to pause the tutorial step
+  underneath.
   Renamed from `InactivityOverlay.tsx` when the redirect changed from
   `/` to `/app`. **TODO once this branch is merged into `main`:** in
   the Framer project, replace every placed `InactivityOverlay` with
