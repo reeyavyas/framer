@@ -13,7 +13,7 @@ const COUNTDOWN_SECONDS = 30
  * @framerIntrinsicWidth 1080
  * @framerIntrinsicHeight 1920
  */
-export default function InactivityOverlay() {
+export default function AppInactivityOverlay() {
     const [isVisible, setIsVisible] = React.useState(false)
     const [countdown, setCountdown] = React.useState(COUNTDOWN_SECONDS)
     const [animateIn, setAnimateIn] = React.useState(false)
@@ -64,7 +64,7 @@ export default function InactivityOverlay() {
 
     const goHome = React.useCallback(() => {
         if (typeof window !== "undefined") {
-            window.location.href = "/"
+            window.location.href = "/app"
         }
     }, [])
 

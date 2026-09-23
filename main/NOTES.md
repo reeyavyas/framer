@@ -4,13 +4,21 @@ Site-wide, page-agnostic components — not owned by any single feature.
 
 ## Current
 
-- `InactivityOverlay.tsx` — kiosk idle-timeout redirect. If the kiosk
-  sits untouched for the configured period (currently ~3 minutes), it
-  shows a countdown and then automatically redirects back to the
-  homepage, so the next person at the kiosk never inherits a stranger's
-  left-open session. Its backdrop blur is skipped on pages with the
-  `CurvedCarouselV2` flip cards: on Windows Chrome/Edge the blur paints
-  a stray rectangular shadow on the centered card.
+- `AppInactivityOverlay.tsx` — kiosk idle-timeout redirect. If the
+  kiosk sits untouched for the configured period (currently ~3
+  minutes), it shows a countdown and then automatically redirects to
+  `/app`, so the next person at the kiosk never inherits a stranger's
+  left-open session. Both the countdown and the RETURN HOME button go
+  through `goHome`, the one place the redirect path lives. Its
+  backdrop blur is skipped on pages with the `CurvedCarouselV2` flip
+  cards: on Windows Chrome/Edge the blur paints a stray rectangular
+  shadow on the centered card.
+  Renamed from `InactivityOverlay.tsx` when the redirect changed from
+  `/` to `/app`. **TODO once this branch is merged into `main`:** in
+  the Framer project, replace every placed `InactivityOverlay` with
+  `AppInactivityOverlay` (Framer treats the renamed file as a new
+  component and won't swap existing instances), then delete the old
+  `InactivityOverlay` code file there.
 - **Hydration guard** — any code component rendering live date/time
   (or other client-only dynamic values, e.g. weather) needs to hide
   itself until the client has mounted, or the value Framer
