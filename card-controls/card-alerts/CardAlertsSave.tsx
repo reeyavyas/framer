@@ -1,7 +1,11 @@
 import * as React from "react"
 import type { ComponentType } from "react"
 import { RenderTarget } from "framer"
-import { anyToggleOn, subscribeToggles } from "./CardAlertsToggleReport.tsx"
+import {
+    anyToggleOn,
+    resetToggles,
+    subscribeToggles,
+} from "./CardAlertsToggleReport.tsx"
 
 /**
  * CardAlertsSave
@@ -146,6 +150,10 @@ function renderCardAlertsSave(
 
         React.useEffect(() => {
             if (isCanvas) return
+            // Fresh visit to the page: every switch has just remounted
+            // showing Off, so start the flags there too (see
+            // resetToggles in CardAlertsToggleReport.tsx).
+            resetToggles()
             return subscribeToggles(forceUpdate)
         }, [isCanvas])
 
