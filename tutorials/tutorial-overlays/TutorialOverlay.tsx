@@ -26,7 +26,8 @@ import { getVirtualScroll } from "./VirtualScroll.tsx"
  *    each instance a `stepNumber` (1, 2, 3, …); only the current step
  *    shows itself, and one of three triggers hands off to the next
  *    stepNumber in that same group: `clickAdvancesStep` (tap the real
- *    target), `nextStepAfterSeconds` (a timer, no tap needed), or
+ *    target — optionally held on screen `clickAdvanceDelaySeconds`
+ *    after the tap), `nextStepAfterSeconds` (a timer, no tap needed), or
  *    `scrollAdvancesStep` + `scrollThresholdPercent` (for a beat like
  *    "scroll down to see more" that has no tap target at all — point
  *    `scrollContainerTarget` at the real scrollable element, tagged
@@ -92,6 +93,7 @@ interface Props {
     pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
     stepNumber: number // 1-based position within pageGroup
     clickAdvancesStep: boolean // tapping the real target hands off to stepNumber + 1
+    clickAdvanceDelaySeconds: number // hold this step on screen this long after the tap before handing off — e.g. so a tap-triggered animation (and any delayed navigation it does itself) can play out under the overlay
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
@@ -422,6 +424,7 @@ export default function TutorialOverlay(props: Props) {
         pageGroup,
         stepNumber,
         clickAdvancesStep,
+        clickAdvanceDelaySeconds,
         nextStepAfterSeconds,
         scrollAdvancesStep,
         scrollDirection,
@@ -670,24 +673,46 @@ export default function TutorialOverlay(props: Props) {
     // watches for a real tap landing inside this step's hole. It never
     // calls preventDefault/stopPropagation, so the real element
     // underneath still gets the real click; we just also notice it.
+    //
+    // clickAdvanceDelaySeconds holds the step (card, dim, glow) on screen
+    // for that long after the tap before handing off — for a target whose
+    // tap kicks off its own animation (e.g. the login page's fingerprint,
+    // whose FingerprintDelayedNavigation override navigates 1.5s after
+    // the tap) that should play out under the overlay rather than have
+    // the step vanish the instant it's tapped. Only the first tap starts
+    // the timer; repeat taps while it's pending are ignored.
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
+        let pending: ReturnType<typeof setTimeout> | null = null
         function onPointerDown(e: PointerEvent) {
             const r = rectRef.current
             if (
+                !pending &&
                 r &&
                 e.clientX >= r.left &&
                 e.clientX <= r.right &&
                 e.clientY >= r.top &&
                 e.clientY <= r.bottom
             ) {
-                advanceStep()
+                const delayMs =
+                    Math.max(clickAdvanceDelaySeconds || 0, 0) * 1000
+                if (delayMs > 0) pending = setTimeout(advanceStep, delayMs)
+                else advanceStep()
             }
         }
         window.addEventListener("pointerdown", onPointerDown, true)
-        return () =>
+        return () => {
             window.removeEventListener("pointerdown", onPointerDown, true)
-    }, [isCanvas, active, isMyTurn, clickAdvancesStep, advanceStep])
+            if (pending) clearTimeout(pending)
+        }
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        clickAdvancesStep,
+        clickAdvanceDelaySeconds,
+        advanceStep,
+    ])
 
     // Scroll-driven hand-off — for a beat like "scroll down to see your
     // other accounts" (scrollDirection "down") or "scroll up to see the
@@ -1489,6 +1514,7 @@ TutorialOverlay.defaultProps = {
     pageGroup: "",
     stepNumber: 1,
     clickAdvancesStep: false,
+    clickAdvanceDelaySeconds: 0,
     nextStepAfterSeconds: 0,
     scrollAdvancesStep: false,
     scrollDirection: "down",
@@ -1593,6 +1619,14 @@ addPropertyControls(TutorialOverlay, {
         enabledTitle: "On",
         disabledTitle: "Off",
         hidden: (props) => !props.pageGroup,
+    },
+    clickAdvanceDelaySeconds: {
+        type: ControlType.Number,
+        title: "Click advance delay (sec)",
+        min: 0,
+        step: 0.1,
+        defaultValue: 0,
+        hidden: (props) => !props.pageGroup || !props.clickAdvancesStep,
     },
     nextStepAfterSeconds: {
         type: ControlType.Number,

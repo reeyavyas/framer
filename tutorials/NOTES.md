@@ -103,6 +103,15 @@ anywhere else on the page.
   size on its own). If that resurfaces, re-splitting it out is the known
   fix; see git history for `nextButtonFontSize`.
 
+  `clickAdvanceDelaySeconds` ("Click advance delay (sec)", shown only
+  with `clickAdvancesStep` on) holds a step on screen for that long
+  after the tap before handing off, instead of vanishing the instant
+  it's tapped. It's for a target whose tap starts its own animation that
+  should play out under the overlay, e.g. the login page's fingerprint
+  (`FingerprintMarker`), whose own override navigates 1.5s after the
+  tap. Only the first tap starts the timer, and it's cleared if the
+  step unmounts first.
+
   `cardWrapperStyle()` positions the card two different ways depending
   on whether a target `rect` was actually measured. With one, it's
   target-relative: `cardAnchorX`/`cardAnchorY` anchor to the target's
