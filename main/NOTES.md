@@ -8,7 +8,9 @@ Site-wide, page-agnostic components — not owned by any single feature.
   sits untouched for the configured period (currently ~3 minutes), it
   shows a countdown and then automatically redirects back to the
   homepage, so the next person at the kiosk never inherits a stranger's
-  left-open session.
+  left-open session. Its backdrop blur is skipped on pages with the
+  `CurvedCarouselV2` flip cards: on Windows Chrome/Edge the blur paints
+  a stray rectangular shadow on the centered card.
 - **Hydration guard** — any code component rendering live date/time
   (or other client-only dynamic values, e.g. weather) needs to hide
   itself until the client has mounted, or the value Framer

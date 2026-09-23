@@ -17,6 +17,10 @@ export default function InactivityOverlay() {
     const [isVisible, setIsVisible] = React.useState(false)
     const [countdown, setCountdown] = React.useState(COUNTDOWN_SECONDS)
     const [animateIn, setAnimateIn] = React.useState(false)
+    // Whether the backdrop gets its blur. Decided fresh each time the
+    // overlay opens (see startInactivityTimer) rather than once on mount,
+    // since the page's content can change underneath this layer.
+    const [blurBackdrop, setBlurBackdrop] = React.useState(true)
 
     // True while designing on the Framer canvas. We skip all timers and
     // listeners in this context, and render a static (non-portaled) preview
@@ -69,6 +73,17 @@ export default function InactivityOverlay() {
         clearInactivityTimeout()
         const timeoutMs = INACTIVITY_MINUTES * 60 * 1000
         inactivityTimeoutRef.current = window.setTimeout(() => {
+            // On Windows Chrome/Edge, backdrop-filter blur over the
+            // CurvedCarouselV2 flip cards paints a stray rectangular
+            // shadow on the centered card (not seen on macOS). Confirmed
+            // by removing the blur live — the rectangle disappears — while
+            // flattening the carousel's own preserve-3d or removing its
+            // edge-fade mask did not. So skip the blur only on pages that
+            // actually have the carousel (its cards carry
+            // data-carousel-card); every other page keeps it unchanged.
+            setBlurBackdrop(
+                !document.querySelector("[data-carousel-card]")
+            )
             setCountdown(COUNTDOWN_SECONDS)
             setIsVisible(true)
         }, timeoutMs)
@@ -167,8 +182,8 @@ export default function InactivityOverlay() {
                     position: "absolute",
                     inset: 0,
                     background: "rgba(0,0,0,0.25)",
-                    backdropFilter: "blur(3px)",
-                    WebkitBackdropFilter: "blur(3px)",
+                    backdropFilter: blurBackdrop ? "blur(3px)" : "none",
+                    WebkitBackdropFilter: blurBackdrop ? "blur(3px)" : "none",
                     opacity: faded ? 1 : 0,
                     transition: "opacity 0.4s ease-out 0.3s",
                 }}
