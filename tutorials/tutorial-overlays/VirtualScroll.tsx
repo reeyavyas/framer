@@ -104,6 +104,13 @@ export interface VirtualScrollHandle {
     // earlier step froze it is long over, and the container is about
     // to unmount anyway on navigation.
     scrollToTop(): void
+    // Smoothly animates position to `percent` (0-100) of the scrollable
+    // range. Used by TutorialOverlay's Skip button on a scroll step, to
+    // carry the content past that step's scrollThresholdPercent the same
+    // way a real scroll would. Ignores frozen state for the same reason
+    // scrollToTop does — a scroll step and a freeze step are never
+    // active at the same time.
+    scrollToPercent(percent: number): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
     subscribe(fn: () => void): () => void
@@ -252,6 +259,16 @@ function withVirtualScroll(id: string) {
                 // effect actually registered under, leaving a stale
                 // entry behind instead of removing it.
                 const key = scopedKey(id)
+                function animateTo(target: number) {
+                    animate(posRef.current, target, {
+                        duration: 0.5,
+                        onUpdate: (v) => {
+                            posRef.current = v
+                            y.set(-v)
+                            listenersRef.current.forEach((fn) => fn())
+                        },
+                    })
+                }
                 const handle: VirtualScrollHandle = {
                     getPercent: () =>
                         maxRef.current > 0
@@ -263,16 +280,12 @@ function withVirtualScroll(id: string) {
                     unfreeze: () => {
                         frozenRef.current = false
                     },
-                    scrollToTop: () => {
-                        animate(posRef.current, 0, {
-                            duration: 0.5,
-                            onUpdate: (v) => {
-                                posRef.current = v
-                                y.set(-v)
-                                listenersRef.current.forEach((fn) => fn())
-                            },
-                        })
-                    },
+                    scrollToTop: () => animateTo(0),
+                    scrollToPercent: (percent) =>
+                        animateTo(
+                            (Math.min(Math.max(percent, 0), 100) / 100) *
+                                maxRef.current
+                        ),
                     subscribe: (fn) => {
                         listenersRef.current.add(fn)
                         // Block body, not an implicit-return arrow — a

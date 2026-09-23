@@ -181,6 +181,20 @@ anywhere else on the page.
   agree, and a repo-wide sweep turned up no other Boolean/Enum/Number
   control with this same defaultProps-vs-control mismatch.
 
+  The Skip button (`skipStep()`) moves on to the next step, same page
+  or next, by doing what the step's own advance would have done: a
+  scroll step scrolls its container 1% past `scrollThresholdPercent`
+  (VirtualScroll's `scrollToPercent()` or native `scrollTo`), letting
+  the normal scroll hand-off fire; a step advanced by tapping its target
+  gets a simulated tap at the hole's center (pointerdown/pointerup/click
+  on `elementFromPoint`), so toggles really flip and Links really
+  navigate; anything else behaves like the Next button, then the
+  auto-advance link, then `advanceStep()`. One skip per step, so a
+  second press can't flip a toggle back. `skipLink`, when set, still
+  overrides all of this and navigates there instead. Confirmed live
+  that a simulated tap flips the Card Controls card toggle and all
+  three Card Alerts toggles and advances their steps.
+
   `glowDelaySeconds` (and the `glowShown` state/timer effect that only
   existed to support it) was removed as unused — the glow now just
   shows immediately whenever `showGlow` is on, same as it always did
