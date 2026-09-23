@@ -41,9 +41,10 @@ import { getVirtualScroll } from "./VirtualScroll.tsx"
  * This component never manages a cross-PAGE sequence itself — only the
  * optional same-page step handoff described above.
  *
- * For the end of a whole tutorial, use TutorialCongrats.tsx instead —
- * a separate, smaller component built for a full-screen finish, with
- * no hole/target of its own. Drop one per tutorial's last page.
+ * For the end of a whole tutorial, send the user to a dedicated
+ * congrats page built as a native Framer component, with
+ * TutorialCongratsAutoRedirect.tsx attached to it to return to the
+ * Tutorials page after a delay.
  *
  * Targeting a real element: see TutorialTargets.tsx — one shared file,
  * one thin override export per target, reused across every page.
