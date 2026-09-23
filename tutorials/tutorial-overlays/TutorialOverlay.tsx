@@ -855,7 +855,7 @@ export default function TutorialOverlay(props: Props) {
         function onPointerDown(e: PointerEvent) {
             // Same exemption as blockOutsideHole above. This listener only
             // checks coordinates, so without it a tap on this overlay's own
-            // Skip/Exit/Next buttons, or on InactivityOverlay's "YES, I'M
+            // Skip/Exit/Next buttons, or on AppInactivityOverlay's "YES, I'M
             // HERE" / "RETURN HOME" (a data-system-overlay sitting on top
             // of everything), that happened to land inside the hole's
             // bounds counted as tapping the target — advancing the step
