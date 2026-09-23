@@ -28,15 +28,20 @@ import { addPropertyControls, ControlType } from "framer"
  * ("Friday, September 11, 2026"), since there's no benefit to a year or
  * weekday on a fixed, always-current-relative example date.
  *
- * Save still writes the exact same sessionStorage record
- * SetTravelNotice.tsx does, under the same keys, so
- * TravelNoticeToast.tsx (unchanged, shared with the base flow) and
- * tutorials/card-controls-tutorial/TravelNoticeSectionTutorial.tsx pick it up
- * exactly the same way — Save doesn't need a disabled state here since
- * the fixed values make it valid from the very first render.
+ * Save writes the same shape of sessionStorage record
+ * SetTravelNotice.tsx does, but under its own tutorial-only key
+ * ("kioskTravelNoticeTutorial") so the tutorial's fixed practice notice
+ * never shows up in the real Card Controls page's TravelNoticeSection
+ * (which reads "kioskTravelNotice" and would otherwise show it once as
+ * if the user had set it). tutorials/card-controls-tutorial/
+ * TravelNoticeSectionTutorial.tsx reads this same tutorial key. The
+ * toast flag key stays shared, so TravelNoticeToast.tsx (unchanged,
+ * shared with the base flow) picks it up exactly the same way — Save
+ * doesn't need a disabled state here since the fixed values make it
+ * valid from the very first render.
  */
 
-const STORAGE_KEY = "kioskTravelNotice"
+const STORAGE_KEY = "kioskTravelNoticeTutorial"
 const STORAGE_TOAST_FLAG_KEY = "kioskTravelNoticeToastFlag"
 
 const TUTORIAL_DESTINATIONS = ["Illinois", "Kentucky", "Missouri"]

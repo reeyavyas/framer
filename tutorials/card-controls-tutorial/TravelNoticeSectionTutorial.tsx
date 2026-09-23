@@ -7,9 +7,11 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * Tutorial-duplicate of `card-controls/travel-notice/TravelNoticeSection.tsx`,
  * for the card-controls tutorial flow (see `tutorials/card-controls-tutorial/NOTES.md`).
  *
- * No functional changes from the base component — it already reads
- * whichever record is under sessionStorage's "kioskTravelNotice" key,
- * and already labels it "Future Plans" whenever the record's startDate
+ * Reads its record from the tutorial-only "kioskTravelNoticeTutorial"
+ * sessionStorage key (written by SetTravelNoticeTutorial.tsx) instead of
+ * the base "kioskTravelNotice", so the tutorial's practice notice never
+ * leaks into the real Card Controls page. Otherwise it's unchanged: it
+ * already labels the record "Future Plans" whenever its startDate
  * isn't today. SetTravelNoticeTutorial.tsx (this tutorial's own
  * duplicate of the form) always writes a startDate two weeks out, so this
  * naturally shows "Future Plans" — never "Happening Now" — with no
@@ -92,7 +94,7 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * behavior only runs in Preview/Published.
  */
 
-const STORAGE_KEY = "kioskTravelNotice"
+const STORAGE_KEY = "kioskTravelNoticeTutorial"
 const SHOWN_MARKER_KEY = "kioskTravelNoticeSectionTutorialShownAt"
 
 const MONTH_NAMES = [
