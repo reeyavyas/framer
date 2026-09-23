@@ -112,6 +112,16 @@ anywhere else on the page.
   tap. Only the first tap starts the timer, and it's cleared if the
   step unmounts first.
 
+  `revealDelaySeconds` ("Reveal delay (sec)") shows the dim right away
+  but holds back everything that traces the target (the hole, glow,
+  arrow and card) for that long. It's for a target inside something
+  that's still animating in when the step starts, e.g. the fingerprint
+  inside the Framer overlay opened by the login page's previous step,
+  so the glow doesn't appear mid-animation and ride along with it. Until
+  it reveals, taps on the target are blocked like any tap outside the
+  hole and don't count toward `clickAdvancesStep`. Always revealed on
+  canvas.
+
   `cardWrapperStyle()` positions the card two different ways depending
   on whether a target `rect` was actually measured. With one, it's
   target-relative: `cardAnchorX`/`cardAnchorY` anchor to the target's

@@ -87,6 +87,7 @@ interface Props {
     active: boolean
 
     target: string
+    revealDelaySeconds: number // dim shows at once, but the hole/glow/arrow/card wait this long — e.g. for a target inside an overlay that's still animating open when this step starts
     holeShape: HoleShape
     cornerRadius: number
 
@@ -419,6 +420,7 @@ export default function TutorialOverlay(props: Props) {
     const {
         active,
         target,
+        revealDelaySeconds,
         holeShape,
         cornerRadius,
         pageGroup,
@@ -484,6 +486,7 @@ export default function TutorialOverlay(props: Props) {
     const [rect, setRect] = React.useState<DOMRect | null>(null)
     const [viewport, setViewport] = React.useState({ w: 0, h: 0 })
     const [arrowShown, setArrowShown] = React.useState(false)
+    const [revealTimerDone, setRevealTimerDone] = React.useState(false)
 
     const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
@@ -571,6 +574,32 @@ export default function TutorialOverlay(props: Props) {
         }
     }, [isCanvas, active, isMyTurn, target])
 
+    // Timer-driven reveal of everything that traces the target (hole,
+    // glow, arrow, card). For a target inside something that's still
+    // animating in when this step starts — e.g. the login page's
+    // fingerprint, inside a Framer overlay opened by the previous step's
+    // tap — so the glow doesn't lock onto the target mid-slide/scale and
+    // ride along with it while it's still opening. The dim itself shows
+    // immediately so the screen never flashes undimmed between steps.
+    React.useEffect(() => {
+        setRevealTimerDone(false)
+        if (isCanvas || !active || !isMyTurn || !(revealDelaySeconds > 0))
+            return
+        const t = setTimeout(
+            () => setRevealTimerDone(true),
+            revealDelaySeconds * 1000
+        )
+        return () => clearTimeout(t)
+    }, [isCanvas, active, isMyTurn, target, revealDelaySeconds])
+    // Always revealed on canvas (so the step stays inspectable) and when
+    // no delay is set.
+    const revealed = isCanvas || !(revealDelaySeconds > 0) || revealTimerDone
+    // Read by the window listeners below: until revealed there's no hole
+    // on screen, so a tap on the target is blocked like any other tap
+    // outside the hole, and doesn't count toward clickAdvancesStep.
+    const revealedRef = React.useRef(revealed)
+    revealedRef.current = revealed
+
     // Timer-driven arrow reveal — independent of any click, uncapped delay.
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !showArrow) return
@@ -651,6 +680,7 @@ export default function TutorialOverlay(props: Props) {
                 return
             const r = rectRef.current
             const insideHole =
+                revealedRef.current &&
                 !!r &&
                 e.clientX >= r.left &&
                 e.clientX <= r.right &&
@@ -688,6 +718,7 @@ export default function TutorialOverlay(props: Props) {
             const r = rectRef.current
             if (
                 !pending &&
+                revealedRef.current &&
                 r &&
                 e.clientX >= r.left &&
                 e.clientX <= r.right &&
@@ -879,7 +910,7 @@ export default function TutorialOverlay(props: Props) {
             : autoAdvanceAfterSeconds
 
     const clipPath =
-        rect && viewport.w
+        rect && revealed && viewport.w
             ? `path(evenodd, "M0,0 H${viewport.w} V${viewport.h} H0 Z ${buildHolePath(
                   rect,
                   holeShape,
@@ -1073,11 +1104,12 @@ export default function TutorialOverlay(props: Props) {
                 fight. The progress bar and Next button only render when
                 their own toggles are on; the card itself shows whenever
                 there's a title/body/bar/button, any combination of them. */}
-            {(cardTitleLine1 ||
-                cardTitleLine2 ||
-                cardBody ||
-                (showProgressBar && progressBarDurationSeconds > 0) ||
-                showNextButton) && (
+            {revealed &&
+                (cardTitleLine1 ||
+                    cardTitleLine2 ||
+                    cardBody ||
+                    (showProgressBar && progressBarDurationSeconds > 0) ||
+                    showNextButton) && (
                 <div
                     style={{
                         ...cardWrapperStyle(
@@ -1290,7 +1322,7 @@ export default function TutorialOverlay(props: Props) {
                 dimmed area around it. Ripple's expanding rings are left
                 outward-growing on purpose — that's a different "ping"
                 idiom, not the glow being asked about here. */}
-            {showGlow && rect && (
+            {showGlow && rect && revealed && (
                 <>
                     <style>{`
                         @keyframes tutorial-glow-breathe {
@@ -1360,7 +1392,7 @@ export default function TutorialOverlay(props: Props) {
                 independent of this wrapper's own static transform, the
                 same separation that fixed the card's positioning bug
                 earlier in this file. */}
-            {showArrow && arrowShown && arrowAnchor && (
+            {showArrow && arrowShown && revealed && arrowAnchor && (
                 <div
                     style={{
                         position: "fixed",
@@ -1509,6 +1541,7 @@ export default function TutorialOverlay(props: Props) {
 TutorialOverlay.defaultProps = {
     active: true,
     target: "more-tab",
+    revealDelaySeconds: 0,
     holeShape: "pill",
     cornerRadius: 0,
     pageGroup: "",
@@ -1582,6 +1615,13 @@ addPropertyControls(TutorialOverlay, {
         title: "Target ID",
         defaultValue: "more-tab",
         placeholder: "data-tutorial-target value",
+    },
+    revealDelaySeconds: {
+        type: ControlType.Number,
+        title: "Reveal delay (sec)",
+        min: 0,
+        step: 0.1,
+        defaultValue: 0,
     },
     holeShape: {
         type: ControlType.Enum,
