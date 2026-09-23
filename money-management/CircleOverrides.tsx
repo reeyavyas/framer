@@ -982,11 +982,18 @@ export function BillsCircle(
 // button (two separate top-level components) with no add-on needed.
 const BUDGETS_VARIANT_EVENT = "budgets:variant2"
 
-// One physical tap reaches all three handlers below (pointerdown, then
+// One physical tap reaches all three handlers below (pointerup, then
 // Framer's onTap, then the browser's click). All three stay wired so the
 // bridge still fires whichever of them Framer reliably delivers, but only
 // the first within this window actually sends the event: one signal per
 // tap instead of three.
+//
+// Deliberately pointerUP, not pointerdown: firing on pointerdown counted
+// a press as a save the moment a finger touched the button, even if it
+// then slid off without lifting. A touch pointer stays implicitly
+// captured by the element it started on, so pointerup still arrives here
+// after sliding off — hence the check that the release point is actually
+// over the button before it counts.
 const BRIDGE_DEDUPE_MS = 500
 
 // Apply to the Save button. Fires the bridge event on click, then calls
@@ -1019,10 +1026,15 @@ export function withBudgetsVariantTrigger(
             },
             [props, fire]
         )
-        const handlePointerDown = useCallback(
+        const handlePointerUp = useCallback(
             (event: any) => {
-                props.onPointerDown?.(event)
-                fire()
+                props.onPointerUp?.(event)
+                const el = event.currentTarget as HTMLElement | null
+                const hit = document.elementFromPoint(
+                    event.clientX,
+                    event.clientY
+                )
+                if (el && hit && el.contains(hit)) fire()
             },
             [props, fire]
         )
@@ -1033,7 +1045,7 @@ export function withBudgetsVariantTrigger(
                 ref={ref}
                 onClick={handleClick}
                 onTap={handleTap}
-                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerUp}
             />
         )
     })
