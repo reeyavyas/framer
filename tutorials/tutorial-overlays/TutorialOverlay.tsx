@@ -853,6 +853,20 @@ export default function TutorialOverlay(props: Props) {
         if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
         let pending: ReturnType<typeof setTimeout> | null = null
         function onPointerDown(e: PointerEvent) {
+            // Same exemption as blockOutsideHole above. This listener only
+            // checks coordinates, so without it a tap on this overlay's own
+            // Skip/Exit/Next buttons, or on InactivityOverlay's "YES, I'M
+            // HERE" / "RETURN HOME" (a data-system-overlay sitting on top
+            // of everything), that happened to land inside the hole's
+            // bounds counted as tapping the target — advancing the step
+            // even though the real target never got the tap (a toggle left
+            // unflipped).
+            if (
+                (e.target as HTMLElement | null)?.closest?.(
+                    "[data-tutorial-overlay], [data-system-overlay]"
+                )
+            )
+                return
             const r = rectRef.current
             if (
                 !pending &&
