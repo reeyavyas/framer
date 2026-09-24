@@ -106,8 +106,14 @@ Site-wide, page-agnostic components — not owned by any single feature.
     glow, heaviest along the bottom, plus a glow band at the bottom
     edge — no outer halo or drop shadow on the wallpaper) whose
     colour/strength/spread are the "Glow Color/Intensity/Size"
-    controls. The glow colour goes through CSS `color-mix()` so any
-    colour Framer's picker returns works in the shadows. It forms over the first "Form Distance" px of drag
+    controls (defaults: intensity 0.2, size 96px with wide blur radii
+    and a gradual bottom band, so its edges stay soft). The glow is its
+    own layer above the frosted sheet, so with "Glow At Rest" on (the
+    default) it stays lit along the screen edges while the lock screen
+    is at rest, and the frosted sheet alone fades in with the swipe;
+    "Swipe Only" makes the glow appear with the sheet instead. The glow
+    colour goes through CSS `color-mix()` so any colour Framer's
+    picker returns works in the shadows. It forms over the first "Form Distance" px of drag
     (invisible at rest) and is driven off the same `dragY` motion
     value as the drag itself. With it on, content rides the pane at
     full opacity instead of fading out (only the clock/date soften to

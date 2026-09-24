@@ -268,12 +268,15 @@ function LockScreenInner(props) {
     const sheetBlurFilter = `blur(${swipeGlass.blur ?? 16}px) saturate(${swipeGlass.saturation ?? 200}%) brightness(${swipeGlass.brightness ?? 125}%)`
     // Glow colour at a given strength (0-1). color-mix keeps any colour
     // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
-    const glowIntensity = swipeGlass.glowIntensity ?? 0.4
-    const glowSize = swipeGlass.glowSize ?? 56
+    const glowIntensity = swipeGlass.glowIntensity ?? 0.2
+    const glowSize = swipeGlass.glowSize ?? 96
     const glow = (strength: number) =>
         `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
             Math.min(strength, 1) * 100
         )}%, transparent)`
+    // The glow can stay on while the lock screen is at rest (along the
+    // screen's edges) instead of only appearing with the swipe.
+    const glowAtRest = swipeGlass.glowAtRest !== false
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -388,22 +391,38 @@ function LockScreenInner(props) {
                         // Only a faint white tint — the pane's colour comes
                         // from the wallpaper itself, pushed brighter and more
                         // saturated by the backdrop filter so it glows
-                        // through rather than washing out to white. A soft
-                        // band of glow light hugs the bottom (leading) edge.
-                        background: `linear-gradient(0deg, ${glow(glowIntensity * 0.5)} 0px, transparent ${glowSize}px), ${rgba(255, 255, 255, sheetTint)}`,
+                        // through rather than washing out to white.
+                        background: rgba(255, 255, 255, sheetTint),
                         backdropFilter: sheetBlurFilter,
                         WebkitBackdropFilter: sheetBlurFilter,
-                        // A soft glow bleeding in from every edge (follows
-                        // the rounded corners), heaviest along the bottom —
-                        // light caught in the glass's thickness. No crisp
-                        // outline stroke, and all inset: the glow stays
-                        // inside the pane rather than spilling out onto the
-                        // wallpaper.
-                        boxShadow: `inset 0 0 ${glowSize}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.3}px ${glowSize}px ${glow(glowIntensity * 0.6)}`,
                         // Same reason as buttonGlassStyle: allocate the
                         // backdrop-filter layer up front so the blur doesn't
                         // lag a frame behind the first drag movement.
                         willChange: "backdrop-filter, opacity",
+                    }}
+                />
+            )}
+            {/* Swipe Glass Glow — its own layer on top of the sheet so it
+                can stay lit at rest ("Glow At Rest") while the frosted
+                sheet only forms once the drag starts. A soft glow bleeding
+                in from every edge (following the rounded corners),
+                heaviest along the bottom — light caught in the glass's
+                thickness. Wide blur radii and a gradual bottom band keep
+                its edges soft. No outline stroke, and all inset: the glow
+                stays inside the pane rather than spilling onto the
+                wallpaper. */}
+            {swipeGlassEnabled && glowIntensity > 0 && (
+                <motion.div
+                    aria-hidden
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        opacity: glowAtRest ? 1 : glassProgress,
+                        borderBottomLeftRadius: sheetRadius,
+                        borderBottomRightRadius: sheetRadius,
+                        background: `linear-gradient(0deg, ${glow(glowIntensity * 0.5)} 0px, ${glow(glowIntensity * 0.2)} ${glowSize * 0.5}px, transparent ${glowSize * 1.5}px)`,
+                        boxShadow: `inset 0 0 ${glowSize * 1.5}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.3}px ${glowSize * 1.5}px ${glow(glowIntensity * 0.6)}`,
                     }}
                 />
             )}
@@ -1151,8 +1170,9 @@ LockScreen.defaultProps = {
         saturation: 200,
         brightness: 125,
         glowColor: "#E6D9FF",
-        glowIntensity: 0.4,
-        glowSize: 56,
+        glowIntensity: 0.2,
+        glowSize: 96,
+        glowAtRest: true,
         cornerRadius: 150,
         clockOpacity: 0.75,
     },
@@ -1605,7 +1625,7 @@ addPropertyControls(LockScreen, {
             glowIntensity: {
                 type: ControlType.Number,
                 title: "Glow Intensity",
-                defaultValue: 0.4,
+                defaultValue: 0.2,
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1614,11 +1634,19 @@ addPropertyControls(LockScreen, {
             glowSize: {
                 type: ControlType.Number,
                 title: "Glow Size",
-                defaultValue: 56,
+                defaultValue: 96,
                 min: 0,
                 max: 160,
                 step: 1,
                 unit: "px",
+                hidden: (p) => p.enabled === false,
+            },
+            glowAtRest: {
+                type: ControlType.Boolean,
+                title: "Glow At Rest",
+                defaultValue: true,
+                enabledTitle: "On",
+                disabledTitle: "Swipe Only",
                 hidden: (p) => p.enabled === false,
             },
             cornerRadius: {
