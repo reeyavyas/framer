@@ -97,27 +97,22 @@ Site-wide, page-agnostic components — not owned by any single feature.
     swipe cleared the threshold.
   - **Swipe Glass** — the lock screen is a pane of glass that lifts
     off the wallpaper as it's dragged (modelled on the iOS 26 unlock).
-    The pane looks exactly the same at rest and mid-swipe — no backdrop
-    blur, tint, saturation or brightness change — with the same soft
-    glow along its bottom edge throughout, where the swipe starts,
-    wrapping up into the rounded bottom corners (a pushed-up inset
-    shadow with negative spread so the sides and top stay clear — no
-    vignette around the frame — plus a tighter, brighter feathered
-    highlight right at the edge for contrast and an eased smoothstep
-    bottom band; no outline stroke and nothing spilling outside the
-    pane). What the swipe
-    reveals is the glass's edges: the bottom corners round off (square
-    at rest, 150px by default, close to the phone's own screen-corner
-    curve) over the first "Form Distance" px of drag, and the glowing
-    bottom edge lifts away from the bottom of the screen. Glow colour,
-    intensity (0.3) and size (96px) are the "Glow Color/Intensity/Size"
-    controls; the colour goes through CSS `color-mix()` so any colour
-    Framer's picker returns works in the shadows. Driven off the same
-    `dragY` motion value as the drag itself. With it on, content rides
-    the pane at full opacity instead of fading out — only the
-    clock/date dim to "Clock Opacity" as the pane lifts, as on iOS.
-    This also keeps the flashlight/camera buttons' own backdrop blur
-    working mid-drag, since an opacity < 1 ancestor would cut them off
+    The pane brightens the wallpaper behind it (with just a touch of
+    extra contrast) via a backdrop filter — "Brightness" 115% and
+    "Contrast" 104% by default — and does so identically at rest and
+    mid-swipe, so the lock screen's look never changes with the
+    swipe. No glow, vignette, tint, blur or outline stroke (all tried
+    and dropped). What the swipe reveals is the glass's edges: the
+    bottom corners round off (square at rest, 150px by default, close
+    to the phone's own screen-corner curve) over the first "Form
+    Distance" px of drag, and as the pane lifts the plain,
+    unbrightened wallpaper shows beneath it, so the pane's edge reads
+    by that brightness difference. Driven off the same `dragY` motion
+    value as the drag itself. With it on, content rides the pane at
+    full opacity instead of fading out — only the clock/date dim to
+    "Clock Opacity" as the pane lifts, as on iOS. This also keeps the
+    flashlight/camera buttons' own backdrop blur working mid-drag,
+    since an opacity < 1 ancestor would cut them off
     from the wallpaper. Turning "Swipe Glass" off restores the old
     fade-out-while-dragging behaviour. All of it is tunable under the
     **Swipe Glass** property group.

@@ -238,12 +238,14 @@ function LockScreenInner(props) {
     // Swipe-up glass pane — the way the iOS 26 lock screen reads once
     // you start to drag it: the lock screen is a pane of glass that lifts
     // off the wallpaper, carrying the clock/buttons/home indicator with
-    // it. Nothing about the pane's colour, contrast or lighting changes
-    // with the swipe — the same soft inner glow sits along its edges at
-    // rest and while dragging. What the swipe reveals is the glass's
-    // edges: its bottom corners round off over the first `formDistance`
-    // px of the drag (square at rest, matching the screen) and the
-    // glowing bottom edge lifts away from the bottom of the screen.
+    // it. The pane lifts the wallpaper behind it a little brighter (and a
+    // touch more contrasty) — no glow, vignette, tint or blur — and does
+    // so identically at rest and while dragging, so nothing about the
+    // lock screen's look changes with the swipe. What the swipe reveals
+    // is the glass's edges: its bottom corners round off over the first
+    // `formDistance` px of the drag (square at rest, matching the
+    // screen), and as the pane lifts the plain, unbrightened wallpaper
+    // shows beneath it, so the pane's edge reads by that difference.
     const swipeGlassEnabled = swipeGlass.enabled !== false
     const glassProgress = useTransform(
         dragY,
@@ -265,33 +267,7 @@ function LockScreenInner(props) {
         [0, 1],
         [1, swipeGlass.clockOpacity ?? 0.75]
     )
-    // Glow colour at a given strength (0-1). color-mix keeps any colour
-    // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
-    const glowIntensity = swipeGlass.glowIntensity ?? 0.3
-    const glowSize = swipeGlass.glowSize ?? 96
-    const glow = (strength: number) =>
-        `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
-            Math.min(strength, 1) * 100
-        )}%, transparent)`
-    // Bottom glow band as an eased (smoothstep) gradient over many stops
-    // rather than a couple of linear ones — a linear ramp has visible
-    // kinks where its segments meet and a hard line where it ends,
-    // which is what made the feathering look uneven.
-    const glowBandStops = Array.from({ length: 13 }, (_, i) => {
-        const t = i / 12
-        const falloff = 1 - t * t * (3 - 2 * t)
-        return `${glow(glowIntensity * 0.9 * falloff)} ${Math.round(
-            t * glowSize * 1.5
-        )}px`
-    }).join(", ")
-    // Glow along the bottom edge only, wrapping up into the rounded
-    // bottom corners — no vignette around the rest of the frame. An
-    // inset shadow pushed up (negative y) lights only the bottom edge;
-    // the negative spread pulls it back off the sides so they stay
-    // clear. A second, tighter one right at the edge adds a little
-    // contrast (brighter, crisper edge) while staying feathered rather
-    // than reading as an outline stroke.
-    const glowShadow = `inset 0 -${glowSize * 0.6}px ${glowSize * 0.5}px -${glowSize * 0.3}px ${glow(glowIntensity)}, inset 0 -6px 12px -6px ${glow(glowIntensity * 1.8)}`
+    const paneFilter = `brightness(${swipeGlass.brightness ?? 115}%) contrast(${swipeGlass.contrast ?? 104}%)`
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -390,16 +366,13 @@ function LockScreenInner(props) {
             }}
             onDragEnd={handleDragEnd}
         >
-            {/* Swipe Glass Glow — the same at rest and while swiping: a
-                soft glow along the bottom edge, where the swipe starts,
-                wrapping up into the rounded corners once the pane lifts —
-                light caught in the glass's thickness. No vignette around
-                the rest of the frame. An eased bottom band and blurred
-                inset shadows keep its feathering smooth. No outline
-                stroke and no backdrop filter/tint (the wallpaper looks
-                exactly as it does at rest), and all inset: the glow stays
-                inside the pane rather than spilling onto the wallpaper. */}
-            {swipeGlassEnabled && glowIntensity > 0 && (
+            {/* Swipe Glass Pane — the same at rest and while swiping: it
+                brightens (and very slightly contrasts) the wallpaper
+                behind it via a backdrop filter, with no glow, tint, blur
+                or outline. Once the pane lifts and its bottom corners
+                round off, the untouched wallpaper below makes its edge
+                visible. */}
+            {swipeGlassEnabled && (
                 <motion.div
                     aria-hidden
                     style={{
@@ -408,8 +381,11 @@ function LockScreenInner(props) {
                         pointerEvents: "none",
                         borderBottomLeftRadius: sheetRadius,
                         borderBottomRightRadius: sheetRadius,
-                        background: `linear-gradient(0deg, ${glowBandStops})`,
-                        boxShadow: glowShadow,
+                        backdropFilter: paneFilter,
+                        WebkitBackdropFilter: paneFilter,
+                        // Same reason as buttonGlassStyle: allocate the
+                        // backdrop-filter layer up front.
+                        willChange: "backdrop-filter",
                     }}
                 />
             )}
@@ -1152,9 +1128,8 @@ LockScreen.defaultProps = {
     swipeGlass: {
         enabled: true,
         formDistance: 80,
-        glowColor: "#E6D9FF",
-        glowIntensity: 0.3,
-        glowSize: 96,
+        brightness: 115,
+        contrast: 104,
         cornerRadius: 150,
         clockOpacity: 0.75,
     },
@@ -1562,29 +1537,24 @@ addPropertyControls(LockScreen, {
                 unit: "px",
                 hidden: (p) => p.enabled === false,
             },
-            glowColor: {
-                type: ControlType.Color,
-                title: "Glow Color",
-                defaultValue: "#E6D9FF",
-                hidden: (p) => p.enabled === false,
-            },
-            glowIntensity: {
+            brightness: {
                 type: ControlType.Number,
-                title: "Glow Intensity",
-                defaultValue: 0.3,
-                min: 0,
-                max: 1,
-                step: 0.01,
-                hidden: (p) => p.enabled === false,
-            },
-            glowSize: {
-                type: ControlType.Number,
-                title: "Glow Size",
-                defaultValue: 96,
-                min: 0,
-                max: 160,
+                title: "Brightness",
+                defaultValue: 115,
+                min: 100,
+                max: 150,
                 step: 1,
-                unit: "px",
+                unit: "%",
+                hidden: (p) => p.enabled === false,
+            },
+            contrast: {
+                type: ControlType.Number,
+                title: "Contrast",
+                defaultValue: 104,
+                min: 100,
+                max: 130,
+                step: 1,
+                unit: "%",
                 hidden: (p) => p.enabled === false,
             },
             cornerRadius: {
