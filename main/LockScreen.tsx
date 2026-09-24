@@ -173,6 +173,7 @@ function LockScreenInner(props) {
         layout = {},
         icons = {},
         glass = {},
+        swipeGlass = {},
         homeIndicator = {},
         // NEW Event trigger prop
         onSwipeUp,
@@ -233,6 +234,40 @@ function LockScreenInner(props) {
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
     const opacityTransform = useTransform(dragY, [-150, 0], [0, 1])
+
+    // Swipe-up glass pane — the way the iOS 26 lock screen reads once
+    // you start to drag it: the lock screen is a pane of glass that lifts
+    // off the wallpaper, carrying the clock/buttons/home indicator with
+    // it. The pane lifts the wallpaper behind it a little brighter (and a
+    // touch more contrasty) — no glow, vignette, tint or blur — and does
+    // so identically at rest and while dragging, so nothing about the
+    // lock screen's look changes with the swipe. What the swipe reveals
+    // is the glass's edges: its bottom corners round off over the first
+    // `formDistance` px of the drag (square at rest, matching the
+    // screen), and as the pane lifts the plain, unbrightened wallpaper
+    // shows beneath it, so the pane's edge reads by that difference.
+    const swipeGlassEnabled = swipeGlass.enabled !== false
+    const glassProgress = useTransform(
+        dragY,
+        [-(swipeGlass.formDistance || 80), 0],
+        [1, 0]
+    )
+    const sheetRadius = useTransform(
+        glassProgress,
+        [0, 1],
+        [0, swipeGlass.cornerRadius ?? 150]
+    )
+    // With the glass pane on, content rides the pane at full opacity
+    // (as on iOS) instead of fading out — which also keeps the
+    // flashlight/camera buttons' own backdrop blur intact, since an
+    // opacity < 1 ancestor would cut them off from the wallpaper. Only
+    // the clock/date dim a little as the pane lifts, as they do on iOS.
+    const clockGlassOpacity = useTransform(
+        glassProgress,
+        [0, 1],
+        [1, swipeGlass.clockOpacity ?? 0.75]
+    )
+    const paneFilter = `brightness(${swipeGlass.brightness ?? 118}%) contrast(${swipeGlass.contrast ?? 104}%)`
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -331,6 +366,29 @@ function LockScreenInner(props) {
             }}
             onDragEnd={handleDragEnd}
         >
+            {/* Swipe Glass Pane — the same at rest and while swiping: it
+                brightens (and very slightly contrasts) the wallpaper
+                behind it via a backdrop filter, with no glow, tint, blur
+                or outline. Once the pane lifts and its bottom corners
+                round off, the untouched wallpaper below makes its edge
+                visible. */}
+            {swipeGlassEnabled && (
+                <motion.div
+                    aria-hidden
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        borderBottomLeftRadius: sheetRadius,
+                        borderBottomRightRadius: sheetRadius,
+                        backdropFilter: paneFilter,
+                        WebkitBackdropFilter: paneFilter,
+                        // Same reason as buttonGlassStyle: allocate the
+                        // backdrop-filter layer up front.
+                        willChange: "backdrop-filter",
+                    }}
+                />
+            )}
             {/* Content Layer */}
             <motion.div
                 style={{
@@ -345,15 +403,18 @@ function LockScreenInner(props) {
                     paddingRight: layout.sideInset,
                     paddingTop: layout.topInset,
                     pointerEvents: "none",
-                    opacity: opacityTransform, // Smoothly fades out content while user drags up
+                    // Without the glass pane, fade content out while the
+                    // user drags up; with it, content rides the pane.
+                    opacity: swipeGlassEnabled ? 1 : opacityTransform,
                 }}
             >
                 {/* Date + Time Core Block */}
-                <div
+                <motion.div
                     style={{
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
+                        opacity: swipeGlassEnabled ? clockGlassOpacity : 1,
                     }}
                 >
                     {/* Date Block */}
@@ -391,7 +452,7 @@ function LockScreenInner(props) {
                             {timeString}
                         </span>
                     </div>
-                </div>
+                </motion.div>
                 {/* Spacer pushes context rows downward */}
                 <div style={{ flex: 1 }} />
                 {/* Fake Notifications — stack low, near the icon row:
@@ -1064,6 +1125,14 @@ LockScreen.defaultProps = {
         shadowOpacity: 0.25,
         innerHighlight: 0.5,
     },
+    swipeGlass: {
+        enabled: true,
+        formDistance: 80,
+        brightness: 118,
+        contrast: 104,
+        cornerRadius: 150,
+        clockOpacity: 0.75,
+    },
     homeIndicator: {
         width: 404,
         height: 15,
@@ -1445,6 +1514,66 @@ addPropertyControls(LockScreen, {
                 min: 0,
                 max: 1,
                 step: 0.01,
+            },
+        },
+    },
+    swipeGlass: {
+        type: ControlType.Object,
+        title: "Swipe Glass",
+        hidden: (p) => p.variant !== "lockScreen",
+        controls: {
+            enabled: {
+                type: ControlType.Boolean,
+                title: "Enabled",
+                defaultValue: true,
+            },
+            formDistance: {
+                type: ControlType.Number,
+                title: "Form Distance",
+                defaultValue: 80,
+                min: 10,
+                max: 300,
+                step: 1,
+                unit: "px",
+                hidden: (p) => p.enabled === false,
+            },
+            brightness: {
+                type: ControlType.Number,
+                title: "Brightness",
+                defaultValue: 118,
+                min: 100,
+                max: 150,
+                step: 1,
+                unit: "%",
+                hidden: (p) => p.enabled === false,
+            },
+            contrast: {
+                type: ControlType.Number,
+                title: "Contrast",
+                defaultValue: 104,
+                min: 100,
+                max: 130,
+                step: 1,
+                unit: "%",
+                hidden: (p) => p.enabled === false,
+            },
+            cornerRadius: {
+                type: ControlType.Number,
+                title: "Corner Radius",
+                defaultValue: 150,
+                min: 0,
+                max: 300,
+                step: 1,
+                hidden: (p) => p.enabled === false,
+            },
+            clockOpacity: {
+                type: ControlType.Number,
+                title: "Clock Opacity",
+                defaultValue: 0.75,
+                min: 0,
+                max: 1,
+                step: 0.01,
+                hidden: (p) => p.enabled === false,
             },
         },
     },
