@@ -8,7 +8,9 @@ Builds the Tutorials landing page itself.
 
 - `CurvedCarouselV2.tsx` — the curved/arc card carousel that holds the
   flip-card tutorial entries. Current version (fixes the front-card
-  reset firing mid-drag). The superseded V1, `CurvedCarousel.tsx`, has
+  reset firing mid-drag). Its autoplay holds while
+  `AppInactivityOverlay`'s "Are you still there?" box is open
+  (`window.__systemOverlayOpen`). The superseded V1, `CurvedCarousel.tsx`, has
   moved to `archived/tutorials-main-page/` — see `archived/NOTES.md`.
 
 ## `tutorial-overlays/`

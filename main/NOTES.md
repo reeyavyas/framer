@@ -9,19 +9,20 @@ Site-wide, page-agnostic components — not owned by any single feature.
   minutes), it shows a countdown and then automatically redirects to
   `/app`, so the next person at the kiosk never inherits a stranger's
   left-open session. Both the countdown and the RETURN HOME button go
-  through `goHome`, the one place the redirect path lives. Its
-  backdrop blur is skipped on pages with the `CurvedCarouselV2` flip
-  cards: on Windows Chrome/Edge the blur paints a stray rectangular
-  shadow on the centered card. While open it sets
+  through `goHome`, the one place the redirect path lives. On pages
+  with the `CurvedCarouselV2` flip cards, Windows Chrome/Edge paints a
+  stray rectangle on the centered card under the backdrop blur and
+  during any CSS opacity transition over the carousel. So on those
+  pages the blur is skipped and the fade-in has no CSS transitions:
+  the backdrop colour and the panel's opacity/scale are stepped each
+  frame from `requestAnimationFrame` (`CAROUSEL_*_MS` timings). Every
+  other page keeps the blur and CSS fade. While open it sets
   `window.__systemOverlayOpen` and fires a `system-overlay-change`
   event, which `TutorialOverlay.tsx` uses to pause the tutorial step
-  underneath.
+  underneath and `CurvedCarouselV2.tsx` uses to hold its autoplay.
   Renamed from `InactivityOverlay.tsx` when the redirect changed from
-  `/` to `/app`. **TODO once this branch is merged into `main`:** in
-  the Framer project, replace every placed `InactivityOverlay` with
-  `AppInactivityOverlay` (Framer treats the renamed file as a new
-  component and won't swap existing instances), then delete the old
-  `InactivityOverlay` code file there.
+  `/` to `/app`; the Framer project's placed instances have been
+  swapped over and the old code file deleted there.
 - **Hydration guard** — any code component rendering live date/time
   (or other client-only dynamic values, e.g. weather) needs to hide
   itself until the client has mounted, or the value Framer
