@@ -44,9 +44,9 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| B1 | On a tutorial step with a spotlighted target (e.g. the card toggle step), let the overlay appear, then tap **YES, I'M HERE** | Tutorial stays on the **same** step; the target was not tapped | |
-| B2 | On a "Scroll down" step, let the overlay appear, then try to scroll | Page doesn't move, step doesn't advance | |
-| B3 | On a step that advances by itself on a timer (progress bar showing), if any exists: let the overlay appear and wait longer than the timer | Step doesn't advance while the overlay is open. After **YES, I'M HERE**, the progress bar starts over from empty and the step advances after its full time | |
+| B1 | On a tutorial step with a spotlighted target (e.g. the card toggle step), let the overlay appear, then tap **YES, I'M HERE** | Tutorial stays on the **same** step; the target was not tapped | Pass |
+| B2 | On a "Scroll down" step, let the overlay appear, then try to scroll | Page doesn't move, step doesn't advance | Pass |
+| B3 | On a step that advances by itself on a timer (progress bar showing), if any exists: let the overlay appear and wait longer than the timer | Step doesn't advance while the overlay is open. After **YES, I'M HERE**, the progress bar starts over from empty and the step advances after its full time | Pass |
 
 ## C. Tutorial Skip button (Skip link fields cleared)
 
