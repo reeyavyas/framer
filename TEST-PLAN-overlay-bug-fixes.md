@@ -65,10 +65,10 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| D1 | Turn one toggle on | Save becomes enabled (blue) | |
-| D2 | Leave the page **without saving** (Cancel/back), then come back | All toggles off **and** Save disabled (gray) | |
-| D3 | Now turn a toggle on, then off | Save enables, then disables again | |
-| D4 | Turn a toggle on and tap **Save** | "Saving…", then Card Controls with the Card Alerts toast | |
+| D1 | Turn one toggle on | Save becomes enabled (blue) | Pass |
+| D2 | Leave the page **without saving** (Cancel/back), then come back | All toggles off **and** Save disabled (gray) | **Fail:** toggles off but Save still blue. Fixed in CardAlertsSave.tsx (subscribe before resetToggles); **retest** |
+| D3 | Now turn a toggle on, then off | Save enables, then disables again | Pass |
+| D4 | Turn a toggle on and tap **Save** | "Saving…", then Card Controls with the Card Alerts toast | Pass |
 
 ## E. Travel Notice
 

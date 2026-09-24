@@ -152,9 +152,12 @@ function renderCardAlertsSave(
             if (isCanvas) return
             // Fresh visit to the page: every switch has just remounted
             // showing Off, so start the flags there too (see
-            // resetToggles in CardAlertsToggleReport.tsx).
+            // resetToggles in CardAlertsToggleReport.tsx). Subscribe
+            // first: this button already rendered with the stale flags,
+            // and resetting before subscribing left it enabled.
+            const unsubscribe = subscribeToggles(forceUpdate)
             resetToggles()
-            return subscribeToggles(forceUpdate)
+            return unsubscribe
         }, [isCanvas])
 
         if (isCanvas) return <Component {...props} />
