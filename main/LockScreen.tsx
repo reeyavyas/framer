@@ -252,7 +252,7 @@ function LockScreenInner(props) {
     const sheetRadius = useTransform(
         glassProgress,
         [0, 1],
-        [0, swipeGlass.cornerRadius ?? 64]
+        [0, swipeGlass.cornerRadius ?? 150]
     )
     // With the glass sheet on, content rides the pane at full opacity
     // (as on iOS) instead of fading out — which also keeps the
@@ -395,12 +395,12 @@ function LockScreenInner(props) {
                         backdropFilter: sheetBlurFilter,
                         WebkitBackdropFilter: sheetBlurFilter,
                         // Crisp bright rim along the bottom and sides
-                        // (follows the rounded corners), then a soft inner
-                        // glow bleeding in from every edge and a matching
-                        // outer halo spilling onto the wallpaper — light
-                        // caught in the glass's thickness instead of a dark
-                        // drop shadow.
-                        boxShadow: `inset 0 -2px 1px ${rgba(255, 255, 255, sheetEdge)}, inset 1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset -1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset 0 1px 1px ${rgba(255, 255, 255, sheetEdge * 0.4)}, inset 0 0 ${glowSize}px ${glow(glowIntensity * 0.7)}, 0 0 ${glowSize}px ${glow(glowIntensity)}, 0 ${glowSize * 0.4}px ${glowSize * 1.5}px ${glow(glowIntensity * 0.6)}`,
+                        // (follows the rounded corners), then a soft glow
+                        // bleeding in from every edge, heaviest along the
+                        // bottom — light caught in the glass's thickness.
+                        // All inset: the glow stays inside the pane rather
+                        // than spilling out onto the wallpaper.
+                        boxShadow: `inset 0 -2px 1px ${rgba(255, 255, 255, sheetEdge)}, inset 1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset -1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset 0 1px 1px ${rgba(255, 255, 255, sheetEdge * 0.4)}, inset 0 0 ${glowSize}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.3}px ${glowSize}px ${glow(glowIntensity * 0.6)}`,
                         // Same reason as buttonGlassStyle: allocate the
                         // backdrop-filter layer up front so the blur doesn't
                         // lag a frame behind the first drag movement.
@@ -1154,7 +1154,7 @@ LockScreen.defaultProps = {
         glowColor: "#E6D9FF",
         glowIntensity: 0.6,
         glowSize: 56,
-        cornerRadius: 64,
+        cornerRadius: 150,
         edgeHighlight: 0.8,
         clockOpacity: 0.75,
     },
@@ -1626,9 +1626,9 @@ addPropertyControls(LockScreen, {
             cornerRadius: {
                 type: ControlType.Number,
                 title: "Corner Radius",
-                defaultValue: 64,
+                defaultValue: 150,
                 min: 0,
-                max: 160,
+                max: 300,
                 step: 1,
                 hidden: (p) => p.enabled === false,
             },

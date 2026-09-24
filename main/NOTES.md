@@ -100,9 +100,11 @@ Site-wide, page-agnostic components — not owned by any single feature.
     on the iOS 26 unlock): only a faint white tint, with the
     wallpaper's own colours pushed brighter and more saturated by the
     backdrop filter so the pane glows rather than washing out white;
-    bottom corners rounding off; a bright rim along the bottom and
-    sides; and a soft glow (inner edge glow, a band along the bottom
-    edge, and an outer halo in place of a dark drop shadow) whose
+    bottom corners rounding off (to 150px by default, close to the
+    phone's own screen-corner curve); a bright rim along the bottom and
+    sides; and a soft glow kept entirely inside the pane (inset edge
+    glow, heaviest along the bottom, plus a glow band at the bottom
+    edge — no outer halo or drop shadow on the wallpaper) whose
     colour/strength/spread are the "Glow Color/Intensity/Size"
     controls. The glow colour goes through CSS `color-mix()` so any
     colour Framer's picker returns works in the shadows. It forms over the first "Form Distance" px of drag
