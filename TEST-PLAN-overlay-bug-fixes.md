@@ -37,7 +37,7 @@ when done.
 | A2 | Leave any page idle until the overlay appears, then let the 30-second countdown run out | Overlay appears after the idle time; countdown reaches 0 and goes to `/app` | Pass |
 | A3 | Open the overlay again and tap **RETURN HOME** | Goes to `/app` | Pass |
 | A4 | Open the overlay again and tap **YES, I'M HERE** | Overlay closes; after another idle period it appears again | Pass |
-| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | **Fail (partial):** rectangle flickers briefly as the overlay first opens, then goes away. Needs a follow-up fix. User also saw the carousel keep auto-cycling under the overlay; CurvedCarouselV2 autoplay now holds while the overlay is open. **Retest** |
+| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | **Fail (partial):** rectangle flickers briefly as the overlay first opens, then goes away. Needs a follow-up fix. User also saw the carousel keep auto-cycling under the overlay; CurvedCarouselV2 autoplay now holds while the overlay is open (retest: carousel pauses, flicker remains). AppInactivityOverlay now also skips its fade-in on the carousel page. **Retest** |
 | A6 | Any other page: let the overlay appear | Background is dimmed **and** blurred, same as before | Pass |
 
 ## B. Tutorial pauses while "Are you still there?" is open
