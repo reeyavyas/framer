@@ -99,15 +99,18 @@ Site-wide, page-agnostic components — not owned by any single feature.
     off the wallpaper as it's dragged (modelled on the iOS 26 unlock).
     The pane looks exactly the same at rest and mid-swipe — no backdrop
     blur, tint, saturation or brightness change — with the same soft
-    inner glow along its edges throughout (inset edge glow, heaviest
-    along the bottom, plus an eased bottom band; very wide blur radii
-    and a smoothstep gradient keep the feathering smooth; no outline
-    stroke and nothing spilling outside the pane). What the swipe
+    glow along its bottom edge throughout, where the swipe starts,
+    wrapping up into the rounded bottom corners (a pushed-up inset
+    shadow with negative spread so the sides and top stay clear — no
+    vignette around the frame — plus a tighter, brighter feathered
+    highlight right at the edge for contrast and an eased smoothstep
+    bottom band; no outline stroke and nothing spilling outside the
+    pane). What the swipe
     reveals is the glass's edges: the bottom corners round off (square
     at rest, 150px by default, close to the phone's own screen-corner
     curve) over the first "Form Distance" px of drag, and the glowing
     bottom edge lifts away from the bottom of the screen. Glow colour,
-    intensity (0.2) and size (96px) are the "Glow Color/Intensity/Size"
+    intensity (0.3) and size (96px) are the "Glow Color/Intensity/Size"
     controls; the colour goes through CSS `color-mix()` so any colour
     Framer's picker returns works in the shadows. Driven off the same
     `dragY` motion value as the drag itself. With it on, content rides

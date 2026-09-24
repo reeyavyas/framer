@@ -267,7 +267,7 @@ function LockScreenInner(props) {
     )
     // Glow colour at a given strength (0-1). color-mix keeps any colour
     // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
-    const glowIntensity = swipeGlass.glowIntensity ?? 0.2
+    const glowIntensity = swipeGlass.glowIntensity ?? 0.3
     const glowSize = swipeGlass.glowSize ?? 96
     const glow = (strength: number) =>
         `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
@@ -280,10 +280,18 @@ function LockScreenInner(props) {
     const glowBandStops = Array.from({ length: 13 }, (_, i) => {
         const t = i / 12
         const falloff = 1 - t * t * (3 - 2 * t)
-        return `${glow(glowIntensity * 0.5 * falloff)} ${Math.round(
-            t * glowSize * 2
+        return `${glow(glowIntensity * 0.9 * falloff)} ${Math.round(
+            t * glowSize * 1.5
         )}px`
     }).join(", ")
+    // Glow along the bottom edge only, wrapping up into the rounded
+    // bottom corners — no vignette around the rest of the frame. An
+    // inset shadow pushed up (negative y) lights only the bottom edge;
+    // the negative spread pulls it back off the sides so they stay
+    // clear. A second, tighter one right at the edge adds a little
+    // contrast (brighter, crisper edge) while staying feathered rather
+    // than reading as an outline stroke.
+    const glowShadow = `inset 0 -${glowSize * 0.6}px ${glowSize * 0.5}px -${glowSize * 0.3}px ${glow(glowIntensity)}, inset 0 -6px 12px -6px ${glow(glowIntensity * 1.8)}`
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -383,14 +391,14 @@ function LockScreenInner(props) {
             onDragEnd={handleDragEnd}
         >
             {/* Swipe Glass Glow — the same at rest and while swiping: a
-                soft glow bleeding in from every edge (following the
-                rounded corners once the pane lifts), heaviest along the
-                bottom — light caught in the glass's thickness. Very wide
-                blur radii and an eased bottom band keep its feathering
-                smooth. No outline stroke and no backdrop filter/tint (the
-                wallpaper looks exactly as it does at rest), and all inset:
-                the glow stays inside the pane rather than spilling onto
-                the wallpaper. */}
+                soft glow along the bottom edge, where the swipe starts,
+                wrapping up into the rounded corners once the pane lifts —
+                light caught in the glass's thickness. No vignette around
+                the rest of the frame. An eased bottom band and blurred
+                inset shadows keep its feathering smooth. No outline
+                stroke and no backdrop filter/tint (the wallpaper looks
+                exactly as it does at rest), and all inset: the glow stays
+                inside the pane rather than spilling onto the wallpaper. */}
             {swipeGlassEnabled && glowIntensity > 0 && (
                 <motion.div
                     aria-hidden
@@ -401,7 +409,7 @@ function LockScreenInner(props) {
                         borderBottomLeftRadius: sheetRadius,
                         borderBottomRightRadius: sheetRadius,
                         background: `linear-gradient(0deg, ${glowBandStops})`,
-                        boxShadow: `inset 0 0 ${glowSize * 2}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.25}px ${glowSize * 2.5}px ${glow(glowIntensity * 0.5)}`,
+                        boxShadow: glowShadow,
                     }}
                 />
             )}
@@ -1145,7 +1153,7 @@ LockScreen.defaultProps = {
         enabled: true,
         formDistance: 80,
         glowColor: "#E6D9FF",
-        glowIntensity: 0.2,
+        glowIntensity: 0.3,
         glowSize: 96,
         cornerRadius: 150,
         clockOpacity: 0.75,
@@ -1563,7 +1571,7 @@ addPropertyControls(LockScreen, {
             glowIntensity: {
                 type: ControlType.Number,
                 title: "Glow Intensity",
-                defaultValue: 0.2,
+                defaultValue: 0.3,
                 min: 0,
                 max: 1,
                 step: 0.01,
