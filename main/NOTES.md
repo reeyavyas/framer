@@ -95,6 +95,20 @@ Site-wide, page-agnostic components — not owned by any single feature.
     threshold fires the `onSwipeUp` event control; every release
     springs back to rest with a little overshoot, whether or not the
     swipe cleared the threshold.
+  - **Swipe Glass** — as soon as the drag starts, the lock screen
+    turns into a frosted glass pane lifting off the wallpaper (modelled
+    on the iOS 26 unlock): a milky tint thickening toward the bottom,
+    light blur/saturate/brightness backdrop filter, bottom corners
+    rounding off, a bright rim along the bottom and sides, and a soft
+    drop shadow. It forms over the first "Form Distance" px of drag
+    (invisible at rest) and is driven off the same `dragY` motion
+    value as the drag itself. With it on, content rides the pane at
+    full opacity instead of fading out (only the clock/date soften to
+    "Clock Opacity") — this also keeps the flashlight/camera buttons'
+    own backdrop blur working mid-drag, since an opacity < 1 ancestor
+    would cut them off from the wallpaper. Turning "Swipe Glass" off
+    restores the old fade-out-while-dragging behaviour. All of it is
+    tunable under the **Swipe Glass** property group.
   Wire `onSwipeUp` on the Lock Screen instance to navigate to whatever
   page/frame holds your own splash composition.
 - **The Splash screen is hand-built in Framer, not code.** It lives
