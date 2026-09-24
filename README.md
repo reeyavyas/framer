@@ -31,7 +31,7 @@ main/                    Site-wide, page-agnostic pieces
     NeatGradient1.tsx
     bluemotionbackgeound.tsx
     bluemotionbackground2.tsx
-  InactivityOverlay.tsx     Idle-timeout kiosk redirect to homepage
+  AppInactivityOverlay.tsx  Idle-timeout kiosk redirect to /app
   NOTES.md
 
 tutorials/               The tutorial system

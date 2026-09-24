@@ -4,8 +4,21 @@ import { RenderTarget } from "framer"
 
 // Edit these two values directly — they're shared by every instance of
 // this component across every page, with no per-page property to manage.
-const INACTIVITY_MINUTES = 3 // ~6 seconds — TEMP for testing, set back to 5 after
+const INACTIVITY_MINUTES = 3
 const COUNTDOWN_SECONDS = 30
+
+// Fade-in timing on the tutorials carousel page, where it's driven
+// frame by frame instead of by CSS transitions (see onCarouselPage).
+const CAROUSEL_DIM_MS = 700
+const CAROUSEL_PANEL_DELAY_MS = 250
+const CAROUSEL_PANEL_MS = 600
+
+function fadeProgress(elapsedMs: number, delayMs: number, durationMs: number) {
+    return Math.min(1, Math.max(0, (elapsedMs - delayMs) / durationMs))
+}
+const easeInOut = (t: number) =>
+    t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
 
 /**
  * @framerSupportedLayoutWidth fixed
@@ -13,10 +26,19 @@ const COUNTDOWN_SECONDS = 30
  * @framerIntrinsicWidth 1080
  * @framerIntrinsicHeight 1920
  */
-export default function InactivityOverlay() {
+export default function AppInactivityOverlay() {
     const [isVisible, setIsVisible] = React.useState(false)
     const [countdown, setCountdown] = React.useState(COUNTDOWN_SECONDS)
     const [animateIn, setAnimateIn] = React.useState(false)
+    // Whether this page has the tutorials carousel, which turns off the
+    // backdrop blur and changes how the backdrop fades in (see
+    // startInactivityTimer). Decided
+    // fresh each time the overlay opens rather than once on mount, since
+    // the page's content can change underneath this layer.
+    const [onCarouselPage, setOnCarouselPage] = React.useState(false)
+    // Milliseconds since the overlay opened, advanced every frame while
+    // the carousel-page fade-in runs.
+    const [carouselFadeMs, setCarouselFadeMs] = React.useState(0)
 
     // True while designing on the Framer canvas. We skip all timers and
     // listeners in this context, and render a static (non-portaled) preview
@@ -60,7 +82,7 @@ export default function InactivityOverlay() {
 
     const goHome = React.useCallback(() => {
         if (typeof window !== "undefined") {
-            window.location.href = "/"
+            window.location.href = "/app"
         }
     }, [])
 
@@ -69,6 +91,24 @@ export default function InactivityOverlay() {
         clearInactivityTimeout()
         const timeoutMs = INACTIVITY_MINUTES * 60 * 1000
         inactivityTimeoutRef.current = window.setTimeout(() => {
+            // On Windows Chrome/Edge, backdrop-filter blur over the
+            // CurvedCarouselV2 flip cards paints a stray rectangular
+            // shadow on the centered card (not seen on macOS). Confirmed
+            // by removing the blur live — the rectangle disappears — while
+            // flattening the carousel's own preserve-3d or removing its
+            // edge-fade mask did not. With the blur gone the rectangle
+            // still flickered during any CSS opacity transition over the
+            // carousel (backdrop or panel), which Chrome runs on the GPU
+            // compositor, and never when the fade came only from
+            // repainting. So there the fade-in has no CSS transitions:
+            // it's stepped frame by frame from JS (see carouselFadeMs).
+            // Both apply only on pages that actually have the carousel
+            // (its cards carry data-carousel-card); every other page
+            // keeps the blur and CSS fade unchanged.
+            setOnCarouselPage(
+                !!document.querySelector("[data-carousel-card]")
+            )
+            setCarouselFadeMs(0)
             setCountdown(COUNTDOWN_SECONDS)
             setIsVisible(true)
         }, timeoutMs)
@@ -138,6 +178,26 @@ export default function InactivityOverlay() {
         }
     }, [isCanvas, isVisible, clearCountdownInterval])
 
+    // Carousel page only: step the fade-in every frame (see
+    // startInactivityTimer for why it avoids CSS transitions there).
+    React.useEffect(() => {
+        if (isCanvas || !isVisible || !onCarouselPage) return
+        const totalMs = Math.max(
+            CAROUSEL_DIM_MS,
+            CAROUSEL_PANEL_DELAY_MS + CAROUSEL_PANEL_MS
+        )
+        const start = performance.now()
+        let frame = 0
+        const tick = (now: number) => {
+            const elapsed = now - start
+            setCarouselFadeMs(elapsed)
+            if (elapsed < totalMs) frame = window.requestAnimationFrame(tick)
+        }
+        setCarouselFadeMs(0)
+        frame = window.requestAnimationFrame(tick)
+        return () => window.cancelAnimationFrame(frame)
+    }, [isCanvas, isVisible, onCarouselPage])
+
     // Countdown hit 0 while visible -> go home automatically.
     React.useEffect(() => {
         if (isCanvas) return
@@ -146,6 +206,27 @@ export default function InactivityOverlay() {
             goHome()
         }
     }, [isCanvas, countdown, isVisible, clearCountdownInterval, goHome])
+
+    // Announce open/closed to the rest of the page, so a tutorial step
+    // (TutorialOverlay.tsx) can pause underneath while this is up — its
+    // timers, scroll hand-off and scroll redirection would otherwise keep
+    // running behind the "Are you still there?" box. A window flag (for a
+    // step that mounts while this is already open) plus an event (for
+    // steps already mounted), not an import: this file and
+    // TutorialOverlay.tsx live in different top-level folders, and a
+    // cross-folder import doesn't resolve reliably in Framer (see
+    // tutorials/NOTES.md). Cleared on unmount too, so a page navigation
+    // while open can't leave the flag stuck on.
+    React.useEffect(() => {
+        if (isCanvas || !isVisible) return
+        const w = window as any
+        w.__systemOverlayOpen = true
+        window.dispatchEvent(new Event("system-overlay-change"))
+        return () => {
+            w.__systemOverlayOpen = false
+            window.dispatchEvent(new Event("system-overlay-change"))
+        }
+    }, [isCanvas, isVisible])
 
     // Cleanup on unmount.
     React.useEffect(() => {
@@ -159,6 +240,12 @@ export default function InactivityOverlay() {
     // so drive the visual state directly to "fully shown" instead of
     // relying on animateIn, which would otherwise stay stuck at false.
     const faded = isCanvas ? true : animateIn
+    const carouselDim = easeInOut(
+        fadeProgress(carouselFadeMs, 0, CAROUSEL_DIM_MS)
+    )
+    const carouselPanel = easeOut(
+        fadeProgress(carouselFadeMs, CAROUSEL_PANEL_DELAY_MS, CAROUSEL_PANEL_MS)
+    )
 
     const overlayInner = (
         <>
@@ -166,11 +253,15 @@ export default function InactivityOverlay() {
                 style={{
                     position: "absolute",
                     inset: 0,
-                    background: "rgba(0,0,0,0.25)",
-                    backdropFilter: "blur(3px)",
-                    WebkitBackdropFilter: "blur(3px)",
-                    opacity: faded ? 1 : 0,
-                    transition: "opacity 0.4s ease-out 0.3s",
+                    ...(onCarouselPage
+                        ? { background: `rgba(0,0,0,${0.25 * carouselDim})` }
+                        : {
+                              background: "rgba(0,0,0,0.25)",
+                              backdropFilter: "blur(3px)",
+                              WebkitBackdropFilter: "blur(3px)",
+                              opacity: faded ? 1 : 0,
+                              transition: "opacity 0.4s ease-out 0.3s",
+                          }),
                 }}
             />
 
@@ -186,10 +277,17 @@ export default function InactivityOverlay() {
                     flexDirection: "column",
                     gap: 100,
                     alignItems: "flex-start",
-                    opacity: faded ? 1 : 0,
-                    transform: faded ? "scale(1)" : "scale(0.97)",
-                    transition:
-                        "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
+                    ...(onCarouselPage
+                        ? {
+                              opacity: carouselPanel,
+                              transform: `scale(${0.97 + 0.03 * carouselPanel})`,
+                          }
+                        : {
+                              opacity: faded ? 1 : 0,
+                              transform: faded ? "scale(1)" : "scale(0.97)",
+                              transition:
+                                  "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
+                          }),
                     fontFamily: "Inter, sans-serif",
                 }}
             >

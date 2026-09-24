@@ -31,7 +31,11 @@ Card-level account actions a user manages from settings.
     from one factory function assigned to `const`s — Framer's Code
     Override picker only lists exports shaped like a literal top-level
     `function name(Component) {...}`, so every factory-produced export
-    silently failed to show up in the dropdown at all.)
+    silently failed to show up in the dropdown at all.) The flags are
+    module-level and survive Framer's client-side page navigation, so
+    `resetToggles()` clears them all whenever the base page's Save
+    mounts; otherwise leaving without saving and coming back left the
+    flags out of step with the switches, which remount showing Off.
   - `CardAlertsSave.tsx` — the Save button (enabled once any toggle is
     on) and its "Saving..." overlay. Unlike Travel Notice, this page
     shows a brief spinner before navigating, matching the reference

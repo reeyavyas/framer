@@ -4,11 +4,25 @@ Site-wide, page-agnostic components — not owned by any single feature.
 
 ## Current
 
-- `InactivityOverlay.tsx` — kiosk idle-timeout redirect. If the kiosk
-  sits untouched for the configured period (currently ~3 minutes), it
-  shows a countdown and then automatically redirects back to the
-  homepage, so the next person at the kiosk never inherits a stranger's
-  left-open session.
+- `AppInactivityOverlay.tsx` — kiosk idle-timeout redirect. If the
+  kiosk sits untouched for the configured period (currently ~3
+  minutes), it shows a countdown and then automatically redirects to
+  `/app`, so the next person at the kiosk never inherits a stranger's
+  left-open session. Both the countdown and the RETURN HOME button go
+  through `goHome`, the one place the redirect path lives. On pages
+  with the `CurvedCarouselV2` flip cards, Windows Chrome/Edge paints a
+  stray rectangle on the centered card under the backdrop blur and
+  during any CSS opacity transition over the carousel. So on those
+  pages the blur is skipped and the fade-in has no CSS transitions:
+  the backdrop colour and the panel's opacity/scale are stepped each
+  frame from `requestAnimationFrame` (`CAROUSEL_*_MS` timings). Every
+  other page keeps the blur and CSS fade. While open it sets
+  `window.__systemOverlayOpen` and fires a `system-overlay-change`
+  event, which `TutorialOverlay.tsx` uses to pause the tutorial step
+  underneath and `CurvedCarouselV2.tsx` uses to hold its autoplay.
+  Renamed from `InactivityOverlay.tsx` when the redirect changed from
+  `/` to `/app`; the Framer project's placed instances have been
+  swapped over and the old code file deleted there.
 - **Hydration guard** — any code component rendering live date/time
   (or other client-only dynamic values, e.g. weather) needs to hide
   itself until the client has mounted, or the value Framer

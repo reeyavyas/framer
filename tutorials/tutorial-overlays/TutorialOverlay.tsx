@@ -41,9 +41,10 @@ import { getVirtualScroll } from "./VirtualScroll.tsx"
  * This component never manages a cross-PAGE sequence itself — only the
  * optional same-page step handoff described above.
  *
- * For the end of a whole tutorial, use TutorialCongrats.tsx instead —
- * a separate, smaller component built for a full-screen finish, with
- * no hole/target of its own. Drop one per tutorial's last page.
+ * For the end of a whole tutorial, send the user to a dedicated
+ * congrats page built as a native Framer component, with
+ * TutorialCongratsAutoRedirect.tsx attached to it to return to the
+ * Tutorials page after a delay.
  *
  * Targeting a real element: see TutorialTargets.tsx — one shared file,
  * one thin override export per target, reused across every page.
@@ -510,6 +511,30 @@ export default function TutorialOverlay(props: Props) {
         if (pageGroup) setPageStep(pageGroup, stepNumber + 1)
     }, [pageGroup, stepNumber])
 
+    // Paused while AppInactivityOverlay's "Are you still there?" box is
+    // up (it sets window.__systemOverlayOpen and fires
+    // "system-overlay-change" — see that file). While paused this step's
+    // timers stop, scrolling doesn't advance it, and scroll gestures go
+    // nowhere instead of moving the page behind the box. On resume
+    // ("YES, I'M HERE") the timers start over from the full duration
+    // rather than resuming mid-way, and resumeCount remounts the progress
+    // bar so it starts over in step with them.
+    const [systemPaused, setSystemPaused] = React.useState(false)
+    const [resumeCount, setResumeCount] = React.useState(0)
+    const systemPausedRef = React.useRef(false)
+    React.useEffect(() => {
+        if (isCanvas) return
+        function sync() {
+            const open = !!(window as any).__systemOverlayOpen
+            if (systemPausedRef.current && !open) setResumeCount((c) => c + 1)
+            systemPausedRef.current = open
+            setSystemPaused(open)
+        }
+        sync()
+        window.addEventListener("system-overlay-change", sync)
+        return () => window.removeEventListener("system-overlay-change", sync)
+    }, [isCanvas])
+
     React.useEffect(() => setMounted(true), [])
     React.useEffect(() => setArrowShown(false), [target])
 
@@ -620,6 +645,7 @@ export default function TutorialOverlay(props: Props) {
             isCanvas ||
             !active ||
             !isMyTurn ||
+            systemPaused ||
             !autoAdvanceAfterSeconds ||
             !autoAdvanceLink
         )
@@ -631,18 +657,188 @@ export default function TutorialOverlay(props: Props) {
             Math.max(autoAdvanceAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [isCanvas, active, isMyTurn, autoAdvanceAfterSeconds, autoAdvanceLink])
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        systemPaused,
+        autoAdvanceAfterSeconds,
+        autoAdvanceLink,
+    ])
 
     // Optional timer-driven hand-off to the next step on THIS page —
     // independent of any click, uncapped delay.
     React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !nextStepAfterSeconds) return
+        if (
+            isCanvas ||
+            !active ||
+            !isMyTurn ||
+            systemPaused ||
+            !nextStepAfterSeconds
+        )
+            return
         const t = setTimeout(
             advanceStep,
             Math.max(nextStepAfterSeconds, 0) * 1000
         )
         return () => clearTimeout(t)
-    }, [isCanvas, active, isMyTurn, nextStepAfterSeconds, advanceStep])
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        systemPaused,
+        nextStepAfterSeconds,
+        advanceStep,
+    ])
+
+    // Skip moves the user on to the next step, wherever it is — same page
+    // or the next one — by doing whatever this step's own advance
+    // trigger would have done, rather than guessing where "next" is:
+    //
+    //  - A scroll step scrolls its container just past
+    //    scrollThresholdPercent, in scrollDirection. The existing
+    //    scroll hand-off above then fires exactly as it would for a real
+    //    scroll, and the next step's target is left where a real scroll
+    //    would have brought it into view.
+    //  - A step whose advance is tapping its target gets a simulated tap
+    //    at the center of the hole. Everything downstream of a real tap
+    //    happens unchanged: a toggle really flips (so later steps see the
+    //    state they expect), a Link really navigates to the next page,
+    //    and clickAdvancesStep's own listener (clickAdvanceDelaySeconds
+    //    included) advances the group. The tap goes to whatever is
+    //    actually under that point (elementFromPoint), so a marker layer
+    //    with pointer-events:none passes it through to the real element
+    //    beneath, same as a finger would.
+    //  - Otherwise: same as the Next button (nextButtonLink, else the next
+    //    step in this group), else the auto-advance link, else the next
+    //    step in this group — except a step with no target, no Next
+    //    button and no timer, which is waiting on something else on the
+    //    page to move on; there Skip leaves the step up.
+    //
+    // A set skipLink still wins over all of this — handled by the <a>
+    // itself below, as before.
+    const skipUsedRef = React.useRef(false)
+    React.useEffect(() => {
+        skipUsedRef.current = false
+    }, [isMyTurn])
+
+    const tapAdvances =
+        !!target &&
+        (clickAdvancesStep ||
+            (!scrollAdvancesStep &&
+                !showNextButton &&
+                !nextStepAfterSeconds &&
+                !autoAdvanceAfterSeconds))
+
+    const skipStep = React.useCallback(() => {
+        if (isCanvas || !active || !isMyTurn) return
+        // Until revealed, a tap on the target is blocked like any tap
+        // outside the hole, so there's nothing for a simulated one to do
+        // yet — ignore the press rather than skip past the step without
+        // its action.
+        if (tapAdvances && !revealedRef.current) return
+        // One skip per step: a second press during clickAdvanceDelaySeconds
+        // (or while a scroll animates) would otherwise tap a toggle twice,
+        // flipping it straight back.
+        if (skipUsedRef.current) return
+        skipUsedRef.current = true
+
+        if (scrollAdvancesStep) {
+            // 1% past the threshold, so rounding in the scroll position
+            // can't leave it a hair short of crossing.
+            const percent =
+                scrollDirection === "up"
+                    ? Math.max(scrollThresholdPercent - 1, 0)
+                    : Math.min(scrollThresholdPercent + 1, 100)
+            const virtual = getVirtualScroll(scrollContainerTarget)
+            if (virtual) {
+                virtual.scrollToPercent(percent)
+            } else {
+                const el = resolveScrollTarget(scrollContainerTarget)
+                const node =
+                    el === window ? document.documentElement : (el as HTMLElement)
+                const max = node.scrollHeight - node.clientHeight
+                el.scrollTo({ top: (max * percent) / 100, behavior: "smooth" })
+            }
+            // Backstop once the scroll has had time to finish: if it still
+            // didn't cross the threshold (e.g. content shorter than
+            // expected), advance anyway, so one-skip-per-step can't leave
+            // the user stuck on this step.
+            setTimeout(() => {
+                if (pageGroup && getPageStep(pageGroup) === stepNumber)
+                    advanceStep()
+            }, 1000)
+            return
+        }
+
+        if (tapAdvances) {
+            const r = rectRef.current
+            const x = r ? r.left + r.width / 2 : -1
+            const y = r ? r.top + r.height / 2 : -1
+            // Null when the point is off screen (e.g. a target below the
+            // fold) — fall through and just advance instead.
+            const hit =
+                x >= 0 && y >= 0 ? document.elementFromPoint(x, y) : null
+            if (hit && !hit.closest("[data-tutorial-overlay]")) {
+                const init = {
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true,
+                    clientX: x,
+                    clientY: y,
+                    pointerId: 1,
+                    pointerType: "mouse",
+                    isPrimary: true,
+                    button: 0,
+                    buttons: 1,
+                }
+                hit.dispatchEvent(new PointerEvent("pointerdown", init))
+                hit.dispatchEvent(
+                    new PointerEvent("pointerup", { ...init, buttons: 0 })
+                )
+                hit.dispatchEvent(
+                    new MouseEvent("click", { ...init, buttons: 0 })
+                )
+                // Either clickAdvancesStep's listener has already seen the
+                // pointerdown above and advanced (or scheduled it), or the
+                // tap itself is the advance (e.g. a Link to the next page).
+                return
+            }
+        }
+
+        if (showNextButton && nextButtonLink) {
+            window.location.href = nextButtonLink
+        } else if (autoAdvanceAfterSeconds && autoAdvanceLink) {
+            window.location.href = autoAdvanceLink
+        } else if (!target && !showNextButton && !nextStepAfterSeconds) {
+            // A waiting step: nothing of its own hands off, because
+            // something else on the page moves on (e.g. the Card Alerts
+            // tutorial's step shown under "Saving..."). Skipping would
+            // only hide the overlay and leave the page open to taps, so
+            // keep it up and let the page move on by itself.
+            return
+        } else {
+            advanceStep()
+        }
+    }, [
+        isCanvas,
+        active,
+        isMyTurn,
+        tapAdvances,
+        scrollAdvancesStep,
+        scrollDirection,
+        scrollThresholdPercent,
+        scrollContainerTarget,
+        target,
+        showNextButton,
+        nextButtonLink,
+        nextStepAfterSeconds,
+        autoAdvanceAfterSeconds,
+        autoAdvanceLink,
+        pageGroup,
+        stepNumber,
+        advanceStep,
+    ])
 
     // Explicit click-blocking. Replaces relying on clip-path to exclude
     // the hole from hit-testing — clip-path reliably PAINTS the hole, but
@@ -715,6 +911,20 @@ export default function TutorialOverlay(props: Props) {
         if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
         let pending: ReturnType<typeof setTimeout> | null = null
         function onPointerDown(e: PointerEvent) {
+            // Same exemption as blockOutsideHole above. This listener only
+            // checks coordinates, so without it a tap on this overlay's own
+            // Skip/Exit/Next buttons, or on AppInactivityOverlay's "YES, I'M
+            // HERE" / "RETURN HOME" (a data-system-overlay sitting on top
+            // of everything), that happened to land inside the hole's
+            // bounds counted as tapping the target — advancing the step
+            // even though the real target never got the tap (a toggle left
+            // unflipped).
+            if (
+                (e.target as HTMLElement | null)?.closest?.(
+                    "[data-tutorial-overlay], [data-system-overlay]"
+                )
+            )
+                return
             const r = rectRef.current
             if (
                 !pending &&
@@ -761,7 +971,14 @@ export default function TutorialOverlay(props: Props) {
     // of native scrollTop/scroll events — there's nothing native to
     // listen to once a container's scrolling has been taken over.
     React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !scrollAdvancesStep) return
+        if (
+            isCanvas ||
+            !active ||
+            !isMyTurn ||
+            systemPaused ||
+            !scrollAdvancesStep
+        )
+            return
         const virtual = getVirtualScroll(scrollContainerTarget)
         if (virtual) {
             function checkVirtual() {
@@ -800,6 +1017,7 @@ export default function TutorialOverlay(props: Props) {
         isCanvas,
         active,
         isMyTurn,
+        systemPaused,
         scrollAdvancesStep,
         scrollDirection,
         scrollContainerTarget,
@@ -852,7 +1070,14 @@ export default function TutorialOverlay(props: Props) {
         if (isCanvas || !active || !isMyTurn) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
+        // While paused (see systemPausedRef), swallow scroll gestures
+        // instead of redirecting them, so the page behind the "Are you
+        // still there?" box stays put.
         function onWheel(e: WheelEvent) {
+            if (systemPausedRef.current) {
+                e.preventDefault()
+                return
+            }
             scrollTarget = findScrollableAt(e.clientX, e.clientY)
             scrollByOn(scrollTarget, e.deltaY, e.deltaX)
             e.preventDefault()
@@ -865,6 +1090,10 @@ export default function TutorialOverlay(props: Props) {
             )
         }
         function onTouchMove(e: TouchEvent) {
+            if (systemPausedRef.current) {
+                e.preventDefault()
+                return
+            }
             const y = e.touches[0].clientY
             scrollByOn(scrollTarget, lastY - y)
             lastY = y
@@ -1288,6 +1517,7 @@ export default function TutorialOverlay(props: Props) {
                                                     remount), so it always
                                                     restarts at 0%. */}
                                                 <motion.div
+                                                    key={resumeCount}
                                                     initial={{ width: "0%" }}
                                                     animate={{
                                                         width: "100%",
@@ -1415,7 +1645,11 @@ export default function TutorialOverlay(props: Props) {
             {showSkipButton && (
                 <a
                     href={skipLink || undefined}
-                    onClick={(e) => !skipLink && e.preventDefault()}
+                    onClick={(e) => {
+                        if (skipLink) return
+                        e.preventDefault()
+                        skipStep()
+                    }}
                     style={{
                         position: "fixed",
                         top: 60,

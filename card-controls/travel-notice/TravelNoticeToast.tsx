@@ -15,7 +15,7 @@ import { RenderTarget } from "framer"
  *    left behind; if present, it shows the frame, holds it for
  *    VISIBLE_MS, fades it out over FADE_MS, then hides it. Edit the two
  *    constants below directly to change timing — same "edit the
- *    constant" convention InactivityOverlay.tsx uses for its own
+ *    constant" convention AppInactivityOverlay.tsx uses for its own
  *    timings.
  *
  *  - withTravelNoticeToastDismiss — apply to the toast's own × button

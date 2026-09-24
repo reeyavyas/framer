@@ -13,6 +13,12 @@ Budgeting UI: the draggable "Budget Circles" spending categories.
   - A `window` `CustomEvent` bridge (avoids needing the paid Framer
     Convert Add-On) swaps Set 1 out and Set 2 in when the Set 1 "Save"
     button fires, and drives the success toast that confirms the save.
+    The Save override listens for pointerup, Framer's onTap and click
+    (whichever Framer delivers), but sends the event only once per tap
+    (repeats within 500ms are ignored). pointerup only counts when the
+    finger is released over the button, so pressing Save and sliding
+    off without lifting doesn't save; it used to fire on pointerdown,
+    which did.
   - This is the confirmed-good version, pulled from
     `claude/framer-circle-physics-0jt0rf` (drag-collision-iteration
     fix applied) — see root repo history for how it was selected among

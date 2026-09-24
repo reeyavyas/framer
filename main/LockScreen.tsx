@@ -927,7 +927,7 @@ function LockScreenInner(props) {
 // Component
 /**
  * Fixed to the kiosk's native resolution — same convention as
- * InactivityOverlay.tsx — so dropping either variant onto the canvas
+ * AppInactivityOverlay.tsx — so dropping either variant onto the canvas
  * defaults to the real screen size instead of an arbitrary frame.
  *
  * @framerSupportedLayoutWidth fixed

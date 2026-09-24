@@ -64,6 +64,24 @@ export function subscribeToggles(onChange: () => void): () => void {
     }
 }
 
+// Clears every toggle's flag and the shared on-count. CardAlertsSave.tsx's
+// base-page Save calls this when the Set Card Alerts page mounts. These
+// flags are module-level, and Framer's client-side routing keeps this
+// module alive across page navigations, but the native switches
+// themselves remount showing Off. Without a reset, leaving the page
+// without saving (e.g. Cancel/back) and coming back left the flags from
+// the last visit behind: Save enabled with every switch showing Off, and
+// the next tap on a switch that had been on moving its flag to false
+// while the switch showed On (Save disabled with a toggle visibly on).
+export function resetToggles(): void {
+    isOn1 = isOn2 = isOn3 = isOn4 = isOn5 = false
+    isOn6 = isOn7 = isOn8 = isOn9 = isOn10 = false
+    isOn11 = isOn12 = isOn13 = isOn14 = isOn15 = false
+    isOn16 = isOn17 = isOn18 = isOn19 = isOn20 = false
+    onCount = 0
+    notifyToggleListeners()
+}
+
 // Shared tap handling for every numbered export below.
 function handleToggleTap(
     props: any,

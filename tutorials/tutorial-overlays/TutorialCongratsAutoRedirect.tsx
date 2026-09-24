@@ -1,7 +1,7 @@
 import { Override, RenderTarget } from "framer"
 import { useEffect } from "react"
 
-const AUTO_REDIRECT_SECONDS = 2
+const AUTO_REDIRECT_SECONDS = 5
 const EXIT_LINK = "/tutorials"
 
 /**

@@ -43,15 +43,17 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
     for visual parity with the real app, but the × isn't clickable
     (rendered as a plain `<span aria-hidden>`, not a `<button>`).
   - Save has no disabled state — the fixed values are always valid, so
-    it's just always styled "enabled". It still writes the exact same
-    `kioskTravelNotice` / `kioskTravelNoticeToastFlag` sessionStorage
-    keys as the base form, so `TravelNoticeToast.tsx` and
-    `TravelNoticeSectionTutorial.tsx` (below) both work unmodified. Cancel is
-    unchanged from the base form.
+    it's just always styled "enabled". It writes its record under its
+    own `kioskTravelNoticeTutorial` key, not the base form's
+    `kioskTravelNotice`: sharing that key made the tutorial's practice
+    notice show up once on the real Card Controls page, whose
+    `TravelNoticeSection.tsx` has never seen that save. The toast flag
+    (`kioskTravelNoticeToastFlag`) stays shared, so `TravelNoticeToast.tsx`
+    works unmodified. Cancel is unchanged from the base form.
 - `TravelNoticeSectionTutorial.tsx` — duplicate of
-  `card-controls/travel-notice/TravelNoticeSection.tsx`. No functional
-  changes needed: it already reads whatever's under the shared
-  `kioskTravelNotice` key and already labels it "Future Plans" whenever
+  `card-controls/travel-notice/TravelNoticeSection.tsx`. Reads the
+  tutorial-only `kioskTravelNoticeTutorial` key (see above) instead of
+  `kioskTravelNotice`; otherwise unchanged. It labels it "Future Plans" whenever
   the record's start date isn't today, which is always true for
   `SetTravelNoticeTutorial.tsx`'s fixed 2-weeks-out date — so it shows
   "Future Plans" (never "Happening Now") automatically. Only its

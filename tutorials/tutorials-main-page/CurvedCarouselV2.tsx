@@ -641,6 +641,14 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         let timer: ReturnType<typeof setTimeout>
 
         const tick = () => {
+            // Hold still while "Are you still there?" is open (see
+            // AppInactivityOverlay.tsx), and wait a full interval after
+            // it closes before moving again.
+            if ((window as any).__systemOverlayOpen) {
+                lastInteractionRef.current = Date.now()
+                timer = setTimeout(tick, intervalMs)
+                return
+            }
             const elapsed = Date.now() - lastInteractionRef.current
             if (elapsed >= intervalMs) {
                 lastInteractionRef.current = Date.now()

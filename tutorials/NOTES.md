@@ -8,7 +8,9 @@ Builds the Tutorials landing page itself.
 
 - `CurvedCarouselV2.tsx` — the curved/arc card carousel that holds the
   flip-card tutorial entries. Current version (fixes the front-card
-  reset firing mid-drag). The superseded V1, `CurvedCarousel.tsx`, has
+  reset firing mid-drag). Its autoplay holds while
+  `AppInactivityOverlay`'s "Are you still there?" box is open
+  (`window.__systemOverlayOpen`). The superseded V1, `CurvedCarousel.tsx`, has
   moved to `archived/tutorials-main-page/` — see `archived/NOTES.md`.
 
 ## `tutorial-overlays/`
@@ -180,6 +182,32 @@ anywhere else on the page.
   `"center"` (confirmed as the intended no-target default) so they
   agree, and a repo-wide sweep turned up no other Boolean/Enum/Number
   control with this same defaultProps-vs-control mismatch.
+
+  The Skip button (`skipStep()`) moves on to the next step, same page
+  or next, by doing what the step's own advance would have done: a
+  scroll step scrolls its container 1% past `scrollThresholdPercent`
+  (VirtualScroll's `scrollToPercent()` or native `scrollTo`), letting
+  the normal scroll hand-off fire; a step advanced by tapping its target
+  gets a simulated tap at the hole's center (pointerdown/pointerup/click
+  on `elementFromPoint`), so toggles really flip and Links really
+  navigate; anything else behaves like the Next button, then the
+  auto-advance link, then `advanceStep()`. The exception is a waiting
+  step (no target, no Next button, no timer), such as the Card Alerts
+  tutorial's step shown under "Saving...": the page moves on by itself,
+  so Skip leaves the step up rather than hiding the overlay and letting
+  taps through. One skip per step, so a
+  second press can't flip a toggle back. `skipLink`, when set, still
+  overrides all of this and navigates there instead. Confirmed live
+  that a simulated tap flips the Card Controls card toggle and all
+  three Card Alerts toggles and advances their steps.
+
+  While `AppInactivityOverlay`'s "Are you still there?" box is open
+  (`window.__systemOverlayOpen` / `system-overlay-change`), the active
+  step pauses: its `nextStepAfterSeconds`/`autoAdvanceAfterSeconds`
+  timers stop, scrolling doesn't advance it, and scroll gestures are
+  swallowed instead of moving the page behind the box. On "YES, I'M
+  HERE" the timers restart from their full duration and the progress
+  bar restarts with them (`resumeCount` key).
 
   `glowDelaySeconds` (and the `glowShown` state/timer effect that only
   existed to support it) was removed as unused — the glow now just
