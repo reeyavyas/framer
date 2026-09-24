@@ -33,11 +33,11 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| A1 | Check every page that used to have `InactivityOverlay` | Each now has `AppInactivityOverlay`, and the old `InactivityOverlay` code file is deleted in Framer | Not confirmed yet (user's A1 note was the A5 flicker, see A5) |
+| A1 | Check every page that used to have `InactivityOverlay` | Each now has `AppInactivityOverlay`, and the old `InactivityOverlay` code file is deleted in Framer | Pass |
 | A2 | Leave any page idle until the overlay appears, then let the 30-second countdown run out | Overlay appears after the idle time; countdown reaches 0 and goes to `/app` | Pass |
 | A3 | Open the overlay again and tap **RETURN HOME** | Goes to `/app` | Pass |
 | A4 | Open the overlay again and tap **YES, I'M HERE** | Overlay closes; after another idle period it appears again | Pass |
-| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | **Fail (partial):** rectangle flickers briefly as the overlay first opens, then goes away. Needs a follow-up fix |
+| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | **Fail (partial):** rectangle flickers briefly as the overlay first opens, then goes away. Needs a follow-up fix. User also saw the carousel keep auto-cycling under the overlay; CurvedCarouselV2 autoplay now holds while the overlay is open. **Retest** |
 | A6 | Any other page: let the overlay appear | Background is dimmed **and** blurred, same as before | Pass |
 
 ## B. Tutorial pauses while "Are you still there?" is open
@@ -82,13 +82,13 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| F1 | Tap **Save** normally | Circles swap to the second set (with Bills & Utilities) and the success toast shows | |
-| F2 | Same, with DevTools Console open | No `[budgets-bridge]` lines | |
-| F3 | Press **Save**, slide your finger/mouse off the button, then lift | Nothing happens (no swap, no toast) | |
-| F4 | If F1 fails (Save does nothing) | Report it: Save used to also fire on finger-down, and that may have been covering for Framer's tap/click not firing | |
+| F1 | Tap **Save** normally | Circles swap to the second set (with Bills & Utilities) and the success toast shows | Pass |
+| F2 | Same, with DevTools Console open | No `[budgets-bridge]` lines | Pass (none seen; the code no longer logs them). Can confirm with the Console filter box |
+| F3 | Press **Save**, slide your finger/mouse off the button, then lift | Nothing happens (no swap, no toast) | Pass |
+| F4 | If F1 fails (Save does nothing) | Report it: Save used to also fire on finger-down, and that may have been covering for Framer's tap/click not firing | N/A (F1 passed) |
 
 ## G. Congrats page
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| G1 | Finish a tutorial to reach the congrats page | Returns to `/tutorials` after about 5 seconds | |
+| G1 | Finish a tutorial to reach the congrats page | Returns to `/tutorials` after about 5 seconds | Pass |
