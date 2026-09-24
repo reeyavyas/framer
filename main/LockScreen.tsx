@@ -264,9 +264,17 @@ function LockScreenInner(props) {
         [0, 1],
         [1, swipeGlass.clockOpacity ?? 0.75]
     )
-    const sheetTint = swipeGlass.tintOpacity ?? 0.2
+    const sheetTint = swipeGlass.tintOpacity ?? 0.05
     const sheetEdge = swipeGlass.edgeHighlight ?? 0.8
-    const sheetBlurFilter = `blur(${swipeGlass.blur ?? 16}px) saturate(${swipeGlass.saturation ?? 150}%) brightness(${swipeGlass.brightness ?? 112}%)`
+    const sheetBlurFilter = `blur(${swipeGlass.blur ?? 16}px) saturate(${swipeGlass.saturation ?? 200}%) brightness(${swipeGlass.brightness ?? 125}%)`
+    // Glow colour at a given strength (0-1). color-mix keeps any colour
+    // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
+    const glowIntensity = swipeGlass.glowIntensity ?? 0.6
+    const glowSize = swipeGlass.glowSize ?? 56
+    const glow = (strength: number) =>
+        `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
+            Math.min(strength, 1) * 100
+        )}%, transparent)`
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -378,18 +386,21 @@ function LockScreenInner(props) {
                         opacity: glassProgress,
                         borderBottomLeftRadius: sheetRadius,
                         borderBottomRightRadius: sheetRadius,
-                        // Milky tint that thickens toward the bottom (where
-                        // the pane is lifting away), plus a narrow bright
-                        // band hugging the bottom edge — light refracting
-                        // through the glass's thickness at its leading edge.
-                        background: `linear-gradient(0deg, ${rgba(255, 255, 255, sheetEdge * 0.35)} 0px, rgba(255,255,255,0) 28px), linear-gradient(180deg, ${rgba(255, 255, 255, sheetTint * 0.6)} 0%, ${rgba(255, 255, 255, sheetTint)} 100%)`,
+                        // Only a faint white tint — the pane's colour comes
+                        // from the wallpaper itself, pushed brighter and more
+                        // saturated by the backdrop filter so it glows
+                        // through rather than washing out to white. A soft
+                        // band of glow light hugs the bottom (leading) edge.
+                        background: `linear-gradient(0deg, ${glow(glowIntensity * 0.5)} 0px, transparent ${glowSize}px), ${rgba(255, 255, 255, sheetTint)}`,
                         backdropFilter: sheetBlurFilter,
                         WebkitBackdropFilter: sheetBlurFilter,
-                        // Bright rim along the bottom and sides (follows the
-                        // rounded corners), a faint top rim, and a soft drop
-                        // shadow so the pane reads as floating above the
-                        // wallpaper rather than painted onto it.
-                        boxShadow: `inset 0 -2px 1px ${rgba(255, 255, 255, sheetEdge)}, inset 1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset -1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset 0 1px 1px ${rgba(255, 255, 255, sheetEdge * 0.4)}, 0 24px 48px rgba(0,0,0,0.18)`,
+                        // Crisp bright rim along the bottom and sides
+                        // (follows the rounded corners), then a soft inner
+                        // glow bleeding in from every edge and a matching
+                        // outer halo spilling onto the wallpaper — light
+                        // caught in the glass's thickness instead of a dark
+                        // drop shadow.
+                        boxShadow: `inset 0 -2px 1px ${rgba(255, 255, 255, sheetEdge)}, inset 1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset -1px 0 1px ${rgba(255, 255, 255, sheetEdge * 0.5)}, inset 0 1px 1px ${rgba(255, 255, 255, sheetEdge * 0.4)}, inset 0 0 ${glowSize}px ${glow(glowIntensity * 0.7)}, 0 0 ${glowSize}px ${glow(glowIntensity)}, 0 ${glowSize * 0.4}px ${glowSize * 1.5}px ${glow(glowIntensity * 0.6)}`,
                         // Same reason as buttonGlassStyle: allocate the
                         // backdrop-filter layer up front so the blur doesn't
                         // lag a frame behind the first drag movement.
@@ -1136,10 +1147,13 @@ LockScreen.defaultProps = {
     swipeGlass: {
         enabled: true,
         formDistance: 80,
-        tintOpacity: 0.2,
+        tintOpacity: 0.05,
         blur: 16,
-        saturation: 150,
-        brightness: 112,
+        saturation: 200,
+        brightness: 125,
+        glowColor: "#E6D9FF",
+        glowIntensity: 0.6,
+        glowSize: 56,
         cornerRadius: 64,
         edgeHighlight: 0.8,
         clockOpacity: 0.75,
@@ -1551,7 +1565,7 @@ addPropertyControls(LockScreen, {
             tintOpacity: {
                 type: ControlType.Number,
                 title: "Tint Opacity",
-                defaultValue: 0.2,
+                defaultValue: 0.05,
                 min: 0,
                 max: 1,
                 step: 0.01,
@@ -1569,7 +1583,7 @@ addPropertyControls(LockScreen, {
             saturation: {
                 type: ControlType.Number,
                 title: "Saturation",
-                defaultValue: 150,
+                defaultValue: 200,
                 min: 100,
                 max: 250,
                 step: 5,
@@ -1578,10 +1592,35 @@ addPropertyControls(LockScreen, {
             brightness: {
                 type: ControlType.Number,
                 title: "Brightness",
-                defaultValue: 112,
+                defaultValue: 125,
                 min: 80,
                 max: 150,
                 step: 1,
+                hidden: (p) => p.enabled === false,
+            },
+            glowColor: {
+                type: ControlType.Color,
+                title: "Glow Color",
+                defaultValue: "#E6D9FF",
+                hidden: (p) => p.enabled === false,
+            },
+            glowIntensity: {
+                type: ControlType.Number,
+                title: "Glow Intensity",
+                defaultValue: 0.6,
+                min: 0,
+                max: 1,
+                step: 0.01,
+                hidden: (p) => p.enabled === false,
+            },
+            glowSize: {
+                type: ControlType.Number,
+                title: "Glow Size",
+                defaultValue: 56,
+                min: 0,
+                max: 160,
+                step: 1,
+                unit: "px",
                 hidden: (p) => p.enabled === false,
             },
             cornerRadius: {

@@ -97,10 +97,15 @@ Site-wide, page-agnostic components — not owned by any single feature.
     swipe cleared the threshold.
   - **Swipe Glass** — as soon as the drag starts, the lock screen
     turns into a frosted glass pane lifting off the wallpaper (modelled
-    on the iOS 26 unlock): a milky tint thickening toward the bottom,
-    light blur/saturate/brightness backdrop filter, bottom corners
-    rounding off, a bright rim along the bottom and sides, and a soft
-    drop shadow. It forms over the first "Form Distance" px of drag
+    on the iOS 26 unlock): only a faint white tint, with the
+    wallpaper's own colours pushed brighter and more saturated by the
+    backdrop filter so the pane glows rather than washing out white;
+    bottom corners rounding off; a bright rim along the bottom and
+    sides; and a soft glow (inner edge glow, a band along the bottom
+    edge, and an outer halo in place of a dark drop shadow) whose
+    colour/strength/spread are the "Glow Color/Intensity/Size"
+    controls. The glow colour goes through CSS `color-mix()` so any
+    colour Framer's picker returns works in the shadows. It forms over the first "Form Distance" px of drag
     (invisible at rest) and is driven off the same `dragY` motion
     value as the drag itself. With it on, content rides the pane at
     full opacity instead of fading out (only the clock/date soften to
