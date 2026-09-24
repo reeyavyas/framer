@@ -98,7 +98,7 @@ Site-wide, page-agnostic components — not owned by any single feature.
   - **Swipe Glass** — the lock screen is a pane of glass that lifts
     off the wallpaper as it's dragged (modelled on the iOS 26 unlock).
     The pane brightens the wallpaper behind it (with just a touch of
-    extra contrast) via a backdrop filter — "Brightness" 115% and
+    extra contrast) via a backdrop filter — "Brightness" 118% and
     "Contrast" 104% by default — and does so identically at rest and
     mid-swipe, so the lock screen's look never changes with the
     swipe. No glow, vignette, tint, blur or outline stroke (all tried

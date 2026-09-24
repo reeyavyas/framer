@@ -267,7 +267,7 @@ function LockScreenInner(props) {
         [0, 1],
         [1, swipeGlass.clockOpacity ?? 0.75]
     )
-    const paneFilter = `brightness(${swipeGlass.brightness ?? 115}%) contrast(${swipeGlass.contrast ?? 104}%)`
+    const paneFilter = `brightness(${swipeGlass.brightness ?? 118}%) contrast(${swipeGlass.contrast ?? 104}%)`
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -1128,7 +1128,7 @@ LockScreen.defaultProps = {
     swipeGlass: {
         enabled: true,
         formDistance: 80,
-        brightness: 115,
+        brightness: 118,
         contrast: 104,
         cornerRadius: 150,
         clockOpacity: 0.75,
@@ -1540,7 +1540,7 @@ addPropertyControls(LockScreen, {
             brightness: {
                 type: ControlType.Number,
                 title: "Brightness",
-                defaultValue: 115,
+                defaultValue: 118,
                 min: 100,
                 max: 150,
                 step: 1,
