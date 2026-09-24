@@ -235,14 +235,15 @@ function LockScreenInner(props) {
     const dragY = useMotionValue(0)
     const opacityTransform = useTransform(dragY, [-150, 0], [0, 1])
 
-    // Swipe-up glass sheet — the way the iOS 26 lock screen reads once
-    // you start to drag it: the whole screen turns into a milky, frosted
-    // pane that lifts off the wallpaper, carrying the clock/buttons/home
-    // indicator with it, its bottom corners rounding off like a physical
-    // card and a bright rim catching light along the edge. The pane
-    // forms over the first `formDistance` px of the drag (0 at rest, so
-    // the lock screen itself is untouched until the finger moves) and
-    // then stays fully formed as it travels.
+    // Swipe-up glass pane — the way the iOS 26 lock screen reads once
+    // you start to drag it: the lock screen is a pane of glass that lifts
+    // off the wallpaper, carrying the clock/buttons/home indicator with
+    // it. Nothing about the pane's colour, contrast or lighting changes
+    // with the swipe — the same soft inner glow sits along its edges at
+    // rest and while dragging. What the swipe reveals is the glass's
+    // edges: its bottom corners round off over the first `formDistance`
+    // px of the drag (square at rest, matching the screen) and the
+    // glowing bottom edge lifts away from the bottom of the screen.
     const swipeGlassEnabled = swipeGlass.enabled !== false
     const glassProgress = useTransform(
         dragY,
@@ -254,18 +255,16 @@ function LockScreenInner(props) {
         [0, 1],
         [0, swipeGlass.cornerRadius ?? 150]
     )
-    // With the glass sheet on, content rides the pane at full opacity
+    // With the glass pane on, content rides the pane at full opacity
     // (as on iOS) instead of fading out — which also keeps the
     // flashlight/camera buttons' own backdrop blur intact, since an
     // opacity < 1 ancestor would cut them off from the wallpaper. Only
-    // the clock/date soften a little, reading as etched into the glass.
+    // the clock/date dim a little as the pane lifts, as they do on iOS.
     const clockGlassOpacity = useTransform(
         glassProgress,
         [0, 1],
         [1, swipeGlass.clockOpacity ?? 0.75]
     )
-    const sheetTint = swipeGlass.tintOpacity ?? 0.05
-    const sheetBlurFilter = `blur(${swipeGlass.blur ?? 16}px) saturate(${swipeGlass.saturation ?? 200}%) brightness(${swipeGlass.brightness ?? 125}%)`
     // Glow colour at a given strength (0-1). color-mix keeps any colour
     // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
     const glowIntensity = swipeGlass.glowIntensity ?? 0.2
@@ -274,9 +273,17 @@ function LockScreenInner(props) {
         `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
             Math.min(strength, 1) * 100
         )}%, transparent)`
-    // The glow can stay on while the lock screen is at rest (along the
-    // screen's edges) instead of only appearing with the swipe.
-    const glowAtRest = swipeGlass.glowAtRest !== false
+    // Bottom glow band as an eased (smoothstep) gradient over many stops
+    // rather than a couple of linear ones — a linear ramp has visible
+    // kinks where its segments meet and a hard line where it ends,
+    // which is what made the feathering look uneven.
+    const glowBandStops = Array.from({ length: 13 }, (_, i) => {
+        const t = i / 12
+        const falloff = 1 - t * t * (3 - 2 * t)
+        return `${glow(glowIntensity * 0.5 * falloff)} ${Math.round(
+            t * glowSize * 2
+        )}px`
+    }).join(", ")
 
     // CSS Glass System Recipes — Liquid Glass (iOS 26) inspired: a soft,
     // centered top-lit glow, contained close to the top edge, over a flat
@@ -375,42 +382,15 @@ function LockScreenInner(props) {
             }}
             onDragEnd={handleDragEnd}
         >
-            {/* Swipe Glass Sheet — invisible at rest, fades in as the drag
-                starts. Sits behind the content so everything on the lock
-                screen reads as resting on the pane. */}
-            {swipeGlassEnabled && (
-                <motion.div
-                    aria-hidden
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        opacity: glassProgress,
-                        borderBottomLeftRadius: sheetRadius,
-                        borderBottomRightRadius: sheetRadius,
-                        // Only a faint white tint — the pane's colour comes
-                        // from the wallpaper itself, pushed brighter and more
-                        // saturated by the backdrop filter so it glows
-                        // through rather than washing out to white.
-                        background: rgba(255, 255, 255, sheetTint),
-                        backdropFilter: sheetBlurFilter,
-                        WebkitBackdropFilter: sheetBlurFilter,
-                        // Same reason as buttonGlassStyle: allocate the
-                        // backdrop-filter layer up front so the blur doesn't
-                        // lag a frame behind the first drag movement.
-                        willChange: "backdrop-filter, opacity",
-                    }}
-                />
-            )}
-            {/* Swipe Glass Glow — its own layer on top of the sheet so it
-                can stay lit at rest ("Glow At Rest") while the frosted
-                sheet only forms once the drag starts. A soft glow bleeding
-                in from every edge (following the rounded corners),
-                heaviest along the bottom — light caught in the glass's
-                thickness. Wide blur radii and a gradual bottom band keep
-                its edges soft. No outline stroke, and all inset: the glow
-                stays inside the pane rather than spilling onto the
-                wallpaper. */}
+            {/* Swipe Glass Glow — the same at rest and while swiping: a
+                soft glow bleeding in from every edge (following the
+                rounded corners once the pane lifts), heaviest along the
+                bottom — light caught in the glass's thickness. Very wide
+                blur radii and an eased bottom band keep its feathering
+                smooth. No outline stroke and no backdrop filter/tint (the
+                wallpaper looks exactly as it does at rest), and all inset:
+                the glow stays inside the pane rather than spilling onto
+                the wallpaper. */}
             {swipeGlassEnabled && glowIntensity > 0 && (
                 <motion.div
                     aria-hidden
@@ -418,11 +398,10 @@ function LockScreenInner(props) {
                         position: "absolute",
                         inset: 0,
                         pointerEvents: "none",
-                        opacity: glowAtRest ? 1 : glassProgress,
                         borderBottomLeftRadius: sheetRadius,
                         borderBottomRightRadius: sheetRadius,
-                        background: `linear-gradient(0deg, ${glow(glowIntensity * 0.5)} 0px, ${glow(glowIntensity * 0.2)} ${glowSize * 0.5}px, transparent ${glowSize * 1.5}px)`,
-                        boxShadow: `inset 0 0 ${glowSize * 1.5}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.3}px ${glowSize * 1.5}px ${glow(glowIntensity * 0.6)}`,
+                        background: `linear-gradient(0deg, ${glowBandStops})`,
+                        boxShadow: `inset 0 0 ${glowSize * 2}px ${glow(glowIntensity * 0.85)}, inset 0 -${glowSize * 0.25}px ${glowSize * 2.5}px ${glow(glowIntensity * 0.5)}`,
                     }}
                 />
             )}
@@ -440,7 +419,7 @@ function LockScreenInner(props) {
                     paddingRight: layout.sideInset,
                     paddingTop: layout.topInset,
                     pointerEvents: "none",
-                    // Without the glass sheet, fade content out while the
+                    // Without the glass pane, fade content out while the
                     // user drags up; with it, content rides the pane.
                     opacity: swipeGlassEnabled ? 1 : opacityTransform,
                 }}
@@ -1165,14 +1144,9 @@ LockScreen.defaultProps = {
     swipeGlass: {
         enabled: true,
         formDistance: 80,
-        tintOpacity: 0.05,
-        blur: 16,
-        saturation: 200,
-        brightness: 125,
         glowColor: "#E6D9FF",
         glowIntensity: 0.2,
         glowSize: 96,
-        glowAtRest: true,
         cornerRadius: 150,
         clockOpacity: 0.75,
     },
@@ -1580,42 +1554,6 @@ addPropertyControls(LockScreen, {
                 unit: "px",
                 hidden: (p) => p.enabled === false,
             },
-            tintOpacity: {
-                type: ControlType.Number,
-                title: "Tint Opacity",
-                defaultValue: 0.05,
-                min: 0,
-                max: 1,
-                step: 0.01,
-                hidden: (p) => p.enabled === false,
-            },
-            blur: {
-                type: ControlType.Number,
-                title: "Blur",
-                defaultValue: 16,
-                min: 0,
-                max: 60,
-                step: 1,
-                hidden: (p) => p.enabled === false,
-            },
-            saturation: {
-                type: ControlType.Number,
-                title: "Saturation",
-                defaultValue: 200,
-                min: 100,
-                max: 250,
-                step: 5,
-                hidden: (p) => p.enabled === false,
-            },
-            brightness: {
-                type: ControlType.Number,
-                title: "Brightness",
-                defaultValue: 125,
-                min: 80,
-                max: 150,
-                step: 1,
-                hidden: (p) => p.enabled === false,
-            },
             glowColor: {
                 type: ControlType.Color,
                 title: "Glow Color",
@@ -1639,14 +1577,6 @@ addPropertyControls(LockScreen, {
                 max: 160,
                 step: 1,
                 unit: "px",
-                hidden: (p) => p.enabled === false,
-            },
-            glowAtRest: {
-                type: ControlType.Boolean,
-                title: "Glow At Rest",
-                defaultValue: true,
-                enabledTitle: "On",
-                disabledTitle: "Swipe Only",
                 hidden: (p) => p.enabled === false,
             },
             cornerRadius: {
