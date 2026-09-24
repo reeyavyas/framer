@@ -711,7 +711,9 @@ export default function TutorialOverlay(props: Props) {
     //    beneath, same as a finger would.
     //  - Otherwise: same as the Next button (nextButtonLink, else the next
     //    step in this group), else the auto-advance link, else the next
-    //    step in this group.
+    //    step in this group — except a step with no target, no Next
+    //    button and no timer, which is waiting on something else on the
+    //    page to move on; there Skip leaves the step up.
     //
     // A set skipLink still wins over all of this — handled by the <a>
     // itself below, as before.
@@ -808,6 +810,13 @@ export default function TutorialOverlay(props: Props) {
             window.location.href = nextButtonLink
         } else if (autoAdvanceAfterSeconds && autoAdvanceLink) {
             window.location.href = autoAdvanceLink
+        } else if (!target && !showNextButton && !nextStepAfterSeconds) {
+            // A waiting step: nothing of its own hands off, because
+            // something else on the page moves on (e.g. the Card Alerts
+            // tutorial's step shown under "Saving..."). Skipping would
+            // only hide the overlay and leave the page open to taps, so
+            // keep it up and let the page move on by itself.
+            return
         } else {
             advanceStep()
         }
@@ -820,8 +829,10 @@ export default function TutorialOverlay(props: Props) {
         scrollDirection,
         scrollThresholdPercent,
         scrollContainerTarget,
+        target,
         showNextButton,
         nextButtonLink,
+        nextStepAfterSeconds,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
         pageGroup,

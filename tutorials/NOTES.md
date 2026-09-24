@@ -191,7 +191,11 @@ anywhere else on the page.
   gets a simulated tap at the hole's center (pointerdown/pointerup/click
   on `elementFromPoint`), so toggles really flip and Links really
   navigate; anything else behaves like the Next button, then the
-  auto-advance link, then `advanceStep()`. One skip per step, so a
+  auto-advance link, then `advanceStep()`. The exception is a waiting
+  step (no target, no Next button, no timer), such as the Card Alerts
+  tutorial's step shown under "Saving...": the page moves on by itself,
+  so Skip leaves the step up rather than hiding the overlay and letting
+  taps through. One skip per step, so a
   second press can't flip a toggle back. `skipLink`, when set, still
   overrides all of this and navigates there instead. Confirmed live
   that a simulated tap flips the Card Controls card toggle and all
