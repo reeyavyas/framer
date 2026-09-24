@@ -269,7 +269,7 @@ function LockScreenInner(props) {
     const sheetBlurFilter = `blur(${swipeGlass.blur ?? 16}px) saturate(${swipeGlass.saturation ?? 200}%) brightness(${swipeGlass.brightness ?? 125}%)`
     // Glow colour at a given strength (0-1). color-mix keeps any colour
     // the Framer picker hands back (hex, rgb, rgba) usable in a shadow.
-    const glowIntensity = swipeGlass.glowIntensity ?? 0.6
+    const glowIntensity = swipeGlass.glowIntensity ?? 0.4
     const glowSize = swipeGlass.glowSize ?? 56
     const glow = (strength: number) =>
         `color-mix(in srgb, ${swipeGlass.glowColor || "#E6D9FF"} ${Math.round(
@@ -1152,7 +1152,7 @@ LockScreen.defaultProps = {
         saturation: 200,
         brightness: 125,
         glowColor: "#E6D9FF",
-        glowIntensity: 0.6,
+        glowIntensity: 0.4,
         glowSize: 56,
         cornerRadius: 150,
         edgeHighlight: 0.8,
@@ -1607,7 +1607,7 @@ addPropertyControls(LockScreen, {
             glowIntensity: {
                 type: ControlType.Number,
                 title: "Glow Intensity",
-                defaultValue: 0.6,
+                defaultValue: 0.4,
                 min: 0,
                 max: 1,
                 step: 0.01,
