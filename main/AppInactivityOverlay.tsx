@@ -18,7 +18,8 @@ export default function AppInactivityOverlay() {
     const [countdown, setCountdown] = React.useState(COUNTDOWN_SECONDS)
     const [animateIn, setAnimateIn] = React.useState(false)
     // Whether this page has the tutorials carousel, which turns off the
-    // backdrop blur and the fade-in (see startInactivityTimer). Decided
+    // backdrop blur and changes how the backdrop fades in (see
+    // startInactivityTimer). Decided
     // fresh each time the overlay opens rather than once on mount, since
     // the page's content can change underneath this layer.
     const [onCarouselPage, setOnCarouselPage] = React.useState(false)
@@ -80,11 +81,12 @@ export default function AppInactivityOverlay() {
             // by removing the blur live — the rectangle disappears — while
             // flattening the carousel's own preserve-3d or removing its
             // edge-fade mask did not. With the blur gone the rectangle
-            // still flickered while the overlay faded in, so the fade-in
-            // is skipped there too and the overlay appears at once. Both
-            // apply only on pages that actually have the carousel (its
-            // cards carry data-carousel-card); every other page keeps
-            // them unchanged.
+            // still flickered while the backdrop's opacity faded in (and
+            // stopped when the fade-in was removed), so there the backdrop
+            // fades its background colour instead, which Chrome paints
+            // rather than hands to the GPU compositor. Both apply only on
+            // pages that actually have the carousel (its cards carry
+            // data-carousel-card); every other page keeps them unchanged.
             setOnCarouselPage(
                 !!document.querySelector("[data-carousel-card]")
             )
@@ -206,13 +208,20 @@ export default function AppInactivityOverlay() {
                 style={{
                     position: "absolute",
                     inset: 0,
-                    background: "rgba(0,0,0,0.25)",
-                    backdropFilter: onCarouselPage ? "none" : "blur(3px)",
-                    WebkitBackdropFilter: onCarouselPage ? "none" : "blur(3px)",
-                    opacity: faded ? 1 : 0,
-                    transition: onCarouselPage
-                        ? "none"
-                        : "opacity 0.4s ease-out 0.3s",
+                    ...(onCarouselPage
+                        ? {
+                              background: faded
+                                  ? "rgba(0,0,0,0.25)"
+                                  : "rgba(0,0,0,0)",
+                              transition: "background-color 0.4s ease-out 0.3s",
+                          }
+                        : {
+                              background: "rgba(0,0,0,0.25)",
+                              backdropFilter: "blur(3px)",
+                              WebkitBackdropFilter: "blur(3px)",
+                              opacity: faded ? 1 : 0,
+                              transition: "opacity 0.4s ease-out 0.3s",
+                          }),
                 }}
             />
 
@@ -230,9 +239,8 @@ export default function AppInactivityOverlay() {
                     alignItems: "flex-start",
                     opacity: faded ? 1 : 0,
                     transform: faded ? "scale(1)" : "scale(0.97)",
-                    transition: onCarouselPage
-                        ? "none"
-                        : "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
+                    transition:
+                        "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
                     fontFamily: "Inter, sans-serif",
                 }}
             >
