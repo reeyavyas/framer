@@ -101,8 +101,8 @@ Site-wide, page-agnostic components — not owned by any single feature.
     wallpaper's own colours pushed brighter and more saturated by the
     backdrop filter so the pane glows rather than washing out white;
     bottom corners rounding off (to 150px by default, close to the
-    phone's own screen-corner curve); a bright rim along the bottom and
-    sides; and a soft glow kept entirely inside the pane (inset edge
+    phone's own screen-corner curve); no outline stroke; and a soft
+    glow kept entirely inside the pane (inset edge
     glow, heaviest along the bottom, plus a glow band at the bottom
     edge — no outer halo or drop shadow on the wallpaper) whose
     colour/strength/spread are the "Glow Color/Intensity/Size"
