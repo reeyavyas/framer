@@ -213,7 +213,10 @@ export default function AppInactivityOverlay() {
                               background: faded
                                   ? "rgba(0,0,0,0.25)"
                                   : "rgba(0,0,0,0)",
-                              transition: "background-color 0.4s ease-out 0.3s",
+                              // Without the blur, the plain dim read as
+                              // snapping in, so it fades longer and
+                              // starts right away, ahead of the panel.
+                              transition: "background-color 0.7s ease-in-out",
                           }
                         : {
                               background: "rgba(0,0,0,0.25)",
@@ -239,8 +242,11 @@ export default function AppInactivityOverlay() {
                     alignItems: "flex-start",
                     opacity: faded ? 1 : 0,
                     transform: faded ? "scale(1)" : "scale(0.97)",
-                    transition:
-                        "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
+                    // On the carousel page the panel eases in slower and
+                    // without the overshoot, which read as a pop there.
+                    transition: onCarouselPage
+                        ? "opacity 0.6s ease-out 0.25s, transform 0.6s cubic-bezier(0.22,1,0.36,1) 0.25s"
+                        : "opacity 0.35s ease 0.2s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.2s",
                     fontFamily: "Inter, sans-serif",
                 }}
             >
