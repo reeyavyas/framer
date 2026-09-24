@@ -52,14 +52,14 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| C1 | Card Controls tutorial: **Skip** on the card on/off step | Card toggle turns off; next step appears | |
-| C2 | Card Alerts tutorial: **Skip** on "Scroll down" | Page scrolls; toggle 3 is **fully** visible for the next step (note if only partly visible) | |
-| C3 | Card Alerts tutorial: **Skip** on each of the 3 toggle steps | Each toggle flips on; next step appears each time | |
-| C4 | Card Alerts tutorial: **Skip** on the Save step | "Saving…" shows, then goes to the Card Controls tutorial page with the Card Alerts toast | |
-| C5 | Travel Notice tutorial: **Skip** through every step (scroll, date/destination fields, Save) | Each Skip moves to the next step; Save goes on to the next page | |
-| C6 | **Skip** on any step whose next step is on a **different page** | Goes to that page and its first step | |
-| C7 | Double-tap **Skip** quickly on a toggle step | Toggle flips only once (ends up on, not back off) | |
-| C8 | A step that still has a **Skip link** set (if you kept any) | Skip goes to that link | |
+| C1 | Card Controls tutorial: **Skip** on the card on/off step | Card toggle turns off; next step appears | Pass |
+| C2 | Card Alerts tutorial: **Skip** on "Scroll down" | Page scrolls; toggle 3 is **fully** visible for the next step (note if only partly visible) | Pass |
+| C3 | Card Alerts tutorial: **Skip** on each of the 3 toggle steps | Each toggle flips on; next step appears each time | Pass |
+| C4 | Card Alerts tutorial: **Skip** on the Save step | "Saving…" shows, then goes to the Card Controls tutorial page with the Card Alerts toast | Pass. Follow-up: the top-nav Close can still be tapped while "Saving…" shows; user will add a reveal delay to the tutorial step there |
+| C5 | Travel Notice tutorial: **Skip** through every step (scroll, date/destination fields, Save) | Each Skip moves to the next step; Save goes on to the next page | Pass |
+| C6 | **Skip** on any step whose next step is on a **different page** | Goes to that page and its first step | Pass |
+| C7 | Double-tap **Skip** quickly on a toggle step | Toggle flips only once (ends up on, not back off) | Pass |
+| C8 | A step that still has a **Skip link** set (if you kept any) | Skip goes to that link | N/A (no Skip links set yet). **Ask the user to test this once they set a Skip link** |
 
 ## D. Card Alerts base page (real, non-tutorial)
 
