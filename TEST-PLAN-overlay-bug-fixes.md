@@ -33,12 +33,12 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| A1 | Check every page that used to have `InactivityOverlay` | Each now has `AppInactivityOverlay`, and the old `InactivityOverlay` code file is deleted in Framer | |
-| A2 | Leave any page idle until the overlay appears, then let the 30-second countdown run out | Overlay appears after the idle time; countdown reaches 0 and goes to `/app` | |
-| A3 | Open the overlay again and tap **RETURN HOME** | Goes to `/app` | |
-| A4 | Open the overlay again and tap **YES, I'M HERE** | Overlay closes; after another idle period it appears again | |
-| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | |
-| A6 | Any other page: let the overlay appear | Background is dimmed **and** blurred, same as before | |
+| A1 | Check every page that used to have `InactivityOverlay` | Each now has `AppInactivityOverlay`, and the old `InactivityOverlay` code file is deleted in Framer | Not confirmed yet (user's A1 note was the A5 flicker, see A5) |
+| A2 | Leave any page idle until the overlay appears, then let the 30-second countdown run out | Overlay appears after the idle time; countdown reaches 0 and goes to `/app` | Pass |
+| A3 | Open the overlay again and tap **RETURN HOME** | Goes to `/app` | Pass |
+| A4 | Open the overlay again and tap **YES, I'M HERE** | Overlay closes; after another idle period it appears again | Pass |
+| A5 | Tutorials landing page (flip-card carousel): let the overlay appear | **No rectangle/shadow on the center flip card.** Background is dimmed but not blurred | **Fail (partial):** rectangle flickers briefly as the overlay first opens, then goes away. Needs a follow-up fix |
+| A6 | Any other page: let the overlay appear | Background is dimmed **and** blurred, same as before | Pass |
 
 ## B. Tutorial pauses while "Are you still there?" is open
 
