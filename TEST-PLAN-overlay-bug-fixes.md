@@ -59,14 +59,14 @@ when done.
 | C5 | Travel Notice tutorial: **Skip** through every step (scroll, date/destination fields, Save) | Each Skip moves to the next step; Save goes on to the next page | Pass |
 | C6 | **Skip** on any step whose next step is on a **different page** | Goes to that page and its first step | Pass |
 | C7 | Double-tap **Skip** quickly on a toggle step | Toggle flips only once (ends up on, not back off) | Pass |
-| C8 | A step that still has a **Skip link** set (if you kept any) | Skip goes to that link | N/A (no Skip links set yet). **Ask the user to test this once they set a Skip link** |
+| C8 | A step that still has a **Skip link** set (if you kept any) | Skip goes to that link | Pass (tested with a temporary Skip link on Travel Notice tutorial step 3, since removed) |
 
 ## D. Card Alerts base page (real, non-tutorial)
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
 | D1 | Turn one toggle on | Save becomes enabled (blue) | Pass |
-| D2 | Leave the page **without saving** (Cancel/back), then come back | All toggles off **and** Save disabled (gray) | **Fail:** toggles off but Save still blue. Fixed in CardAlertsSave.tsx (subscribe before resetToggles); **retest** |
+| D2 | Leave the page **without saving** (Cancel/back), then come back | All toggles off **and** Save disabled (gray) | **Fail:** toggles off but Save still blue. Fixed in CardAlertsSave.tsx (subscribe before resetToggles). Retest: Pass |
 | D3 | Now turn a toggle on, then off | Save enables, then disables again | Pass |
 | D4 | Turn a toggle on and tap **Save** | "Saving…", then Card Controls with the Card Alerts toast | Pass |
 
@@ -74,9 +74,9 @@ when done.
 
 | # | Test | Expected | Result |
 |---|------|----------|--------|
-| E1 | Complete the Travel Notice tutorial through Save | Tutorial Card Controls page shows the "Future Plans" section (Illinois, Kentucky, Missouri) and the toast | |
-| E2 | Then open the **real** Card Controls page | **No** travel notice section appears | |
-| E3 | Set a real travel notice on the real form and Save | Real Card Controls page shows your notice and the toast | |
+| E1 | Complete the Travel Notice tutorial through Save | Tutorial Card Controls page shows the "Future Plans" section (Illinois, Kentucky, Missouri) and the toast | Pass |
+| E2 | Then open the **real** Card Controls page | **No** travel notice section appears | Pass |
+| E3 | Set a real travel notice on the real form and Save | Real Card Controls page shows your notice and the toast | Pass |
 
 ## F. Budget Circles Save (money management)
 
