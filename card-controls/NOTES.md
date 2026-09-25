@@ -88,13 +88,16 @@ Card-level account actions a user manages from settings.
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
 
-- `reset-pin/` — **in progress.** "Reset PIN" for the debit card: two
-  display-only PIN fields (fixed "····", since the kiosk has no
-  keyboard), Confirm and Cancel. Confirm leads back to Card Controls,
-  which shows a "Your PIN has been reset for this card." toast with a
-  simple progress bar. It will reuse the same one-shot sessionStorage
-  toast flag as Card Alerts and Travel Notice, under its own key. It
-  gets its own tutorial, separate from the card-controls walkthrough.
+## Sub-features that live elsewhere
+
+- **Reset PIN** is a card-controls sub-feature (reached from, and
+  returning to, Card Controls, whose page shows its toast). But it has
+  its own tutorial, so its code lives in the top-level **`reset-pin/`**
+  folder, not here. Any tutorial duplicates would go in
+  `tutorials/reset-pin-tutorial/`, not `tutorials/card-controls-tutorial/`.
+  Don't add Reset PIN files anywhere under `card-controls/`. Its
+  branches still use this group's `card-controls/<feature>` prefix. See
+  `reset-pin/NOTES.md`.
 
 ## Tutorial variants
 

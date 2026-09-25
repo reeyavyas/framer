@@ -487,6 +487,15 @@ inside the tutorial flow, not a full copy of the folder. See
   tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
   directly. See `card-controls-tutorial/NOTES.md`.
 
+## `reset-pin-tutorial/` (reserved, not created yet)
+
+The home for tutorial-only duplicates of `reset-pin/` components, if
+Reset PIN's own tutorial ever needs one. Reset PIN is a card-controls
+sub-feature, but it has its own tutorial, so its duplicates go here, not
+in `card-controls-tutorial/`. Nothing needs one yet: both the base and
+tutorial pages use `reset-pin/`'s overrides directly. See
+`reset-pin/NOTES.md`.
+
 More `<group>-tutorial/` subfolders (e.g. `money-management-tutorial/`)
 will show up here the same way, as tutorial work needs them.
 
