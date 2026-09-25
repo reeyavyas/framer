@@ -88,6 +88,14 @@ Card-level account actions a user manages from settings.
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
 
+- `reset-pin/` — **in progress.** "Reset PIN" for the debit card: two
+  display-only PIN fields (fixed "····", since the kiosk has no
+  keyboard), Confirm and Cancel. Confirm leads back to Card Controls,
+  which shows a "Your PIN has been reset for this card." toast with a
+  simple progress bar. It will reuse the same one-shot sessionStorage
+  toast flag as Card Alerts and Travel Notice, under its own key. It
+  gets its own tutorial, separate from the card-controls walkthrough.
+
 ## Tutorial variants
 
 These are the free-exploration base-page components — no tutorial
