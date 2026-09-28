@@ -858,7 +858,26 @@ export default function TutorialOverlay(props: Props) {
         // and block EVERY click anywhere on the page at design time,
         // including inside Framer's own editor chrome.
         if (isCanvas || !active || !isMyTurn) return
+        // A tap that hands off to this step on its pointerdown (the
+        // previous step's clickAdvancesStep) finishes with a click that
+        // arrives after this step is already up. That click belongs to
+        // the previous step's target, so let it through. Otherwise a
+        // waiting step with no hole — e.g. the Card Alerts tutorial's step
+        // under "Saving..." — blocked the very click on Save that was
+        // meant to start the save, leaving the page dim and stuck.
+        // Skip's simulated tap never hit this, since it fires pointerdown,
+        // pointerup and click in one go, before this step even mounts.
+        // Only a click with no pointerdown seen by this step gets through,
+        // and only once; every tap that starts on this step is blocked
+        // as usual.
+        let sawPointerDown = false
+        let letThroughCarriedClick = false
         function blockOutsideHole(e: PointerEvent | MouseEvent) {
+            if (e.type === "pointerdown") sawPointerDown = true
+            else if (!sawPointerDown && !letThroughCarriedClick) {
+                letThroughCarriedClick = true
+                return
+            }
             const eventTarget = e.target as HTMLElement | null
             // Also exempt any other full-screen "system" overlay (e.g.
             // an inactivity/idle-timeout modal) that marks its own

@@ -195,7 +195,17 @@ anywhere else on the page.
   step (no target, no Next button, no timer), such as the Card Alerts
   tutorial's step shown under "Saving...": the page moves on by itself,
   so Skip leaves the step up rather than hiding the overlay and letting
-  taps through. One skip per step, so a
+  taps through. That waiting step also broke tapping Save for real
+  (Skip still worked). The Save step hands off on finger-down, the
+  waiting step (no hole) switched on its tap blocking before the finger
+  lifted, and it blocked the click Save's override runs on. So
+  "Saving..." never showed, and the page sat dim on a waiting step whose
+  Skip does nothing. Skip never hit this, because its simulated tap fires
+  pointerdown, pointerup and click in one go, before the next step
+  mounts. Fixed in `blockOutsideHole`: a newly active step lets through
+  one click if it hasn't seen a pointerdown yet, since that click
+  finishes a tap that started on the previous step. Every tap that
+  starts on the new step is blocked as before. One skip per step, so a
   second press can't flip a toggle back. `skipLink`, when set, still
   overrides all of this and navigates there instead. Confirmed live
   that a simulated tap flips the Card Controls card toggle and all
@@ -214,22 +224,48 @@ anywhere else on the page.
   shows immediately whenever `showGlow` is on, same as it always did
   once its delay elapsed, just without a delay to configure at all.
 - `TutorialTargets.tsx` — Override that tags a layer so
-  `TutorialOverlay` can find/measure it. Carries the full live export
-  list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
-  `CardToggle`, `TravelNotice`, `TravelScroll`, `SetCardAlerts`,
-  `TravelStart`, `TravelEnd`, `TravelDestinations`, `TravelSave`,
-  `TravelNoticeShown`, `CardAlertsToggleTarget1`/`2`/`3`,
-  `CardAlertsSaveTarget`), added directly in Framer's own code editor
-  and pulled back into this repo's copy — verify against the live
-  Framer project before trusting this as the source of truth either
-  direction. The marker exports (`TravelStart`/`TravelEnd`/
-  `TravelDestinations`/`TravelSave`/`TravelNoticeShown`/
-  `CardAlertsSaveTarget`) go through a separate `withTutorialMarker`
-  helper that forces `pointer-events: none`, since each sits on top of
-  a real field/button rather than being a separately tappable layer —
-  without it, the marker itself would swallow the tap meant for the
-  real element underneath. See `card-controls-tutorial/NOTES.md` for
-  how the field markers and Card Alerts toggles/save are used.
+  `TutorialOverlay` can find/measure it. Exports are added in Framer's
+  own code editor and copied back into the repo, so verify against the
+  live Framer project before trusting either copy as the source of
+  truth. Last synced on `card-controls/reset-pin`.
+  **Organized by tutorial, in step order**, with each tutorial's step
+  list at the top of its section:
+  - **Login Tutorial:** `LoginButton`, `FingerprintMarker`.
+  - **Shared starting steps:** many tutorials start on the Accounts
+    page and go either to the More tab or to Settings. Those opening
+    targets live here once, each noting which tutorials use it:
+    `MoreTabTarget`, `CardControlsTarget`. There's no Settings target
+    yet; when a tutorial needs one, it goes in this section.
+  - **Card Controls Tutorial** (Accounts → More → Card Controls, then
+    the card toggle, Travel Notice and Card Alerts): `MoreTabTarget`
+    and `CardControlsTarget` (shared), `CardToggle`, `TravelNotice`, `TravelStart`,
+    `TravelEnd`, `TravelDestinations`, `TravelSave`,
+    `TravelNoticeShown`, `SetCardAlerts`,
+    `CardAlertsToggleTarget1`/`2`/`3`, `CardAlertsSaveTarget`.
+  - **Reset PIN Tutorial** (Accounts → More → Card Controls):
+    `MoreTabTarget` and `CardControlsTarget` (shared), `ResetPin`,
+    `NewPin`, `ResetPinConfirm`.
+  An export used by more than one tutorial is defined once, in the
+  shared section, and listed by name in each tutorial's step list. Add
+  new exports under their tutorial's section, in step order. Renaming an export or changing its id breaks
+  every layer it's already applied to, so only move them.
+  Each export is labelled as one of two kinds:
+  - **Targets** (`withTutorialTarget`) go on the real layer the user
+    taps.
+  - **Markers** (`withTutorialMarker`, forces `pointer-events: none`)
+    go on an empty frame placed on top of the real thing, when that
+    thing is plain JSX inside a code component or already has its own
+    override (Framer allows one per layer). Without
+    `pointer-events: none`, the marker would swallow the tap meant for
+    the real element underneath. A marker frame gets no Link of its
+    own.
+  `TravelScroll` (`"travel-scroll"`) was removed: the Travel Notice
+  page's scroll container is tagged by `VirtualScroll.tsx`'s
+  `"scrollable-content"` instead. The `ResetPinConfirm` marker is
+  unrelated to `reset-pin/`'s `withResetPinConfirm` override, despite
+  the similar name. See `card-controls-tutorial/NOTES.md` for how the
+  Travel Notice field markers and Card Alerts toggles/save are used,
+  and `reset-pin/NOTES.md` for the Reset PIN ones.
 - `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
   shape as `FingerprintDelayedNavigation`, a plain function returning a
   props patch — not the wrap-the-whole-component style tried twice
@@ -486,6 +522,15 @@ inside the tutorial flow, not a full copy of the folder. See
 - `TravelNoticeToast.tsx` is deliberately *not* duplicated here — the
   tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
   directly. See `card-controls-tutorial/NOTES.md`.
+
+## `reset-pin-tutorial/` (reserved, not created yet)
+
+The home for tutorial-only duplicates of `reset-pin/` components, if
+Reset PIN's own tutorial ever needs one. Reset PIN is a card-controls
+sub-feature, but it has its own tutorial, so its duplicates go here, not
+in `card-controls-tutorial/`. Nothing needs one yet: both the base and
+tutorial pages use `reset-pin/`'s overrides directly. See
+`reset-pin/NOTES.md`.
 
 More `<group>-tutorial/` subfolders (e.g. `money-management-tutorial/`)
 will show up here the same way, as tutorial work needs them.

@@ -88,6 +88,17 @@ Card-level account actions a user manages from settings.
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
 
+## Sub-features that live elsewhere
+
+- **Reset PIN** is a card-controls sub-feature (reached from, and
+  returning to, Card Controls, whose page shows its toast). But it has
+  its own tutorial, so its code lives in the top-level **`reset-pin/`**
+  folder, not here. Any tutorial duplicates would go in
+  `tutorials/reset-pin-tutorial/`, not `tutorials/card-controls-tutorial/`.
+  Don't add Reset PIN files anywhere under `card-controls/`. Its
+  branches still use this group's `card-controls/<feature>` prefix. See
+  `reset-pin/NOTES.md`.
+
 ## Tutorial variants
 
 These are the free-exploration base-page components — no tutorial

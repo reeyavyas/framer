@@ -22,6 +22,12 @@ card-controls/          Card-level account actions (settings)
     TravelNoticeToast.tsx    Confirmation toast on save
   NOTES.md
 
+reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
+                        because it has its own tutorial (see its NOTES.md)
+  ResetPinConfirm.tsx      Confirm button: sets the toast flag
+  ResetPinToast.tsx        Toast on Card Controls, with countdown bar + ×
+  NOTES.md
+
 money-management/       Budgeting UI
   CircleOverrides.tsx      Draggable "Budget Circles" spending categories
   NOTES.md
