@@ -61,6 +61,18 @@ function withTutorialMarker(id: string) {
 // thin named export like this one, even though they share the same
 // factory above. Add one more per target the same way.
 
+//Login page "Login" button
+export function LoginButton(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("login-button")(Component)
+}
+
+//Login page fingerprint marker
+export function FingerprintMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("fingerprint-marker")(Component)
+}
+
 //More bottom nav menu
 export function MoreTabTarget(
     Component: ComponentType<any>
@@ -85,6 +97,23 @@ export function TravelNotice(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("travel-notice")(Component)
+}
+
+//Card Controls Page "Reset PIN"
+export function ResetPin(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("reset-pin")(Component)
+}
+
+//Reset PIN Page "New 4-Digit Pin" and "Confirm New 4-Digit Pin" fields
+export function NewPin(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("new-pin")(Component)
+}
+
+//Reset PIN Page "Confirm" button
+export function ResetPinConfirm(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("reset-pin-confirm")(Component)
 }
 
 //Travel Notice Page Scrollable Content — the real scroll container
