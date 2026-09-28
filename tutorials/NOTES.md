@@ -214,22 +214,34 @@ anywhere else on the page.
   shows immediately whenever `showGlow` is on, same as it always did
   once its delay elapsed, just without a delay to configure at all.
 - `TutorialTargets.tsx` — Override that tags a layer so
-  `TutorialOverlay` can find/measure it. Carries the full live export
-  list as of the last sync (`MoreTabTarget`, `CardControlsTarget`,
-  `CardToggle`, `TravelNotice`, `TravelScroll`, `SetCardAlerts`,
-  `TravelStart`, `TravelEnd`, `TravelDestinations`, `TravelSave`,
-  `TravelNoticeShown`, `CardAlertsToggleTarget1`/`2`/`3`,
-  `CardAlertsSaveTarget`), added directly in Framer's own code editor
-  and pulled back into this repo's copy — verify against the live
-  Framer project before trusting this as the source of truth either
-  direction. The marker exports (`TravelStart`/`TravelEnd`/
-  `TravelDestinations`/`TravelSave`/`TravelNoticeShown`/
-  `CardAlertsSaveTarget`) go through a separate `withTutorialMarker`
-  helper that forces `pointer-events: none`, since each sits on top of
-  a real field/button rather than being a separately tappable layer —
-  without it, the marker itself would swallow the tap meant for the
-  real element underneath. See `card-controls-tutorial/NOTES.md` for
-  how the field markers and Card Alerts toggles/save are used.
+  `TutorialOverlay` can find/measure it. Exports are added in Framer's
+  own code editor and copied back into the repo, so verify against the
+  live Framer project before trusting either copy as the source of
+  truth. Last synced on `card-controls/reset-pin`, then reorganized by
+  page in tutorial order (Login, More, Card Controls, Travel Notice,
+  Card Controls 2, Set Card Alerts, Reset PIN). Only the order and
+  comments changed; every export name and id stayed the same, because
+  renaming either breaks the layers it's already applied to.
+  Each export is one of two kinds, labelled in the file:
+  - **Targets** (`withTutorialTarget`) go on the real layer the user
+    taps or scrolls: `LoginButton`, `MoreTabTarget`,
+    `CardControlsTarget`, `CardToggle`, `TravelNotice`,
+    `SetCardAlerts`, `ResetPin`, `TravelScroll`,
+    `CardAlertsToggleTarget1`/`2`/`3`, `NewPin`.
+  - **Markers** (`withTutorialMarker`, forces `pointer-events: none`)
+    go on an empty frame placed on top of the real thing, when that
+    thing is plain JSX inside a code component or already has its own
+    override (Framer allows one per layer): `FingerprintMarker`,
+    `TravelStart`, `TravelEnd`, `TravelDestinations`, `TravelSave`,
+    `TravelNoticeShown`, `CardAlertsSaveTarget`, `ResetPinConfirm`.
+    Without `pointer-events: none`, the marker would swallow the tap
+    meant for the real element underneath. A marker frame gets no Link
+    of its own.
+  The `ResetPinConfirm` marker is unrelated to `reset-pin/`'s
+  `withResetPinConfirm` override, despite the similar name. See
+  `card-controls-tutorial/NOTES.md` for how the Travel Notice field
+  markers and Card Alerts toggles/save are used, and
+  `reset-pin/NOTES.md` for the Reset PIN ones.
 - `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
   shape as `FingerprintDelayedNavigation`, a plain function returning a
   props patch — not the wrap-the-whole-component style tried twice

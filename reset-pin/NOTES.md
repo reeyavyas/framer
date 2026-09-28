@@ -71,6 +71,19 @@ duplicate yet:
   overrides, reading the same flag. That works the same way
   `TravelNoticeToast.tsx` is used undivided in its tutorial.
 
+Spotlight targets, from `tutorials/tutorial-overlays/TutorialTargets.tsx`:
+- `ResetPin` (`"reset-pin"`) — target on the "Reset PIN" row of the
+  tutorial copy of Card Controls, where the user enters this flow.
+- `NewPin` (`"new-pin"`) — target on the two PIN fields.
+- `ResetPinConfirm` (`"reset-pin-confirm"`) — **marker**, on an empty
+  frame placed exactly on top of the tutorial Confirm button. It can't
+  go on Confirm itself, because Confirm already carries
+  `withResetPinConfirm` and Framer allows one override per layer. The
+  marker frame gets no Link and no fill. Taps pass through it to the
+  real Confirm, whose override sets the toast flag and whose Link
+  navigates. Despite the similar name, it's unrelated to
+  `withResetPinConfirm`.
+
 If a tutorial-specific tweak is ever needed, it goes in
 `tutorials/reset-pin-tutorial/` (see above), not here and not in any
 `card-controls` folder.
