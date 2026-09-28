@@ -17,8 +17,10 @@ import type { ComponentType } from "react"
  * Usage: select the "more-tab" layer on the canvas → Code (right
  * panel) → Override → this file → MoreTabTarget.
  *
- * Exports are grouped by page, in the order the tutorials visit them.
- * Each one is either:
+ * Exports are grouped by tutorial, in step order. A target used by more
+ * than one tutorial (e.g. MoreTabTarget) is defined once, under the
+ * first tutorial that uses it; later tutorials list it in their step
+ * list with a pointer back. Each export is either:
  *
  *  - a TARGET (withTutorialTarget) — goes on the real layer the user
  *    taps or scrolls. Only tags it; nothing else about the layer is
@@ -54,7 +56,7 @@ function withTutorialTarget(id: string) {
 // Skip button working: its simulated tap uses elementFromPoint, which
 // skips pointer-events:none and lands on the real element. Don't use
 // this for a target that IS the real tappable/scrollable element itself
-// (e.g. MoreTabTarget, TravelScroll) — those still need to receive
+// (e.g. MoreTabTarget, CardToggle) — those still need to receive
 // taps/scroll input.
 function withTutorialMarker(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
@@ -76,123 +78,126 @@ function withTutorialMarker(id: string) {
 // assigned from calling another function. So each target gets its own
 // thin named export like the ones below, even though they share the
 // same two helpers above. Add one more per target the same way, under
-// its page's section.
+// its tutorial's section, in step order.
 
-// ─── Login page ───────────────────────────────────────────────────────
+// ═══ Login Tutorial ═══════════════════════════════════════════════════
+//   1. LoginButton
+//   2. FingerprintMarker
 
-// TARGET: "Login" button
+// Step 1 — TARGET: Login page "Login" button
 export function LoginButton(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("login-button")(Component)
 }
 
-// MARKER: over the fingerprint
+// Step 2 — MARKER: over the Login page fingerprint
 export function FingerprintMarker(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("fingerprint-marker")(Component)
 }
 
-// ─── More page ────────────────────────────────────────────────────────
+// ═══ Card Controls Tutorial ═══════════════════════════════════════════
+// Starts on the Accounts page → More → Card Controls, then walks through
+// the card toggle, Travel Notice and Card Alerts.
+//   1. MoreTabTarget
+//   2. CardControlsTarget
+//   3. CardToggle
+//   4. TravelNotice
+//   5. TravelStart
+//   6. TravelEnd
+//   7. TravelDestinations
+//   8. TravelSave
+//   9. TravelNoticeShown
+//  10. SetCardAlerts
+//  11. CardAlertsToggleTarget1
+//  12. CardAlertsToggleTarget2
+//  13. CardAlertsToggleTarget3
+//  14. CardAlertsSaveTarget
+// (The Travel Notice page's scroll container is tagged by
+// VirtualScroll.tsx's "scrollable-content", not by an export here.)
 
-// TARGET: "More" in the bottom nav menu
+// Step 1 — TARGET: "More" in the bottom nav menu (Accounts page).
+// Also Reset PIN Tutorial step 1.
 export function MoreTabTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("more-tab")(Component)
 }
 
-// TARGET: "Card Controls" at the top of the More page
+// Step 2 — TARGET: "Card Controls" at the top of the More page.
+// Also Reset PIN Tutorial step 2.
 export function CardControlsTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("card-controls")(Component)
 }
 
-// ─── Card Controls page ───────────────────────────────────────────────
-// The hub each card-controls tutorial starts from.
-
-// TARGET: card on/off toggle switch
+// Step 3 — TARGET: Card Controls page card on/off toggle switch
 export function CardToggle(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("card-toggle")(Component)
 }
 
-// TARGET: "Set Travel Notice"
+// ─── Travel Notice (steps 4–9) ──────────────────────────────────────────
+
+// Step 4 — TARGET: Card Controls page "Set Travel Notice"
 export function TravelNotice(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("travel-notice")(Component)
 }
 
-// TARGET: "Set Card Alerts"
-export function SetCardAlerts(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withTutorialTarget("set-card-alerts")(Component)
-}
+// Steps 5–8 are MARKERS over SetTravelNoticeTutorial.tsx's individual
+// fields. Start Date, End Date, Destinations and the Save button aren't
+// separately selectable Framer layers — they're plain JSX inside one
+// component's render — so each gets an empty marker frame positioned
+// over it instead (see tutorials/card-controls-tutorial/NOTES.md,
+// "Wiring a TutorialOverlay step to a field inside one of these
+// components").
 
-// TARGET: "Reset PIN"
-export function ResetPin(Component: ComponentType<any>): ComponentType<any> {
-    return withTutorialTarget("reset-pin")(Component)
-}
-
-// ─── Travel Notice page ───────────────────────────────────────────────
-
-// TARGET: the page's Scrollable Content — the real scroll container
-// itself, not a marker, so it stays plain (no pointer-events:none) or
-// nothing on the page could be scrolled at all.
-export function TravelScroll(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withTutorialTarget("travel-scroll")(Component)
-}
-
-// MARKERS over SetTravelNoticeTutorial.tsx's (and potentially
-// SetTravelNotice.tsx's) individual fields. Start Date, End Date,
-// Destinations and the Save button aren't separately selectable Framer
-// layers — they're plain JSX inside one component's render — so each
-// gets an empty marker frame positioned over it instead (see
-// tutorials/card-controls-tutorial/NOTES.md, "Wiring a TutorialOverlay
-// step to a field inside one of these components").
-
-// MARKER: "Start Date"
+// Step 5 — MARKER: Travel Notice page "Start Date"
 export function TravelStart(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-start")(Component)
 }
 
-// MARKER: "End Date"
+// Step 6 — MARKER: Travel Notice page "End Date"
 export function TravelEnd(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-end")(Component)
 }
 
-// MARKER: "Destinations"
+// Step 7 — MARKER: Travel Notice page "Destinations"
 export function TravelDestinations(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("travel-destinations")(Component)
 }
 
-// MARKER: "Save" button
+// Step 8 — MARKER: Travel Notice page "Save" button
 export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("travel-save")(Component)
 }
 
-// ─── Card Controls 2 page (end of the Travel Notice tutorial) ─────────
-
-// MARKER: over the TravelNoticeSectionTutorial component showing the
-// saved notice
+// Step 9 — MARKER: Card Controls 2 page, over the
+// TravelNoticeSectionTutorial component showing the saved notice
 export function TravelNoticeShown(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("travel-notice-shown")(Component)
 }
 
-// ─── Set Card Alerts page (tutorial copy) ─────────────────────────────
+// ─── Card Alerts (steps 10–14) ──────────────────────────────────────────
 
-// TARGETS: one per toggle layer the tutorial spotlights and asks the
-// user to tap. Each toggle IS the real tappable element (a native
-// Framer switch), so these are plain targets, not markers: the toggle
-// must still receive the real tap itself (that's what flips its own
-// on/off visual).
+// Step 10 — TARGET: Card Controls page "Set Card Alerts"
+export function SetCardAlerts(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("set-card-alerts")(Component)
+}
+
+// Steps 11–13 are TARGETS, one per toggle layer the tutorial spotlights
+// and asks the user to tap on the tutorial copy of Set Card Alerts.
+// Each toggle IS the real tappable element (a native Framer switch), so
+// these are plain targets, not markers: the toggle must still receive
+// the real tap itself (that's what flips its own on/off visual).
 //
 // Don't also apply the toggle's original withCardAlertsToggleReportN
 // override (from card-controls/card-alerts/CardAlertsToggleReport.tsx)
@@ -211,56 +216,68 @@ export function TravelNoticeShown(
 // matching whichever toggle layer you apply it to, not a particular
 // alert category.
 
-// TARGET: toggle #1
+// Step 11 — TARGET: toggle #1
 export function CardAlertsToggleTarget1(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("card-alerts-toggle-1")(Component)
 }
 
-// TARGET: toggle #2
+// Step 12 — TARGET: toggle #2
 export function CardAlertsToggleTarget2(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("card-alerts-toggle-2")(Component)
 }
 
-// TARGET: toggle #3
+// Step 13 — TARGET: toggle #3
 export function CardAlertsToggleTarget3(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("card-alerts-toggle-3")(Component)
 }
 
-// MARKER: over the "Save" button. The real Save already carries
-// withCardAlertsSaveTutorial (card-controls/card-alerts/CardAlertsSave.tsx),
-// and Framer allows only one override per layer. As a marker, the tap
-// passes through to the real Save, so its onClick (and the Saving
-// overlay) still fires.
+// Step 14 — MARKER: over the Set Card Alerts "Save" button. The real
+// Save already carries withCardAlertsSaveTutorial
+// (card-controls/card-alerts/CardAlertsSave.tsx), and Framer allows
+// only one override per layer. As a marker, the tap passes through to
+// the real Save, so its onClick (and the Saving overlay) still fires.
 export function CardAlertsSaveTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("card-alerts-save")(Component)
 }
 
-// ─── Reset PIN page (tutorial copy) ───────────────────────────────────
+// ═══ Reset PIN Tutorial ═══════════════════════════════════════════════
 // Reset PIN is a card-controls sub-feature with its own tutorial — see
-// reset-pin/NOTES.md.
+// reset-pin/NOTES.md. Starts on the Accounts page → More → Card
+// Controls, same as the Card Controls Tutorial.
+//   1. MoreTabTarget       (defined under Card Controls Tutorial, step 1)
+//   2. CardControlsTarget  (defined under Card Controls Tutorial, step 2)
+//   3. ResetPin
+//   4. ResetPinConfirm
 
-// TARGET: the "New 4-Digit PIN" and "Confirm New 4-Digit PIN" fields
-// (display-only "····", so nothing to tap through to)
-export function NewPin(Component: ComponentType<any>): ComponentType<any> {
-    return withTutorialTarget("new-pin")(Component)
+// Step 3 — TARGET: Card Controls page "Reset PIN"
+export function ResetPin(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("reset-pin")(Component)
 }
 
-// MARKER: over the "Confirm" button. The real Confirm already carries
-// withResetPinConfirm (reset-pin/ResetPinConfirm.tsx, which sets the
-// toast flag) and its own native Link to the tutorial copy of Card
-// Controls. As a marker, the tap passes through to it, so both still
-// fire. Not the same thing as withResetPinConfirm, despite the similar
-// name: this one only tags the marker frame for TutorialOverlay.
+// Step 4 — MARKER: over the Reset PIN page "Confirm" button. The real
+// Confirm already carries withResetPinConfirm
+// (reset-pin/ResetPinConfirm.tsx, which sets the toast flag) and its
+// own native Link to the tutorial copy of Card Controls. As a marker,
+// the tap passes through to it, so both still fire. Not the same thing
+// as withResetPinConfirm, despite the similar name: this one only tags
+// the marker frame for TutorialOverlay.
 export function ResetPinConfirm(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("reset-pin-confirm")(Component)
+}
+
+// Not currently one of the steps above — TARGET: the Reset PIN page's
+// "New 4-Digit PIN" and "Confirm New 4-Digit PIN" fields. Kept so any
+// layer it's still applied to in Framer doesn't break.
+export function NewPin(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("new-pin")(Component)
 }

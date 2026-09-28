@@ -217,31 +217,42 @@ anywhere else on the page.
   `TutorialOverlay` can find/measure it. Exports are added in Framer's
   own code editor and copied back into the repo, so verify against the
   live Framer project before trusting either copy as the source of
-  truth. Last synced on `card-controls/reset-pin`, then reorganized by
-  page in tutorial order (Login, More, Card Controls, Travel Notice,
-  Card Controls 2, Set Card Alerts, Reset PIN). Only the order and
-  comments changed; every export name and id stayed the same, because
-  renaming either breaks the layers it's already applied to.
-  Each export is one of two kinds, labelled in the file:
+  truth. Last synced on `card-controls/reset-pin`.
+  **Organized by tutorial, in step order**, with each tutorial's step
+  list at the top of its section:
+  - **Login Tutorial:** `LoginButton`, `FingerprintMarker`.
+  - **Card Controls Tutorial** (Accounts → More → Card Controls, then
+    the card toggle, Travel Notice and Card Alerts): `MoreTabTarget`,
+    `CardControlsTarget`, `CardToggle`, `TravelNotice`, `TravelStart`,
+    `TravelEnd`, `TravelDestinations`, `TravelSave`,
+    `TravelNoticeShown`, `SetCardAlerts`,
+    `CardAlertsToggleTarget1`/`2`/`3`, `CardAlertsSaveTarget`.
+  - **Reset PIN Tutorial** (Accounts → More → Card Controls):
+    `MoreTabTarget` and `CardControlsTarget` (shared, defined under
+    Card Controls Tutorial), `ResetPin`, `ResetPinConfirm`. `NewPin` is
+    kept at the end of this section, but isn't a current step.
+  An export used by more than one tutorial is defined once, under the
+  first tutorial that uses it, and listed with a pointer back in the
+  later tutorial's step list. Add new exports under their tutorial's
+  section, in step order. Renaming an export or changing its id breaks
+  every layer it's already applied to, so only move them.
+  Each export is labelled as one of two kinds:
   - **Targets** (`withTutorialTarget`) go on the real layer the user
-    taps or scrolls: `LoginButton`, `MoreTabTarget`,
-    `CardControlsTarget`, `CardToggle`, `TravelNotice`,
-    `SetCardAlerts`, `ResetPin`, `TravelScroll`,
-    `CardAlertsToggleTarget1`/`2`/`3`, `NewPin`.
+    taps.
   - **Markers** (`withTutorialMarker`, forces `pointer-events: none`)
     go on an empty frame placed on top of the real thing, when that
     thing is plain JSX inside a code component or already has its own
-    override (Framer allows one per layer): `FingerprintMarker`,
-    `TravelStart`, `TravelEnd`, `TravelDestinations`, `TravelSave`,
-    `TravelNoticeShown`, `CardAlertsSaveTarget`, `ResetPinConfirm`.
-    Without `pointer-events: none`, the marker would swallow the tap
-    meant for the real element underneath. A marker frame gets no Link
-    of its own.
-  The `ResetPinConfirm` marker is unrelated to `reset-pin/`'s
-  `withResetPinConfirm` override, despite the similar name. See
-  `card-controls-tutorial/NOTES.md` for how the Travel Notice field
-  markers and Card Alerts toggles/save are used, and
-  `reset-pin/NOTES.md` for the Reset PIN ones.
+    override (Framer allows one per layer). Without
+    `pointer-events: none`, the marker would swallow the tap meant for
+    the real element underneath. A marker frame gets no Link of its
+    own.
+  `TravelScroll` (`"travel-scroll"`) was removed: the Travel Notice
+  page's scroll container is tagged by `VirtualScroll.tsx`'s
+  `"scrollable-content"` instead. The `ResetPinConfirm` marker is
+  unrelated to `reset-pin/`'s `withResetPinConfirm` override, despite
+  the similar name. See `card-controls-tutorial/NOTES.md` for how the
+  Travel Notice field markers and Card Alerts toggles/save are used,
+  and `reset-pin/NOTES.md` for the Reset PIN ones.
 - `TutorialCongratsAutoRedirect.tsx` — a classic-style Override (same
   shape as `FingerprintDelayedNavigation`, a plain function returning a
   props patch — not the wrap-the-whole-component style tried twice

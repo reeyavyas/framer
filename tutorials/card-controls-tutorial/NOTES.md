@@ -108,7 +108,7 @@ So, per toggle the tutorial wants the user to tap:
    `CardAlertsToggleTarget2` / `CardAlertsToggleTarget3` (add more the
    same way if needed) instead — plain `withTutorialTarget`, not the
    marker variant, since the toggle itself is the real tappable element
-   here (same category as `CardToggle`/`TravelScroll`), not something
+   here (same category as `CardToggle`), not something
    sitting on top of a separate real element.
 3. Drop a `TutorialOverlay` instance targeting that id, `stepNumber` in
    sequence with the rest of the flow, `clickAdvancesStep: true`, one
