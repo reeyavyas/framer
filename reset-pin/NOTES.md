@@ -74,8 +74,8 @@ duplicate yet:
 Spotlight targets, from `tutorials/tutorial-overlays/TutorialTargets.tsx`
 (its "Reset PIN Tutorial" section). The tutorial starts on the Accounts
 page → More → Card Controls, the same as the Card Controls Tutorial:
-1. `MoreTabTarget` (`"more-tab"`) — shared with the Card Controls
-   Tutorial and defined under its section.
+1. `MoreTabTarget` (`"more-tab"`) — a shared starting step, defined in
+   the file's "Shared starting steps" section.
 2. `CardControlsTarget` (`"card-controls"`) — shared, as above.
 3. `ResetPin` (`"reset-pin"`) — target on the "Reset PIN" row of the
    tutorial copy of Card Controls.

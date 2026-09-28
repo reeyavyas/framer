@@ -221,20 +221,24 @@ anywhere else on the page.
   **Organized by tutorial, in step order**, with each tutorial's step
   list at the top of its section:
   - **Login Tutorial:** `LoginButton`, `FingerprintMarker`.
+  - **Shared starting steps:** many tutorials start on the Accounts
+    page and go either to the More tab or to Settings. Those opening
+    targets live here once, each noting which tutorials use it:
+    `MoreTabTarget`, `CardControlsTarget`. There's no Settings target
+    yet; when a tutorial needs one, it goes in this section.
   - **Card Controls Tutorial** (Accounts → More → Card Controls, then
-    the card toggle, Travel Notice and Card Alerts): `MoreTabTarget`,
-    `CardControlsTarget`, `CardToggle`, `TravelNotice`, `TravelStart`,
+    the card toggle, Travel Notice and Card Alerts): `MoreTabTarget`
+    and `CardControlsTarget` (shared), `CardToggle`, `TravelNotice`, `TravelStart`,
     `TravelEnd`, `TravelDestinations`, `TravelSave`,
     `TravelNoticeShown`, `SetCardAlerts`,
     `CardAlertsToggleTarget1`/`2`/`3`, `CardAlertsSaveTarget`.
   - **Reset PIN Tutorial** (Accounts → More → Card Controls):
-    `MoreTabTarget` and `CardControlsTarget` (shared, defined under
-    Card Controls Tutorial), `ResetPin`, `ResetPinConfirm`. `NewPin` is
-    kept at the end of this section, but isn't a current step.
-  An export used by more than one tutorial is defined once, under the
-  first tutorial that uses it, and listed with a pointer back in the
-  later tutorial's step list. Add new exports under their tutorial's
-  section, in step order. Renaming an export or changing its id breaks
+    `MoreTabTarget` and `CardControlsTarget` (shared), `ResetPin`,
+    `ResetPinConfirm`. `NewPin` is kept at the end of this section,
+    but isn't a current step.
+  An export used by more than one tutorial is defined once, in the
+  shared section, and listed by name in each tutorial's step list. Add
+  new exports under their tutorial's section, in step order. Renaming an export or changing its id breaks
   every layer it's already applied to, so only move them.
   Each export is labelled as one of two kinds:
   - **Targets** (`withTutorialTarget`) go on the real layer the user

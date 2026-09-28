@@ -17,10 +17,10 @@ import type { ComponentType } from "react"
  * Usage: select the "more-tab" layer on the canvas → Code (right
  * panel) → Override → this file → MoreTabTarget.
  *
- * Exports are grouped by tutorial, in step order. A target used by more
- * than one tutorial (e.g. MoreTabTarget) is defined once, under the
- * first tutorial that uses it; later tutorials list it in their step
- * list with a pointer back. Each export is either:
+ * Exports are grouped by tutorial, in step order. Starting steps that
+ * many tutorials share (Accounts page → More tab, or Accounts page →
+ * Settings) live once in the "Shared starting steps" section; each
+ * tutorial's step list points back to them. Each export is either:
  *
  *  - a TARGET (withTutorialTarget) — goes on the real layer the user
  *    taps or scrolls. Only tags it; nothing else about the layer is
@@ -96,11 +96,33 @@ export function FingerprintMarker(
     return withTutorialMarker("fingerprint-marker")(Component)
 }
 
+// ═══ Shared starting steps ════════════════════════════════════════════
+// Many tutorials start on the Accounts page and go either to the More
+// tab or to Settings. Those opening steps are defined once here and
+// listed by name in each tutorial's step list below. A Settings target
+// doesn't exist yet: when a tutorial needs one, add it here.
+
+// TARGET: "More" in the Accounts page's bottom nav menu.
+// Used by: Card Controls Tutorial (step 1), Reset PIN Tutorial (step 1).
+export function MoreTabTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("more-tab")(Component)
+}
+
+// TARGET: "Card Controls" at the top of the More page.
+// Used by: Card Controls Tutorial (step 2), Reset PIN Tutorial (step 2).
+export function CardControlsTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("card-controls")(Component)
+}
+
 // ═══ Card Controls Tutorial ═══════════════════════════════════════════
 // Starts on the Accounts page → More → Card Controls, then walks through
 // the card toggle, Travel Notice and Card Alerts.
-//   1. MoreTabTarget
-//   2. CardControlsTarget
+//   1. MoreTabTarget       (shared starting step, defined above)
+//   2. CardControlsTarget  (shared starting step, defined above)
 //   3. CardToggle
 //   4. TravelNotice
 //   5. TravelStart
@@ -115,22 +137,6 @@ export function FingerprintMarker(
 //  14. CardAlertsSaveTarget
 // (The Travel Notice page's scroll container is tagged by
 // VirtualScroll.tsx's "scrollable-content", not by an export here.)
-
-// Step 1 — TARGET: "More" in the bottom nav menu (Accounts page).
-// Also Reset PIN Tutorial step 1.
-export function MoreTabTarget(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withTutorialTarget("more-tab")(Component)
-}
-
-// Step 2 — TARGET: "Card Controls" at the top of the More page.
-// Also Reset PIN Tutorial step 2.
-export function CardControlsTarget(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return withTutorialTarget("card-controls")(Component)
-}
 
 // Step 3 — TARGET: Card Controls page card on/off toggle switch
 export function CardToggle(Component: ComponentType<any>): ComponentType<any> {
@@ -251,9 +257,9 @@ export function CardAlertsSaveTarget(
 // ═══ Reset PIN Tutorial ═══════════════════════════════════════════════
 // Reset PIN is a card-controls sub-feature with its own tutorial — see
 // reset-pin/NOTES.md. Starts on the Accounts page → More → Card
-// Controls, same as the Card Controls Tutorial.
-//   1. MoreTabTarget       (defined under Card Controls Tutorial, step 1)
-//   2. CardControlsTarget  (defined under Card Controls Tutorial, step 2)
+// Controls, the same as the Card Controls Tutorial.
+//   1. MoreTabTarget       (shared starting step, defined above)
+//   2. CardControlsTarget  (shared starting step, defined above)
 //   3. ResetPin
 //   4. ResetPinConfirm
 
