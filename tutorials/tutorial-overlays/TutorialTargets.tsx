@@ -261,14 +261,21 @@ export function CardAlertsSaveTarget(
 //   1. MoreTabTarget       (shared starting step, defined above)
 //   2. CardControlsTarget  (shared starting step, defined above)
 //   3. ResetPin
-//   4. ResetPinConfirm
+//   4. NewPin
+//   5. ResetPinConfirm
 
 // Step 3 — TARGET: Card Controls page "Reset PIN"
 export function ResetPin(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("reset-pin")(Component)
 }
 
-// Step 4 — MARKER: over the Reset PIN page "Confirm" button. The real
+// Step 4 — TARGET: Reset PIN page "New 4-Digit PIN" and "Confirm New
+// 4-Digit PIN" fields (display-only "····", so nothing to tap through to)
+export function NewPin(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("new-pin")(Component)
+}
+
+// Step 5 — MARKER: over the Reset PIN page "Confirm" button. The real
 // Confirm already carries withResetPinConfirm
 // (reset-pin/ResetPinConfirm.tsx, which sets the toast flag) and its
 // own native Link to the tutorial copy of Card Controls. As a marker,
@@ -279,11 +286,4 @@ export function ResetPinConfirm(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("reset-pin-confirm")(Component)
-}
-
-// Not currently one of the steps above — TARGET: the Reset PIN page's
-// "New 4-Digit PIN" and "Confirm New 4-Digit PIN" fields. Kept so any
-// layer it's still applied to in Framer doesn't break.
-export function NewPin(Component: ComponentType<any>): ComponentType<any> {
-    return withTutorialTarget("new-pin")(Component)
 }

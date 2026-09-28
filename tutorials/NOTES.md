@@ -234,8 +234,7 @@ anywhere else on the page.
     `CardAlertsToggleTarget1`/`2`/`3`, `CardAlertsSaveTarget`.
   - **Reset PIN Tutorial** (Accounts → More → Card Controls):
     `MoreTabTarget` and `CardControlsTarget` (shared), `ResetPin`,
-    `ResetPinConfirm`. `NewPin` is kept at the end of this section,
-    but isn't a current step.
+    `NewPin`, `ResetPinConfirm`.
   An export used by more than one tutorial is defined once, in the
   shared section, and listed by name in each tutorial's step list. Add
   new exports under their tutorial's section, in step order. Renaming an export or changing its id breaks

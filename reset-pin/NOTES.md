@@ -79,7 +79,8 @@ page → More → Card Controls, the same as the Card Controls Tutorial:
 2. `CardControlsTarget` (`"card-controls"`) — shared, as above.
 3. `ResetPin` (`"reset-pin"`) — target on the "Reset PIN" row of the
    tutorial copy of Card Controls.
-4. `ResetPinConfirm` (`"reset-pin-confirm"`) — **marker**, on an empty
+4. `NewPin` (`"new-pin"`) — target on the two PIN fields.
+5. `ResetPinConfirm` (`"reset-pin-confirm"`) — **marker**, on an empty
    frame placed exactly on top of the tutorial Confirm button. It can't
    go on Confirm itself, because Confirm already carries
    `withResetPinConfirm` and Framer allows one override per layer. The
@@ -87,9 +88,6 @@ page → More → Card Controls, the same as the Card Controls Tutorial:
    real Confirm, whose override sets the toast flag and whose Link
    navigates. Despite the similar name, it's unrelated to
    `withResetPinConfirm`.
-
-`NewPin` (`"new-pin"`, a target on the two PIN fields) also exists, but
-isn't one of the tutorial's current steps.
 
 If a tutorial-specific tweak is ever needed, it goes in
 `tutorials/reset-pin-tutorial/` (see above), not here and not in any
