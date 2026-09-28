@@ -195,7 +195,17 @@ anywhere else on the page.
   step (no target, no Next button, no timer), such as the Card Alerts
   tutorial's step shown under "Saving...": the page moves on by itself,
   so Skip leaves the step up rather than hiding the overlay and letting
-  taps through. One skip per step, so a
+  taps through. That waiting step also broke tapping Save for real
+  (Skip still worked). The Save step hands off on finger-down, the
+  waiting step (no hole) switched on its tap blocking before the finger
+  lifted, and it blocked the click Save's override runs on. So
+  "Saving..." never showed, and the page sat dim on a waiting step whose
+  Skip does nothing. Skip never hit this, because its simulated tap fires
+  pointerdown, pointerup and click in one go, before the next step
+  mounts. Fixed in `blockOutsideHole`: a newly active step lets through
+  one click if it hasn't seen a pointerdown yet, since that click
+  finishes a tap that started on the previous step. Every tap that
+  starts on the new step is blocked as before. One skip per step, so a
   second press can't flip a toggle back. `skipLink`, when set, still
   overrides all of this and navigates there instead. Confirmed live
   that a simulated tap flips the Card Controls card toggle and all
