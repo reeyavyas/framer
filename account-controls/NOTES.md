@@ -34,6 +34,8 @@ accounts from the Accounts page.
   starts from the ≡ handle only, so a swipe on a row still scrolls the
   page. Every color, font and size is a property control. Set
   `Canvas preview` to Edit to style the edit rows.
+  `Eye icon` and `Eye off icon` take your own images for the shown and
+  hidden states. Leave them blank to use the built-in eye.
 - `AccountPreferencesEditMode.tsx` holds the Overrides for edit mode and
   the save overlay. Timing is controlled by `SAVING_MS`, `SAVED_MS` and
   `FADE_MS`, which you edit directly.

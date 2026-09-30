@@ -56,6 +56,11 @@ import {
  * — and `Only it drags` limits dragging to that row, so the tutorial
  * can tell the user which account to drag.
  *
+ * Eye icons: `Eye icon` / `Eye off icon` take your own images (SVG or
+ * PNG, e.g. exported from your design) for the shown and hidden states.
+ * Leave either blank to use the built-in drawn eye, which follows
+ * `Icons` color. Custom images are drawn as-is at `Eye size`.
+ *
  * On the canvas nothing is interactive; `Canvas preview` switches
  * between View and Edit so both row styles can be styled.
  *
@@ -82,6 +87,8 @@ type Props = {
     fieldBorderColor: string
     fieldBackground: string
     iconColor: string
+    eyeImage?: { src: string; srcSet?: string; alt?: string }
+    eyeOffImage?: { src: string; srcSet?: string; alt?: string }
     hiddenOpacity: number
 
     nameFont: React.CSSProperties
@@ -114,7 +121,30 @@ function sameOrder(a: string[], b: string[]): boolean {
     return a.length === b.length && a.every((id, i) => id === b[i])
 }
 
-function EyeIcon({ size, color, off }: { size: number; color: string; off: boolean }) {
+function EyeIcon({
+    size,
+    color,
+    off,
+    image,
+}: {
+    size: number
+    color: string
+    off: boolean
+    image?: { src: string; srcSet?: string; alt?: string }
+}) {
+    // A custom icon from the "Eye icon" / "Eye off icon" controls, if set.
+    // It's drawn as-is at Eye size, so "Icons" color doesn't apply to it.
+    if (image?.src) {
+        return (
+            <img
+                src={image.src}
+                srcSet={image.srcSet}
+                alt={image.alt ?? ""}
+                draggable={false}
+                style={{ width: size, height: size, objectFit: "contain", display: "block" }}
+            />
+        )
+    }
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
             <path
@@ -212,7 +242,12 @@ function AccountRow({
                             cursor: "pointer",
                         }}
                     >
-                        <EyeIcon size={p.iconSize} color={p.iconColor} off={hidden} />
+                        <EyeIcon
+                            size={p.iconSize}
+                            color={p.iconColor}
+                            off={hidden}
+                            image={hidden ? p.eyeOffImage : p.eyeImage}
+                        />
                     </div>
                     <div
                         style={{
@@ -474,6 +509,16 @@ addPropertyControls(AccountPreferencesList, {
     fieldBorderColor: { type: ControlType.Color, title: "Field border", defaultValue: defaultProps.fieldBorderColor },
     fieldBackground: { type: ControlType.Color, title: "Field fill", defaultValue: defaultProps.fieldBackground },
     iconColor: { type: ControlType.Color, title: "Icons", defaultValue: defaultProps.iconColor },
+    eyeImage: {
+        type: ControlType.ResponsiveImage,
+        title: "Eye icon",
+        description: "Shown account. Blank = built-in eye.",
+    },
+    eyeOffImage: {
+        type: ControlType.ResponsiveImage,
+        title: "Eye off icon",
+        description: "Hidden account. Blank = built-in crossed eye.",
+    },
     hiddenOpacity: { type: ControlType.Number, title: "Hidden opacity", min: 0, max: 1, step: 0.05, defaultValue: defaultProps.hiddenOpacity },
 
     nameFont: {
