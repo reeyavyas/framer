@@ -4,6 +4,57 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
+## Status: pick up here (end of session, 2026-09-30)
+
+### Done in Framer
+- The `AccountPreferencesList` component is placed on the Account
+  Preferences page.
+- The page header is built with its **View** variant (← and "Edit")
+  and its **Editing** variant ("Done", no ←), and the Edit/Done tap
+  target is set up.
+- The "No External Accounts" section is on the view version.
+
+### Next steps, in order
+1. **Wire the Accounts base page.** In "Accounts Page Scroll Content",
+   apply `withAccount7500`, `withAccount8665`, `withAccount5101` and
+   `withAccount5007` (from `AccountOrder.tsx`), each to its own account
+   frame.
+2. **Build the overlay component.** Make it full-screen with a dim fill
+   and the bottom bar, placed above everything including the tab bar.
+   It needs two variants, named exactly **Saving** (a native looping
+   spinner and "Saving Changes…") and **Saved** ("Changes Saved").
+   Apply `withAccountPrefsSavingOverlay` to it.
+3. **Check the other Account Preferences overrides are on:**
+   - `withAccountPrefsHeader` on the header instance;
+   - `withAccountPrefsEditToggle` on the Edit/Done tap frame, or on the
+     Edit/Done text layer inside the header;
+   - `withAccountPrefsHideWhileEditing` on the "No External Accounts"
+     section.
+4. **Test in Preview or Published:**
+   - Edit changes to Done, the ← hides and External Accounts hides.
+   - Dragging by the ≡ handle and letting go in a new spot plays
+     Saving (1s), then Saved (1s), then fades out, and the page stays
+     in edit mode.
+   - Tapping an eye swaps the icon and plays the overlay. The last
+     visible account can't be hidden.
+   - Done returns to view mode. Hidden accounts show at lower opacity.
+   - Going back to Accounts shows the new order, and hidden accounts
+     are gone.
+   - A refresh resets everything to the default order.
+   - Swiping on a row, not on its handle, still scrolls the page, and
+     dragging works by touch on the kiosk.
+5. **Adjust if needed:** the timing (`SAVING_MS`, `SAVED_MS` and
+   `FADE_MS` in `AccountPreferencesEditMode.tsx`) and the list styling
+   in its Properties panel.
+
+### After the base page works
+- Account Controls tutorial. See "Tutorial (not built yet)" below; the
+  question of which saved order the tutorial Accounts page reads is
+  still open.
+- Optional: a custom image slot for the ≡ handle, as was done for the
+  eye.
+- PR: https://github.com/reeyavyas/framer/pull/9 (open, not merged).
+
 ## Account Preferences (base page)
 
 ### How it works
