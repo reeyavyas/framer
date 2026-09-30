@@ -28,6 +28,12 @@ reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
   ResetPinToast.tsx        Toast on Card Controls, with countdown bar + ×
   NOTES.md
 
+account-controls/       Account-level preferences (settings)
+  AccountPreferencesList.tsx     Drag-to-reorder list, eye to hide
+  AccountPreferencesEditMode.tsx Edit/Done, header variants, Saving overlay
+  AccountOrder.tsx               Saved order + Accounts page overrides
+  NOTES.md
+
 money-management/       Budgeting UI
   CircleOverrides.tsx      Draggable "Budget Circles" spending categories
   NOTES.md

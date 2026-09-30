@@ -15,6 +15,9 @@ with the detail on what's in it; this file is just the map.
   has a tutorial of its own. Its files never go under `card-controls/`,
   and any tutorial duplicates go in `tutorials/reset-pin-tutorial/`.
   Branches use `card-controls/<feature>`. See `reset-pin/NOTES.md`.
+- **`account-controls/`** — Account-level preferences a user manages
+  from settings (Account Preferences: drag to reorder accounts, hide
+  accounts from the Accounts page). See `account-controls/NOTES.md`.
 - **`money-management/`** — Budgeting UI, currently the draggable "Budget
   Circles" spending categories. See `money-management/NOTES.md`.
 - **`main/`** — Site-wide, page-agnostic pieces not owned by any one
@@ -39,6 +42,7 @@ land in:
 
 ```
 card-controls/<feature>
+account-controls/<feature>
 money-management/<feature>
 main/<feature>
 tutorials-main-page/<feature>
