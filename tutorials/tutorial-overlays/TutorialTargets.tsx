@@ -118,6 +118,14 @@ export function CardControlsTarget(
     return withTutorialTarget("card-controls")(Component)
 }
 
+// TARGET: "Settings" button at the top of the Accounts page.
+// Used by: Log Out Tutorial (step 1).
+export function SettingsButton(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("settings-button")(Component)
+}
+
 // ═══ Card Controls Tutorial ═══════════════════════════════════════════
 // Starts on the Accounts page → More → Card Controls, then walks through
 // the card toggle, Travel Notice and Card Alerts.
@@ -286,4 +294,15 @@ export function ResetPinConfirm(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("reset-pin-confirm")(Component)
+}
+
+// ═══ Log Off Tutorial ═══════════════════════════════════════════════
+// 1. Logout - settings page menu item
+// 2. Yes- button on the logout confirmation overlay
+export function Logout(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialMarker("logout")(Component)
+}
+
+export function YesButton(Component: ComponentType<any>): ComponentType<any> {
+    return withTutorialTarget("yes-button")(Component)
 }
