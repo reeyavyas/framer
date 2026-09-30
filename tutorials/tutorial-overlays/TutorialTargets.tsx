@@ -99,8 +99,7 @@ export function FingerprintMarker(
 // ═══ Shared starting steps ════════════════════════════════════════════
 // Many tutorials start on the Accounts page and go either to the More
 // tab or to Settings. Those opening steps are defined once here and
-// listed by name in each tutorial's step list below. A Settings target
-// doesn't exist yet: when a tutorial needs one, add it here.
+// listed by name in each tutorial's step list below.
 
 // TARGET: "More" in the Accounts page's bottom nav menu.
 // Used by: Card Controls Tutorial (step 1), Reset PIN Tutorial (step 1).
@@ -119,7 +118,7 @@ export function CardControlsTarget(
 }
 
 // TARGET: "Settings" button at the top of the Accounts page.
-// Used by: Log Out Tutorial (step 1).
+// Used by: Log Off Tutorial (step 1).
 export function SettingsButton(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -296,13 +295,19 @@ export function ResetPinConfirm(
     return withTutorialMarker("reset-pin-confirm")(Component)
 }
 
-// ═══ Log Off Tutorial ═══════════════════════════════════════════════
-// 1. Logout - settings page menu item
-// 2. Yes- button on the logout confirmation overlay
+// ═══ Log Off Tutorial ═════════════════════════════════════════════════
+// Starts on the Accounts page → Settings → Logout, then confirms on the
+// logout confirmation overlay.
+//   1. SettingsButton  (shared starting step, defined above)
+//   2. Logout
+//   3. YesButton
+
+// Step 2 — MARKER: over the Settings page "Logout" menu item
 export function Logout(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialMarker("logout")(Component)
 }
 
+// Step 3 — TARGET: "Yes" button on the logout confirmation overlay
 export function YesButton(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("yes-button")(Component)
 }
