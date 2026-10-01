@@ -35,6 +35,20 @@ with the detail on what's in it; this file is just the map.
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
 
+## Open items across groups
+
+- **Test that a new session starts fresh after the tutorials page
+  gets a free exploration button.** Account Preferences
+  (`account-controls/`) keeps the account order and hidden accounts in
+  memory only, so they reset whenever the page reloads: on a refresh,
+  and on `AppInactivityOverlay`'s redirect to `/app`. To test: reorder
+  or hide an account, log off, come back in through the free
+  exploration button, and open Accounts. It should show the default
+  order. If that route is all native Framer Links with no reload, the
+  previous person's changes carry over, and the Log Off or free
+  exploration button will need an override that resets the saved
+  state. See `account-controls/NOTES.md`.
+
 ## Branch naming
 
 New feature branches are prefixed by group, matching the folder they'll
