@@ -52,10 +52,18 @@ this repo:
   Controls**.
 
 So the tutorial files import from
-`"../../Account Controls/AccountOrder.tsx"` and
-`"../../Account Controls/AccountPreferencesEditMode.tsx"`. Renaming or
-moving either folder in Framer breaks those imports. The base files
-import each other with `"./…"` and must stay together.
+`"../../Account_Controls/AccountOrder.tsx"` and
+`"../../Account_Controls/AccountPreferencesEditMode.tsx"`. In import
+paths Framer writes a space in a folder name as an underscore
+("Account Controls" → `Account_Controls`). Renaming or moving either
+folder in Framer breaks those imports. The base files import each
+other with `"./…"` and must stay together.
+
+Framer rewrites an import when the file it points to moves, but not
+when the importing file itself moves. After moving a file, check its
+imports: moving `AccountPreferencesList.tsx` into Account Controls
+left it importing `"./Account_Controls/AccountOrder.tsx"`, which had
+to go back to `"./AccountOrder.tsx"`.
 
 ## Framer setup
 
