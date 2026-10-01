@@ -4,13 +4,68 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (2026-10-01)
+## Status: pick up here (end of session, 2026-10-01)
+
+### Where to pick up
+**Account Controls tutorial, step 2 on the tutorial Account
+Preferences page** (tap the name field). The step table and setup are
+in `tutorials/account-controls-tutorial/NOTES.md`.
+
+Built in Framer so far:
+- All code files pasted, in their Code folders: base files in Phone
+  Components > Account Controls, tutorial files in Phone Components >
+  Tutorials > Account Controls Tutorial. The imports resolve, with no
+  underlines. Tutorial files import from `"../../Account_Controls/…"`:
+  Framer writes the folder's space as an underscore.
+- The tutorial pages up to the Account Preferences page.
+- Account Preferences step 1 (tap Edit): its TutorialOverlay card, and
+  the `AccountPrefsEdit` marker over "Edit".
+
+### Next steps, in order
+1. **Finish the Account Preferences steps** (same `pageGroup` as step
+   1):
+   - **Step 2:** tap the name field. `target`
+     `account-prefs-name-field`, `Click advances step`.
+   - **Step 3:** the name types and saves. Same target, `Advance on
+     event` `account-prefs-renamed`. For the optional progress bar,
+     set `Event progress` to about 5.75s.
+   - **Step 4:** drag Main Checking to the top. `target`
+     `account-prefs-row`, `Advance on event` `account-prefs-moved`.
+   - **Step 5:** hide Platinum. `target` `account-prefs-eye`,
+     `Advance on event` `account-prefs-hidden`.
+   - **Step 6:** tap Done. Add the `AccountPrefsDone` marker over
+     "Done", where it sits in the Editing variant. `target`
+     `account-prefs-done`, `Click advances step`. Check the Edit/Done
+     tap frame (`withAccountPrefsEditToggle`) also covers the "Done"
+     spot; the tutorial only lets the tap through there.
+   - **Step 7:** tap ←. Add the `AccountPrefsBack` marker over the ←.
+     `target` `account-prefs-back`. The ←'s Link goes to
+     `/account-controls-tutorial/accounts-2`.
+   Use native Links only, and no `nextButtonLink` or `autoAdvanceLink`,
+   until `accounts-2`. Those reload the page and wipe the tutorial's
+   changes.
+2. **Build `/account-controls-tutorial/accounts-2`:** put
+   `withAccountName8665` on the "Vertical Checking * 8665" text layer
+   in the Accounts content component's main component, then add the
+   closing card.
+3. **Test the tutorial in Preview:**
+   - the name types, and each step advances after Saved fades out;
+   - dragging by touch on the kiosk, and the page not scrolling;
+   - Skip on every step;
+   - `accounts-2` shows "Main Checking * 8665" at the top, with
+     Platinum gone;
+   - running it twice in a row starts the second run from the default
+     order.
+   Also check whether the save overlay covers the tutorial card on
+   steps 3–5. Not yet confirmed in Framer: the name text override.
+4. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
+   Use **Create a merge commit**.
 
 ### Done
-- **Base page works in Preview.** Account Preferences (list, header
-  variants, Edit/Done, save overlay, "No External Accounts" hiding)
-  and the Accounts page reorder/hide. The three bugs fixed on
-  2026-10-01 are confirmed fixed:
+- **Base page works in Preview.** This covers Account Preferences
+  (list, header variants, Edit/Done, save overlay, "No External
+  Accounts" hiding) and the Accounts page reorder/hide. These three
+  fixes are confirmed:
   - the rows no longer stretch on Edit or overlap "No External
     Accounts" on Done;
   - Done registers right after a change;
@@ -18,26 +73,9 @@ accounts from the Accounts page.
     a component instance, not inside a full-screen frame of its own.
 - **Resets confirmed:** a refresh, and logging out and back in, both
   return to the default order.
-- **Tutorial code written** (not yet built in Framer). See
-  `tutorials/account-controls-tutorial/NOTES.md`.
-
-### Next steps
-1. **Build the tutorial pages in Framer,** following
-   `tutorials/account-controls-tutorial/NOTES.md`:
-   - `/account-controls-tutorial/accounts-1`, with the reset override;
-   - the tutorial Settings page;
-   - the tutorial Account Preferences page, with
-     `AccountPreferencesListTutorial` and 7 TutorialOverlay steps;
-   - `/account-controls-tutorial/accounts-2`, with
-     `withAccountName8665` on Vertical Checking's name text.
-   Paste the updated `AccountOrder.tsx`, `AccountPreferencesList.tsx`
-   and `TutorialOverlay.tsx` too.
-2. **Test the tutorial in Preview:** typing, each step advancing after
-   the save overlay, dragging by touch, Skip on every step, and
-   `accounts-2` showing Main Checking at the top with Platinum gone.
-   Run it twice in a row to check the reset.
-3. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
-   Use **Create a merge commit**.
+- **Tutorial code written:** the tutorial list, the reset override,
+  the `TutorialOverlay` additions (advance on event, Skip doing the
+  action, drag passthrough) and the targets.
 
 ### Later
 - Once the tutorials page has a free exploration button, test that
