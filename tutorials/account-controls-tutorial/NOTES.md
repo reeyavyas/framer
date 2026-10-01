@@ -103,9 +103,12 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 ### `/account-controls-tutorial/accounts-2`
 - Same Accounts content component, so the frames reorder and hide
   from the tutorial store.
-- `withAccountName8665` (AccountOrder.tsx) on Vertical Checking's name
-  text layer. That layer must hold only the name, since the override
-  replaces its whole text. It shows "Main Checking" once renamed.
+- `withAccountName8665` (AccountOrder.tsx) on the "Vertical Checking *
+  8665" text layer inside Vertical Checking's frame. Once renamed it
+  shows "Main Checking * 8665". The field on Account Preferences types
+  just "Main Checking". The " * " between the name and the number is
+  `NAME_NUMBER_SEPARATOR` in AccountOrder.tsx, and must match the
+  canvas text exactly.
 - The closing card.
 
 ## Navigation must be native Links

@@ -117,8 +117,8 @@ accounts from the Accounts page.
   The overrides read the "base" saved order everywhere except pages
   under `/account-controls-tutorial/`, where they read the tutorial's.
   The same file also has `withAccountName7500` etc., for an account's
-  name text layer, which show a saved new name (only the tutorial
-  renames), and `resetAccountState()`, which the tutorial uses to
+  "Name * 1234" text layer, which show a saved new name with the
+  number, e.g. "Main Checking * 8665" (only the tutorial renames), and `resetAccountState()`, which the tutorial uses to
   start fresh.
 
 ### Where the order is kept, and why

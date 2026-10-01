@@ -64,9 +64,11 @@ import { RenderTarget } from "framer"
  * (/account-controls-tutorial/accounts-2) shows the new name. Put
  * withAccountName7500 etc. on the account's NAME TEXT layer (not the
  * frame — that one already carries withAccountNNNN, and Framer allows
- * one override per layer). The text layer must hold only the name,
- * since the override replaces its whole text. Until a name is saved
- * the layer's own text shows. Only the renamed account needs it.
+ * one override per layer). That layer holds the name and the number,
+ * e.g. "Vertical Checking * 8665", and the override replaces its whole
+ * text with the new name plus NAME_NUMBER_SEPARATOR plus the id, e.g.
+ * "Main Checking * 8665". Until a name is saved the layer's own text
+ * shows. Only the renamed account needs it.
  *
  * resetAccountState() clears a store. The tutorial calls it when its
  * first page opens (see AccountControlsTutorialReset.tsx), so a second
@@ -217,6 +219,10 @@ export function withAccount5007(
 // Name text overrides: show the saved new name, if any (see NAMES in
 // the header comment).
 
+// Between the name and the account number on the Accounts page's name
+// text layers. Must match the canvas text exactly.
+const NAME_NUMBER_SEPARATOR = " * "
+
 function useAccountName(accountId: string): string | undefined {
     useAccountStateUpdates()
     return getAccountState(storeForThisPage()).names[accountId]
@@ -225,10 +231,16 @@ function useAccountName(accountId: string): string | undefined {
 function renderAccountName(
     Component: ComponentType<any>,
     props: any,
+    accountId: string,
     name: string | undefined
 ) {
     if (name === undefined) return <Component {...props} />
-    return <Component {...props} text={name} />
+    return (
+        <Component
+            {...props}
+            text={`${name}${NAME_NUMBER_SEPARATOR}${accountId}`}
+        />
+    )
 }
 
 export function withAccountName7500(
@@ -237,7 +249,12 @@ export function withAccountName7500(
     return function AccountName7500(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         const name = useAccountName("7500")
-        return renderAccountName(Component, props, isCanvas ? undefined : name)
+        return renderAccountName(
+            Component,
+            props,
+            "7500",
+            isCanvas ? undefined : name
+        )
     }
 }
 
@@ -247,7 +264,12 @@ export function withAccountName8665(
     return function AccountName8665(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         const name = useAccountName("8665")
-        return renderAccountName(Component, props, isCanvas ? undefined : name)
+        return renderAccountName(
+            Component,
+            props,
+            "8665",
+            isCanvas ? undefined : name
+        )
     }
 }
 
@@ -257,7 +279,12 @@ export function withAccountName5101(
     return function AccountName5101(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         const name = useAccountName("5101")
-        return renderAccountName(Component, props, isCanvas ? undefined : name)
+        return renderAccountName(
+            Component,
+            props,
+            "5101",
+            isCanvas ? undefined : name
+        )
     }
 }
 
@@ -267,6 +294,11 @@ export function withAccountName5007(
     return function AccountName5007(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         const name = useAccountName("5007")
-        return renderAccountName(Component, props, isCanvas ? undefined : name)
+        return renderAccountName(
+            Component,
+            props,
+            "5007",
+            isCanvas ? undefined : name
+        )
     }
 }
