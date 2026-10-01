@@ -31,9 +31,11 @@ import { RenderTarget } from "framer"
  *    "Saving Changes...", spin as a native looping rotation) and
  *    OVERLAY_SAVED_VARIANT ("Saved": "Changes Saved"). Hidden until a
  *    save; then Saving for SAVING_MS, Saved for SAVED_MS, then fades out
- *    over FADE_MS. While showing it catches every tap, so nothing can be
- *    dragged or toggled mid-save. Place it above everything on the page
- *    (tab bar included), matching the reference screenshots.
+ *    over FADE_MS. While Saving/Saved show it catches every tap, so
+ *    nothing can be dragged or toggled mid-save; while it's hidden or
+ *    fading, taps pass through it (and through the instance's
+ *    wrapper). Place it above everything on the page (tab bar
+ *    included), matching the reference screenshots.
  *
  *  - withAccountPrefsHideWhileEditing — apply to anything that should
  *    disappear in edit mode, e.g. the "No External Accounts" card.
@@ -100,8 +102,12 @@ export function resetEditMode() {
     notify()
 }
 
+// No isSaving() guard: while the overlay is up it catches the tap
+// itself. A guard here silently dropped Done for the whole 2.25s after
+// every change, which looked like a missed tap — always, if the
+// overlay layer was hidden on the canvas, and during the fade-out when
+// it wasn't.
 function toggleEditing() {
-    if (isSaving()) return
     editing = !editing
     notify()
 }
@@ -181,24 +187,62 @@ export function withAccountPrefsSavingOverlay(
     return function AccountPrefsSavingOverlay(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         useEditModeUpdates(!isCanvas)
+
+        // Framer draws a component instance inside its own wrapper div,
+        // sized like the instance (here, full screen), and the override
+        // only reaches the component inside it. Hiding the component
+        // leaves that empty wrapper over the page, and it still catches
+        // every tap. So the wrapper is made click-through, and the
+        // component turns taps back on only while it's blocking.
+        // The marker span finds the wrapper: it renders next to the
+        // component, so its parent is the wrapper.
+        const markerRef = React.useRef<HTMLSpanElement>(null)
+        React.useEffect(() => {
+            if (isCanvas) return
+            const marker = markerRef.current
+            const wrapper = marker?.parentElement
+            if (!marker || !wrapper) return
+            // Only a wrapper that holds just this overlay. If the
+            // override sits on a plain frame instead, the parent is a
+            // real layer with other children, and those must keep
+            // their taps (pointer-events is inherited).
+            const others = Array.from(wrapper.children).filter(
+                (el) => el !== marker
+            )
+            if (others.length !== 1) return
+            const previous = wrapper.style.pointerEvents
+            wrapper.style.pointerEvents = "none"
+            return () => {
+                wrapper.style.pointerEvents = previous
+            }
+        }, [isCanvas])
+
         if (isCanvas) return <Component {...props} />
 
+        // Taps go through while fading out, so a quick tap on Done
+        // right after "Changes Saved" isn't swallowed.
+        const blocking = savePhase === "saving" || savePhase === "saved"
+
         return (
-            <Component
-                {...props}
-                variant={
-                    savePhase === "saving"
-                        ? OVERLAY_SAVING_VARIANT
-                        : OVERLAY_SAVED_VARIANT
-                }
-                style={{
-                    ...props.style,
-                    opacity: savePhase === "fading" ? 0 : 1,
-                    transition: `opacity ${FADE_MS}ms ease`,
-                    pointerEvents: "auto",
-                    display: savePhase === "hidden" ? "none" : props.style?.display,
-                }}
-            />
+            <>
+                <span ref={markerRef} style={{ display: "none" }} />
+                <Component
+                    {...props}
+                    variant={
+                        savePhase === "saving"
+                            ? OVERLAY_SAVING_VARIANT
+                            : OVERLAY_SAVED_VARIANT
+                    }
+                    style={{
+                        ...props.style,
+                        opacity: savePhase === "fading" ? 0 : 1,
+                        transition: `opacity ${FADE_MS}ms ease`,
+                        pointerEvents: blocking ? "auto" : "none",
+                        display:
+                            savePhase === "hidden" ? "none" : props.style?.display,
+                    }}
+                />
+            </>
         )
     }
 }

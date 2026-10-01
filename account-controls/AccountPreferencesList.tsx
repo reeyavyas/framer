@@ -213,6 +213,11 @@ function AccountRow({
             value={account.accountId}
             dragListener={false}
             dragControls={dragControls}
+            // Reorder.Item animates layout changes by default, and a
+            // size change is animated with a scale transform, which
+            // squashes and stretches the text and icons. "position"
+            // only slides rows into their new spots during a drag.
+            layout="position"
             onDragEnd={onDragEnd}
             whileDrag={{ zIndex: 2, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}
             {...tag("account-prefs-row")}
@@ -376,6 +381,11 @@ export default function AccountPreferencesList(props: Props) {
 
     return (
         <Reorder.Group
+            // A new key on every View/Edit switch mounts fresh rows, so
+            // they snap to their new height instead of sliding from the
+            // old one over whatever sits below the list (e.g. the
+            // "No External Accounts" card when Done is tapped).
+            key={editing ? "edit" : "view"}
             as="div"
             axis="y"
             values={order}

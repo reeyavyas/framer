@@ -14,6 +14,21 @@ accounts from the Accounts page.
   target is set up.
 - The "No External Accounts" section is on the view version.
 
+### Fixed 2026-10-01 (re-test these in Preview)
+- **Rows stretched on Edit, and overlapped "No External Accounts"
+  on Done.** The rows' layout animation resized them with a scale
+  transform. Rows now only slide while being dragged, and switching
+  between View and Edit snaps them to their new height.
+- **Done sometimes didn't register after a change.** Edit/Done was
+  ignored for the whole 2.25s overlay, including its fade-out, and
+  with no feedback when the overlay layer was hidden. Now only the
+  overlay itself blocks taps, and only during Saving and Saved.
+- **The overlay blocked the page while hidden.** Framer wraps each
+  component instance in a full-screen div that the override can't
+  style, and that empty div caught every tap. The override now makes
+  the wrapper click-through. The overlay must be a component
+  instance, not inside a full-screen frame of its own.
+
 ### Next steps, in order
 1. **Wire the Accounts base page.** In "Accounts Page Scroll Content",
    apply `withAccount7500`, `withAccount8665`, `withAccount5101` and
@@ -51,8 +66,6 @@ accounts from the Accounts page.
 - Account Controls tutorial. See "Tutorial (not built yet)" below; the
   question of which saved order the tutorial Accounts page reads is
   still open.
-- Optional: a custom image slot for the ≡ handle, as was done for the
-  eye.
 - PR: https://github.com/reeyavyas/framer/pull/9 (open, not merged).
 
 ## Account Preferences (base page)
@@ -101,7 +114,10 @@ accounts from the Accounts page.
     everything including the tab bar. It has two variants, named
     exactly **Saving** (native looping spinner plus "Saving Changes…")
     and **Saved** ("Changes Saved"). The overlay catches every tap
-    while it shows.
+    during Saving and Saved, and lets taps through while hidden or
+    fading. Framer wraps each instance in a full-screen div, and the
+    override makes that div click-through, so the instance must not be
+    nested in another full-screen frame, which would still block taps.
   - `withAccountPrefsHideWhileEditing` goes on the "No External
     Accounts" card, or on anything else that should hide in edit mode.
 - `AccountOrder.tsx` is the shared saved state, plus the Accounts page
