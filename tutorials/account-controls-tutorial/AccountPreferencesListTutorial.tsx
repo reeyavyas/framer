@@ -5,7 +5,7 @@ import {
     getAccountState,
     saveAccountState,
     subscribeAccountState,
-} from "./AccountOrder.tsx"
+} from "../../Account Controls/AccountOrder.tsx"
 import {
     getSavePhase,
     isEditing,
@@ -14,7 +14,7 @@ import {
     startSaveOverlay,
     subscribeEditMode,
     useEditModeUpdates,
-} from "./AccountPreferencesEditMode.tsx"
+} from "../../Account Controls/AccountPreferencesEditMode.tsx"
 
 /**
  * AccountPreferencesListTutorial
@@ -22,10 +22,13 @@ import {
  * Tutorial copy of account-controls/AccountPreferencesList.tsx, for the
  * Account Controls tutorial's copy of the Account Preferences page.
  * Placed and styled the same way as the base list (same property
- * controls). In Framer, AccountOrder.tsx and
- * AccountPreferencesEditMode.tsx sit next to this file in the Code
- * panel, so they're imported as "./…tsx" even though this repo keeps
- * them in account-controls/.
+ * controls).
+ *
+ * Framer Code folders: this file lives in Phone Components > Tutorials >
+ * Account Controls Tutorial, and imports AccountOrder.tsx and
+ * AccountPreferencesEditMode.tsx from the base files' folder, Phone
+ * Components > Account Controls ("../../Account Controls/…"). Moving or
+ * renaming either folder in Framer breaks these imports.
  *
  * Differences from the base list:
  *

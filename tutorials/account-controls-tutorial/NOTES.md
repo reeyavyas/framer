@@ -43,10 +43,19 @@ shows the new order, the new name, and Platinum gone.
   clears the tutorial store when the first page opens, so a second run
   in the same session starts from the default order.
 
-Both import `./AccountOrder.tsx` and
-`./AccountPreferencesEditMode.tsx`. In Framer every code file sits in
-one Code panel, so that works even though this repo keeps them in
-`account-controls/`.
+**Framer Code folders.** Tutorial and base files are kept apart, as in
+this repo:
+- these two files go in **Phone Components > Tutorials > Account
+  Controls Tutorial**;
+- the base files (`AccountOrder.tsx`, `AccountPreferencesEditMode.tsx`,
+  `AccountPreferencesList.tsx`) go in **Phone Components > Account
+  Controls**.
+
+So the tutorial files import from
+`"../../Account Controls/AccountOrder.tsx"` and
+`"../../Account Controls/AccountPreferencesEditMode.tsx"`. Renaming or
+moving either folder in Framer breaks those imports. The base files
+import each other with `"./…"` and must stay together.
 
 ## Framer setup
 
