@@ -318,12 +318,12 @@ export function YesButton(Component: ComponentType<any>): ComponentType<any> {
 // /account-controls-tutorial/accounts-2 to show the result.
 //   1. SettingsButton          (shared starting step, defined above)
 //   2. AccountPreferencesItem
-//   3. AccountPrefsEditDone    (tap Edit)
+//   3. AccountPrefsEdit
 //   4. "account-prefs-name-field"  — tap the name field
 //   5. "account-prefs-name-field"  — the name types and saves
 //   6. "account-prefs-row"         — drag Main Checking to the top
 //   7. "account-prefs-eye"         — hide Platinum Rewards Checking
-//   8. AccountPrefsEditDone    (tap Done)
+//   8. AccountPrefsDone
 //   9. AccountPrefsBack
 // (Steps 4–7's targets are tagged by AccountPreferencesListTutorial.tsx
 // in tutorials/account-controls-tutorial/, not by an export here.)
@@ -335,13 +335,24 @@ export function AccountPreferencesItem(
     return withTutorialTarget("account-preferences")(Component)
 }
 
-// Steps 3 and 8 — MARKER: over the Account Preferences header's
-// "Edit"/"Done" word. A marker because the tap frame there already
-// carries withAccountPrefsEditToggle.
-export function AccountPrefsEditDone(
+// Steps 3 and 8 are separate markers because "Edit" and "Done" sit in
+// different spots: the View header's ← pushes "Edit" over. Markers
+// because the Edit/Done tap frame already carries
+// withAccountPrefsEditToggle. Both can stay on the page all the time;
+// each step only looks for its own.
+
+// Step 3 — MARKER: over "Edit" in the header's View variant
+export function AccountPrefsEdit(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withTutorialMarker("account-prefs-edit-done")(Component)
+    return withTutorialMarker("account-prefs-edit")(Component)
+}
+
+// Step 8 — MARKER: over "Done" in the header's Editing variant
+export function AccountPrefsDone(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("account-prefs-done")(Component)
 }
 
 // Step 9 — MARKER: over the Account Preferences header's ← (inside the

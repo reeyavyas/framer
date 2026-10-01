@@ -88,8 +88,13 @@ of the base list. The header, Edit/Done tap frame, save overlay and
 "No External Accounts" card keep their base overrides
 (`withAccountPrefsHeader`, `withAccountPrefsEditToggle`,
 `withAccountPrefsSavingOverlay`, `withAccountPrefsHideWhileEditing`).
-Add two marker frames (empty, no fill, no Link):
-- `AccountPrefsEditDone` over the Edit/Done word.
+Add three marker frames (empty, no fill, no Link):
+- `AccountPrefsEdit` over "Edit", where it sits in the header's View
+  variant.
+- `AccountPrefsDone` over "Done", where it sits in the Editing variant.
+  "Edit" and "Done" are in different spots because the ← takes up
+  room in the View variant. Both markers can stay on the page all the
+  time; each step only looks for its own.
 - `AccountPrefsBack` over the ←. The ←'s own native Link goes to
   `/account-controls-tutorial/accounts-2`.
 
@@ -98,12 +103,12 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 
 | Step | Target | Advances on | Card |
 |---|---|---|---|
-| 1 | `account-prefs-edit-done` | `Click advances step` | Tap Edit |
+| 1 | `account-prefs-edit` | `Click advances step` | Tap Edit |
 | 2 | `account-prefs-name-field` | `Click advances step` | Tap the name to change it |
 | 3 | `account-prefs-name-field` | `Advance on event`: `account-prefs-renamed` | The name changes; optional progress bar (`Event progress` ≈ 5.75s) |
 | 4 | `account-prefs-row` (or `account-prefs-handle`) | `Advance on event`: `account-prefs-moved` | Drag Main Checking to the top |
 | 5 | `account-prefs-eye` | `Advance on event`: `account-prefs-hidden` | Hide Platinum Rewards Checking |
-| 6 | `account-prefs-edit-done` | `Click advances step` | Tap Done |
+| 6 | `account-prefs-done` | `Click advances step` | Tap Done |
 | 7 | `account-prefs-back` | the ←'s Link | Go back to Accounts |
 
 - Step 3's progress bar: typing takes about 3.5s with the default
