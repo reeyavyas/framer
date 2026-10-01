@@ -4,75 +4,48 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (end of session, 2026-09-30)
+## Status: pick up here (2026-10-01)
 
-### Done in Framer
-- The `AccountPreferencesList` component is placed on the Account
-  Preferences page.
-- The page header is built with its **View** variant (← and "Edit")
-  and its **Editing** variant ("Done", no ←), and the Edit/Done tap
-  target is set up.
-- The "No External Accounts" section is on the view version.
+### Done
+- **Base page works in Preview.** Account Preferences (list, header
+  variants, Edit/Done, save overlay, "No External Accounts" hiding)
+  and the Accounts page reorder/hide. The three bugs fixed on
+  2026-10-01 are confirmed fixed:
+  - the rows no longer stretch on Edit or overlap "No External
+    Accounts" on Done;
+  - Done registers right after a change;
+  - the hidden save overlay no longer blocks taps. The overlay must be
+    a component instance, not inside a full-screen frame of its own.
+- **Resets confirmed:** a refresh, and logging out and back in, both
+  return to the default order.
+- **Tutorial code written** (not yet built in Framer). See
+  `tutorials/account-controls-tutorial/NOTES.md`.
 
-### Fixed 2026-10-01 (re-test these in Preview)
-- **Rows stretched on Edit, and overlapped "No External Accounts"
-  on Done.** The rows' layout animation resized them with a scale
-  transform. Rows now only slide while being dragged, and switching
-  between View and Edit snaps them to their new height.
-- **Done sometimes didn't register after a change.** Edit/Done was
-  ignored for the whole 2.25s overlay, including its fade-out, and
-  with no feedback when the overlay layer was hidden. Now only the
-  overlay itself blocks taps, and only during Saving and Saved.
-- **The overlay blocked the page while hidden.** Framer wraps each
-  component instance in a full-screen div that the override can't
-  style, and that empty div caught every tap. The override now makes
-  the wrapper click-through. The overlay must be a component
-  instance, not inside a full-screen frame of its own.
+### Next steps
+1. **Build the tutorial pages in Framer,** following
+   `tutorials/account-controls-tutorial/NOTES.md`:
+   - `/account-controls-tutorial/accounts-1`, with the reset override;
+   - the tutorial Settings page;
+   - the tutorial Account Preferences page, with
+     `AccountPreferencesListTutorial` and 7 TutorialOverlay steps;
+   - `/account-controls-tutorial/accounts-2`, with
+     `withAccountName8665` on Vertical Checking's name text.
+   Paste the updated `AccountOrder.tsx`, `AccountPreferencesList.tsx`
+   and `TutorialOverlay.tsx` too.
+2. **Test the tutorial in Preview:** typing, each step advancing after
+   the save overlay, dragging by touch, Skip on every step, and
+   `accounts-2` showing Main Checking at the top with Platinum gone.
+   Run it twice in a row to check the reset.
+3. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
+   Use **Create a merge commit**.
 
-### Next steps, in order
-1. **Wire the Accounts base page.** In "Accounts Page Scroll Content",
-   apply `withAccount7500`, `withAccount8665`, `withAccount5101` and
-   `withAccount5007` (from `AccountOrder.tsx`), each to its own account
-   frame.
-2. **Build the overlay component.** Make it full-screen with a dim fill
-   and the bottom bar, placed above everything including the tab bar.
-   It needs two variants, named exactly **Saving** (a native looping
-   spinner and "Saving Changes…") and **Saved** ("Changes Saved").
-   Apply `withAccountPrefsSavingOverlay` to it.
-3. **Check the other Account Preferences overrides are on:**
-   - `withAccountPrefsHeader` on the header instance;
-   - `withAccountPrefsEditToggle` on the Edit/Done tap frame, or on the
-     Edit/Done text layer inside the header;
-   - `withAccountPrefsHideWhileEditing` on the "No External Accounts"
-     section.
-4. **Test in Preview or Published:**
-   - Edit changes to Done, the ← hides and External Accounts hides.
-   - Dragging by the ≡ handle and letting go in a new spot plays
-     Saving (1s), then Saved (1s), then fades out, and the page stays
-     in edit mode.
-   - Tapping an eye swaps the icon and plays the overlay. The last
-     visible account can't be hidden.
-   - Done returns to view mode. Hidden accounts show at lower opacity.
-   - Going back to Accounts shows the new order, and hidden accounts
-     are gone.
-   - A refresh resets everything to the default order.
-   - Swiping on a row, not on its handle, still scrolls the page, and
-     dragging works by touch on the kiosk.
-5. **Adjust if needed:** the timing (`SAVING_MS`, `SAVED_MS` and
-   `FADE_MS` in `AccountPreferencesEditMode.tsx`) and the list styling
-   in its Properties panel.
-
-### After the base page works
-- Account Controls tutorial. See "Tutorial (not built yet)" below; the
-  question of which saved order the tutorial Accounts page reads is
-  still open.
+### Later
 - Once the tutorials page has a free exploration button, test that
   logging off and coming back through it starts from the default
   order. If that path is all native Links with no page reload, the
   previous person's order and hidden accounts carry over, and the Log
   Off button (or the free exploration button) will need an override
-  that resets the saved state.
-- PR: https://github.com/reeyavyas/framer/pull/9 (open, not merged).
+  that resets the saved state. (Also in the root `NOTES.md`.)
 
 ## Account Preferences (base page)
 
@@ -88,9 +61,9 @@ accounts from the Accounts page.
   a row in a new spot, or tapping an eye, plays "Saving Changes…" for
   1s and then "Changes Saved" for 1s, and the overlay fades out. The
   page stays in edit mode afterwards, and Done returns to view mode.
-- **The name field is display-only.** The kiosk has no keyboard. The
-  tutorial will point at it ("Here is where you can change your account
-  name.").
+- **The name field is display-only.** The kiosk has no keyboard, so
+  nothing can be typed. In the tutorial, tapping it types a new name
+  by itself.
 - **At least one account always stays visible.** The eye on the last
   visible account does nothing.
 - **The page always opens in view mode.**
@@ -141,6 +114,13 @@ accounts from the Accounts page.
   - Account ids are the last four digits, and they must match the ids
     in the list component's `Accounts` control.
 
+  The overrides read the "base" saved order everywhere except pages
+  under `/account-controls-tutorial/`, where they read the tutorial's.
+  The same file also has `withAccountName7500` etc., for an account's
+  name text layer, which show a saved new name (only the tutorial
+  renames), and `resetAccountState()`, which the tutorial uses to
+  start fresh.
+
 ### Where the order is kept, and why
 
 The order is kept in module memory, not sessionStorage. Native Framer
@@ -153,28 +133,15 @@ so the next student starts from the default order. This means
 Every route between these pages must therefore be a native Link. A
 `window.location.href` navigation would also reset the order.
 
-## Tutorial (not built yet)
+## Tutorial
 
-The "Account Controls" tutorial will use a copy of Account Preferences
-and the tutorial variant of the Accounts content component.
-
-- **List component.** The tutorial copy uses the same component with
-  `Saved order` set to **Tutorial**, so it never reshuffles the
-  free-play Accounts page.
-  - `Tutorial account`: the account id whose row gets
-    `data-tutorial-target` tags: `account-prefs-row`,
-    `account-prefs-eye`, `account-prefs-name-field` and
-    `account-prefs-handle`.
-  - `Only it drags`: turn it on so the student can drag only the
-    account the step names. The step then says "tap Next when done", so
-    `TutorialOverlay` never has to pass a drag gesture through.
-- **Still open: the tutorial Accounts page.** It is a variant of the
-  same component, so it carries the same four `withAccountNNNN`
-  overrides, which read the **base** store. Overrides apply to every
-  variant, so they will need to pick the store by page, for example
-  from the tutorial page's URL path, once that page exists.
-- **Tutorial-only duplicates** go in `tutorials/account-controls-tutorial/`,
-  following the `<Component>Tutorial.tsx` convention.
+The Account Controls tutorial (rename Vertical Checking to Main
+Checking, drag it to the top, hide Platinum Rewards Checking) lives in
+`tutorials/account-controls-tutorial/`. Its `NOTES.md` has the Framer
+setup and the step list. The base list has no tutorial settings: the
+tutorial uses its own copy, `AccountPreferencesListTutorial.tsx`,
+which saves to a separate tutorial store so it never changes the
+free-play pages.
 
 ## Branch naming
 

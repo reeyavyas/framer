@@ -53,6 +53,9 @@ tutorials/               The tutorial system
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
+  account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
+    AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
+    AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
   NOTES.md
 
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing

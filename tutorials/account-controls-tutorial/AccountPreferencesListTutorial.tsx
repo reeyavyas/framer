@@ -1,57 +1,78 @@
 import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { Reorder, useDragControls } from "framer-motion"
+import { motion, Reorder, useDragControls } from "framer-motion"
 import {
     getAccountState,
     saveAccountState,
     subscribeAccountState,
 } from "./AccountOrder.tsx"
 import {
+    getSavePhase,
     isEditing,
+    isSaving,
     resetEditMode,
     startSaveOverlay,
+    subscribeEditMode,
     useEditModeUpdates,
 } from "./AccountPreferencesEditMode.tsx"
 
 /**
- * AccountPreferencesList
+ * AccountPreferencesListTutorial
  *
- * Code Component: the "Internal Accounts" list on the Account
- * Preferences page. Drop it inside the page's Scrollable Content frame,
- * under the "Internal Accounts" heading, set to fill the width with
- * auto height.
+ * Tutorial copy of account-controls/AccountPreferencesList.tsx, for the
+ * Account Controls tutorial's copy of the Account Preferences page.
+ * Placed and styled the same way as the base list (same property
+ * controls). In Framer, AccountOrder.tsx and
+ * AccountPreferencesEditMode.tsx sit next to this file in the Code
+ * panel, so they're imported as "./…tsx" even though this repo keeps
+ * them in account-controls/.
  *
- * View mode: one row per account, "Name #1234" only. A hidden account
- * shows at `Hidden opacity`.
+ * Differences from the base list:
  *
- * Edit mode (header shows "Done" — see AccountPreferencesEditMode.tsx):
- * each row gets the eye, a small "Name #1234" label, a display-only
- * name field (the kiosk has no keyboard; nothing is typed), and the ≡
- * drag handle.
- *  - Drag a row by its ≡ handle only, so a swipe anywhere else still
- *    scrolls the page. Letting go in a new spot saves the order and
- *    plays the Saving -> Saved overlay. Letting go where it started
- *    saves nothing.
- *  - Tapping the eye hides/shows that account on the Accounts page (it
- *    turns into an eye with a slash) and also plays the overlay. The
- *    last visible account can't be hidden — its eye does nothing.
+ *  - Saves to AccountOrder.tsx's "tutorial" store, never "base". The
+ *    tutorial's Accounts pages read it (the withAccountNNNN overrides
+ *    pick the store from the URL), and AccountControlsTutorialReset.tsx
+ *    clears it when the tutorial starts.
  *
- * The saved order and hidden accounts go to AccountOrder.tsx's "base"
- * store (module memory — see that file for why, and for how the
- * Accounts page reads them). The Account Controls tutorial uses its own
- * copy of this component, AccountPreferencesListTutorial.tsx in
- * tutorials/account-controls-tutorial/, which writes the "tutorial"
- * store, so the tutorial never reshuffles the free-play Accounts page.
+ *  - Only the three things the tutorial teaches work, each only in its
+ *    turn, in this order:
+ *     1. Rename: tapping the `Rename account`'s name field shows a
+ *        cursor, erases the old name and types `New name` letter by
+ *        letter (the kiosk has no keyboard; nothing is really typed).
+ *        Then it saves and plays the Saving -> Saved overlay.
+ *     2. Move: the same account's ≡ handle drags. Any drop in a new spot
+ *        saves and plays the overlay, as in the real app, but the step
+ *        only counts once the account is at the top.
+ *     3. Hide: the `Hide account`'s eye hides it and plays the overlay.
+ *    Every other eye, handle and field does nothing. Which step is
+ *    current comes from the saved state itself (renamed? at the top?
+ *    hidden?), so it can't get out of step with what's on screen.
  *
- * `Accounts`: each entry's id is the account's last four digits, and
- * must match the Accounts page override for that account
- * (withAccount7500 etc. in AccountOrder.tsx). The order here is the
- * default order, before anyone drags.
+ *  - When each step's overlay has finished (Saved has faded out), it
+ *    fires a window event for TutorialOverlay's `Advance on event`:
+ *      "account-prefs-renamed", "account-prefs-moved",
+ *      "account-prefs-hidden"
  *
- * Eye icons: `Eye icon` / `Eye off icon` take your own images (SVG or
- * PNG, e.g. exported from your design) for the shown and hidden states.
- * Leave either blank to use the built-in drawn eye, which follows
- * `Icons` color. Custom images are drawn as-is at `Eye size`.
+ *  - TutorialOverlay's Skip, on a step whose `Advance on event` is one
+ *    of those, asks this list to do that step's action instead
+ *    ("tutorial-skip" event): the name types itself, the account slides
+ *    to the top, or the account hides, then the overlay plays and the
+ *    step advances as if the user had done it. If that step is already
+ *    done, it advances straight away.
+ *
+ *  - data-tutorial-target tags for TutorialOverlay's `target`:
+ *      "account-prefs-row", "account-prefs-name-field",
+ *      "account-prefs-handle" — on the `Rename account`'s row;
+ *      "account-prefs-eye" — on the `Hide account`'s eye.
+ *    The draggable handle also carries data-tutorial-drag, which tells
+ *    TutorialOverlay to let a touch drag that starts on it move the
+ *    row instead of scrolling the page.
+ *
+ * Typing timing: the cursor shows for FOCUS_HOLD_MS, then each old
+ * letter erases every `Erase speed` ms, a BETWEEN_MS pause, each new
+ * letter types every `Type speed` ms, and an AFTER_TYPING_MS pause
+ * before the overlay. With the defaults, "Vertical Checking" ->
+ * "Main Checking" takes about 3.5s, plus 2.25s for the overlay.
  *
  * On the canvas nothing is interactive; `Canvas preview` switches
  * between View and Edit so both row styles can be styled.
@@ -60,12 +81,32 @@ import {
  * @framerSupportedLayoutHeight auto
  */
 
+// Edit these directly.
+const FOCUS_HOLD_MS = 400
+const BETWEEN_MS = 300
+const AFTER_TYPING_MS = 500
+
+// Must match TutorialOverlay's `Advance on event` on each step.
+const RENAMED_EVENT = "account-prefs-renamed"
+const MOVED_EVENT = "account-prefs-moved"
+const HIDDEN_EVENT = "account-prefs-hidden"
+// Fired by TutorialOverlay's Skip (see TutorialOverlay.tsx).
+const SKIP_EVENT = "tutorial-skip"
+
+const STORE = "tutorial"
+
 type Account = { accountId: string; name: string }
+type Stage = "rename" | "move" | "hide" | "done"
 
 type Props = {
     accounts: Account[]
     canvasPreview: "view" | "edit"
     numberPrefix: string
+    renameAccountId: string
+    newName: string
+    hideAccountId: string
+    eraseMs: number
+    typeMs: number
 
     viewBackground: string
     editBackground: string
@@ -74,6 +115,7 @@ type Props = {
     textColor: string
     labelColor: string
     fieldBorderColor: string
+    fieldFocusBorderColor: string
     fieldBackground: string
     iconColor: string
     eyeImage?: { src: string; srcSet?: string; alt?: string }
@@ -168,27 +210,66 @@ function HandleIcon({ size, color }: { size: number; color: string }) {
     )
 }
 
+// A blinking text cursor, the height of the field's text.
+function Caret({ color }: { color: string }) {
+    return (
+        <motion.span
+            aria-hidden
+            animate={{ opacity: [1, 1, 0, 0] }}
+            transition={{
+                duration: 1,
+                times: [0, 0.5, 0.5, 1],
+                repeat: Infinity,
+            }}
+            style={{
+                display: "inline-block",
+                width: 2,
+                height: "1.1em",
+                marginLeft: 1,
+                background: color,
+                flexShrink: 0,
+            }}
+        />
+    )
+}
+
 type RowProps = {
     p: Props
     account: Account
+    name: string
+    // The field's text while the rename types; null otherwise.
+    typingText: string | null
     editing: boolean
     hidden: boolean
+    isRenameRow: boolean
+    isHideRow: boolean
+    canDrag: boolean
     isCanvas: boolean
-    onToggleHidden: () => void
+    onFieldTap: () => void
+    onEyeTap: () => void
     onDragEnd: () => void
 }
 
 function AccountRow({
     p,
     account,
+    name,
+    typingText,
     editing,
     hidden,
+    isRenameRow,
+    isHideRow,
+    canDrag,
     isCanvas,
-    onToggleHidden,
+    onFieldTap,
+    onEyeTap,
     onDragEnd,
 }: RowProps) {
     const dragControls = useDragControls()
-    const fullName = `${account.name} ${p.numberPrefix}${account.accountId}`
+    const tag = (on: boolean, id: string) =>
+        on ? { "data-tutorial-target": id } : {}
+    const fullName = `${name} ${p.numberPrefix}${account.accountId}`
+    const typing = typingText !== null
 
     return (
         <Reorder.Item
@@ -199,10 +280,12 @@ function AccountRow({
             // Reorder.Item animates layout changes by default, and a
             // size change is animated with a scale transform, which
             // squashes and stretches the text and icons. "position"
-            // only slides rows into their new spots during a drag.
+            // only slides rows into their new spots during a drag, or
+            // when Skip moves the account to the top.
             layout="position"
             onDragEnd={onDragEnd}
             whileDrag={{ zIndex: 2, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}
+            {...tag(isRenameRow, "account-prefs-row")}
             style={{
                 position: "relative",
                 background: editing ? p.editBackground : p.viewBackground,
@@ -219,13 +302,14 @@ function AccountRow({
                     }}
                 >
                     <div
+                        {...tag(isHideRow, "account-prefs-eye")}
                         role="button"
                         aria-label={hidden ? "Show account" : "Hide account"}
-                        onClick={isCanvas ? undefined : onToggleHidden}
+                        onClick={isCanvas ? undefined : onEyeTap}
                         style={{
                             display: "flex",
                             flexShrink: 0,
-                            cursor: "pointer",
+                            cursor: isHideRow ? "pointer" : "default",
                         }}
                     >
                         <EyeIcon
@@ -248,26 +332,36 @@ function AccountRow({
                             {fullName}
                         </div>
                         <div
+                            {...tag(isRenameRow, "account-prefs-name-field")}
+                            onClick={
+                                isCanvas || !isRenameRow ? undefined : onFieldTap
+                            }
                             style={{
                                 ...p.fieldFont,
                                 color: p.textColor,
                                 background: p.fieldBackground,
-                                border: `1.5px solid ${p.fieldBorderColor}`,
+                                border: `1.5px solid ${
+                                    typing ? p.fieldFocusBorderColor : p.fieldBorderColor
+                                }`,
                                 borderRadius: p.fieldRadius,
                                 height: p.fieldHeight,
                                 padding: `0 ${p.fieldPaddingX}px`,
                                 display: "flex",
                                 alignItems: "center",
                                 overflow: "hidden",
-                                whiteSpace: "nowrap",
+                                whiteSpace: "pre",
+                                cursor: isRenameRow ? "pointer" : "default",
                             }}
                         >
-                            {account.name}
+                            {typing ? typingText : name}
+                            {typing && <Caret color={p.textColor} />}
                         </div>
                     </div>
                     <div
+                        {...tag(isRenameRow, "account-prefs-handle")}
+                        {...(isRenameRow ? { "data-tutorial-drag": "" } : {})}
                         onPointerDown={(e) => {
-                            if (isCanvas) return
+                            if (isCanvas || !canDrag) return
                             e.preventDefault()
                             dragControls.start(e)
                         }}
@@ -276,8 +370,8 @@ function AccountRow({
                             flexShrink: 0,
                             // Stops the browser from scrolling instead of
                             // dragging when a touch starts on the handle.
-                            touchAction: "none",
-                            cursor: "grab",
+                            touchAction: isRenameRow ? "none" : undefined,
+                            cursor: canDrag ? "grab" : "default",
                         }}
                     >
                         <HandleIcon size={p.handleSize} color={p.iconColor} />
@@ -299,17 +393,35 @@ function AccountRow({
     )
 }
 
-export default function AccountPreferencesList(props: Props) {
+export default function AccountPreferencesListTutorial(props: Props) {
     const p = { ...defaultProps, ...props }
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
     useEditModeUpdates(!isCanvas)
-    const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+    const [, forceUpdate] = React.useReducer((n: number) => n + 1, 0)
     React.useEffect(() => {
         if (isCanvas) return
         const unsubscribe = subscribeAccountState(forceUpdate)
         forceUpdate()
         return unsubscribe
+    }, [isCanvas])
+
+    // The step event waiting for the overlay to finish; fired once
+    // Saved has faded out. Subscribed before the reset below, so on
+    // unmount it unsubscribes first and the reset can't fire it.
+    const pendingEventRef = React.useRef<string | null>(null)
+    React.useEffect(() => {
+        if (isCanvas) return
+        const unsubscribe = subscribeEditMode(() => {
+            const pending = pendingEventRef.current
+            if (!pending || getSavePhase() !== "hidden") return
+            pendingEventRef.current = null
+            window.dispatchEvent(new Event(pending))
+        })
+        return () => {
+            unsubscribe()
+            pendingEventRef.current = null
+        }
     }, [isCanvas])
 
     // The page always opens in view mode (see AccountPreferencesEditMode.tsx).
@@ -321,15 +433,117 @@ export default function AccountPreferencesList(props: Props) {
 
     const accounts = p.accounts ?? []
     const ids = accounts.map((a) => a.accountId)
-    const saved = isCanvas ? { order: null, hidden: [] } : getAccountState("base")
+    const saved = isCanvas
+        ? { order: null, hidden: [] as string[], names: {} as Record<string, string> }
+        : getAccountState(STORE)
     const savedOrder = normalizeOrder(saved.order, ids)
     const hidden = saved.hidden.filter((id) => ids.includes(id))
     const editing = isCanvas ? p.canvasPreview === "edit" : isEditing()
+
+    const renamed = saved.names[p.renameAccountId] !== undefined
+    const moved = savedOrder[0] === p.renameAccountId
+    const isHidden = hidden.includes(p.hideAccountId)
+    const stage: Stage = !renamed
+        ? "rename"
+        : !moved
+          ? "move"
+          : !isHidden
+            ? "hide"
+            : "done"
 
     // The live order while a drag is in progress; null otherwise.
     const [dragOrder, setDragOrder] = React.useState<string[] | null>(null)
     const dragOrderRef = React.useRef<string[] | null>(null)
     const order = dragOrder ?? savedOrder
+
+    // The field's text while the rename types; null otherwise.
+    const [typingText, setTypingText] = React.useState<string | null>(null)
+    const typingTimersRef = React.useRef<ReturnType<typeof setTimeout>[]>([])
+    React.useEffect(
+        () => () => typingTimersRef.current.forEach((t) => clearTimeout(t)),
+        []
+    )
+
+    const byId = new Map(accounts.map((a) => [a.accountId, a]))
+    const nameOf = (id: string) => saved.names[id] ?? byId.get(id)?.name ?? ""
+
+    function saveThenSignal(eventName: string | null) {
+        pendingEventRef.current = eventName
+        startSaveOverlay()
+    }
+
+    // Each step's action reads the store at the moment it runs, not this
+    // render's copy, since the rename commits after a delay.
+    function current() {
+        const state = getAccountState(STORE)
+        return {
+            order: normalizeOrder(state.order, ids),
+            hidden: state.hidden,
+            names: state.names,
+        }
+    }
+
+    function startRename() {
+        if (typingTimersRef.current.length > 0) return
+        const from = nameOf(p.renameAccountId)
+        const to = p.newName
+        const frames: [number, string][] = []
+        let at = FOCUS_HOLD_MS
+        for (let i = from.length - 1; i >= 0; i--) {
+            at += p.eraseMs
+            frames.push([at, from.slice(0, i)])
+        }
+        at += BETWEEN_MS
+        for (let i = 1; i <= to.length; i++) {
+            at += p.typeMs
+            frames.push([at, to.slice(0, i)])
+        }
+        at += AFTER_TYPING_MS
+
+        setTypingText(from)
+        const timers = frames.map(([delay, text]) =>
+            setTimeout(() => setTypingText(text), delay)
+        )
+        timers.push(
+            setTimeout(() => {
+                typingTimersRef.current = []
+                setTypingText(null)
+                const state = current()
+                saveAccountState(STORE, state.order, state.hidden, {
+                    ...state.names,
+                    [p.renameAccountId]: to,
+                })
+                saveThenSignal(RENAMED_EVENT)
+            }, at)
+        )
+        typingTimersRef.current = timers
+    }
+
+    function moveToTop() {
+        const state = current()
+        const next = [
+            p.renameAccountId,
+            ...state.order.filter((id) => id !== p.renameAccountId),
+        ]
+        saveAccountState(STORE, next, state.hidden)
+        saveThenSignal(MOVED_EVENT)
+    }
+
+    function hideAccount() {
+        const state = current()
+        saveAccountState(STORE, state.order, [...state.hidden, p.hideAccountId])
+        saveThenSignal(HIDDEN_EVENT)
+    }
+
+    function handleFieldTap() {
+        if (stage !== "rename" || isSaving()) return
+        startRename()
+    }
+
+    function handleEyeTap(id: string) {
+        if (id !== p.hideAccountId || stage !== "hide" || isSaving()) return
+        hideAccount()
+    }
 
     function handleReorder(next: string[]) {
         dragOrderRef.current = next
@@ -341,22 +555,45 @@ export default function AccountPreferencesList(props: Props) {
         dragOrderRef.current = null
         setDragOrder(null)
         if (!final || sameOrder(final, savedOrder)) return
-        saveAccountState("base", final, hidden)
-        startSaveOverlay()
+        // Any new spot saves, as in the real app; only the top counts.
+        saveAccountState(STORE, final, hidden)
+        saveThenSignal(final[0] === p.renameAccountId ? MOVED_EVENT : null)
     }
 
-    function handleToggleHidden(id: string) {
-        const isHidden = hidden.includes(id)
-        // At least one account always stays visible.
-        if (!isHidden && ids.length - hidden.length <= 1) return
-        const nextHidden = isHidden
-            ? hidden.filter((h) => h !== id)
-            : [...hidden, id]
-        saveAccountState("base", savedOrder, nextHidden)
-        startSaveOverlay()
+    // TutorialOverlay's Skip: do the step's action for the user. A step
+    // already done advances straight away; a rename already typing just
+    // carries on.
+    function handleSkip(eventName: string) {
+        if (eventName === RENAMED_EVENT) {
+            if (renamed) window.dispatchEvent(new Event(RENAMED_EVENT))
+            else startRename()
+        } else if (eventName === MOVED_EVENT) {
+            if (moved) window.dispatchEvent(new Event(MOVED_EVENT))
+            else moveToTop()
+        } else if (eventName === HIDDEN_EVENT) {
+            if (isHidden) window.dispatchEvent(new Event(HIDDEN_EVENT))
+            else hideAccount()
+        }
     }
-
-    const byId = new Map(accounts.map((a) => [a.accountId, a]))
+    const handleSkipRef = React.useRef(handleSkip)
+    handleSkipRef.current = handleSkip
+    React.useEffect(() => {
+        if (isCanvas) return
+        function onSkip(e: Event) {
+            const eventName = (e as CustomEvent).detail?.event
+            if (
+                eventName !== RENAMED_EVENT &&
+                eventName !== MOVED_EVENT &&
+                eventName !== HIDDEN_EVENT
+            )
+                return
+            // Tells TutorialOverlay this list handles the skip.
+            e.preventDefault()
+            handleSkipRef.current(eventName)
+        }
+        window.addEventListener(SKIP_EVENT, onSkip)
+        return () => window.removeEventListener(SKIP_EVENT, onSkip)
+    }, [isCanvas])
 
     return (
         <Reorder.Group
@@ -381,15 +618,22 @@ export default function AccountPreferencesList(props: Props) {
             {order.map((id) => {
                 const account = byId.get(id)
                 if (!account) return null
+                const isRenameRow = id === p.renameAccountId
                 return (
                     <AccountRow
                         key={id}
                         p={p}
                         account={account}
+                        name={nameOf(id)}
+                        typingText={isRenameRow ? typingText : null}
                         editing={editing}
                         hidden={hidden.includes(id)}
+                        isRenameRow={isRenameRow}
+                        isHideRow={id === p.hideAccountId}
+                        canDrag={isRenameRow && stage === "move"}
                         isCanvas={isCanvas}
-                        onToggleHidden={() => handleToggleHidden(id)}
+                        onFieldTap={handleFieldTap}
+                        onEyeTap={() => handleEyeTap(id)}
                         onDragEnd={handleDragEnd}
                     />
                 )
@@ -407,6 +651,11 @@ const defaultProps: Omit<Props, "style"> = {
     ],
     canvasPreview: "view",
     numberPrefix: "#",
+    renameAccountId: "8665",
+    newName: "Main Checking",
+    hideAccountId: "7500",
+    eraseMs: 50,
+    typeMs: 110,
 
     viewBackground: "#FFFFFF",
     editBackground: "#F4F5F7",
@@ -415,6 +664,7 @@ const defaultProps: Omit<Props, "style"> = {
     textColor: "#333333",
     labelColor: "#444444",
     fieldBorderColor: "#7A7A7A",
+    fieldFocusBorderColor: "#7A7A7A",
     fieldBackground: "rgba(255,255,255,0)",
     iconColor: "#6B6B6B",
     hiddenOpacity: 0.5,
@@ -435,9 +685,9 @@ const defaultProps: Omit<Props, "style"> = {
     labelGap: 8,
 }
 
-AccountPreferencesList.defaultProps = defaultProps
+AccountPreferencesListTutorial.defaultProps = defaultProps
 
-addPropertyControls(AccountPreferencesList, {
+addPropertyControls(AccountPreferencesListTutorial, {
     accounts: {
         type: ControlType.Array,
         title: "Accounts",
@@ -463,6 +713,25 @@ addPropertyControls(AccountPreferencesList, {
         title: "Number prefix",
         defaultValue: "#",
     },
+    renameAccountId: {
+        type: ControlType.String,
+        title: "Rename account",
+        description: "Id of the account renamed, then dragged to the top.",
+        defaultValue: defaultProps.renameAccountId,
+    },
+    newName: {
+        type: ControlType.String,
+        title: "New name",
+        defaultValue: defaultProps.newName,
+    },
+    hideAccountId: {
+        type: ControlType.String,
+        title: "Hide account",
+        description: "Id of the account hidden with the eye.",
+        defaultValue: defaultProps.hideAccountId,
+    },
+    eraseMs: { type: ControlType.Number, title: "Erase speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.eraseMs },
+    typeMs: { type: ControlType.Number, title: "Type speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.typeMs },
 
     viewBackground: { type: ControlType.Color, title: "View row fill", defaultValue: defaultProps.viewBackground },
     editBackground: { type: ControlType.Color, title: "Edit row fill", defaultValue: defaultProps.editBackground },
@@ -471,6 +740,7 @@ addPropertyControls(AccountPreferencesList, {
     textColor: { type: ControlType.Color, title: "Text", defaultValue: defaultProps.textColor },
     labelColor: { type: ControlType.Color, title: "Label", defaultValue: defaultProps.labelColor },
     fieldBorderColor: { type: ControlType.Color, title: "Field border", defaultValue: defaultProps.fieldBorderColor },
+    fieldFocusBorderColor: { type: ControlType.Color, title: "Field typing border", defaultValue: defaultProps.fieldFocusBorderColor },
     fieldBackground: { type: ControlType.Color, title: "Field fill", defaultValue: defaultProps.fieldBackground },
     iconColor: { type: ControlType.Color, title: "Icons", defaultValue: defaultProps.iconColor },
     eyeImage: {

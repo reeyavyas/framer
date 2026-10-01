@@ -27,14 +27,18 @@ import { getVirtualScroll } from "./VirtualScroll.tsx"
  *    shows itself, and one of three triggers hands off to the next
  *    stepNumber in that same group: `clickAdvancesStep` (tap the real
  *    target — optionally held on screen `clickAdvanceDelaySeconds`
- *    after the tap), `nextStepAfterSeconds` (a timer, no tap needed), or
+ *    after the tap), `nextStepAfterSeconds` (a timer, no tap needed),
  *    `scrollAdvancesStep` + `scrollThresholdPercent` (for a beat like
  *    "scroll down to see more" that has no tap target at all — point
  *    `scrollContainerTarget` at the real scrollable element, tagged
  *    the same way as any other target, or leave it blank to watch the
- *    whole page). A page with only one step just leaves `pageGroup`
- *    blank — it behaves exactly as a single always-on overlay, no
- *    coordination needed. Pick a `pageGroup` string that's unique to
+ *    whole page), or `advanceOnEvent` (a window event a component on
+ *    the page fires when the user has finished something that isn't a
+ *    single tap, e.g. AccountPreferencesListTutorial's
+ *    "account-prefs-moved" once a drag lands the account at the top).
+ *    A page with only one step just leaves `pageGroup` blank — it
+ *    behaves exactly as a single always-on overlay, no coordination
+ *    needed. Pick a `pageGroup` string that's unique to
  *    that one page (e.g. its page name) so unrelated pages never
  *    cross-talk.
  *
@@ -102,6 +106,8 @@ interface Props {
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — resumes normally once the step ends
+    advanceOnEvent: string // window event name that hands off to stepNumber + 1, fired by a component on the page. Blank = off. Skip asks the component to do the step's action (see skipStep).
+    eventProgressSeconds: number // with advanceOnEvent, how long the progress bar takes to fill (the event, not the bar, still decides when the step moves on). 0 = no bar.
 
     cardTitleLine1: string
     cardTitleLine1Color: string
@@ -118,7 +124,7 @@ interface Props {
     cardOffsetX: number
     cardOffsetY: number
 
-    showProgressBar: boolean // fills over nextStepAfterSeconds (same-page-group hand-off) or, if that's 0, autoAdvanceAfterSeconds (cross-page hand-off) — whichever timer is actually driving this step's advance
+    showProgressBar: boolean // fills over nextStepAfterSeconds (same-page-group hand-off) or, if that's 0, autoAdvanceAfterSeconds (cross-page hand-off) — whichever timer is actually driving this step's advance — or, with neither, eventProgressSeconds on an advanceOnEvent step
     progressBarColor: string
     progressBarTrackColor: string
 
@@ -255,6 +261,9 @@ function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
 // step with no hole, e.g. a closing "all set" card).
 const CARD_TARGET_GAP = 24
 const CARD_MAX_WIDTH = 900
+// Fired by Skip on a step with advanceOnEvent (see skipStep). Must match
+// the listener in the component that fires that event.
+const SKIP_EVENT = "tutorial-skip"
 
 // Skip/exit are the overlay's own system chrome, not per-step tutorial
 // content — kept as a fixed brand color rather than a per-instance
@@ -434,6 +443,8 @@ export default function TutorialOverlay(props: Props) {
         scrollThresholdPercent,
         scrollContainerTarget,
         freezeScrollWhileActive,
+        advanceOnEvent,
+        eventProgressSeconds,
         cardTitleLine1,
         cardTitleLine1Color,
         cardTitleLine1Font,
@@ -691,10 +702,26 @@ export default function TutorialOverlay(props: Props) {
         advanceStep,
     ])
 
+    // Event-driven hand-off — for a step whose finish isn't a single tap
+    // the overlay can see, e.g. a drag landing in the right spot or a
+    // save overlay fading out. A component on the page fires
+    // `advanceOnEvent` on window when that's done.
+    React.useEffect(() => {
+        if (isCanvas || !active || !isMyTurn || !advanceOnEvent) return
+        window.addEventListener(advanceOnEvent, advanceStep)
+        return () => window.removeEventListener(advanceOnEvent, advanceStep)
+    }, [isCanvas, active, isMyTurn, advanceOnEvent, advanceStep])
+
     // Skip moves the user on to the next step, wherever it is — same page
     // or the next one — by doing whatever this step's own advance
     // trigger would have done, rather than guessing where "next" is:
     //
+    //  - A step with advanceOnEvent fires a cancelable SKIP_EVENT on
+    //    window with { event: advanceOnEvent } as its detail. The
+    //    component that fires that event does the step's action for the
+    //    user (e.g. AccountPreferencesListTutorial types the new name)
+    //    and calls preventDefault() to say so; its event then advances
+    //    the step as usual. If nothing claims it, Skip carries on below.
     //  - A scroll step scrolls its container just past
     //    scrollThresholdPercent, in scrollDirection. The existing
     //    scroll hand-off above then fires exactly as it would for a real
@@ -742,6 +769,16 @@ export default function TutorialOverlay(props: Props) {
         // flipping it straight back.
         if (skipUsedRef.current) return
         skipUsedRef.current = true
+
+        if (advanceOnEvent) {
+            const handled = !window.dispatchEvent(
+                new CustomEvent(SKIP_EVENT, {
+                    detail: { event: advanceOnEvent },
+                    cancelable: true,
+                })
+            )
+            if (handled) return
+        }
 
         if (scrollAdvancesStep) {
             // 1% past the threshold, so rounding in the scroll position
@@ -825,6 +862,7 @@ export default function TutorialOverlay(props: Props) {
         active,
         isMyTurn,
         tapAdvances,
+        advanceOnEvent,
         scrollAdvancesStep,
         scrollDirection,
         scrollThresholdPercent,
@@ -1089,6 +1127,11 @@ export default function TutorialOverlay(props: Props) {
         if (isCanvas || !active || !isMyTurn) return
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
+        // A touch that starts on a drag handle (data-tutorial-drag, e.g.
+        // AccountPreferencesListTutorial's ≡) is a drag, not a scroll:
+        // leave its moves alone so the row follows the finger and the
+        // page stays put.
+        let dragging = false
         // While paused (see systemPausedRef), swallow scroll gestures
         // instead of redirecting them, so the page behind the "Are you
         // still there?" box stays put.
@@ -1102,6 +1145,9 @@ export default function TutorialOverlay(props: Props) {
             e.preventDefault()
         }
         function onTouchStart(e: TouchEvent) {
+            dragging = !!(e.target as HTMLElement | null)?.closest?.(
+                "[data-tutorial-drag]"
+            )
             lastY = e.touches[0].clientY
             scrollTarget = findScrollableAt(
                 e.touches[0].clientX,
@@ -1109,6 +1155,7 @@ export default function TutorialOverlay(props: Props) {
             )
         }
         function onTouchMove(e: TouchEvent) {
+            if (dragging) return
             if (systemPausedRef.current) {
                 e.preventDefault()
                 return
@@ -1152,10 +1199,16 @@ export default function TutorialOverlay(props: Props) {
     // autoAdvanceAfterSeconds. The progress bar visualizes whichever one
     // applies, since both are just "how long until this step moves on
     // by itself" from the person looking at the bar's point of view.
+    // A step waiting on advanceOnEvent has no timer of its own, so its
+    // bar uses eventProgressSeconds, an estimate of how long that takes.
     const progressBarDurationSeconds =
         nextStepAfterSeconds > 0
             ? nextStepAfterSeconds
-            : autoAdvanceAfterSeconds
+            : autoAdvanceAfterSeconds > 0
+              ? autoAdvanceAfterSeconds
+              : advanceOnEvent
+                ? eventProgressSeconds
+                : 0
 
     const clipPath =
         rect && revealed && viewport.w
@@ -1807,6 +1860,8 @@ TutorialOverlay.defaultProps = {
     scrollThresholdPercent: 50,
     scrollContainerTarget: "",
     freezeScrollWhileActive: false,
+    advanceOnEvent: "",
+    eventProgressSeconds: 0,
     cardTitleLine1: "Let's disable your debit card",
     cardTitleLine1Color: "#ffffff",
     cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
@@ -1974,6 +2029,22 @@ addPropertyControls(TutorialOverlay, {
         disabledTitle: "Off",
         hidden: (props) => !props.pageGroup,
     },
+    advanceOnEvent: {
+        type: ControlType.String,
+        title: "Advance on event",
+        defaultValue: "",
+        placeholder: "e.g. account-prefs-moved",
+        hidden: (props) => !props.pageGroup,
+    },
+    eventProgressSeconds: {
+        type: ControlType.Number,
+        title: "Event progress (sec)",
+        defaultValue: 0,
+        min: 0,
+        max: 60,
+        step: 0.25,
+        hidden: (props) => !props.pageGroup || !props.advanceOnEvent,
+    },
     cardTitleLine1: {
         type: ControlType.String,
         title: "Card title line 1",
@@ -2068,14 +2139,18 @@ addPropertyControls(TutorialOverlay, {
         enabledTitle: "Show",
         disabledTitle: "Hide",
         hidden: (props) =>
-            !props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds,
+            !props.nextStepAfterSeconds &&
+            !props.autoAdvanceAfterSeconds &&
+            !(props.advanceOnEvent && props.eventProgressSeconds),
     },
     progressBarColor: {
         type: ControlType.Color,
         title: "Progress bar color",
         defaultValue: "#ffffff",
         hidden: (props) =>
-            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
+            (!props.nextStepAfterSeconds &&
+                !props.autoAdvanceAfterSeconds &&
+                !(props.advanceOnEvent && props.eventProgressSeconds)) ||
             !props.showProgressBar,
     },
     progressBarTrackColor: {
@@ -2083,7 +2158,9 @@ addPropertyControls(TutorialOverlay, {
         title: "Progress bar track color",
         defaultValue: "rgba(255,255,255,0.25)",
         hidden: (props) =>
-            (!props.nextStepAfterSeconds && !props.autoAdvanceAfterSeconds) ||
+            (!props.nextStepAfterSeconds &&
+                !props.autoAdvanceAfterSeconds &&
+                !(props.advanceOnEvent && props.eventProgressSeconds)) ||
             !props.showProgressBar,
     },
     showNextButton: {

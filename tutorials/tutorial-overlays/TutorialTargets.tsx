@@ -118,7 +118,7 @@ export function CardControlsTarget(
 }
 
 // TARGET: "Settings" button at the top of the Accounts page.
-// Used by: Log Off Tutorial (step 1).
+// Used by: Log Off Tutorial (step 1), Account Controls Tutorial (step 1).
 export function SettingsButton(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -310,4 +310,45 @@ export function Logout(Component: ComponentType<any>): ComponentType<any> {
 // Step 3 — TARGET: "Yes" button on the logout confirmation overlay
 export function YesButton(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("yes-button")(Component)
+}
+
+// ═══ Account Controls Tutorial ════════════════════════════════════════
+// Starts on /account-controls-tutorial/accounts-1 → Settings → Account
+// Preferences, renames, moves and hides accounts, then goes back to
+// /account-controls-tutorial/accounts-2 to show the result.
+//   1. SettingsButton          (shared starting step, defined above)
+//   2. AccountPreferencesItem
+//   3. AccountPrefsEditDone    (tap Edit)
+//   4. "account-prefs-name-field"  — tap the name field
+//   5. "account-prefs-name-field"  — the name types and saves
+//   6. "account-prefs-row"         — drag Main Checking to the top
+//   7. "account-prefs-eye"         — hide Platinum Rewards Checking
+//   8. AccountPrefsEditDone    (tap Done)
+//   9. AccountPrefsBack
+// (Steps 4–7's targets are tagged by AccountPreferencesListTutorial.tsx
+// in tutorials/account-controls-tutorial/, not by an export here.)
+
+// Step 2 — TARGET: Settings page "Account Preferences" menu item
+export function AccountPreferencesItem(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("account-preferences")(Component)
+}
+
+// Steps 3 and 8 — MARKER: over the Account Preferences header's
+// "Edit"/"Done" word. A marker because the tap frame there already
+// carries withAccountPrefsEditToggle.
+export function AccountPrefsEditDone(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("account-prefs-edit-done")(Component)
+}
+
+// Step 9 — MARKER: over the Account Preferences header's ← (inside the
+// header component, which carries withAccountPrefsHeader). The ←'s own
+// native Link goes to /account-controls-tutorial/accounts-2.
+export function AccountPrefsBack(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("account-prefs-back")(Component)
 }

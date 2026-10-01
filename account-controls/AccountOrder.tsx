@@ -53,10 +53,24 @@ import { RenderTarget } from "framer"
  *
  * STORES: "base" and "tutorial" are kept separately, so walking through
  * the Account Controls tutorial never reshuffles the free-play Accounts
- * page. AccountPreferencesList picks its store with a property control.
- * These four overrides read "base". The tutorial's Accounts page (a
- * variant of the same component, so it carries these same overrides)
- * isn't wired yet — see account-controls/NOTES.md.
+ * page. AccountPreferencesList writes "base";
+ * AccountPreferencesListTutorial (tutorials/account-controls-tutorial/)
+ * writes "tutorial". The overrides here apply to every variant of the
+ * Accounts content component, the tutorial's included, so they pick
+ * the store from the page's URL: "tutorial" under
+ * TUTORIAL_PATH_PREFIX, "base" everywhere else.
+ *
+ * NAMES: the tutorial renames an account, and its last Accounts page
+ * (/account-controls-tutorial/accounts-2) shows the new name. Put
+ * withAccountName7500 etc. on the account's NAME TEXT layer (not the
+ * frame — that one already carries withAccountNNNN, and Framer allows
+ * one override per layer). The text layer must hold only the name,
+ * since the override replaces its whole text. Until a name is saved
+ * the layer's own text shows. Only the renamed account needs it.
+ *
+ * resetAccountState() clears a store. The tutorial calls it when its
+ * first page opens (see AccountControlsTutorialReset.tsx), so a second
+ * run in the same session starts from the default order.
  *
  * Account ids are the last four digits, and must match the ids in
  * AccountPreferencesList's "Accounts" property control.
@@ -70,25 +84,42 @@ type AccountState = {
     // null until the first save: nothing to reorder yet.
     order: string[] | null
     hidden: string[]
+    // Account id -> new name. Only the tutorial renames.
+    names: Record<string, string>
+}
+
+function emptyState(): AccountState {
+    return { order: null, hidden: [], names: {} }
 }
 
 const stores: Record<AccountStoreName, AccountState> = {
-    base: { order: null, hidden: [] },
-    tutorial: { order: null, hidden: [] },
+    base: emptyState(),
+    tutorial: emptyState(),
 }
 const listeners = new Set<() => void>()
+
+function notify() {
+    listeners.forEach((fn) => fn())
+}
 
 export function getAccountState(store: AccountStoreName): AccountState {
     return stores[store]
 }
 
+// Leaving `names` out keeps the names already saved.
 export function saveAccountState(
     store: AccountStoreName,
     order: string[],
-    hidden: string[]
+    hidden: string[],
+    names: Record<string, string> = stores[store].names
 ) {
-    stores[store] = { order: [...order], hidden: [...hidden] }
-    listeners.forEach((fn) => fn())
+    stores[store] = { order: [...order], hidden: [...hidden], names: { ...names } }
+    notify()
+}
+
+export function resetAccountState(store: AccountStoreName) {
+    stores[store] = emptyState()
+    notify()
 }
 
 export function subscribeAccountState(onChange: () => void): () => void {
@@ -98,24 +129,33 @@ export function subscribeAccountState(onChange: () => void): () => void {
     }
 }
 
-// Negative so the accounts sort ahead of every un-overridden sibling in
-// the same stack (see header comment).
-const ORDER_OFFSET = -100
+// Pages under this path read and show the "tutorial" store.
+const TUTORIAL_PATH_PREFIX = "/account-controls-tutorial/"
 
-function useAccountFrameStyle(
-    accountId: string,
-    store: AccountStoreName
-): React.CSSProperties | null {
-    const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+function storeForThisPage(): AccountStoreName {
+    if (typeof window === "undefined") return "base"
+    return window.location.pathname.startsWith(TUTORIAL_PATH_PREFIX)
+        ? "tutorial"
+        : "base"
+}
 
+function useAccountStateUpdates() {
+    const [, forceUpdate] = React.useReducer((n: number) => n + 1, 0)
     React.useEffect(() => {
         const unsubscribe = subscribeAccountState(forceUpdate)
         // Catch a save made between this render and subscribing.
         forceUpdate()
         return unsubscribe
     }, [])
+}
 
-    const { order, hidden } = getAccountState(store)
+// Negative so the accounts sort ahead of every un-overridden sibling in
+// the same stack (see header comment).
+const ORDER_OFFSET = -100
+
+function useAccountFrameStyle(accountId: string): React.CSSProperties | null {
+    useAccountStateUpdates()
+    const { order, hidden } = getAccountState(storeForThisPage())
     if (hidden.includes(accountId)) return { display: "none" }
     const index = order ? order.indexOf(accountId) : -1
     if (index === -1) return null
@@ -139,7 +179,7 @@ export function withAccount7500(
 ): ComponentType<any> {
     return function Account7500(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("7500", "base")
+        const style = useAccountFrameStyle("7500")
         return renderAccountFrame(Component, props, isCanvas ? null : style)
     }
 }
@@ -149,7 +189,7 @@ export function withAccount8665(
 ): ComponentType<any> {
     return function Account8665(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("8665", "base")
+        const style = useAccountFrameStyle("8665")
         return renderAccountFrame(Component, props, isCanvas ? null : style)
     }
 }
@@ -159,7 +199,7 @@ export function withAccount5101(
 ): ComponentType<any> {
     return function Account5101(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("5101", "base")
+        const style = useAccountFrameStyle("5101")
         return renderAccountFrame(Component, props, isCanvas ? null : style)
     }
 }
@@ -169,7 +209,64 @@ export function withAccount5007(
 ): ComponentType<any> {
     return function Account5007(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("5007", "base")
+        const style = useAccountFrameStyle("5007")
         return renderAccountFrame(Component, props, isCanvas ? null : style)
+    }
+}
+
+// Name text overrides: show the saved new name, if any (see NAMES in
+// the header comment).
+
+function useAccountName(accountId: string): string | undefined {
+    useAccountStateUpdates()
+    return getAccountState(storeForThisPage()).names[accountId]
+}
+
+function renderAccountName(
+    Component: ComponentType<any>,
+    props: any,
+    name: string | undefined
+) {
+    if (name === undefined) return <Component {...props} />
+    return <Component {...props} text={name} />
+}
+
+export function withAccountName7500(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return function AccountName7500(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        const name = useAccountName("7500")
+        return renderAccountName(Component, props, isCanvas ? undefined : name)
+    }
+}
+
+export function withAccountName8665(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return function AccountName8665(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        const name = useAccountName("8665")
+        return renderAccountName(Component, props, isCanvas ? undefined : name)
+    }
+}
+
+export function withAccountName5101(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return function AccountName5101(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        const name = useAccountName("5101")
+        return renderAccountName(Component, props, isCanvas ? undefined : name)
+    }
+}
+
+export function withAccountName5007(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return function AccountName5007(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        const name = useAccountName("5007")
+        return renderAccountName(Component, props, isCanvas ? undefined : name)
     }
 }
