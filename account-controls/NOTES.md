@@ -66,6 +66,12 @@ accounts from the Accounts page.
 - Account Controls tutorial. See "Tutorial (not built yet)" below; the
   question of which saved order the tutorial Accounts page reads is
   still open.
+- Once the tutorials page has a free exploration button, test that
+  logging off and coming back through it starts from the default
+  order. If that path is all native Links with no page reload, the
+  previous person's order and hidden accounts carry over, and the Log
+  Off button (or the free exploration button) will need an override
+  that resets the saved state.
 - PR: https://github.com/reeyavyas/framer/pull/9 (open, not merged).
 
 ## Account Preferences (base page)
