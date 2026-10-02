@@ -129,11 +129,15 @@ Built in Framer so far:
   `Canvas preview` to Edit to style the edit rows.
   `Eye icon` and `Eye off icon` take your own images for the shown and
   hidden states. Leave them blank to use the built-in eye.
-  `Handle tap area` (default 16) adds invisible space on every side of
-  the ≡, so a finger doesn't have to land on the icon itself. It
-  doesn't move anything. Keep it below `Icon gap`, or it starts
-  covering the right edge of the name field. The tutorial list has the
-  same control.
+  The ≡'s tap area runs the full height of the row's content (label and
+  field). `Handle tap width` (default 16) and `Handle tap height`
+  (default 20) add invisible space beside and above/below that, so a finger
+  doesn't have to land on the icon itself. They don't move anything.
+  Keep the width below `Icon gap`, or it starts covering the right
+  edge of the name field. The height is capped at `Edit row padding`,
+  where the tap area fills the row from top to bottom; any more would
+  take taps from the rows above and below. The tutorial list has the
+  same controls.
 - `AccountPreferencesEditMode.tsx` holds the Overrides for edit mode and
   the save overlay. Timing is controlled by `SAVING_MS`, `SAVED_MS` and
   `FADE_MS`, which you edit directly.

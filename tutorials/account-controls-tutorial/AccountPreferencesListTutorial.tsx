@@ -135,7 +135,8 @@ type Props = {
     gap: number
     iconSize: number
     handleSize: number
-    handleHitPadding: number
+    handleHitPaddingX: number
+    handleHitPaddingY: number
     fieldHeight: number
     fieldRadius: number
     fieldPaddingX: number
@@ -270,6 +271,7 @@ function AccountRow({
     onDragEnd,
 }: RowProps) {
     const dragControls = useDragControls()
+    const hitY = Math.min(p.handleHitPaddingY, p.editPaddingY)
     const tag = (on: boolean, id: string) =>
         on ? { "data-tutorial-target": id } : {}
     const fullName = `${name} ${p.numberPrefix}${account.accountId}`
@@ -378,10 +380,19 @@ function AccountRow({
                             cursor: canDrag ? "grab" : "default",
                             // Invisible tap area around the icon; the
                             // negative margin keeps the icon and the row
-                            // layout where they were. Keep it under
-                            // `Icon gap` so it doesn't cover the field.
-                            padding: p.handleHitPadding,
-                            margin: -p.handleHitPadding,
+                            // layout where they were. Keep the width under
+                            // `Icon gap` so it doesn't cover the field. The
+                            // height extends into the row's own padding and
+                            // stops there, so at most it fills the row top
+                            // to bottom and never takes taps from the rows
+                            // above or below.
+                            // Stretch to the row's full content height (the
+                            // label and field are taller than the icon),
+                            // with the icon still centered.
+                            alignSelf: "stretch",
+                            alignItems: "center",
+                            padding: `${hitY}px ${p.handleHitPaddingX}px`,
+                            margin: `${-hitY}px ${-p.handleHitPaddingX}px`,
                         }}
                     >
                         <HandleIcon size={p.handleSize} color={p.iconColor} />
@@ -689,7 +700,8 @@ const defaultProps: Omit<Props, "style"> = {
     gap: 24,
     iconSize: 44,
     handleSize: 40,
-    handleHitPadding: 16,
+    handleHitPaddingX: 16,
+    handleHitPaddingY: 20,
     fieldHeight: 64,
     fieldRadius: 2,
     fieldPaddingX: 16,
@@ -794,7 +806,8 @@ addPropertyControls(AccountPreferencesListTutorial, {
     gap: { type: ControlType.Number, title: "Icon gap", min: 0, max: 80, defaultValue: defaultProps.gap },
     iconSize: { type: ControlType.Number, title: "Eye size", min: 12, max: 100, defaultValue: defaultProps.iconSize },
     handleSize: { type: ControlType.Number, title: "Handle size", min: 12, max: 100, defaultValue: defaultProps.handleSize },
-    handleHitPadding: { type: ControlType.Number, title: "Handle tap area", min: 0, max: 40, defaultValue: defaultProps.handleHitPadding },
+    handleHitPaddingX: { type: ControlType.Number, title: "Handle tap width", min: 0, max: 40, defaultValue: defaultProps.handleHitPaddingX },
+    handleHitPaddingY: { type: ControlType.Number, title: "Handle tap height", min: 0, max: 80, defaultValue: defaultProps.handleHitPaddingY },
     fieldHeight: { type: ControlType.Number, title: "Field height", min: 20, max: 160, defaultValue: defaultProps.fieldHeight },
     fieldRadius: { type: ControlType.Number, title: "Field radius", min: 0, max: 40, defaultValue: defaultProps.fieldRadius },
     fieldPaddingX: { type: ControlType.Number, title: "Field padding", min: 0, max: 60, defaultValue: defaultProps.fieldPaddingX },
