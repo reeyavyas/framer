@@ -38,39 +38,31 @@ Built in Framer so far:
      `account-prefs-done`, `Click advances step`. Check the Edit/Done
      tap frame (`withAccountPrefsEditToggle`) also covers the "Done"
      spot; the tutorial only lets the tap through there.
-   - **Step 7:** tap ←. Add the `AccountPrefsBack` marker over the ←.
-     `target` `account-prefs-back`. The ←'s Link goes to the second
-     Settings copy (next step), not straight to `accounts-2`.
+   - **Step 7:** tap Accounts in the bottom nav. Paste the updated
+     `TutorialTargets.tsx` into Framer first, for the new `AccountsTab`
+     export. Add the `AccountsTab` marker over "Accounts". `target`
+     `accounts-tab`; the button's own native Link advances it. That
+     Link must go to `/account-controls-tutorial/accounts-2`, not the
+     free-play Accounts page.
    Use native Links only, and no `nextButtonLink` or `autoAdvanceLink`,
    until `accounts-2`. Those reload the page and wipe the tutorial's
    changes.
-2. **Build the second tutorial copy of Settings** (the missed step: ←
-   on Account Preferences goes to Settings, and ← on Settings goes to
-   Accounts). Paste the updated `TutorialTargets.tsx` into Framer
-   first, for the new `SettingsBack` export. Then copy the tutorial
-   Settings page, for example to
-   `/account-controls-tutorial/settings-2`; put the `SettingsBack`
-   marker over its ←, link that ← to `accounts-2`, and give it one
-   TutorialOverlay (`target` `settings-back`, no `pageGroup`). Remove
-   the first copy's step-2 TutorialOverlay from this copy. Details in
-   `tutorials/account-controls-tutorial/NOTES.md`.
-3. **Build `/account-controls-tutorial/accounts-2`:** put
+2. **Build `/account-controls-tutorial/accounts-2`:** put
    `withAccountName8665` on the "Vertical Checking * 8665" text layer
    in the Accounts content component's main component, then add the
    closing card.
-4. **Test the tutorial in Preview:**
+3. **Test the tutorial in Preview:**
    - the name types, and each step advances after Saved fades out;
    - dragging by touch on the kiosk, and the page not scrolling;
    - Skip on every step;
-   - ← on Account Preferences lands on the second Settings copy with
-     its "Go back to Accounts" card, and its ← lands on `accounts-2`;
+   - Accounts in the bottom nav lands on `accounts-2`;
    - `accounts-2` shows "Main Checking * 8665" at the top, with
      Platinum gone;
    - running it twice in a row starts the second run from the default
      order.
    Also check whether the save overlay covers the tutorial card on
    steps 3–5. Not yet confirmed in Framer: the name text override.
-5. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
+4. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
    Use **Create a merge commit**.
 
 ### Done

@@ -14,10 +14,10 @@ Account Preferences, then:
 2. Drag "Main Checking" to the top.
 3. Hide "Platinum Rewards Checking".
 
-Then Done, ← back to Settings, and ← again to
-`/account-controls-tutorial/accounts-2`, which shows the new order, the
-new name, and Platinum gone. As in the real app, ← on Account
-Preferences goes to Settings, not straight to Accounts.
+Then Done, and Accounts in the bottom nav, which goes to
+`/account-controls-tutorial/accounts-2`. That page shows the new order,
+the new name, and Platinum gone. The tutorial doesn't use the ←, which
+goes back through Settings.
 
 ## Files
 
@@ -92,7 +92,7 @@ refresh the preview. Reload the Framer tab if that isn't enough.
 - `SettingsButton` (TutorialTargets, `"settings-button"`) on the gear.
   TutorialOverlay `target`: `settings-button`.
 
-### Settings (tutorial copy, on the way in)
+### Settings (tutorial copy)
 - `AccountPreferencesItem` (`"account-preferences"`) on the Account
   Preferences menu item. TutorialOverlay `target`:
   `account-preferences`.
@@ -110,8 +110,11 @@ Add three marker frames (empty, no fill, no Link):
   "Edit" and "Done" are in different spots because the ← takes up
   room in the View variant. Both markers can stay on the page all the
   time; each step only looks for its own.
-- `AccountPrefsBack` over the ←. The ←'s own native Link goes to the
-  second Settings copy below, not to `accounts-2`.
+- `AccountsTab` over "Accounts" in the bottom nav. The button's own
+  native Link must go to `/account-controls-tutorial/accounts-2`. If
+  the nav is a shared component, its Accounts Link goes to the
+  free-play Accounts page, so this page needs a nav (a variant or a
+  copy) whose Accounts Link goes to `accounts-2` instead.
 
 TutorialOverlay steps, all with the same `pageGroup` (e.g.
 `account-prefs-tutorial`):
@@ -124,7 +127,7 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 | 4 | `account-prefs-row` (or `account-prefs-handle`) | `Advance on event`: `account-prefs-moved` | Drag Main Checking to the top |
 | 5 | `account-prefs-eye` | `Advance on event`: `account-prefs-hidden` | Hide Platinum Rewards Checking |
 | 6 | `account-prefs-done` | `Click advances step` | Tap Done |
-| 7 | `account-prefs-back` | the ←'s Link | Go back to Settings |
+| 7 | `accounts-tab` | the Accounts button's Link | Tap Accounts to see your changes |
 
 - Step 3's progress bar: typing takes about 3.5s with the default
   speeds, and the save overlay 2.25s. The event fires when the overlay
@@ -136,17 +139,6 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 - The save overlay is "above everything". Check that the tutorial
   card still reads well while Saving/Saved shows on steps 3–5. Put
   the overlay below the TutorialOverlay instances if it covers them.
-
-### Settings (second tutorial copy, on the way back)
-A second copy of the Settings page, for example
-`/account-controls-tutorial/settings-2`. It needs to be separate from
-the first copy: that one's TutorialOverlay would show "tap Account
-Preferences" again when the student came back.
-- `SettingsBack` (`"settings-back"`) on an empty marker frame (no fill,
-  no Link) over the ←. The ←'s own native Link goes to
-  `/account-controls-tutorial/accounts-2`.
-- One TutorialOverlay, no `pageGroup`: `target` `settings-back`, card
-  "Go back to Accounts". The ←'s Link advances it.
 
 ### `/account-controls-tutorial/accounts-2`
 - Same Accounts content component, so the frames reorder and hide
@@ -162,9 +154,9 @@ Preferences" again when the student came back.
 ## Navigation must be native Links
 
 The tutorial store is kept in module memory, like the base store. A
-full page load clears it. So from Account Preferences through the second
-Settings copy to `accounts-2`, every navigation must be a native Framer
-Link. On those
+full page load clears it. So from Account Preferences to `accounts-2`,
+every navigation must be a native Framer Link, including the bottom
+nav's Accounts button. On those
 pages, don't use TutorialOverlay's `nextButtonLink` or
 `autoAdvanceLink`, because they navigate with `window.location.href`,
 which reloads the page. Skip on a step that uses them does the same.
