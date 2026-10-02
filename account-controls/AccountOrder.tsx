@@ -100,6 +100,30 @@ const stores: Record<AccountStoreName, AccountState> = {
 }
 const listeners = new Set<() => void>()
 
+// Debugging aid. In the browser console, `__accountOrder` lists every
+// loaded copy of this file, with its saved state (`stores`) and a `log`
+// of its saves and resets. There should be exactly one. Two or more
+// means Framer is running different builds of this file side by side,
+// so the list saves into one copy while the Accounts page reads
+// another: re-save this file and every file that imports it, then
+// reload.
+const debugLog: string[] = []
+function logEvent(what: string) {
+    if (typeof window === "undefined") return
+    debugLog.push(
+        `${new Date().toLocaleTimeString()} ${what} on ${window.location.pathname}`
+    )
+}
+if (typeof window !== "undefined") {
+    const w = window as any
+    w.__accountOrder = w.__accountOrder || []
+    w.__accountOrder.push({
+        loadedOn: window.location.pathname,
+        stores,
+        log: debugLog,
+    })
+}
+
 function notify() {
     listeners.forEach((fn) => fn())
 }
@@ -116,11 +140,13 @@ export function saveAccountState(
     names: Record<string, string> = stores[store].names
 ) {
     stores[store] = { order: [...order], hidden: [...hidden], names: { ...names } }
+    logEvent(`saved ${store}`)
     notify()
 }
 
 export function resetAccountState(store: AccountStoreName) {
     stores[store] = emptyState()
+    logEvent(`reset ${store}`)
     notify()
 }
 
