@@ -187,6 +187,20 @@ After `accounts-2` it doesn't matter.
 Tested in Chromium with Framer stubbed out: typing, each step's event,
 touch drag without page scroll, a drop that isn't at the top not
 advancing, Skip on all three steps (including during typing), and the
-Accounts frames' order, hiding and new name. Still to check in Framer:
-- the name text override (`text` prop) on a native text layer;
+Accounts frames' order, hiding and new name.
+
+Confirmed in Framer (2026-10-02, in a browser tab): the whole run from
+`accounts-1` to `accounts-2` carries the new order, the hidden account
+and the new name, including the name text override (`text` prop) on a
+native text layer. On `accounts-2` the TutorialOverlay card can sit
+over the accounts it's pointing at; move it with the card's anchor and
+offset controls if it hides the renamed row.
+
+Still to check in Framer:
 - the Saving overlay's stacking against the tutorial card.
+
+When `accounts-2` shows the default list, check in this order: the
+reset override clearing on arrival (it now only clears on
+`accounts-1`), the page's path (`location.pathname` must start with
+`/account-controls-tutorial/`), then whether the account frames'
+overrides set `order` / `display: none` in the DOM.
