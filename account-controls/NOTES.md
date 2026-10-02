@@ -40,10 +40,12 @@ Built in Framer so far:
      spot; the tutorial only lets the tap through there.
    - **Step 7:** tap Accounts in the bottom nav. Paste the updated
      `TutorialTargets.tsx` into Framer first, for the new `AccountsTab`
-     export. Add the `AccountsTab` marker over "Accounts". `target`
-     `accounts-tab`; the button's own native Link advances it. That
-     Link must go to `/account-controls-tutorial/accounts-2`, not the
-     free-play Accounts page.
+     export. Put an empty frame (no fill) over "Accounts", above the
+     nav, give it its own native Link to
+     `/account-controls-tutorial/accounts-2`, and apply `AccountsTab`
+     (a target, so it takes the tap; the nav's own button goes to the
+     free-play Accounts page). `target` `accounts-tab`; the frame's
+     Link advances it.
    Use native Links only, and no `nextButtonLink` or `autoAdvanceLink`,
    until `accounts-2`. Those reload the page and wipe the tutorial's
    changes.

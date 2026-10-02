@@ -104,18 +104,21 @@ of the base list. The header, Edit/Done tap frame, save overlay and
 "No External Accounts" card keep their base overrides
 (`withAccountPrefsHeader`, `withAccountPrefsEditToggle`,
 `withAccountPrefsSavingOverlay`, `withAccountPrefsHideWhileEditing`).
-Add three marker frames (empty, no fill, no Link):
+Add three marker frames (empty, no fill, no Link) and one target
+frame:
 - `AccountPrefsEdit` over "Edit", where it sits in the header's View
   variant.
 - `AccountPrefsDone` over "Done", where it sits in the Editing variant.
   "Edit" and "Done" are in different spots because the ← takes up
   room in the View variant. Both markers can stay on the page all the
   time; each step only looks for its own.
-- `AccountsTab` over "Accounts" in the bottom nav. The button's own
-  native Link must go to `/account-controls-tutorial/accounts-2`. If
-  the nav is a shared component, its Accounts Link goes to the
-  free-play Accounts page, so this page needs a nav (a variant or a
-  copy) whose Accounts Link goes to `accounts-2` instead.
+- `AccountsTab`, a target, on an empty frame (no fill) over
+  "Accounts" in the bottom nav, above the nav in the layer order. Give
+  the frame its own native Link to
+  `/account-controls-tutorial/accounts-2`. The nav's own Accounts
+  button links to the free-play Accounts page, so this frame has to
+  take the tap instead of passing it through, which is why it's a
+  target and not a marker.
 
 TutorialOverlay steps, all with the same `pageGroup` (e.g.
 `account-prefs-tutorial`):
@@ -128,7 +131,7 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 | 4 | `account-prefs-row` (or `account-prefs-handle`) | `Advance on event`: `account-prefs-moved` | Drag Main Checking to the top |
 | 5 | `account-prefs-eye` | `Advance on event`: `account-prefs-hidden` | Hide Platinum Rewards Checking |
 | 6 | `account-prefs-done` | `Click advances step` | Tap Done |
-| 7 | `accounts-tab` | the Accounts button's Link | Tap Accounts to see your changes |
+| 7 | `accounts-tab` | the `AccountsTab` frame's Link | Tap Accounts to see your changes |
 
 - Step 3's progress bar: typing takes about 3.5s with the default
   speeds, and the save overlay 2.25s. The event fires when the overlay
@@ -166,8 +169,8 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
 
 The tutorial store is kept in module memory, like the base store. A
 full page load clears it. So from Account Preferences to `accounts-2`,
-every navigation must be a native Framer Link, including the bottom
-nav's Accounts button. On those
+every navigation must be a native Framer Link, including the
+`AccountsTab` frame's. On those
 pages, don't use TutorialOverlay's `nextButtonLink` or
 `autoAdvanceLink`, because they navigate with `window.location.href`,
 which reloads the page. Skip on a step that uses them does the same.

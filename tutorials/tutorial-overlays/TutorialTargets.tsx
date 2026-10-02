@@ -357,13 +357,15 @@ export function AccountPrefsDone(
     return withTutorialMarker("account-prefs-done")(Component)
 }
 
-// Step 9 — MARKER: over "Accounts" in the Account Preferences page's
-// bottom nav. The button's own native Link goes to
-// /account-controls-tutorial/accounts-2.
+// Step 9 — TARGET: an empty frame (no fill) over "Accounts" in the
+// Account Preferences page's bottom nav, with its own native Link to
+// /account-controls-tutorial/accounts-2. A target, not a marker: the nav
+// button underneath links to the free-play Accounts page, so this frame
+// has to take the tap itself rather than pass it through.
 export function AccountsTab(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withTutorialMarker("accounts-tab")(Component)
+    return withTutorialTarget("accounts-tab")(Component)
 }
 
 // Step 10 — MARKER: accounts-2, over the internal accounts card showing
