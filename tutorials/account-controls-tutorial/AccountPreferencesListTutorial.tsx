@@ -7,6 +7,7 @@ import {
     subscribeAccountState,
 } from "../../Account_Controls/AccountOrder.tsx"
 import {
+    cancelSaveOverlay,
     getSavePhase,
     isEditing,
     isSaving,
@@ -60,11 +61,9 @@ import {
  *
  *  - TutorialOverlay's Skip, on a step whose `Advance on event` is one
  *    of those, asks this list to do that step's action instead
- *    ("tutorial-skip" event): the name types itself, the account slides
- *    to the top, or the account hides, then the overlay plays and the
- *    step advances as if the user had done it. If that step is already
- *    done, it advances straight away. If the name is still typing, it
- *    finishes the rename at once and advances without the overlay.
+ *    ("tutorial-skip" event): the account is renamed, moved to the top,
+ *    or hidden at once, and the step advances straight away. Skip never
+ *    waits: typing stops, and a save overlay that's showing is dropped.
  *
  *  - data-tutorial-target tags for TutorialOverlay's `target`:
  *      "account-prefs-row", "account-prefs-name-field",
@@ -551,30 +550,38 @@ export default function AccountPreferencesListTutorial(props: Props) {
             setTimeout(() => {
                 typingTimersRef.current = []
                 setTypingText(null)
-                const state = current()
-                saveAccountState(STORE, state.order, state.hidden, {
-                    ...state.names,
-                    [p.renameAccountId]: to,
-                })
+                applyRename()
                 saveThenSignal(RENAMED_EVENT)
             }, at)
         )
         typingTimersRef.current = timers
     }
 
-    function moveToTop() {
+    // Each step's change to the store, without the overlay or event.
+    function applyRename() {
+        const state = current()
+        saveAccountState(STORE, state.order, state.hidden, {
+            ...state.names,
+            [p.renameAccountId]: p.newName,
+        })
+    }
+
+    function applyMove() {
         const state = current()
         const next = [
             p.renameAccountId,
             ...state.order.filter((id) => id !== p.renameAccountId),
         ]
         saveAccountState(STORE, next, state.hidden)
-        saveThenSignal(MOVED_EVENT)
+    }
+
+    function applyHide() {
+        const state = current()
+        saveAccountState(STORE, state.order, [...state.hidden, p.hideAccountId])
     }
 
     function hideAccount() {
-        const state = current()
-        saveAccountState(STORE, state.order, [...state.hidden, p.hideAccountId])
+        applyHide()
         saveThenSignal(HIDDEN_EVENT)
     }
 
@@ -603,45 +610,25 @@ export default function AccountPreferencesListTutorial(props: Props) {
         saveThenSignal(final[0] === p.renameAccountId ? MOVED_EVENT : null)
     }
 
-    // Skip while the name is still typing: stop typing, put the new name
-    // in and save it at once, and advance without the save overlay.
-    // Letting the typing carry on made Skip look broken: nothing changed
-    // for the ~5s of typing and saving, and a second press is ignored
-    // (TutorialOverlay allows one skip per step).
-    function finishRenameNow() {
+    // TutorialOverlay's Skip: do the step's action for the user and move
+    // on at once. Any typing stops, and a save overlay that's showing is
+    // dropped rather than waited out, so Skip never waits on either. The
+    // pending event is cleared so it can't fire a second time.
+    function handleSkip(eventName: string) {
         typingTimersRef.current.forEach((t) => clearTimeout(t))
         typingTimersRef.current = []
         setTypingText(null)
         const state = current()
-        saveAccountState(STORE, state.order, state.hidden, {
-            ...state.names,
-            [p.renameAccountId]: p.newName,
-        })
-        window.dispatchEvent(new Event(RENAMED_EVENT))
-    }
-
-    // A step already done advances straight away. If its save overlay is
-    // still showing, the event it was waiting to fire is dropped so it
-    // doesn't fire a second time.
-    function advanceNow(eventName: string) {
-        if (pendingEventRef.current === eventName)
-            pendingEventRef.current = null
-        window.dispatchEvent(new Event(eventName))
-    }
-
-    // TutorialOverlay's Skip: do the step's action for the user.
-    function handleSkip(eventName: string) {
         if (eventName === RENAMED_EVENT) {
-            if (typingTimersRef.current.length > 0) finishRenameNow()
-            else if (renamed) advanceNow(RENAMED_EVENT)
-            else startRename()
+            if (state.names[p.renameAccountId] === undefined) applyRename()
         } else if (eventName === MOVED_EVENT) {
-            if (moved) advanceNow(MOVED_EVENT)
-            else moveToTop()
+            if (state.order[0] !== p.renameAccountId) applyMove()
         } else if (eventName === HIDDEN_EVENT) {
-            if (isHidden) advanceNow(HIDDEN_EVENT)
-            else hideAccount()
+            if (!state.hidden.includes(p.hideAccountId)) applyHide()
         }
+        pendingEventRef.current = null
+        cancelSaveOverlay()
+        window.dispatchEvent(new Event(eventName))
     }
     const handleSkipRef = React.useRef(handleSkip)
     handleSkipRef.current = handleSkip

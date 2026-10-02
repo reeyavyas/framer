@@ -42,8 +42,9 @@ Preferences goes to Settings, not straight to Accounts.
   (`account-prefs-renamed`, `account-prefs-moved`,
   `account-prefs-hidden`). Skip on those steps makes the list do the
   action for the user, so the end Accounts page still shows it. Skip
-  while the name is still typing finishes the rename at once and
-  advances without the save overlay.
+  never waits: it applies the change at once, stops any typing, drops
+  a save overlay that's showing (`cancelSaveOverlay` in
+  `AccountPreferencesEditMode.tsx`) and advances straight away.
   The property controls are the base list's, plus `Rename account`
   (8665), `Only drag up` (on), `New name` (Main Checking), `Hide account` (7500),
   `Erase speed`, `Type speed` and `Field typing border`.

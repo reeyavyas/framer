@@ -112,6 +112,14 @@ function toggleEditing() {
     notify()
 }
 
+// Hides the overlay at once, wherever it is in Saving → Saved → fade,
+// and stops its remaining timers. Used by the tutorial list's Skip.
+export function cancelSaveOverlay() {
+    saveGeneration++
+    savePhase = "hidden"
+    notify()
+}
+
 export function startSaveOverlay() {
     const generation = ++saveGeneration
     savePhase = "saving"

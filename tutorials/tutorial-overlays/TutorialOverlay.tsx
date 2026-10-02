@@ -719,7 +719,7 @@ export default function TutorialOverlay(props: Props) {
     //  - A step with advanceOnEvent fires a cancelable SKIP_EVENT on
     //    window with { event: advanceOnEvent } as its detail. The
     //    component that fires that event does the step's action for the
-    //    user (e.g. AccountPreferencesListTutorial types the new name)
+    //    user (e.g. AccountPreferencesListTutorial renames the account)
     //    and calls preventDefault() to say so; its event then advances
     //    the step as usual. If nothing claims it, Skip carries on below.
     //  - A scroll step scrolls its container just past
