@@ -140,6 +140,8 @@ type Props = {
     handleSize: number
     handleHitPaddingX: number
     handleHitPaddingY: number
+    eyeHitPaddingX: number
+    eyeHitPaddingY: number
     fieldHeight: number
     fieldRadius: number
     fieldPaddingX: number
@@ -275,6 +277,7 @@ function AccountRow({
 }: RowProps) {
     const dragControls = useDragControls()
     const hitY = Math.min(p.handleHitPaddingY, p.editPaddingY)
+    const eyeHitY = Math.min(p.eyeHitPaddingY, p.editPaddingY)
     const tag = (on: boolean, id: string) =>
         on ? { "data-tutorial-target": id } : {}
     const fullName = `${name} ${p.numberPrefix}${account.accountId}`
@@ -325,6 +328,15 @@ function AccountRow({
                             display: "flex",
                             flexShrink: 0,
                             cursor: isHideRow ? "pointer" : "default",
+                            // Invisible tap area, as on the ≡ handle: the
+                            // full row height, plus `Eye tap width` on each
+                            // side (keep it under `Icon gap`), without
+                            // moving the icon. The tutorial's highlight on
+                            // "account-prefs-eye" grows with it.
+                            alignSelf: "stretch",
+                            alignItems: "center",
+                            padding: `${eyeHitY}px ${p.eyeHitPaddingX}px`,
+                            margin: `${-eyeHitY}px ${-p.eyeHitPaddingX}px`,
                         }}
                     >
                         <EyeIcon
@@ -712,6 +724,8 @@ const defaultProps: Omit<Props, "style"> = {
     handleSize: 40,
     handleHitPaddingX: 16,
     handleHitPaddingY: 20,
+    eyeHitPaddingX: 16,
+    eyeHitPaddingY: 20,
     fieldHeight: 64,
     fieldRadius: 2,
     fieldPaddingX: 16,
@@ -826,6 +840,8 @@ addPropertyControls(AccountPreferencesListTutorial, {
     handleSize: { type: ControlType.Number, title: "Handle size", min: 12, max: 100, defaultValue: defaultProps.handleSize },
     handleHitPaddingX: { type: ControlType.Number, title: "Handle tap width", min: 0, max: 40, defaultValue: defaultProps.handleHitPaddingX },
     handleHitPaddingY: { type: ControlType.Number, title: "Handle tap height", min: 0, max: 80, defaultValue: defaultProps.handleHitPaddingY },
+    eyeHitPaddingX: { type: ControlType.Number, title: "Eye tap width", min: 0, max: 40, defaultValue: defaultProps.eyeHitPaddingX },
+    eyeHitPaddingY: { type: ControlType.Number, title: "Eye tap height", min: 0, max: 80, defaultValue: defaultProps.eyeHitPaddingY },
     fieldHeight: { type: ControlType.Number, title: "Field height", min: 20, max: 160, defaultValue: defaultProps.fieldHeight },
     fieldRadius: { type: ControlType.Number, title: "Field radius", min: 0, max: 40, defaultValue: defaultProps.fieldRadius },
     fieldPaddingX: { type: ControlType.Number, title: "Field padding", min: 0, max: 60, defaultValue: defaultProps.fieldPaddingX },

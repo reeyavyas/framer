@@ -32,7 +32,10 @@ Preferences goes to Settings, not straight to Accounts.
     plays the overlay, as in the real app, but the step only counts
     once it's at the top. With `Only drag up` on (the default), it can't
     be dragged down at all, not even back to a spot it just passed.
-  - **Hide.** Only Platinum's eye works.
+  - **Hide.** Only Platinum's eye works. Its tap area (and the step's
+    highlight) runs the row's full height, plus `Eye tap width` on each
+    side; `Eye tap height` reaches into the row's padding, capped at
+    `Edit row padding`.
   Which step is current comes from the saved state (renamed? at the
   top? hidden?). After each step's overlay has faded out, the list
   fires the event that step's TutorialOverlay waits for
