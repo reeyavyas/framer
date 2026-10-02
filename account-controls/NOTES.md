@@ -4,74 +4,88 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (end of session, 2026-10-01)
+## Status: pick up here (end of session, 2026-10-02)
 
 ### Where to pick up
-**Account Controls tutorial, step 2 on the tutorial Account
-Preferences page** (tap the name field). The step table and setup are
-in `tutorials/account-controls-tutorial/NOTES.md`.
+**Account Controls tutorial: finish the last step on `accounts-2`,
+then test the whole run.** The tutorial works end to end in Framer:
+a run from `accounts-1` reaches `accounts-2` with Main Checking renamed
+and at the top and Platinum hidden. The step table and setup are in
+`tutorials/account-controls-tutorial/NOTES.md`.
 
-Built in Framer so far:
-- All code files pasted, in their Code folders: base files in Phone
-  Components > Account Controls, tutorial files in Phone Components >
-  Tutorials > Account Controls Tutorial. The imports resolve, with no
-  underlines. Tutorial files import from `"../../Account_Controls/…"`:
-  Framer writes the folder's space as an underscore.
-- The tutorial pages up to the Account Preferences page.
-- Account Preferences step 1 (tap Edit): its TutorialOverlay card, and
-  the `AccountPrefsEdit` marker over "Edit".
+The tutorial's flow (changed this session):
+- `accounts-1` → Settings → Account Preferences: Edit, rename, drag
+  Main Checking to the top, hide Platinum, Done, then Accounts in the
+  bottom nav.
+- The bottom-nav step uses `AccountsTab`, a **target** on an empty
+  frame over "Accounts" with its own native Link to `accounts-2`. The
+  nav's own Accounts button goes to the free-play page, so the frame
+  takes the tap instead of passing it through.
+- `accounts-2` highlights the accounts card (`AccountsUpdated`, a
+  target on the card in the Accounts content component's main
+  component), then auto-advances to the congrats page.
+- The ← steps back through Settings were dropped, along with the
+  `AccountPrefsBack` and `SettingsBack` exports.
 
 ### Next steps, in order
-1. **Finish the Account Preferences steps** (same `pageGroup` as step
-   1):
-   - **Step 2:** tap the name field. `target`
-     `account-prefs-name-field`, `Click advances step`.
-   - **Step 3:** the name types and saves. Same target, `Advance on
-     event` `account-prefs-renamed`. For the optional progress bar,
-     set `Event progress` to about 5.75s.
-   - **Step 4:** drag Main Checking to the top. `target`
-     `account-prefs-row`, `Advance on event` `account-prefs-moved`.
-   - **Step 5:** hide Platinum. `target` `account-prefs-eye`,
-     `Advance on event` `account-prefs-hidden`.
-   - **Step 6:** tap Done. Add the `AccountPrefsDone` marker over
-     "Done", where it sits in the Editing variant. `target`
-     `account-prefs-done`, `Click advances step`. Check the Edit/Done
-     tap frame (`withAccountPrefsEditToggle`) also covers the "Done"
-     spot; the tutorial only lets the tap through there.
-   - **Step 7:** tap Accounts in the bottom nav. Paste the updated
-     `TutorialTargets.tsx` into Framer first, for the new `AccountsTab`
-     export. Put an empty frame (no fill) over "Accounts", above the
-     nav, give it its own native Link to
-     `/account-controls-tutorial/accounts-2`, and apply `AccountsTab`
-     (a target, so it takes the tap; the nav's own button goes to the
-     free-play Accounts page). `target` `accounts-tab`; the frame's
-     Link advances it.
-   Use native Links only, and no `nextButtonLink` or `autoAdvanceLink`,
-   until `accounts-2`. Those reload the page and wipe the tutorial's
-   changes.
-2. **Build `/account-controls-tutorial/accounts-2`:** put
-   `withAccountName8665` on the "Vertical Checking * 8665" text layer
-   in the Accounts content component's main component. Then add the
-   last step: `AccountsUpdated` on the accounts card itself (a target),
-   and
-   one TutorialOverlay (`target` `accounts-updated`, no `pageGroup`,
-   `Auto advance after` about 4s, `Auto advance link` the congrats
-   page).
-3. **Test the tutorial in Preview:**
-   - the name types, and each step advances after Saved fades out;
-   - dragging by touch on the kiosk, and the page not scrolling;
-   - Skip on every step;
-   - Accounts in the bottom nav lands on `accounts-2`, which
-     highlights the accounts card and moves on to the congrats page
-     after the timer;
-   - `accounts-2` shows "Main Checking * 8665" at the top, with
-     Platinum gone;
-   - running it twice in a row starts the second run from the default
-     order.
-   Also check whether the save overlay covers the tutorial card on
-   steps 3–5. Not yet confirmed in Framer: the name text override.
+1. **Paste `AccountOrder.tsx` into Framer once more.** The last pasted
+   copy still has the `__accountOrder` console aid, which has since
+   been removed from the repo.
+2. **Finish `accounts-2`'s TutorialOverlay** (`target`
+   `accounts-updated`, no `pageGroup`): set `Auto advance link` to the
+   congrats page and `Auto advance after` to about 4s, and move the
+   card (anchor and offset controls) so it doesn't cover the renamed
+   Main Checking row.
+3. **Test the whole tutorial** in a browser tab (open the preview in
+   its own tab, or the Published site; Framer's Preview panel is hard
+   to use for tall pages). Use Chrome's device toolbar at the kiosk's
+   size. Check:
+   - each step advances: tap steps on a full tap (a drag across
+     Edit/Done does nothing), event steps after Saved fades out;
+   - dragging Main Checking by touch, only upward, without the page
+     scrolling;
+   - Skip on every step moves on at once, without waiting for the
+     typing or the save overlay;
+   - the tutorial card isn't covered by the Saving overlay on steps
+     3–5; if it is, put the overlay below the TutorialOverlay
+     instances;
+   - Accounts in the bottom nav lands on `accounts-2`, which then
+     moves on to the congrats page;
+   - a second run in the same session starts from the default order;
+   - the other tutorials' tap steps still work, since
+     `TutorialOverlay.tsx` changed for every tutorial (see below).
 4. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
    Use **Create a merge commit**.
+
+### Changed this session (all pasted into Framer unless noted)
+- `TutorialOverlay.tsx`: `Click advances step` hands off on the click,
+  not on finger-down, so a tap that turns into a drag no longer moves
+  the tutorial on without the target acting. Affects every tutorial.
+- `TutorialTargets.tsx`: `AccountsTab` and `AccountsUpdated` added;
+  `AccountPrefsBack` and `SettingsBack` removed.
+- `AccountPreferencesListTutorial.tsx`: larger tap areas on the ≡
+  handle and the eye (`Handle tap width/height`, `Eye tap
+  width/height`), `Only drag up` (on by default), and Skip that never
+  waits.
+- `AccountPreferencesList.tsx` (base): the same handle tap-area
+  controls. Not confirmed pasted.
+- `AccountPreferencesEditMode.tsx`: `cancelSaveOverlay()`, used by the
+  tutorial's Skip.
+- `AccountControlsTutorialReset.tsx`: only clears on
+  `/account-controls-tutorial/accounts-1`. It sits on the Accounts
+  content component, which `accounts-2` also uses; before this check
+  it wiped the student's changes as they arrived there.
+
+### Lessons from this session
+- `Advance on event` is the name of the event the list fires (e.g.
+  `account-prefs-renamed`), not the step's target id.
+- When a file gains a new export, Framer may keep running the old
+  build ("does not provide an export named …"). Save the file, re-save
+  the files that import it, refresh, and reload the tab if needed.
+- If `accounts-2` shows the default list, check in order: a reset
+  clearing on arrival, `location.pathname`, then whether the account
+  frames get `order` / `display: none` in the DOM. Also check the
+  tutorial card isn't simply covering the row.
 
 ### Done
 - **Base page works in Preview.** This covers Account Preferences
@@ -88,6 +102,9 @@ Built in Framer so far:
 - **Tutorial code written:** the tutorial list, the reset override,
   the `TutorialOverlay` additions (advance on event, Skip doing the
   action, drag passthrough) and the targets.
+- **Tutorial runs in Framer from `accounts-1` to `accounts-2`** with
+  steps 1–7 on Account Preferences built, and `accounts-2` shows the
+  new order, the hidden account and the new name (2026-10-02).
 
 ### Later
 - Once the tutorials page has a free exploration button, test that
