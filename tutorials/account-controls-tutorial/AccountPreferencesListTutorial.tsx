@@ -63,7 +63,8 @@ import {
  *    ("tutorial-skip" event): the name types itself, the account slides
  *    to the top, or the account hides, then the overlay plays and the
  *    step advances as if the user had done it. If that step is already
- *    done, it advances straight away.
+ *    done, it advances straight away. If the name is still typing, it
+ *    finishes the rename at once and advances without the overlay.
  *
  *  - data-tutorial-target tags for TutorialOverlay's `target`:
  *      "account-prefs-row", "account-prefs-name-field",
@@ -602,18 +603,43 @@ export default function AccountPreferencesListTutorial(props: Props) {
         saveThenSignal(final[0] === p.renameAccountId ? MOVED_EVENT : null)
     }
 
-    // TutorialOverlay's Skip: do the step's action for the user. A step
-    // already done advances straight away; a rename already typing just
-    // carries on.
+    // Skip while the name is still typing: stop typing, put the new name
+    // in and save it at once, and advance without the save overlay.
+    // Letting the typing carry on made Skip look broken: nothing changed
+    // for the ~5s of typing and saving, and a second press is ignored
+    // (TutorialOverlay allows one skip per step).
+    function finishRenameNow() {
+        typingTimersRef.current.forEach((t) => clearTimeout(t))
+        typingTimersRef.current = []
+        setTypingText(null)
+        const state = current()
+        saveAccountState(STORE, state.order, state.hidden, {
+            ...state.names,
+            [p.renameAccountId]: p.newName,
+        })
+        window.dispatchEvent(new Event(RENAMED_EVENT))
+    }
+
+    // A step already done advances straight away. If its save overlay is
+    // still showing, the event it was waiting to fire is dropped so it
+    // doesn't fire a second time.
+    function advanceNow(eventName: string) {
+        if (pendingEventRef.current === eventName)
+            pendingEventRef.current = null
+        window.dispatchEvent(new Event(eventName))
+    }
+
+    // TutorialOverlay's Skip: do the step's action for the user.
     function handleSkip(eventName: string) {
         if (eventName === RENAMED_EVENT) {
-            if (renamed) window.dispatchEvent(new Event(RENAMED_EVENT))
+            if (typingTimersRef.current.length > 0) finishRenameNow()
+            else if (renamed) advanceNow(RENAMED_EVENT)
             else startRename()
         } else if (eventName === MOVED_EVENT) {
-            if (moved) window.dispatchEvent(new Event(MOVED_EVENT))
+            if (moved) advanceNow(MOVED_EVENT)
             else moveToTop()
         } else if (eventName === HIDDEN_EVENT) {
-            if (isHidden) window.dispatchEvent(new Event(HIDDEN_EVENT))
+            if (isHidden) advanceNow(HIDDEN_EVENT)
             else hideAccount()
         }
     }

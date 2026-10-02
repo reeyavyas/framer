@@ -41,7 +41,9 @@ Preferences goes to Settings, not straight to Accounts.
   fires the event that step's TutorialOverlay waits for
   (`account-prefs-renamed`, `account-prefs-moved`,
   `account-prefs-hidden`). Skip on those steps makes the list do the
-  action for the user, so the end Accounts page still shows it.
+  action for the user, so the end Accounts page still shows it. Skip
+  while the name is still typing finishes the rename at once and
+  advances without the save overlay.
   The property controls are the base list's, plus `Rename account`
   (8665), `Only drag up` (on), `New name` (Main Checking), `Hide account` (7500),
   `Erase speed`, `Type speed` and `Field typing border`.
