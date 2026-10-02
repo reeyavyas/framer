@@ -84,13 +84,13 @@ refresh the preview. Reload the Framer tab if that isn't enough.
 ## Framer setup
 
 ### `/account-controls-tutorial/accounts-1`
-- `withAccountControlsTutorialReset` on any one layer that belongs to
-  this page itself, e.g. the page's own scroll frame. Not on a layer
-  inside the Accounts content component: that component is also on
-  `accounts-2`, where a reset would wipe the student's changes. The
-  override now only clears on `/account-controls-tutorial/accounts-1`
-  (`FIRST_PAGE_PATH`), so a misplaced one is harmless, but keep it on
-  the page.
+- `withAccountControlsTutorialReset` on any one layer that shows on
+  this page. It can go on the Accounts content component (the
+  scrollable element), even though `accounts-2` uses the same
+  component: it only clears on `/account-controls-tutorial/accounts-1`
+  (`FIRST_PAGE_PATH`) and does nothing anywhere else. Before that
+  check, a reset on the component wiped the student's changes as they
+  arrived on `accounts-2`.
 - The account frames carry `withAccount7500` etc. (on the component,
   so every variant has them). They read the tutorial store on any
   page under `/account-controls-tutorial/`, so this page shows the

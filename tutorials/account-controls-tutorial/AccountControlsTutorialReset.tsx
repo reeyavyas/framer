@@ -7,10 +7,9 @@ import { resetAccountState } from "../../Account_Controls/AccountOrder.tsx"
  * AccountControlsTutorialReset
  *
  * Code Override: withAccountControlsTutorialReset. Apply it to any one
- * layer on the tutorial's first page,
- * /account-controls-tutorial/accounts-1, that belongs to the page itself
- * (e.g. the page's own scroll frame), not a layer inside the Accounts
- * content component. When that page opens it clears AccountOrder.tsx's
+ * layer that shows on the tutorial's first page,
+ * /account-controls-tutorial/accounts-1, the Accounts content component
+ * included. When that page opens it clears AccountOrder.tsx's
  * "tutorial" store — order, hidden accounts and the new name — so
  * someone who runs the tutorial twice without a reload starts from the
  * default order again. The free-play "base" store is untouched.
@@ -24,10 +23,10 @@ import { resetAccountState } from "../../Account_Controls/AccountOrder.tsx"
  * ("../../Account_Controls/AccountOrder.tsx"). Moving or renaming
  * either folder in Framer breaks this import.
  *
- * It only clears on FIRST_PAGE_PATH. Put inside the Accounts content
- * component, it would also run on accounts-2 (the same component) and
- * wipe the student's changes the moment they arrive; the path check
- * makes that harmless. Change FIRST_PAGE_PATH if the page's path
+ * It only clears on FIRST_PAGE_PATH. On the Accounts content component
+ * it also renders on accounts-2 (the same component), where clearing
+ * wiped the student's changes the moment they arrived; the path check
+ * stops that. Change FIRST_PAGE_PATH if the page's path
  * changes.
  *
  * Runs in a layout effect, before the page paints, so the Accounts
