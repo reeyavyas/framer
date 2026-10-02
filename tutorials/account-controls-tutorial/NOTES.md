@@ -30,7 +30,8 @@ Preferences goes to Settings, not straight to Accounts.
     on-screen keyboard. Then it saves and plays Saving → Saved.
   - **Move.** Only Main Checking's ≡ drags. Any new spot saves and
     plays the overlay, as in the real app, but the step only counts
-    once it's at the top.
+    once it's at the top. With `Only drag up` on (the default), it can't
+    be dragged down at all, not even back to a spot it just passed.
   - **Hide.** Only Platinum's eye works.
   Which step is current comes from the saved state (renamed? at the
   top? hidden?). After each step's overlay has faded out, the list
@@ -39,7 +40,7 @@ Preferences goes to Settings, not straight to Accounts.
   `account-prefs-hidden`). Skip on those steps makes the list do the
   action for the user, so the end Accounts page still shows it.
   The property controls are the base list's, plus `Rename account`
-  (8665), `New name` (Main Checking), `Hide account` (7500),
+  (8665), `Only drag up` (on), `New name` (Main Checking), `Hide account` (7500),
   `Erase speed`, `Type speed` and `Field typing border`.
 - `AccountControlsTutorialReset.tsx`: `withAccountControlsTutorialReset`
   clears the tutorial store when the first page opens, so a second run

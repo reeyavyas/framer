@@ -45,7 +45,9 @@ import {
  *        Then it saves and plays the Saving -> Saved overlay.
  *     2. Move: the same account's ≡ handle drags. Any drop in a new spot
  *        saves and plays the overlay, as in the real app, but the step
- *        only counts once the account is at the top.
+ *        only counts once the account is at the top. With `Only drag up`
+ *        on, it can't move down at all, not even back to a spot it just
+ *        passed.
  *     3. Hide: the `Hide account`'s eye hides it and plays the overlay.
  *    Every other eye, handle and field does nothing. Which step is
  *    current comes from the saved state itself (renamed? at the top?
@@ -106,6 +108,7 @@ type Props = {
     canvasPreview: "view" | "edit"
     numberPrefix: string
     renameAccountId: string
+    onlyDragUp: boolean
     newName: string
     hideAccountId: string
     eraseMs: number
@@ -290,6 +293,12 @@ function AccountRow({
             // when Skip moves the account to the top.
             layout="position"
             onDragEnd={onDragEnd}
+            // `Only drag up`: no movement below the row's current slot.
+            // The limit is measured from wherever the row sits now, so
+            // once it swaps up a slot it can't come back down either.
+            {...(isRenameRow && p.onlyDragUp
+                ? { dragConstraints: { bottom: 0 }, dragElastic: 0 }
+                : {})}
             whileDrag={{ zIndex: 2, boxShadow: "0 6px 18px rgba(0,0,0,0.18)" }}
             {...tag(isRenameRow, "account-prefs-row")}
             style={{
@@ -673,6 +682,7 @@ const defaultProps: Omit<Props, "style"> = {
     canvasPreview: "view",
     numberPrefix: "#",
     renameAccountId: "8665",
+    onlyDragUp: true,
     newName: "Main Checking",
     hideAccountId: "7500",
     eraseMs: 50,
@@ -741,6 +751,14 @@ addPropertyControls(AccountPreferencesListTutorial, {
         title: "Rename account",
         description: "Id of the account renamed, then dragged to the top.",
         defaultValue: defaultProps.renameAccountId,
+    },
+    onlyDragUp: {
+        type: ControlType.Boolean,
+        title: "Only drag up",
+        description: "The account can't be dragged down, even back to a spot it just left.",
+        defaultValue: defaultProps.onlyDragUp,
+        enabledTitle: "On",
+        disabledTitle: "Off",
     },
     newName: {
         type: ControlType.String,
