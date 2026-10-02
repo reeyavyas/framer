@@ -314,8 +314,10 @@ export function YesButton(Component: ComponentType<any>): ComponentType<any> {
 
 // ═══ Account Controls Tutorial ════════════════════════════════════════
 // Starts on /account-controls-tutorial/accounts-1 → Settings → Account
-// Preferences, renames, moves and hides accounts, then goes back to
-// /account-controls-tutorial/accounts-2 to show the result.
+// Preferences, renames, moves and hides accounts, then goes back through
+// Settings to /account-controls-tutorial/accounts-2 to show the result.
+// The way back uses a second tutorial copy of Settings, so its card is
+// "tap ←" and not step 2's "tap Account Preferences" again.
 //   1. SettingsButton          (shared starting step, defined above)
 //   2. AccountPreferencesItem
 //   3. AccountPrefsEdit
@@ -325,6 +327,7 @@ export function YesButton(Component: ComponentType<any>): ComponentType<any> {
 //   7. "account-prefs-eye"         — hide Platinum Rewards Checking
 //   8. AccountPrefsDone
 //   9. AccountPrefsBack
+//  10. SettingsBack
 // (Steps 4–7's targets are tagged by AccountPreferencesListTutorial.tsx
 // in tutorials/account-controls-tutorial/, not by an export here.)
 
@@ -357,9 +360,17 @@ export function AccountPrefsDone(
 
 // Step 9 — MARKER: over the Account Preferences header's ← (inside the
 // header component, which carries withAccountPrefsHeader). The ←'s own
-// native Link goes to /account-controls-tutorial/accounts-2.
+// native Link goes to the second tutorial copy of Settings.
 export function AccountPrefsBack(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("account-prefs-back")(Component)
+}
+
+// Step 10 — MARKER: over the ← on the second tutorial copy of Settings.
+// The ←'s own native Link goes to /account-controls-tutorial/accounts-2.
+export function SettingsBack(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("settings-back")(Component)
 }

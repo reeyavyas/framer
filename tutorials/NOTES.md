@@ -266,7 +266,8 @@ anywhere else on the page.
     `NewPin`, `ResetPinConfirm`.
   - **Account Controls Tutorial** (Accounts → Settings → Account
     Preferences): `SettingsButton` (shared), `AccountPreferencesItem`,
-    `AccountPrefsEdit`, `AccountPrefsDone`, `AccountPrefsBack`. The
+    `AccountPrefsEdit`, `AccountPrefsDone`, `AccountPrefsBack`,
+    `SettingsBack`. The
     name field, row, handle and eye are tagged by
     `AccountPreferencesListTutorial.tsx` itself.
   An export used by more than one tutorial is defined once, in the
