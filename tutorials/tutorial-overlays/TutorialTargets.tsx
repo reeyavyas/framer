@@ -368,11 +368,14 @@ export function AccountsTab(
     return withTutorialTarget("accounts-tab")(Component)
 }
 
-// Step 10 — MARKER: accounts-2, over the internal accounts card showing
-// the new order, the new name and Platinum gone. A timed step: its
-// TutorialOverlay redirects to the congrats page on its own.
+// Step 10 — TARGET: accounts-2, the internal accounts card itself (the
+// stack holding the four account frames), showing the new order, the
+// new name and Platinum gone. On the card rather than a marker frame,
+// so the highlight follows its real height with Platinum hidden. The
+// account frames inside carry withAccountNNNN; the card itself is free.
+// A timed step: its TutorialOverlay redirects to the congrats page.
 export function AccountsUpdated(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withTutorialMarker("accounts-updated")(Component)
+    return withTutorialTarget("accounts-updated")(Component)
 }

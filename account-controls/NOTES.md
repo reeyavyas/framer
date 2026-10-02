@@ -52,7 +52,8 @@ Built in Framer so far:
 2. **Build `/account-controls-tutorial/accounts-2`:** put
    `withAccountName8665` on the "Vertical Checking * 8665" text layer
    in the Accounts content component's main component. Then add the
-   last step: an `AccountsUpdated` marker over the accounts card, and
+   last step: `AccountsUpdated` on the accounts card itself (a target),
+   and
    one TutorialOverlay (`target` `accounts-updated`, no `pageGroup`,
    `Auto advance after` about 4s, `Auto advance link` the congrats
    page).

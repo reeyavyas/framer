@@ -153,11 +153,12 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
   just "Main Checking". The " * " between the name and the number is
   `NAME_NUMBER_SEPARATOR` in AccountOrder.tsx, and must match the
   canvas text exactly.
-- `AccountsUpdated` (`"accounts-updated"`) on an empty marker frame
-  (no fill, no Link) over the internal accounts card. Platinum is
-  already hidden when this page opens, so size the marker to the card
-  with three accounts, not four: the highlight follows the marker, not
-  the card.
+- `AccountsUpdated` (`"accounts-updated"`), a target, on the internal
+  accounts card itself: the stack holding the four account frames. The
+  highlight then follows the card's real height, with Platinum hidden.
+  The account frames carry `withAccountNNNN`, but the card has no
+  override of its own, so it can take this one. If it ever gets one,
+  use an empty frame over the card instead, sized to three accounts.
 - One TutorialOverlay, no `pageGroup`: `target` `accounts-updated`,
   card e.g. "Your accounts now show your changes",
   `Auto advance after` about 4s, `Auto advance link` the congrats
