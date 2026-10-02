@@ -164,12 +164,18 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
   The account frames carry `withAccountNNNN`, but the card has no
   override of its own, so it can take this one. If it ever gets one,
   use an empty frame over the card instead, sized to three accounts.
-- One TutorialOverlay, no `pageGroup`: `target` `accounts-updated`,
-  card e.g. "Your accounts now show your changes",
-  `Auto advance after` about 4s, `Auto advance link` the congrats
-  page. `Show progress bar` fills over the same 4s. Skip goes to the
-  same link. `Auto advance link` reloads the page, which is fine here:
-  the tutorial's changes aren't needed after this step.
+- Two TutorialOverlay steps, same `Page group` (e.g.
+  `accounts-2-tutorial`):
+  1. Scroll down: `Scroll advances step` on, `Scroll direction` down,
+     `Scroll container ID` the page's scroll container.
+  2. The updated accounts: `Target ID` `accounts-updated`,
+     `Auto-advance (sec)` about 4, `Auto-advance link` the congrats
+     page, `Freeze scroll while active` on, card e.g. "Your accounts
+     now show your changes", placed off the Main Checking row. The
+     `Progress bar` fills over the same 4s, and the timer starts when
+     step 2 does. Skip goes to the same link. `Auto-advance link`
+     reloads the page, which is fine here: the tutorial's changes
+     aren't needed after this step.
 
 ## Navigation must be native Links
 

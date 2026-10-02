@@ -31,11 +31,12 @@ The tutorial's flow (changed this session):
 1. **Paste `AccountOrder.tsx` into Framer once more.** The last pasted
    copy still has the `__accountOrder` console aid, which has since
    been removed from the repo.
-2. **Finish `accounts-2`'s TutorialOverlay** (`target`
-   `accounts-updated`, no `pageGroup`): set `Auto advance link` to the
-   congrats page and `Auto advance after` to about 4s, and move the
-   card (anchor and offset controls) so it doesn't cover the renamed
-   Main Checking row.
+2. **Finish `accounts-2`'s two steps** (same `Page group`): step 1
+   scroll down, step 2 `Target ID` `accounts-updated` with
+   `Auto-advance (sec)` about 4, `Auto-advance link` the congrats
+   page and `Freeze scroll while active` on. Move step 2's card
+   (anchor and offset controls) off the renamed Main Checking row.
+   Details in `tutorials/account-controls-tutorial/NOTES.md`.
 3. **Test the whole tutorial** in a browser tab (open the preview in
    its own tab, or the Published site; Framer's Preview panel is hard
    to use for tall pages). Use Chrome's device toolbar at the kiosk's
