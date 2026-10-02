@@ -129,6 +129,11 @@ Built in Framer so far:
   `Canvas preview` to Edit to style the edit rows.
   `Eye icon` and `Eye off icon` take your own images for the shown and
   hidden states. Leave them blank to use the built-in eye.
+  `Handle tap area` (default 16) adds invisible space on every side of
+  the ≡, so a finger doesn't have to land on the icon itself. It
+  doesn't move anything. Keep it below `Icon gap`, or it starts
+  covering the right edge of the name field. The tutorial list has the
+  same control.
 - `AccountPreferencesEditMode.tsx` holds the Overrides for edit mode and
   the save overlay. Timing is controlled by `SAVING_MS`, `SAVED_MS` and
   `FADE_MS`, which you edit directly.

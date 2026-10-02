@@ -135,6 +135,7 @@ type Props = {
     gap: number
     iconSize: number
     handleSize: number
+    handleHitPadding: number
     fieldHeight: number
     fieldRadius: number
     fieldPaddingX: number
@@ -375,6 +376,12 @@ function AccountRow({
                             // dragging when a touch starts on the handle.
                             touchAction: isRenameRow ? "none" : undefined,
                             cursor: canDrag ? "grab" : "default",
+                            // Invisible tap area around the icon; the
+                            // negative margin keeps the icon and the row
+                            // layout where they were. Keep it under
+                            // `Icon gap` so it doesn't cover the field.
+                            padding: p.handleHitPadding,
+                            margin: -p.handleHitPadding,
                         }}
                     >
                         <HandleIcon size={p.handleSize} color={p.iconColor} />
@@ -682,6 +689,7 @@ const defaultProps: Omit<Props, "style"> = {
     gap: 24,
     iconSize: 44,
     handleSize: 40,
+    handleHitPadding: 16,
     fieldHeight: 64,
     fieldRadius: 2,
     fieldPaddingX: 16,
@@ -786,6 +794,7 @@ addPropertyControls(AccountPreferencesListTutorial, {
     gap: { type: ControlType.Number, title: "Icon gap", min: 0, max: 80, defaultValue: defaultProps.gap },
     iconSize: { type: ControlType.Number, title: "Eye size", min: 12, max: 100, defaultValue: defaultProps.iconSize },
     handleSize: { type: ControlType.Number, title: "Handle size", min: 12, max: 100, defaultValue: defaultProps.handleSize },
+    handleHitPadding: { type: ControlType.Number, title: "Handle tap area", min: 0, max: 40, defaultValue: defaultProps.handleHitPadding },
     fieldHeight: { type: ControlType.Number, title: "Field height", min: 20, max: 160, defaultValue: defaultProps.fieldHeight },
     fieldRadius: { type: ControlType.Number, title: "Field radius", min: 0, max: 40, defaultValue: defaultProps.fieldRadius },
     fieldPaddingX: { type: ControlType.Number, title: "Field padding", min: 0, max: 60, defaultValue: defaultProps.fieldPaddingX },
