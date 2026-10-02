@@ -74,6 +74,12 @@ imports: moving `AccountPreferencesList.tsx` into Account Controls
 left it importing `"./Account_Controls/AccountOrder.tsx"`, which had
 to go back to `"./AccountOrder.tsx"`.
 
+When a base file gains a new export (e.g. `cancelSaveOverlay`), the
+preview can keep running the old build and fail with "does not provide
+an export named …", even after the new code is pasted. Save the base
+file, re-save the file that imports it (type and delete a space), and
+refresh the preview. Reload the Framer tab if that isn't enough.
+
 ## Framer setup
 
 ### `/account-controls-tutorial/accounts-1`
