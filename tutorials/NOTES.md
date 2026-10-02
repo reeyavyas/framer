@@ -196,7 +196,7 @@ anywhere else on the page.
   tutorial's step shown under "Saving...": the page moves on by itself,
   so Skip leaves the step up rather than hiding the overlay and letting
   taps through. That waiting step also broke tapping Save for real
-  (Skip still worked). The Save step hands off on finger-down, the
+  (Skip still worked). The Save step handed off on finger-down, the
   waiting step (no hole) switched on its tap blocking before the finger
   lifted, and it blocked the click Save's override runs on. So
   "Saving..." never showed, and the page sat dim on a waiting step whose
@@ -205,7 +205,12 @@ anywhere else on the page.
   mounts. Fixed in `blockOutsideHole`: a newly active step lets through
   one click if it hasn't seen a pointerdown yet, since that click
   finishes a tap that started on the previous step. Every tap that
-  starts on the new step is blocked as before. One skip per step, so a
+  starts on the new step is blocked as before. `clickAdvancesStep` now
+  hands off on the click instead of finger-down, so that case no longer
+  comes up, but the let-through stays as a safety net. The change came
+  from the Account Controls tutorial: a finger sliding across "Edit"
+  never became a click, so the list stayed in view mode while the
+  tutorial moved on to the name field. One skip per step, so a
   second press can't flip a toggle back. `skipLink`, when set, still
   overrides all of this and navigates there instead. Confirmed live
   that a simulated tap flips the Card Controls card toggle and all

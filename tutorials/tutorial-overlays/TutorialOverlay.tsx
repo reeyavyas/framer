@@ -837,8 +837,8 @@ export default function TutorialOverlay(props: Props) {
                     new MouseEvent("click", { ...init, buttons: 0 })
                 )
                 // Either clickAdvancesStep's listener has already seen the
-                // pointerdown above and advanced (or scheduled it), or the
-                // tap itself is the advance (e.g. a Link to the next page).
+                // click above and advanced (or scheduled it), or the tap
+                // itself is the advance (e.g. a Link to the next page).
                 return
             }
         }
@@ -896,9 +896,9 @@ export default function TutorialOverlay(props: Props) {
         // and block EVERY click anywhere on the page at design time,
         // including inside Framer's own editor chrome.
         if (isCanvas || !active || !isMyTurn) return
-        // A tap that hands off to this step on its pointerdown (the
-        // previous step's clickAdvancesStep) finishes with a click that
-        // arrives after this step is already up. That click belongs to
+        // A tap that hands off to this step before its click (e.g. on a
+        // pointerdown, as clickAdvancesStep used to) finishes with a click
+        // that arrives after this step is already up. That click belongs to
         // the previous step's target, so let it through. Otherwise a
         // waiting step with no hole — e.g. the Card Alerts tutorial's step
         // under "Saving..." — blocked the very click on Save that was
@@ -957,6 +957,13 @@ export default function TutorialOverlay(props: Props) {
     // calls preventDefault/stopPropagation, so the real element
     // underneath still gets the real click; we just also notice it.
     //
+    // It listens for the click, not the pointerdown. A finger that lands
+    // in the hole and slides off (a drag across "Edit" on Account
+    // Preferences) never becomes a click, so the target never acts —
+    // advancing on pointerdown moved the tutorial on anyway and left the
+    // page stuck (the list never went into edit mode). On the click, the
+    // step moves on exactly when the target gets the tap.
+    //
     // clickAdvanceDelaySeconds holds the step (card, dim, glow) on screen
     // for that long after the tap before handing off — for a target whose
     // tap kicks off its own animation (e.g. the login page's fingerprint,
@@ -967,7 +974,7 @@ export default function TutorialOverlay(props: Props) {
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !clickAdvancesStep) return
         let pending: ReturnType<typeof setTimeout> | null = null
-        function onPointerDown(e: PointerEvent) {
+        function onTap(e: MouseEvent) {
             // Same exemption as blockOutsideHole above. This listener only
             // checks coordinates, so without it a tap on this overlay's own
             // Skip/Exit/Next buttons, or on AppInactivityOverlay's "YES, I'M
@@ -998,9 +1005,9 @@ export default function TutorialOverlay(props: Props) {
                 else advanceStep()
             }
         }
-        window.addEventListener("pointerdown", onPointerDown, true)
+        window.addEventListener("click", onTap, true)
         return () => {
-            window.removeEventListener("pointerdown", onPointerDown, true)
+            window.removeEventListener("click", onTap, true)
             if (pending) clearTimeout(pending)
         }
     }, [
