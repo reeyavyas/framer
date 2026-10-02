@@ -316,7 +316,7 @@ export function YesButton(Component: ComponentType<any>): ComponentType<any> {
 // Starts on /account-controls-tutorial/accounts-1 → Settings → Account
 // Preferences, renames, moves and hides accounts, taps Done, then taps
 // Accounts in the bottom nav to reach /account-controls-tutorial/accounts-2,
-// which shows the result.
+// which shows the result for a few seconds before the congrats page.
 //   1. SettingsButton          (shared starting step, defined above)
 //   2. AccountPreferencesItem
 //   3. AccountPrefsEdit
@@ -326,6 +326,7 @@ export function YesButton(Component: ComponentType<any>): ComponentType<any> {
 //   7. "account-prefs-eye"         — hide Platinum Rewards Checking
 //   8. AccountPrefsDone
 //   9. AccountsTab
+//  10. AccountsUpdated
 // (Steps 4–7's targets are tagged by AccountPreferencesListTutorial.tsx
 // in tutorials/account-controls-tutorial/, not by an export here.)
 
@@ -363,4 +364,13 @@ export function AccountsTab(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialMarker("accounts-tab")(Component)
+}
+
+// Step 10 — MARKER: accounts-2, over the internal accounts card showing
+// the new order, the new name and Platinum gone. A timed step: its
+// TutorialOverlay redirects to the congrats page on its own.
+export function AccountsUpdated(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("accounts-updated")(Component)
 }

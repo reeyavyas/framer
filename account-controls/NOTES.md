@@ -49,13 +49,18 @@ Built in Framer so far:
    changes.
 2. **Build `/account-controls-tutorial/accounts-2`:** put
    `withAccountName8665` on the "Vertical Checking * 8665" text layer
-   in the Accounts content component's main component, then add the
-   closing card.
+   in the Accounts content component's main component. Then add the
+   last step: an `AccountsUpdated` marker over the accounts card, and
+   one TutorialOverlay (`target` `accounts-updated`, no `pageGroup`,
+   `Auto advance after` about 4s, `Auto advance link` the congrats
+   page).
 3. **Test the tutorial in Preview:**
    - the name types, and each step advances after Saved fades out;
    - dragging by touch on the kiosk, and the page not scrolling;
    - Skip on every step;
-   - Accounts in the bottom nav lands on `accounts-2`;
+   - Accounts in the bottom nav lands on `accounts-2`, which
+     highlights the accounts card and moves on to the congrats page
+     after the timer;
    - `accounts-2` shows "Main Checking * 8665" at the top, with
      Platinum gone;
    - running it twice in a row starts the second run from the default

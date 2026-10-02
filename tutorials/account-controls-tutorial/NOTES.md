@@ -15,8 +15,9 @@ Account Preferences, then:
 3. Hide "Platinum Rewards Checking".
 
 Then Done, and Accounts in the bottom nav, which goes to
-`/account-controls-tutorial/accounts-2`. That page shows the new order,
-the new name, and Platinum gone. The tutorial doesn't use the ←, which
+`/account-controls-tutorial/accounts-2`. That page highlights the new
+order, the new name, and Platinum gone for a few seconds, then moves on
+to the congrats page by itself. The tutorial doesn't use the ←, which
 goes back through Settings.
 
 ## Files
@@ -149,7 +150,17 @@ TutorialOverlay steps, all with the same `pageGroup` (e.g.
   just "Main Checking". The " * " between the name and the number is
   `NAME_NUMBER_SEPARATOR` in AccountOrder.tsx, and must match the
   canvas text exactly.
-- The closing card.
+- `AccountsUpdated` (`"accounts-updated"`) on an empty marker frame
+  (no fill, no Link) over the internal accounts card. Platinum is
+  already hidden when this page opens, so size the marker to the card
+  with three accounts, not four: the highlight follows the marker, not
+  the card.
+- One TutorialOverlay, no `pageGroup`: `target` `accounts-updated`,
+  card e.g. "Your accounts now show your changes",
+  `Auto advance after` about 4s, `Auto advance link` the congrats
+  page. `Show progress bar` fills over the same 4s. Skip goes to the
+  same link. `Auto advance link` reloads the page, which is fine here:
+  the tutorial's changes aren't needed after this step.
 
 ## Navigation must be native Links
 
