@@ -4,16 +4,15 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (end of session, 2026-10-02)
+## Status: pick up here (2026-10-05)
 
 ### Where to pick up
-**Account Controls tutorial: finish the last step on `accounts-2`,
-then test the whole run.** The tutorial works end to end in Framer:
-a run from `accounts-1` reaches `accounts-2` with Main Checking renamed
-and at the top and Platinum hidden. The step table and setup are in
-`tutorials/account-controls-tutorial/NOTES.md`.
+**The Account Controls tutorial is finished in Framer** (2026-10-05).
+What's left is merging the PR:
+https://github.com/reeyavyas/framer/pull/9. Use **Create a merge
+commit**. After that, see "Later" below.
 
-The tutorial's flow (changed this session):
+The tutorial's flow:
 - `accounts-1` → Settings → Account Preferences: Edit, rename, drag
   Main Checking to the top, hide Platinum, Done, then Accounts in the
   bottom nav.
@@ -21,44 +20,14 @@ The tutorial's flow (changed this session):
   frame over "Accounts" with its own native Link to `accounts-2`. The
   nav's own Accounts button goes to the free-play page, so the frame
   takes the tap instead of passing it through.
-- `accounts-2` highlights the accounts card (`AccountsUpdated`, a
-  target on the card in the Accounts content component's main
-  component), then auto-advances to the congrats page.
+- `accounts-2`: a scroll-down step, then the accounts card highlighted
+  (`AccountsUpdated`, a target on the card in the Accounts content
+  component's main component), then an auto-advance to the congrats
+  page.
 - The ← steps back through Settings were dropped, along with the
   `AccountPrefsBack` and `SettingsBack` exports.
 
-### Next steps, in order
-1. **Paste `AccountOrder.tsx` into Framer once more.** The last pasted
-   copy still has the `__accountOrder` console aid, which has since
-   been removed from the repo.
-2. **Finish `accounts-2`'s two steps** (same `Page group`): step 1
-   scroll down, step 2 `Target ID` `accounts-updated` with
-   `Auto-advance (sec)` about 4, `Auto-advance link` the congrats
-   page and `Freeze scroll while active` on. Move step 2's card
-   (anchor and offset controls) off the renamed Main Checking row.
-   Details in `tutorials/account-controls-tutorial/NOTES.md`.
-3. **Test the whole tutorial** in a browser tab (open the preview in
-   its own tab, or the Published site; Framer's Preview panel is hard
-   to use for tall pages). Use Chrome's device toolbar at the kiosk's
-   size. Check:
-   - each step advances: tap steps on a full tap (a drag across
-     Edit/Done does nothing), event steps after Saved fades out;
-   - dragging Main Checking by touch, only upward, without the page
-     scrolling;
-   - Skip on every step moves on at once, without waiting for the
-     typing or the save overlay;
-   - the tutorial card isn't covered by the Saving overlay on steps
-     3–5; if it is, put the overlay below the TutorialOverlay
-     instances;
-   - Accounts in the bottom nav lands on `accounts-2`, which then
-     moves on to the congrats page;
-   - a second run in the same session starts from the default order;
-   - the other tutorials' tap steps still work, since
-     `TutorialOverlay.tsx` changed for every tutorial (see below).
-4. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
-   Use **Create a merge commit**.
-
-### Changed this session (all pasted into Framer unless noted)
+### Changed 2026-10-02 to 2026-10-05
 - `TutorialOverlay.tsx`: `Click advances step` hands off on the click,
   not on finger-down, so a tap that turns into a drag no longer moves
   the tutorial on without the target acting. Affects every tutorial.
@@ -69,7 +38,10 @@ The tutorial's flow (changed this session):
   width/height`), `Only drag up` (on by default), and Skip that never
   waits.
 - `AccountPreferencesList.tsx` (base): the same handle tap-area
-  controls. Not confirmed pasted.
+  controls.
+- `TutorialOverlay.tsx`, later: Next on an `Advance on event` step
+  finishes the step's action like Skip does, and the scroll freeze
+  controls show on every step, without needing a `Page group`.
 - `AccountPreferencesEditMode.tsx`: `cancelSaveOverlay()`, used by the
   tutorial's Skip.
 - `AccountControlsTutorialReset.tsx`: only clears on
@@ -103,6 +75,7 @@ The tutorial's flow (changed this session):
 - **Tutorial code written:** the tutorial list, the reset override,
   the `TutorialOverlay` additions (advance on event, Skip doing the
   action, drag passthrough) and the targets.
+- **Account Controls tutorial finished in Framer** (2026-10-05).
 - **Tutorial runs in Framer from `accounts-1` to `accounts-2`** with
   steps 1–7 on Account Preferences built, and `accounts-2` shows the
   new order, the hidden account and the new name (2026-10-02).
