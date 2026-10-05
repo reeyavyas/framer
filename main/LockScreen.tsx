@@ -1,5 +1,6 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
+import type { ObjectControlDescription } from "framer"
 import {
     motion,
     useMotionValue,
@@ -138,7 +139,6 @@ function rgba(r: number, g: number, b: number, a: number) {
 
 function LockScreenInner(props) {
     const {
-        variant = "lockScreen",
         // Flattened Time controls
         useLiveTime,
         customTime,
@@ -179,13 +179,11 @@ function LockScreenInner(props) {
         onSwipeUp,
     } = props
 
-    const isLockScreen = variant !== "splash"
     const prefersReducedMotion = usePrefersReducedMotion()
 
     // Live-tick whenever either the clock or the date is set to "live" —
     // otherwise a live date paired with a custom time would never update.
-    // Disabled entirely on the splash variant, which has no clock at all.
-    const now = useTicker(isLockScreen && (useLiveTime || useLiveDate))
+    const now = useTicker(useLiveTime || useLiveDate)
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
 
@@ -199,6 +197,12 @@ function LockScreenInner(props) {
         notification5,
     ].filter((n) => n && n.enabled !== false)
 
+    // Restarts the timers below when any enabled notification's delay or
+    // stay duration is edited, not just when the count changes.
+    const notificationTimingKey = enabledNotifications
+        .map((n) => `${n.delaySeconds}/${n.holdSeconds}`)
+        .join(",")
+
     // How many of enabledNotifications have arrived and are on-screen.
     const [visibleCount, setVisibleCount] = React.useState(0)
 
@@ -207,7 +211,7 @@ function LockScreenInner(props) {
     // stack has arrived it holds for the longest stay duration among them,
     // then clears so the sequence can arrive again from empty.
     React.useEffect(() => {
-        if (!isLockScreen || enabledNotifications.length === 0) return
+        if (enabledNotifications.length === 0) return
         const total = enabledNotifications.length
 
         if (visibleCount < total) {
@@ -229,7 +233,7 @@ function LockScreenInner(props) {
             setVisibleCount(0)
         }, holdSeconds * 1000)
         return () => window.clearTimeout(id)
-    }, [isLockScreen, enabledNotifications.length, visibleCount])
+    }, [notificationTimingKey, visibleCount])
 
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
@@ -289,7 +293,7 @@ function LockScreenInner(props) {
         255,
         Math.min(glass.tintOpacity + 0.14, 0.5)
     )
-    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
+    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), ${glassTint}`
     const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
     const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
@@ -501,10 +505,7 @@ function LockScreenInner(props) {
                                 // instead of staying pinned at the bottom.
                                 .reverse()
                                 .map(({ n, slot }) => {
-                                    const cornerRadius =
-                                        n.cornerRadius === undefined
-                                            ? 50
-                                            : n.cornerRadius
+                                    const cornerRadius = n.cornerRadius ?? 25
                                     // Nests the icon's rounding to the
                                     // card's rather than a fixed value, so
                                     // they stay visually concentric as the
@@ -516,63 +517,15 @@ function LockScreenInner(props) {
                                         <motion.div
                                             key={slot}
                                             layout
-                                            // `layout` is back for smooth
-                                            // sibling reflow, but this card
-                                            // no longer has its own `y`
-                                            // travel on entrance — that
-                                            // separate y motion was a much
-                                            // shorter trip than the sibling
-                                            // below has to make via `layout`
-                                            // (roughly this card's own
-                                            // height + the stack gap), so
-                                            // even with matched springs and
-                                            // synced start times the two
-                                            // finished at different
-                                            // wall-clock moments and briefly
-                                            // overlapped. This card now
-                                            // appears directly at its
-                                            // correct flex position (only
-                                            // scaling in from center, which
-                                            // is symmetric and doesn't
-                                            // drift its edges toward the
-                                            // sibling), so the sibling's
-                                            // `layout` reflow is the only
-                                            // real motion happening — smooth
-                                            // again, with nothing left to
-                                            // desync against.
-                                            // Non-reduced-motion entrance/exit
-                                            // deliberately never animates
-                                            // opacity on this element (it
-                                            // carries the glass chrome one
-                                            // level down, but the parent's
-                                            // opacity still forces the
-                                            // browser to recomposite that
-                                            // backdrop-filter child through
-                                            // a changing alpha every frame).
-                                            // Animating opacity over a
-                                            // freshly-mounted backdrop-filter
-                                            // subtree is the specific thing
-                                            // Chromium struggles to keep up
-                                            // with — the card renders sharp
-                                            // and the blur visibly catches
-                                            // up a beat later. Transform-only
-                                            // motion (y/scale) composites as
-                                            // a cheap bitmap transform
-                                            // instead, so the blur is
-                                            // already correct on the first
-                                            // frame it's visible. The y is
-                                            // positive — the card rises up
-                                            // into place from just below its
-                                            // resting position, rather than
-                                            // dropping down from above.
-                                            // Small on purpose (14, not the
-                                            // old 32) — big enough to read
-                                            // as a settle, small enough
-                                            // relative to the sibling's
-                                            // ~200px `layout` reflow that it
-                                            // doesn't meaningfully
-                                            // reintroduce the overlap a
-                                            // larger offset caused.
+                                            // Entrance is transform-only
+                                            // (y/scale), never opacity: fading
+                                            // a freshly-mounted backdrop-filter
+                                            // subtree makes Chromium paint the
+                                            // card sharp and the blur catch up
+                                            // a beat later. The y travel is
+                                            // kept small (14) next to the
+                                            // sibling's ~200px `layout` reflow
+                                            // so the two don't visibly overlap.
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
@@ -583,20 +536,10 @@ function LockScreenInner(props) {
                                                     ? { opacity: 1 }
                                                     : { y: 0, scale: 1 }
                                             }
-                                            // Exit doesn't have the cold-
-                                            // layer problem above — by the
-                                            // time a card leaves, its
-                                            // backdrop-filter layer has been
-                                            // live for seconds, so fading it
-                                            // out here is safe and reads
-                                            // better than an abrupt pop.
-                                            // It also doesn't have the
-                                            // reflow-distance mismatch: all
-                                            // visible cards clear together
-                                            // (see the visibleCount reset),
-                                            // so there's no sibling making
-                                            // room for this one to race
-                                            // against.
+                                            // Exit can fade: by now the blur
+                                            // layer is long since live, and all
+                                            // cards clear together so there's
+                                            // no sibling reflow to race.
                                             exit={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
@@ -622,48 +565,20 @@ function LockScreenInner(props) {
                                                           layout: {
                                                               type: "spring",
                                                               stiffness: 420,
-                                                              // Softened from
-                                                              // 32 (damping
-                                                              // ratio ~0.78)
-                                                              // to 37 (~0.9)
-                                                              // — still a
-                                                              // little
-                                                              // overshoot,
-                                                              // much less of
-                                                              // it, so the
-                                                              // sibling
-                                                              // reflow is
-                                                              // less likely
-                                                              // to swing past
-                                                              // its resting
-                                                              // spot and
-                                                              // briefly
-                                                              // overlap the
-                                                              // card next to
-                                                              // it.
+                                                              // ~0.9 damping
+                                                              // ratio: little
+                                                              // overshoot, so
+                                                              // the reflow
+                                                              // doesn't swing
+                                                              // into the next
+                                                              // card.
                                                               damping: 37,
                                                           },
-                                                          // This card's own
-                                                          // y/scale no longer
-                                                          // shares vertical
-                                                          // space with the
-                                                          // `layout` reflow
-                                                          // (it's a tiny 14px
-                                                          // offset next to a
-                                                          // ~200px reflow),
-                                                          // so it's free to
-                                                          // use a softer,
-                                                          // slightly slower
-                                                          // spring for a
-                                                          // more graceful
-                                                          // settle instead
-                                                          // of matching
-                                                          // layout's snappier
-                                                          // one. Also
-                                                          // softened (damping
-                                                          // ratio ~0.75 ->
-                                                          // ~0.9) for the
-                                                          // same reason.
+                                                          // The card's own
+                                                          // small y/scale
+                                                          // settle can use a
+                                                          // softer spring
+                                                          // than the reflow.
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 300,
@@ -988,7 +903,7 @@ function LockScreenInner(props) {
 // Component
 /**
  * Fixed to the kiosk's native resolution — same convention as
- * AppInactivityOverlay.tsx — so dropping either variant onto the canvas
+ * AppInactivityOverlay.tsx — so dropping it onto the canvas
  * defaults to the real screen size instead of an arbitrary frame.
  *
  * @framerSupportedLayoutWidth fixed
@@ -998,7 +913,7 @@ function LockScreenInner(props) {
  */
 // Hydration guard baked directly into the component instead of relying
 // on a separately-applied Framer code override — LockScreen has live
-// date/time on the lockScreen variant, so it needs this regardless, and
+// date/time, so it needs this regardless, and
 // keeping it in-file leaves the layer's one available code-override
 // slot free for something else (e.g. a redirect override on the same
 // instance). Renders an invisible placeholder matching the requested
@@ -1023,7 +938,6 @@ export default function LockScreen(props) {
 
 // Default Setup Canvas Configuration
 LockScreen.defaultProps = {
-    variant: "lockScreen",
     useLiveTime: true,
     use24Hour: false,
     customTime: "9:41",
@@ -1158,11 +1072,13 @@ LockScreen.defaultProps = {
 // elsewhere in this codebase — each slot keeps its own defaultValue, so
 // "reset to default" on one notification doesn't collapse both onto a
 // single shared default.
-function notificationControl(title: string, defaults: any) {
+function notificationControl(
+    title: string,
+    defaults: any
+): ObjectControlDescription {
     return {
         type: ControlType.Object,
         title,
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             enabled: {
                 type: ControlType.Boolean,
@@ -1224,18 +1140,10 @@ function notificationControl(title: string, defaults: any) {
 
 // Property Controls Panel Definition
 addPropertyControls(LockScreen, {
-    variant: {
-        type: ControlType.Enum,
-        title: "Variant",
-        options: ["lockScreen", "splash"],
-        optionTitles: ["Lock Screen", "Splash"],
-        defaultValue: "lockScreen",
-    },
     // NEW Framer Action Link Handler Control
     onSwipeUp: {
         type: ControlType.EventHandler,
         title: "On Swipe Up",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveTime: {
         type: ControlType.Boolean,
@@ -1243,19 +1151,17 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     customTime: {
         type: ControlType.String,
         title: "Custom Time",
         defaultValue: "9:41",
-        hidden: (p) => p.variant !== "lockScreen" || p.useLiveTime,
+        hidden: (p) => !!p.useLiveTime,
     },
     use24Hour: {
         type: ControlType.Boolean,
         title: "24-Hour",
         defaultValue: false,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     timeFont: {
         type: ControlType.Font,
@@ -1268,13 +1174,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "-6px",
             variant: "Semibold",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     timeColor: {
         type: ControlType.Color,
         title: "Time Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     clockOpacity: {
         type: ControlType.Number,
@@ -1283,7 +1187,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveDate: {
         type: ControlType.Boolean,
@@ -1291,13 +1194,12 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     customDate: {
         type: ControlType.String,
         title: "Custom Date",
         defaultValue: "Tue Jul 7",
-        hidden: (p) => p.variant !== "lockScreen" || p.useLiveDate,
+        hidden: (p) => !!p.useLiveDate,
     },
     dateFont: {
         type: ControlType.Font,
@@ -1310,13 +1212,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0.3px",
             variant: "Semibold",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     dateColor: {
         type: ControlType.Color,
         title: "Date Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     dateOpacity: {
         type: ControlType.Number,
@@ -1325,7 +1225,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     notification1: notificationControl(
         "Fake Notification 1",
@@ -1350,7 +1249,6 @@ addPropertyControls(LockScreen, {
     layout: {
         type: ControlType.Object,
         title: "Layout & Insets",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             topInset: {
                 type: ControlType.Number,
@@ -1397,7 +1295,6 @@ addPropertyControls(LockScreen, {
     icons: {
         type: ControlType.Object,
         title: "Icons",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             buttonSize: {
                 type: ControlType.Number,
@@ -1433,7 +1330,6 @@ addPropertyControls(LockScreen, {
     glass: {
         type: ControlType.Object,
         title: "Glass Panel",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             panelOpacity: {
                 type: ControlType.Number,
@@ -1520,7 +1416,6 @@ addPropertyControls(LockScreen, {
     swipeGlass: {
         type: ControlType.Object,
         title: "Swipe Glass",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             enabled: {
                 type: ControlType.Boolean,
@@ -1580,7 +1475,6 @@ addPropertyControls(LockScreen, {
     homeIndicator: {
         type: ControlType.Object,
         title: "Home Indicator",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             width: {
                 type: ControlType.Number,
@@ -1633,7 +1527,6 @@ addPropertyControls(LockScreen, {
         type: ControlType.String,
         title: "Swipe Hint Text",
         defaultValue: "Swipe up to open",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintFont: {
         type: ControlType.Font,
@@ -1646,13 +1539,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0px",
             variant: "Regular",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintColor: {
         type: ControlType.Color,
         title: "Swipe Hint Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintOpacity: {
         type: ControlType.Number,
@@ -1661,7 +1552,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintGap: {
         type: ControlType.Number,
@@ -1670,7 +1560,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 150,
         step: 1,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintBounce: {
         type: ControlType.Boolean,
@@ -1678,6 +1567,5 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (p) => p.variant !== "lockScreen",
     },
 })
