@@ -118,7 +118,7 @@ export function CardControlsTarget(
 }
 
 // TARGET: "Settings" button at the top of the Accounts page.
-// Used by: Log Off Tutorial (step 1).
+// Used by: Log Off Tutorial (step 1), Account Controls Tutorial (step 1).
 export function SettingsButton(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -310,4 +310,72 @@ export function Logout(Component: ComponentType<any>): ComponentType<any> {
 // Step 3 — TARGET: "Yes" button on the logout confirmation overlay
 export function YesButton(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("yes-button")(Component)
+}
+
+// ═══ Account Controls Tutorial ════════════════════════════════════════
+// Starts on /account-controls-tutorial/accounts-1 → Settings → Account
+// Preferences, renames, moves and hides accounts, taps Done, then taps
+// Accounts in the bottom nav to reach /account-controls-tutorial/accounts-2,
+// which shows the result for a few seconds before the congrats page.
+//   1. SettingsButton          (shared starting step, defined above)
+//   2. AccountPreferencesItem
+//   3. AccountPrefsEdit
+//   4. "account-prefs-name-field"  — tap the name field
+//   5. "account-prefs-name-field"  — the name types and saves
+//   6. "account-prefs-row"         — drag Main Checking to the top
+//   7. "account-prefs-eye"         — hide Platinum Rewards Checking
+//   8. AccountPrefsDone
+//   9. AccountsTab
+//  10. AccountsUpdated
+// (Steps 4–7's targets are tagged by AccountPreferencesListTutorial.tsx
+// in tutorials/account-controls-tutorial/, not by an export here.)
+
+// Step 2 — TARGET: Settings page "Account Preferences" menu item
+export function AccountPreferencesItem(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("account-preferences")(Component)
+}
+
+// Steps 3 and 8 are separate markers because "Edit" and "Done" sit in
+// different spots: the View header's ← pushes "Edit" over. Markers
+// because the Edit/Done tap frame already carries
+// withAccountPrefsEditToggle. Both can stay on the page all the time;
+// each step only looks for its own.
+
+// Step 3 — MARKER: over "Edit" in the header's View variant
+export function AccountPrefsEdit(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("account-prefs-edit")(Component)
+}
+
+// Step 8 — MARKER: over "Done" in the header's Editing variant
+export function AccountPrefsDone(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("account-prefs-done")(Component)
+}
+
+// Step 9 — TARGET: an empty frame (no fill) over "Accounts" in the
+// Account Preferences page's bottom nav, with its own native Link to
+// /account-controls-tutorial/accounts-2. A target, not a marker: the nav
+// button underneath links to the free-play Accounts page, so this frame
+// has to take the tap itself rather than pass it through.
+export function AccountsTab(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("accounts-tab")(Component)
+}
+
+// Step 10 — TARGET: accounts-2, the internal accounts card itself (the
+// stack holding the four account frames), showing the new order, the
+// new name and Platinum gone. On the card rather than a marker frame,
+// so the highlight follows its real height with Platinum hidden. The
+// account frames inside carry withAccountNNNN; the card itself is free.
+// A timed step: its TutorialOverlay redirects to the congrats page.
+export function AccountsUpdated(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("accounts-updated")(Component)
 }

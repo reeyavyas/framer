@@ -31,12 +31,23 @@ const EXIT_LINK = "/tutorials"
  * onto the ONE layer it's attached to, it can't add a sibling element.
  * Draw that as a real layer instead: any shape + a native Framer Link
  * pointed at EXIT_LINK, placed on top of the animation on the canvas.
+ *
+ * Use it on ONE layer per Congrats page. A second redirect override on a
+ * layer inside the congrats component caused a double redirect: tapping
+ * "X" reached /tutorials, then the page reloaded again. As a safeguard,
+ * the timer also only redirects if the page is still the one it started
+ * on, so a timer that outlives the Congrats page (e.g. after the "X"
+ * Link navigates client-side) can't reload wherever the user is now.
  */
 export function TutorialCongratsAutoRedirect(): Override {
     useEffect(() => {
         if (RenderTarget.current() === RenderTarget.canvas) return
         if (!AUTO_REDIRECT_SECONDS || !EXIT_LINK) return
+        const startPath = window.location.pathname
         const t = setTimeout(() => {
+            // Left already (e.g. by the "X"): don't reload wherever the
+            // user is now.
+            if (window.location.pathname !== startPath) return
             window.location.href = EXIT_LINK
         }, AUTO_REDIRECT_SECONDS * 1000)
         return () => clearTimeout(t)

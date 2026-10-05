@@ -76,7 +76,13 @@ anywhere else on the page.
   `autoAdvanceLink` below — so the same button works as "advance within
   this page group" on every step but the last, and "go to the next
   page" on the last step of a group or on a single-step page with no
-  `pageGroup` at all. The button sits above its own progress bar in a
+  `pageGroup` at all. On a step with `advanceOnEvent`, Next first makes
+  the same request Skip does (`tutorial-skip`), so the page finishes
+  the step's action and its event advances the step; if nothing claims
+  it, Next advances as usual. Before this, Next on the Account Controls
+  tutorial's rename step moved on while the name kept typing and
+  saving underneath, and the drag step stayed locked until it saved.
+  The button sits above its own progress bar in a
   shared wrapper. Space above the button is the card's own `gap: 24`
   (between `cardBody` and this wrapper) plus the wrapper's own
   `marginTop: 8` = 32px; space below the button, before the bar, is the
@@ -196,7 +202,7 @@ anywhere else on the page.
   tutorial's step shown under "Saving...": the page moves on by itself,
   so Skip leaves the step up rather than hiding the overlay and letting
   taps through. That waiting step also broke tapping Save for real
-  (Skip still worked). The Save step hands off on finger-down, the
+  (Skip still worked). The Save step handed off on finger-down, the
   waiting step (no hole) switched on its tap blocking before the finger
   lifted, and it blocked the click Save's override runs on. So
   "Saving..." never showed, and the page sat dim on a waiting step whose
@@ -205,7 +211,12 @@ anywhere else on the page.
   mounts. Fixed in `blockOutsideHole`: a newly active step lets through
   one click if it hasn't seen a pointerdown yet, since that click
   finishes a tap that started on the previous step. Every tap that
-  starts on the new step is blocked as before. One skip per step, so a
+  starts on the new step is blocked as before. `clickAdvancesStep` now
+  hands off on the click instead of finger-down, so that case no longer
+  comes up, but the let-through stays as a safety net. The change came
+  from the Account Controls tutorial: a finger sliding across "Edit"
+  never became a click, so the list stayed in view mode while the
+  tutorial moved on to the name field. One skip per step, so a
   second press can't flip a toggle back. `skipLink`, when set, still
   overrides all of this and navigates there instead. Confirmed live
   that a simulated tap flips the Card Controls card toggle and all
@@ -223,6 +234,26 @@ anywhere else on the page.
   existed to support it) was removed as unused — the glow now just
   shows immediately whenever `showGlow` is on, same as it always did
   once its delay elapsed, just without a delay to configure at all.
+
+  `advanceOnEvent` ("Advance on event") hands off to the next step when
+  a component on the page fires that window event. It's for a step
+  whose finish isn't one tap the overlay can see, e.g. the Account
+  Controls tutorial's drag, which only counts once the account lands
+  at the top and the save overlay has faded out
+  (`AccountPreferencesListTutorial` fires `account-prefs-moved`).
+  `eventProgressSeconds` ("Event progress (sec)") gives such a step a
+  progress bar, since it has no timer of its own; the event, not the
+  bar, still decides when it moves on. Skip on an event step fires a
+  cancelable `tutorial-skip` event with `{ event: advanceOnEvent }`.
+  The component that owns the event does the step's action and calls
+  `preventDefault()`, and its event then advances the step. If nothing
+  claims it, Skip carries on as before.
+
+  A touch that starts on an element marked `data-tutorial-drag` is a
+  drag, not a scroll: the touchmove handler that turns finger moves
+  into scrolling leaves it alone, so a dragged row follows the finger
+  and the page stays put. `AccountPreferencesListTutorial`'s ≡ handle
+  carries it.
 - `TutorialTargets.tsx` — Override that tags a layer so
   `TutorialOverlay` can find/measure it. Exports are added in Framer's
   own code editor and copied back into the repo, so verify against the
@@ -234,8 +265,7 @@ anywhere else on the page.
   - **Shared starting steps:** many tutorials start on the Accounts
     page and go either to the More tab or to Settings. Those opening
     targets live here once, each noting which tutorials use it:
-    `MoreTabTarget`, `CardControlsTarget`. There's no Settings target
-    yet; when a tutorial needs one, it goes in this section.
+    `MoreTabTarget`, `CardControlsTarget`, `SettingsButton`.
   - **Card Controls Tutorial** (Accounts → More → Card Controls, then
     the card toggle, Travel Notice and Card Alerts): `MoreTabTarget`
     and `CardControlsTarget` (shared), `CardToggle`, `TravelNotice`, `TravelStart`,
@@ -245,6 +275,12 @@ anywhere else on the page.
   - **Reset PIN Tutorial** (Accounts → More → Card Controls):
     `MoreTabTarget` and `CardControlsTarget` (shared), `ResetPin`,
     `NewPin`, `ResetPinConfirm`.
+  - **Account Controls Tutorial** (Accounts → Settings → Account
+    Preferences, back by the bottom nav's Accounts): `SettingsButton`
+    (shared), `AccountPreferencesItem`, `AccountPrefsEdit`,
+    `AccountPrefsDone`, `AccountsTab`, `AccountsUpdated`. The
+    name field, row, handle and eye are tagged by
+    `AccountPreferencesListTutorial.tsx` itself.
   An export used by more than one tutorial is defined once, in the
   shared section, and listed by name in each tutorial's step list. Add
   new exports under their tutorial's section, in step order. Renaming an export or changing its id breaks
@@ -283,7 +319,11 @@ anywhere else on the page.
   props onto the ONE layer it's attached to, it can't add a sibling
   element — draw the skip button as a real layer instead (any shape + a
   native Framer Link to the same exit path), on top of the animation on
-  the canvas. Getting the user TO this page is the tutorial step's own
+  the canvas. Put the redirect on ONE layer per Congrats page: a second
+  redirect override on a layer inside the congrats component caused a
+  double redirect, so tapping the "X" reached `/tutorials` and then
+  reloaded it. As a safeguard, the timer also only redirects if the page
+  is still the one it started on. Getting the user TO this page is the tutorial step's own
   job, not this override's — a `TutorialOverlay.tsx` step already does
   real page navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
@@ -331,6 +371,20 @@ anywhere else on the page.
   (`lockScrollWhileActive`/`releaseScrollLockWhileActive`) that only
   blocked backward motion was removed as unused — freeze was the only
   one of the two actually reached for in practice.
+
+  Freeze only reaches a VirtualScroll container when the step's
+  `Scroll container ID` is that container's id (`scrollable-content`
+  for `VirtualScrollGeneral`), not the override's name. Left blank, or
+  set to anything else, it does nothing at all (freeze is
+  VirtualScroll-only; there's no native-scroll freeze), and
+  VirtualScroll keeps moving the content. This is also the fix for a
+  page where nothing should scroll but the content still shifts a few
+  pixels: a `VirtualScrollGeneral` carried over on a component or a
+  duplicated page. Either remove the override there, or freeze the
+  step with `scrollable-content` (needed when the override sits on a
+  shared component). The freeze control shows on every step, single-step
+  pages included; `Scroll container ID` shows once the freeze is on (or
+  on a scroll step). Neither needs a `Page group` any more.
 
   `scrollToTop()` animates position back to 0 — used by
   `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the
@@ -523,6 +577,20 @@ inside the tutorial flow, not a full copy of the folder. See
   tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
   directly. See `card-controls-tutorial/NOTES.md`.
 
+## `account-controls-tutorial/`
+
+Tutorial-only pieces for the Account Controls tutorial (rename
+"Vertical Checking" to "Main Checking", drag it to the top, hide
+"Platinum Rewards Checking"). See `account-controls-tutorial/NOTES.md`
+for the Framer setup and the step list.
+
+- `AccountPreferencesListTutorial.tsx`: duplicate of
+  `account-controls/AccountPreferencesList.tsx`. It saves to the
+  tutorial store, types the new name itself, allows only the taught
+  actions in order, and fires an event for each step.
+- `AccountControlsTutorialReset.tsx`: clears the tutorial store when
+  the tutorial's first page opens.
+
 ## `reset-pin-tutorial/` (reserved, not created yet)
 
 The home for tutorial-only duplicates of `reset-pin/` components, if
@@ -541,4 +609,5 @@ will show up here the same way, as tutorial work needs them.
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
 card-controls-tutorial/<feature>
+account-controls-tutorial/<feature>
 ```

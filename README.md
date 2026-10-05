@@ -28,6 +28,12 @@ reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
   ResetPinToast.tsx        Toast on Card Controls, with countdown bar + ×
   NOTES.md
 
+account-controls/       Account-level preferences (settings)
+  AccountPreferencesList.tsx     Drag-to-reorder list, eye to hide
+  AccountPreferencesEditMode.tsx Edit/Done, header variants, Saving overlay
+  AccountOrder.tsx               Saved order + Accounts page overrides
+  NOTES.md
+
 money-management/       Budgeting UI
   CircleOverrides.tsx      Draggable "Budget Circles" spending categories
   NOTES.md
@@ -47,6 +53,9 @@ tutorials/               The tutorial system
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
+  account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
+    AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
+    AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
   NOTES.md
 
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing
