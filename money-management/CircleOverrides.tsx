@@ -623,6 +623,16 @@ function useDraggableCircle(
         (event: React.PointerEvent) => {
             const c = circles.get(id)
             if (!c) return
+            // No grabbing until this circle's own entrance has finished:
+            // a drag during it fought the entrance arc (the circle jumped
+            // back onto the arc on release). Same clock as tick() uses.
+            if (
+                entranceStartTime === null ||
+                performance.now() - entranceStartTime <
+                    c.staggerDelay + ENTRANCE_DURATION
+            ) {
+                return
+            }
             if (removeListenersRef.current) {
                 removeListenersRef.current()
                 removeListenersRef.current = null
@@ -1018,8 +1028,13 @@ export function withBudgetsSuccessToast(
                 setOpacity(0)
                 // Mount at opacity 0 first, then flip to 1 on the next
                 // frame so the fade-in actually transitions instead of
-                // popping straight to visible.
-                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+                // popping straight to visible. Two frames, not one: this
+                // runs from a window event, so React can batch the mount,
+                // the 0 and a single-frame 1 into one commit and skip the
+                // fade entirely.
+                fadeInFrame = requestAnimationFrame(() => {
+                    fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+                })
                 hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
             }
 
