@@ -368,6 +368,17 @@ anywhere else on the page.
   blocked backward motion was removed as unused — freeze was the only
   one of the two actually reached for in practice.
 
+  Freeze only reaches a VirtualScroll container when the step's
+  `Scroll container ID` is that container's id (`scrollable-content`
+  for `VirtualScrollGeneral`), not the override's name. Left blank, or
+  set to anything else, it freezes only the page's native scroll, and
+  VirtualScroll keeps moving the content. This is also the fix for a
+  page where nothing should scroll but the content still shifts a few
+  pixels: a `VirtualScrollGeneral` carried over on a component or a
+  duplicated page. Either remove the override there, or give the page
+  a `pageGroup` and freeze the step with `scrollable-content` (needed
+  when the override sits on a shared component).
+
   `scrollToTop()` animates position back to 0 — used by
   `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the
   tutorial page is scrolled to top before navigating away, same as the
