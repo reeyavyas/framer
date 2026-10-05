@@ -141,7 +141,7 @@ function storeForThisPage(): AccountStoreName {
         : "base"
 }
 
-function useAccountStateUpdates() {
+export function useAccountStateUpdates() {
     const [, forceUpdate] = React.useReducer((n: number) => n + 1, 0)
     React.useEffect(() => {
         const unsubscribe = subscribeAccountState(forceUpdate)
@@ -155,8 +155,11 @@ function useAccountStateUpdates() {
 // the same stack (see header comment).
 const ORDER_OFFSET = -100
 
+// null on the canvas, so the canvas always shows the default layout.
+// Hooks still run there, unconditionally.
 function useAccountFrameStyle(accountId: string): React.CSSProperties | null {
     useAccountStateUpdates()
+    if (RenderTarget.current() === RenderTarget.canvas) return null
     const { order, hidden } = getAccountState(storeForThisPage())
     if (hidden.includes(accountId)) return { display: "none" }
     const index = order ? order.indexOf(accountId) : -1
@@ -180,9 +183,7 @@ export function withAccount7500(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function Account7500(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("7500")
-        return renderAccountFrame(Component, props, isCanvas ? null : style)
+        return renderAccountFrame(Component, props, useAccountFrameStyle("7500"))
     }
 }
 
@@ -190,9 +191,7 @@ export function withAccount8665(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function Account8665(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("8665")
-        return renderAccountFrame(Component, props, isCanvas ? null : style)
+        return renderAccountFrame(Component, props, useAccountFrameStyle("8665"))
     }
 }
 
@@ -200,9 +199,7 @@ export function withAccount5101(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function Account5101(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("5101")
-        return renderAccountFrame(Component, props, isCanvas ? null : style)
+        return renderAccountFrame(Component, props, useAccountFrameStyle("5101"))
     }
 }
 
@@ -210,9 +207,7 @@ export function withAccount5007(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function Account5007(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const style = useAccountFrameStyle("5007")
-        return renderAccountFrame(Component, props, isCanvas ? null : style)
+        return renderAccountFrame(Component, props, useAccountFrameStyle("5007"))
     }
 }
 
@@ -223,8 +218,10 @@ export function withAccount5007(
 // text layers. Must match the canvas text exactly.
 const NAME_NUMBER_SEPARATOR = " * "
 
+// undefined on the canvas, like useAccountFrameStyle.
 function useAccountName(accountId: string): string | undefined {
     useAccountStateUpdates()
+    if (RenderTarget.current() === RenderTarget.canvas) return undefined
     return getAccountState(storeForThisPage()).names[accountId]
 }
 
@@ -247,14 +244,7 @@ export function withAccountName7500(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function AccountName7500(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const name = useAccountName("7500")
-        return renderAccountName(
-            Component,
-            props,
-            "7500",
-            isCanvas ? undefined : name
-        )
+        return renderAccountName(Component, props, "7500", useAccountName("7500"))
     }
 }
 
@@ -262,14 +252,7 @@ export function withAccountName8665(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function AccountName8665(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const name = useAccountName("8665")
-        return renderAccountName(
-            Component,
-            props,
-            "8665",
-            isCanvas ? undefined : name
-        )
+        return renderAccountName(Component, props, "8665", useAccountName("8665"))
     }
 }
 
@@ -277,14 +260,7 @@ export function withAccountName5101(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function AccountName5101(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const name = useAccountName("5101")
-        return renderAccountName(
-            Component,
-            props,
-            "5101",
-            isCanvas ? undefined : name
-        )
+        return renderAccountName(Component, props, "5101", useAccountName("5101"))
     }
 }
 
@@ -292,13 +268,6 @@ export function withAccountName5007(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return function AccountName5007(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        const name = useAccountName("5007")
-        return renderAccountName(
-            Component,
-            props,
-            "5007",
-            isCanvas ? undefined : name
-        )
+        return renderAccountName(Component, props, "5007", useAccountName("5007"))
     }
 }

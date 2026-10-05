@@ -4,7 +4,7 @@ import { Reorder, useDragControls } from "framer-motion"
 import {
     getAccountState,
     saveAccountState,
-    subscribeAccountState,
+    useAccountStateUpdates,
 } from "./AccountOrder.tsx"
 import {
     isEditing,
@@ -281,17 +281,16 @@ function AccountRow({
                             // dragging when a touch starts on the handle.
                             touchAction: "none",
                             cursor: "grab",
-                            // Invisible tap area around the icon; the
-                            // negative margin keeps the icon and the row
-                            // layout where they were. Keep the width under
-                            // `Icon gap` so it doesn't cover the field. The
-                            // height extends into the row's own padding and
-                            // stops there, so at most it fills the row top
-                            // to bottom and never takes taps from the rows
-                            // above or below.
-                            // Stretch to the row's full content height (the
-                            // label and field are taller than the icon),
-                            // with the icon still centered.
+                            // Invisible tap area: the row's full content
+                            // height (the label and field are taller than
+                            // the icon, which stays centered), plus padding
+                            // whose negative margin keeps the icon and the
+                            // row layout where they were. Keep the width
+                            // under `Icon gap` so it doesn't cover the
+                            // field. The height extends into the row's own
+                            // padding and stops there, so at most it fills
+                            // the row top to bottom and never takes taps
+                            // from the rows above or below.
                             alignSelf: "stretch",
                             alignItems: "center",
                             padding: `${hitY}px ${p.handleHitPaddingX}px`,
@@ -322,13 +321,7 @@ export default function AccountPreferencesList(props: Props) {
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
     useEditModeUpdates(!isCanvas)
-    const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
-    React.useEffect(() => {
-        if (isCanvas) return
-        const unsubscribe = subscribeAccountState(forceUpdate)
-        forceUpdate()
-        return unsubscribe
-    }, [isCanvas])
+    useAccountStateUpdates()
 
     // The page always opens in view mode (see AccountPreferencesEditMode.tsx).
     React.useEffect(() => {

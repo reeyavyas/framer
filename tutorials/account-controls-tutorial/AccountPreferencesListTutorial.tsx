@@ -4,7 +4,7 @@ import { motion, Reorder, useDragControls } from "framer-motion"
 import {
     getAccountState,
     saveAccountState,
-    subscribeAccountState,
+    useAccountStateUpdates,
 } from "../../Account_Controls/AccountOrder.tsx"
 import {
     cancelSaveOverlay,
@@ -399,17 +399,16 @@ function AccountRow({
                             // dragging when a touch starts on the handle.
                             touchAction: isRenameRow ? "none" : undefined,
                             cursor: canDrag ? "grab" : "default",
-                            // Invisible tap area around the icon; the
-                            // negative margin keeps the icon and the row
-                            // layout where they were. Keep the width under
-                            // `Icon gap` so it doesn't cover the field. The
-                            // height extends into the row's own padding and
-                            // stops there, so at most it fills the row top
-                            // to bottom and never takes taps from the rows
-                            // above or below.
-                            // Stretch to the row's full content height (the
-                            // label and field are taller than the icon),
-                            // with the icon still centered.
+                            // Invisible tap area: the row's full content
+                            // height (the label and field are taller than
+                            // the icon, which stays centered), plus padding
+                            // whose negative margin keeps the icon and the
+                            // row layout where they were. Keep the width
+                            // under `Icon gap` so it doesn't cover the
+                            // field. The height extends into the row's own
+                            // padding and stops there, so at most it fills
+                            // the row top to bottom and never takes taps
+                            // from the rows above or below.
                             alignSelf: "stretch",
                             alignItems: "center",
                             padding: `${hitY}px ${p.handleHitPaddingX}px`,
@@ -440,13 +439,7 @@ export default function AccountPreferencesListTutorial(props: Props) {
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
     useEditModeUpdates(!isCanvas)
-    const [, forceUpdate] = React.useReducer((n: number) => n + 1, 0)
-    React.useEffect(() => {
-        if (isCanvas) return
-        const unsubscribe = subscribeAccountState(forceUpdate)
-        forceUpdate()
-        return unsubscribe
-    }, [isCanvas])
+    useAccountStateUpdates()
 
     // The step event waiting for the overlay to finish; fired once
     // Saved has faded out. Subscribed before the reset below, so on
@@ -580,11 +573,6 @@ export default function AccountPreferencesListTutorial(props: Props) {
         saveAccountState(STORE, state.order, [...state.hidden, p.hideAccountId])
     }
 
-    function hideAccount() {
-        applyHide()
-        saveThenSignal(HIDDEN_EVENT)
-    }
-
     function handleFieldTap() {
         if (stage !== "rename" || isSaving()) return
         startRename()
@@ -592,7 +580,8 @@ export default function AccountPreferencesListTutorial(props: Props) {
 
     function handleEyeTap(id: string) {
         if (id !== p.hideAccountId || stage !== "hide" || isSaving()) return
-        hideAccount()
+        applyHide()
+        saveThenSignal(HIDDEN_EVENT)
     }
 
     function handleReorder(next: string[]) {
@@ -613,11 +602,15 @@ export default function AccountPreferencesListTutorial(props: Props) {
     // TutorialOverlay's Skip: do the step's action for the user and move
     // on at once. Any typing stops, and a save overlay that's showing is
     // dropped rather than waited out, so Skip never waits on either. The
-    // pending event is cleared so it can't fire a second time.
+    // pending event is cleared so it can't fire a second time. A drag in
+    // progress is dropped too, so its drag end can't save the old drag
+    // order over Skip's result.
     function handleSkip(eventName: string) {
         typingTimersRef.current.forEach((t) => clearTimeout(t))
         typingTimersRef.current = []
         setTypingText(null)
+        dragOrderRef.current = null
+        setDragOrder(null)
         const state = current()
         if (eventName === RENAMED_EVENT) {
             if (state.names[p.renameAccountId] === undefined) applyRename()
