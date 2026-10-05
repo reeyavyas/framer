@@ -1,14 +1,25 @@
 import * as React from "react"
-import { addPropertyControls, ControlType, RenderTarget } from "framer"
+import {
+    addPropertyControls,
+    ControlType,
+    RenderTarget,
+    type PropertyControls,
+} from "framer"
 import { motion, Reorder, useDragControls } from "framer-motion"
 import {
     getAccountState,
+    normalizeOrder,
+    sameOrder,
     saveAccountState,
     useAccountStateUpdates,
 } from "../../Account_Controls/AccountOrder.tsx"
 import {
+    ACCOUNT_LIST_CONTROLS,
+    ACCOUNT_LIST_DEFAULTS,
     cancelSaveOverlay,
+    EyeIcon,
     getSavePhase,
+    HandleIcon,
     isEditing,
     isSaving,
     resetEditMode,
@@ -148,76 +159,6 @@ type Props = {
     labelGap: number
 
     style?: React.CSSProperties
-}
-
-// The saved order, minus ids no longer in the list, plus new ids at the
-// end — so editing the Accounts control never loses a row.
-function normalizeOrder(saved: string[] | null, ids: string[]): string[] {
-    if (!saved) return ids
-    const kept = saved.filter((id) => ids.includes(id))
-    return [...kept, ...ids.filter((id) => !kept.includes(id))]
-}
-
-function sameOrder(a: string[], b: string[]): boolean {
-    return a.length === b.length && a.every((id, i) => id === b[i])
-}
-
-function EyeIcon({
-    size,
-    color,
-    off,
-    image,
-}: {
-    size: number
-    color: string
-    off: boolean
-    image?: { src: string; srcSet?: string; alt?: string }
-}) {
-    // A custom icon from the "Eye icon" / "Eye off icon" controls, if set.
-    // It's drawn as-is at Eye size, so "Icons" color doesn't apply to it.
-    if (image?.src) {
-        return (
-            <img
-                src={image.src}
-                srcSet={image.srcSet}
-                alt={image.alt ?? ""}
-                draggable={false}
-                style={{ width: size, height: size, objectFit: "contain", display: "block" }}
-            />
-        )
-    }
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-                d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"
-                stroke={color}
-                strokeWidth={1.8}
-                strokeLinejoin="round"
-            />
-            <circle cx={12} cy={12} r={3.4} fill={color} />
-            {off && (
-                <line
-                    x1={3}
-                    y1={3}
-                    x2={21}
-                    y2={21}
-                    stroke={color}
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                />
-            )}
-        </svg>
-    )
-}
-
-function HandleIcon({ size, color }: { size: number; color: string }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-            <rect x={3} y={6} width={18} height={2} rx={1} fill={color} />
-            <rect x={3} y={11} width={18} height={2} rx={1} fill={color} />
-            <rect x={3} y={16} width={18} height={2} rx={1} fill={color} />
-        </svg>
-    )
 }
 
 // A blinking text cursor, the height of the field's text.
@@ -399,16 +340,17 @@ function AccountRow({
                             // dragging when a touch starts on the handle.
                             touchAction: isRenameRow ? "none" : undefined,
                             cursor: canDrag ? "grab" : "default",
-                            // Invisible tap area: the row's full content
-                            // height (the label and field are taller than
-                            // the icon, which stays centered), plus padding
-                            // whose negative margin keeps the icon and the
-                            // row layout where they were. Keep the width
-                            // under `Icon gap` so it doesn't cover the
-                            // field. The height extends into the row's own
-                            // padding and stops there, so at most it fills
-                            // the row top to bottom and never takes taps
-                            // from the rows above or below.
+                            // Invisible tap area around the icon; the
+                            // negative margin keeps the icon and the row
+                            // layout where they were. Keep the width under
+                            // `Icon gap` so it doesn't cover the field. The
+                            // height extends into the row's own padding and
+                            // stops there, so at most it fills the row top
+                            // to bottom and never takes taps from the rows
+                            // above or below.
+                            // Stretch to the row's full content height (the
+                            // label and field are taller than the icon),
+                            // with the icon still centered.
                             alignSelf: "stretch",
                             alignItems: "center",
                             padding: `${hitY}px ${p.handleHitPaddingX}px`,
@@ -690,166 +632,66 @@ export default function AccountPreferencesListTutorial(props: Props) {
     )
 }
 
+// The base list's defaults, plus the tutorial's own.
 const defaultProps: Omit<Props, "style"> = {
-    accounts: [
-        { accountId: "7500", name: "Platinum Rewards Checking" },
-        { accountId: "8665", name: "Vertical Checking" },
-        { accountId: "5101", name: "Regular Shares" },
-        { accountId: "5007", name: "Freddie Mac" },
-    ],
-    canvasPreview: "view",
-    numberPrefix: "#",
+    ...ACCOUNT_LIST_DEFAULTS,
     renameAccountId: "8665",
     onlyDragUp: true,
     newName: "Main Checking",
     hideAccountId: "7500",
     eraseMs: 50,
     typeMs: 110,
-
-    viewBackground: "#FFFFFF",
-    editBackground: "#F4F5F7",
-    dividerColor: "#DCDEE2",
-    dividerWidth: 2,
-    textColor: "#333333",
-    labelColor: "#444444",
-    fieldBorderColor: "#7A7A7A",
     fieldFocusBorderColor: "#7A7A7A",
-    fieldBackground: "rgba(255,255,255,0)",
-    iconColor: "#6B6B6B",
-    hiddenOpacity: 0.5,
-
-    nameFont: { fontSize: 30 },
-    labelFont: { fontSize: 20 },
-    fieldFont: { fontSize: 28 },
-
-    paddingX: 40,
-    viewPaddingY: 28,
-    editPaddingY: 20,
-    gap: 24,
-    iconSize: 44,
-    handleSize: 40,
-    handleHitPaddingX: 16,
-    handleHitPaddingY: 20,
     eyeHitPaddingX: 16,
     eyeHitPaddingY: 20,
-    fieldHeight: 64,
-    fieldRadius: 2,
-    fieldPaddingX: 16,
-    labelGap: 8,
 }
 
 AccountPreferencesListTutorial.defaultProps = defaultProps
 
-addPropertyControls(AccountPreferencesListTutorial, {
-    accounts: {
-        type: ControlType.Array,
-        title: "Accounts",
-        control: {
-            type: ControlType.Object,
-            controls: {
-                accountId: { type: ControlType.String, title: "Last 4 (id)" },
-                name: { type: ControlType.String, title: "Name" },
-            },
-        },
-        defaultValue: defaultProps.accounts,
-    },
-    canvasPreview: {
-        type: ControlType.Enum,
-        title: "Canvas preview",
-        options: ["view", "edit"],
-        optionTitles: ["View", "Edit"],
-        defaultValue: "view",
-        displaySegmentedControl: true,
-    },
+// The tutorial's own controls, keyed by the base control they follow in
+// the Properties panel.
+const TUTORIAL_CONTROLS_AFTER: Record<string, PropertyControls> = {
     numberPrefix: {
-        type: ControlType.String,
-        title: "Number prefix",
-        defaultValue: "#",
+        renameAccountId: {
+            type: ControlType.String,
+            title: "Rename account",
+            description: "Id of the account renamed, then dragged to the top.",
+            defaultValue: defaultProps.renameAccountId,
+        },
+        onlyDragUp: {
+            type: ControlType.Boolean,
+            title: "Only drag up",
+            description: "The account can't be dragged down, even back to a spot it just left.",
+            defaultValue: defaultProps.onlyDragUp,
+            enabledTitle: "On",
+            disabledTitle: "Off",
+        },
+        newName: {
+            type: ControlType.String,
+            title: "New name",
+            defaultValue: defaultProps.newName,
+        },
+        hideAccountId: {
+            type: ControlType.String,
+            title: "Hide account",
+            description: "Id of the account hidden with the eye.",
+            defaultValue: defaultProps.hideAccountId,
+        },
+        eraseMs: { type: ControlType.Number, title: "Erase speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.eraseMs },
+        typeMs: { type: ControlType.Number, title: "Type speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.typeMs },
     },
-    renameAccountId: {
-        type: ControlType.String,
-        title: "Rename account",
-        description: "Id of the account renamed, then dragged to the top.",
-        defaultValue: defaultProps.renameAccountId,
+    fieldBorderColor: {
+        fieldFocusBorderColor: { type: ControlType.Color, title: "Field typing border", defaultValue: defaultProps.fieldFocusBorderColor },
     },
-    onlyDragUp: {
-        type: ControlType.Boolean,
-        title: "Only drag up",
-        description: "The account can't be dragged down, even back to a spot it just left.",
-        defaultValue: defaultProps.onlyDragUp,
-        enabledTitle: "On",
-        disabledTitle: "Off",
+    handleHitPaddingY: {
+        eyeHitPaddingX: { type: ControlType.Number, title: "Eye tap width", min: 0, max: 40, defaultValue: defaultProps.eyeHitPaddingX },
+        eyeHitPaddingY: { type: ControlType.Number, title: "Eye tap height", min: 0, max: 80, defaultValue: defaultProps.eyeHitPaddingY },
     },
-    newName: {
-        type: ControlType.String,
-        title: "New name",
-        defaultValue: defaultProps.newName,
-    },
-    hideAccountId: {
-        type: ControlType.String,
-        title: "Hide account",
-        description: "Id of the account hidden with the eye.",
-        defaultValue: defaultProps.hideAccountId,
-    },
-    eraseMs: { type: ControlType.Number, title: "Erase speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.eraseMs },
-    typeMs: { type: ControlType.Number, title: "Type speed", unit: "ms", min: 10, max: 500, defaultValue: defaultProps.typeMs },
+}
 
-    viewBackground: { type: ControlType.Color, title: "View row fill", defaultValue: defaultProps.viewBackground },
-    editBackground: { type: ControlType.Color, title: "Edit row fill", defaultValue: defaultProps.editBackground },
-    dividerColor: { type: ControlType.Color, title: "Divider", defaultValue: defaultProps.dividerColor },
-    dividerWidth: { type: ControlType.Number, title: "Divider width", min: 0, max: 8, defaultValue: defaultProps.dividerWidth },
-    textColor: { type: ControlType.Color, title: "Text", defaultValue: defaultProps.textColor },
-    labelColor: { type: ControlType.Color, title: "Label", defaultValue: defaultProps.labelColor },
-    fieldBorderColor: { type: ControlType.Color, title: "Field border", defaultValue: defaultProps.fieldBorderColor },
-    fieldFocusBorderColor: { type: ControlType.Color, title: "Field typing border", defaultValue: defaultProps.fieldFocusBorderColor },
-    fieldBackground: { type: ControlType.Color, title: "Field fill", defaultValue: defaultProps.fieldBackground },
-    iconColor: { type: ControlType.Color, title: "Icons", defaultValue: defaultProps.iconColor },
-    eyeImage: {
-        type: ControlType.ResponsiveImage,
-        title: "Eye icon",
-        description: "Shown account. Blank = built-in eye.",
-    },
-    eyeOffImage: {
-        type: ControlType.ResponsiveImage,
-        title: "Eye off icon",
-        description: "Hidden account. Blank = built-in crossed eye.",
-    },
-    hiddenOpacity: { type: ControlType.Number, title: "Hidden opacity", min: 0, max: 1, step: 0.05, defaultValue: defaultProps.hiddenOpacity },
-
-    nameFont: {
-        type: ControlType.Font,
-        title: "Name font (view)",
-        controls: "extended",
-        defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 30 },
-    },
-    labelFont: {
-        type: ControlType.Font,
-        title: "Label font (edit)",
-        controls: "extended",
-        defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 20 },
-    },
-    fieldFont: {
-        type: ControlType.Font,
-        title: "Field font (edit)",
-        controls: "extended",
-        defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 28 },
-    },
-
-    paddingX: { type: ControlType.Number, title: "Side padding", min: 0, max: 120, defaultValue: defaultProps.paddingX },
-    viewPaddingY: { type: ControlType.Number, title: "View row padding", min: 0, max: 80, defaultValue: defaultProps.viewPaddingY },
-    editPaddingY: { type: ControlType.Number, title: "Edit row padding", min: 0, max: 80, defaultValue: defaultProps.editPaddingY },
-    gap: { type: ControlType.Number, title: "Icon gap", min: 0, max: 80, defaultValue: defaultProps.gap },
-    iconSize: { type: ControlType.Number, title: "Eye size", min: 12, max: 100, defaultValue: defaultProps.iconSize },
-    handleSize: { type: ControlType.Number, title: "Handle size", min: 12, max: 100, defaultValue: defaultProps.handleSize },
-    handleHitPaddingX: { type: ControlType.Number, title: "Handle tap width", min: 0, max: 40, defaultValue: defaultProps.handleHitPaddingX },
-    handleHitPaddingY: { type: ControlType.Number, title: "Handle tap height", min: 0, max: 80, defaultValue: defaultProps.handleHitPaddingY },
-    eyeHitPaddingX: { type: ControlType.Number, title: "Eye tap width", min: 0, max: 40, defaultValue: defaultProps.eyeHitPaddingX },
-    eyeHitPaddingY: { type: ControlType.Number, title: "Eye tap height", min: 0, max: 80, defaultValue: defaultProps.eyeHitPaddingY },
-    fieldHeight: { type: ControlType.Number, title: "Field height", min: 20, max: 160, defaultValue: defaultProps.fieldHeight },
-    fieldRadius: { type: ControlType.Number, title: "Field radius", min: 0, max: 40, defaultValue: defaultProps.fieldRadius },
-    fieldPaddingX: { type: ControlType.Number, title: "Field padding", min: 0, max: 60, defaultValue: defaultProps.fieldPaddingX },
-    labelGap: { type: ControlType.Number, title: "Label gap", min: 0, max: 40, defaultValue: defaultProps.labelGap },
-})
+const controls: PropertyControls = {}
+for (const key of Object.keys(ACCOUNT_LIST_CONTROLS)) {
+    controls[key] = ACCOUNT_LIST_CONTROLS[key]
+    Object.assign(controls, TUTORIAL_CONTROLS_AFTER[key])
+}
+addPropertyControls(AccountPreferencesListTutorial, controls)

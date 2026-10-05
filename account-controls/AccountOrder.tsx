@@ -131,6 +131,19 @@ export function subscribeAccountState(onChange: () => void): () => void {
     }
 }
 
+// Shared by AccountPreferencesList and its tutorial copy.
+// The saved order, minus ids no longer in the list, plus new ids at the
+// end — so editing the Accounts control never loses a row.
+export function normalizeOrder(saved: string[] | null, ids: string[]): string[] {
+    if (!saved) return ids
+    const kept = saved.filter((id) => ids.includes(id))
+    return [...kept, ...ids.filter((id) => !kept.includes(id))]
+}
+
+export function sameOrder(a: string[], b: string[]): boolean {
+    return a.length === b.length && a.every((id, i) => id === b[i])
+}
+
 // Pages under this path read and show the "tutorial" store.
 const TUTORIAL_PATH_PREFIX = "/account-controls-tutorial/"
 

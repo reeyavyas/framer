@@ -47,7 +47,9 @@ goes back through Settings.
   a save overlay that's showing (`cancelSaveOverlay` in
   `AccountPreferencesEditMode.tsx`) and advances straight away. A Next
   button on those steps does the same as Skip.
-  The property controls are the base list's, plus `Rename account`
+  The property controls are the base list's (imported, with the
+  defaults, the order helpers and the eye/handle icons, from
+  `AccountOrder.tsx` and `AccountPreferencesEditMode.tsx`), plus `Rename account`
   (8665), `Only drag up` (on), `New name` (Main Checking), `Hide account` (7500),
   `Erase speed`, `Type speed` and `Field typing border`.
 - `AccountControlsTutorialReset.tsx`: `withAccountControlsTutorialReset`
@@ -76,7 +78,8 @@ imports: moving `AccountPreferencesList.tsx` into Account Controls
 left it importing `"./Account_Controls/AccountOrder.tsx"`, which had
 to go back to `"./AccountOrder.tsx"`.
 
-When a base file gains a new export (e.g. `cancelSaveOverlay`), the
+When a base file gains a new export (e.g. `cancelSaveOverlay`, or
+`normalizeOrder`, `EyeIcon` and `ACCOUNT_LIST_CONTROLS`), the
 preview can keep running the old build and fail with "does not provide
 an export named …", even after the new code is pasted. Save the base
 file, re-save the file that imports it (type and delete a space), and
