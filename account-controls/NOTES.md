@@ -4,7 +4,7 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (2026-10-06)
+## Status: pick up here (2026-10-05)
 
 ### Where to pick up
 **The Account Controls tutorial is finished in Framer** (2026-10-05).
