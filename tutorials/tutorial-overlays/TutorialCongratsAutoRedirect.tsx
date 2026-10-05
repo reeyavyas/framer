@@ -32,12 +32,12 @@ const EXIT_LINK = "/tutorials"
  * Draw that as a real layer instead: any shape + a native Framer Link
  * pointed at EXIT_LINK, placed on top of the animation on the canvas.
  *
- * The timer only redirects if the page is still the one it started on.
- * That "X" Link navigates client-side, and the effect's clearTimeout
- * cleanup didn't reliably run when it did, so the timer outlived the
- * Congrats page and fired anyway: tapping "X" reached /tutorials, then
- * the page reloaded a few seconds later. Checking the path at fire time
- * makes that harmless whether or not the cleanup runs.
+ * Use it on ONE layer per Congrats page. A second redirect override on a
+ * layer inside the congrats component caused a double redirect: tapping
+ * "X" reached /tutorials, then the page reloaded again. As a safeguard,
+ * the timer also only redirects if the page is still the one it started
+ * on, so a timer that outlives the Congrats page (e.g. after the "X"
+ * Link navigates client-side) can't reload wherever the user is now.
  */
 export function TutorialCongratsAutoRedirect(): Override {
     useEffect(() => {
