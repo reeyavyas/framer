@@ -37,12 +37,6 @@ with the detail on what's in it; this file is just the map.
 
 ## Open items across groups
 
-- **Re-check every tutorial's tap steps after PR #9 merges.** It
-  changed `tutorials/tutorial-overlays/TutorialOverlay.tsx` so `Click
-  advances step` hands off on the click instead of finger-down (a
-  finger sliding off the target no longer advances). Login, Card
-  Controls, Reset PIN and Log Off all use it. See
-  `account-controls/NOTES.md`, "Next steps".
 
 - **Test that a new session starts fresh after the tutorials page
   gets a free exploration button.** Account Preferences

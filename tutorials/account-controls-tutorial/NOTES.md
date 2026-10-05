@@ -203,8 +203,8 @@ native text layer. On `accounts-2` the TutorialOverlay card can sit
 over the accounts it's pointing at; move it with the card's anchor and
 offset controls if it hides the renamed row.
 
-Still to check in Framer:
-- the Saving overlay's stacking against the tutorial card.
+Also confirmed (2026-10-05): the Saving overlay doesn't cover the
+tutorial card on the rename, drag and hide steps.
 
 When `accounts-2` shows the default list, check in this order: the
 reset override clearing on arrival (it now only clears on

@@ -13,27 +13,14 @@ Nothing on Account Preferences or its tutorial is left to build.
 ### Next steps, in order
 1. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
    Use **Create a merge commit**. Its description is up to date.
-2. **Re-check the other tutorials' tap steps** in a browser tab:
-   Login (fingerprint), Card Controls (card toggle, Travel Notice,
-   Card Alerts toggles and Save), Reset PIN and Log Off. This PR
-   changed `TutorialOverlay.tsx` for every tutorial: `Click advances
-   step` now hands off on the click instead of finger-down. A plain tap
-   should behave as before; a finger that slides off the target no
-   longer advances. Watch the fingerprint step (it uses `Click advance
-   delay`) and any step whose tap opens an overlay.
-3. **Confirm the Saving overlay doesn't cover the tutorial card** on
-   the rename, drag and hide steps of the Account Controls tutorial.
-   It's the one item in `tutorials/account-controls-tutorial/NOTES.md`
-   still marked unchecked. If it does, move the overlay instance below
-   the TutorialOverlay instances in the layer order.
-4. **Then "Later" below:** the free exploration reset test, once the
+2. **Then "Later" below:** the free exploration reset test, once the
    tutorials page has that button.
 
 New Account Controls work after the merge goes on a fresh
 `account-controls/<feature>` branch from `main`, not on
 `account-controls/account-preferences`.
 
-The tutorial's flow:
+### The tutorial's flow
 - `accounts-1` → Settings → Account Preferences: Edit, rename, drag
   Main Checking to the top, hide Platinum, Done, then Accounts in the
   bottom nav.
@@ -97,6 +84,10 @@ The tutorial's flow:
   the `TutorialOverlay` additions (advance on event, Skip doing the
   action, drag passthrough) and the targets.
 - **Account Controls tutorial finished in Framer** (2026-10-05).
+- **Confirmed 2026-10-05:** the other tutorials' tap steps still work
+  with `Click advances step` handing off on the click (Login, Card
+  Controls, Reset PIN, Log Off), and the Saving overlay doesn't cover
+  the tutorial card on the rename, drag and hide steps.
 - **Tutorial runs in Framer from `accounts-1` to `accounts-2`** with
   steps 1–7 on Account Preferences built, and `accounts-2` shows the
   new order, the hidden account and the new name (2026-10-02).
