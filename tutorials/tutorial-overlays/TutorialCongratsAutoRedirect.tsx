@@ -42,7 +42,6 @@ const EXIT_LINK = "/tutorials"
 export function TutorialCongratsAutoRedirect(): Override {
     useEffect(() => {
         if (RenderTarget.current() === RenderTarget.canvas) return
-        if (!AUTO_REDIRECT_SECONDS || !EXIT_LINK) return
         const startPath = window.location.pathname
         const t = setTimeout(() => {
             // Left already (e.g. by the "X"): don't reload wherever the
