@@ -397,15 +397,8 @@ export default function TravelNoticeSection(props: Props) {
         detailPaddingX,
         detailPaddingY,
         style,
+        ...rest
     } = props
-    // No `...rest` spread onto the root div: nothing applies a
-    // TutorialTargets.tsx Code Override to this component (the tutorial
-    // spotlights it with a separate marker layer, `TravelNoticeShown`).
-    // If one ever is, spread the rest of props onto the root div —
-    // this is a custom code component, not a native Frame/Stack/Text
-    // layer, so unlike those, nothing forwards unrecognized props (like
-    // data-tutorial-target) to the DOM automatically, and
-    // TutorialOverlay's querySelector would never find it.
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
 
@@ -459,6 +452,14 @@ export default function TravelNoticeSection(props: Props) {
 
     return (
         <div
+            // Forwards whatever a TutorialTargets.tsx Code Override
+            // injects (data-tutorial-target) onto the actual DOM node.
+            // Without this, TutorialOverlay's querySelector for that
+            // attribute never finds anything: this is a custom code
+            // component, not a native Frame/Stack/Text layer, so unlike
+            // those, nothing forwards unrecognized props to the DOM
+            // automatically — this component has to do it itself.
+            {...rest}
             style={{
                 ...style,
                 width: "100%",
