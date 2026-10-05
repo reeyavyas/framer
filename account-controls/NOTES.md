@@ -9,14 +9,14 @@ accounts from the Accounts page.
 ### Where to pick up
 **The Account Controls tutorial is finished in Framer** (2026-10-05).
 Nothing on Account Preferences or its tutorial is left to build, and
-the Congrats page's double redirect is fixed. The only step left on
-this branch is the merge.
+the Congrats page's double redirect is fixed. The work is merged into
+`main` through https://github.com/reeyavyas/framer/pull/9 (merge
+commit, 2026-10-05).
 
-### Next steps, in order
-1. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
-   Use **Create a merge commit**. Its description is up to date.
-2. **Then "Later" below:** the free exploration reset test, once the
-   tutorials page has that button.
+### Next steps
+- **The free exploration reset test** (see "Later" below). It waits on
+  the tutorials page getting its free exploration button, which will
+  take a while. It's also listed in the root `NOTES.md`.
 
 New Account Controls work after the merge goes on a fresh
 `account-controls/<feature>` branch from `main`, not on
