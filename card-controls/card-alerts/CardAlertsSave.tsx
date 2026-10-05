@@ -37,7 +37,7 @@ import {
  *    (what an earlier version of this file did) doesn't get recognized
  *    and silently disappears from the dropdown. Tapping either while
  *    enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit the
- *    constant directly — same convention as TravelNoticeToast.tsx's
+ *    constant directly — same convention as CardControlsToasts.tsx's
  *    VISIBLE_MS/FADE_MS), sets the one-shot toast flag, then navigates
  *    to its own destination. Tapping withCardAlertsSave while disabled,
  *    or either one a second time, does nothing.
@@ -58,7 +58,7 @@ import {
  *    for that part). One shared override is enough since the overlay's
  *    own behavior never depends on which page it's showing on top of.
  *    It lives on the SAME page as its Save button, so unlike
- *    TravelNoticeToast.tsx's cross-page toast, it needs no
+ *    CardControlsToasts.tsx's cross-page toasts, it needs no
  *    sessionStorage handoff or fade-out timer: the moment SAVE_DELAY_MS
  *    elapses the page navigates away and takes the overlay with it.
  *

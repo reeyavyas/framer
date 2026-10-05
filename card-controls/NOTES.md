@@ -12,9 +12,8 @@ Card-level account actions a user manages from settings.
     initializer) so the client's first render always matches the
     server-rendered HTML — otherwise React throws a hydration mismatch
     (#418/#422), since `sessionStorage` doesn't exist during SSR.
-  - `TravelNoticeToast.tsx` — confirmation toast on save. Subscribes to
-    the toast-phase listener *before* arming it from storage, so the
-    synchronous "visible" notification arming can fire isn't missed.
+  - Its confirmation toast on save is in `CardControlsToasts.tsx` (see
+    below).
   - Pulled from `claude/lucid-ride-48wl0l`, the branch both fixes above
     actually shipped on — not `travel-notice`, which predates them.
 
@@ -81,12 +80,30 @@ Card-level account actions a user manages from settings.
     `scrollCardAlertsToTop()` the instant the Saving overlay appears, so
     the page is back at the top by the time
     `SAVE_DELAY_MS` elapses and it navigates away.
-  - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
-    Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
-    separate storage key.
+  - Its confirmation toast on Card Controls, once Save's delay
+    elapses, is in `CardControlsToasts.tsx` (see below).
   - No sessionStorage record of the actual alert selections — this is a
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
+
+- `CardControlsToasts.tsx` — both features' confirmation toasts, in
+  one file (merged from `travel-notice/TravelNoticeToast.tsx` and
+  `card-alerts/CardAlertsToast.tsx`, which are gone). Same export names
+  as before: `withTravelNoticeToast` / `withTravelNoticeToastDismiss`
+  (flag `kioskTravelNoticeToastFlag`) and `withCardAlertsToast` /
+  `withCardAlertsToastDismiss` (flag `kioskCardAlertsToastFlag`). One
+  shared phase machine, keyed per toast, so each toast keeps its own
+  phase and storage key. **Framer layers that used the old files must
+  re-point their override to this file** (same function name), and the
+  two old files removed from Framer's Code panel.
+  - Subscribes to the toast-phase listener *before* arming it from
+    storage, so the synchronous "visible" notification arming can fire
+    isn't missed.
+  - Arms once per page load per toast, not per mount like
+    `reset-pin/ResetPinToast.tsx`: both saves reach Card Controls by a
+    hard navigation, which resets module state anyway, and per-mount
+    arming would let a second mount of the same toast frame in one load
+    reset a showing toast to hidden.
 
 ## Sub-features that live elsewhere
 

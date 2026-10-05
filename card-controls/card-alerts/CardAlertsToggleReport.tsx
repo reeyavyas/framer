@@ -31,7 +31,8 @@ import { RenderTarget } from "framer"
  * `function name(Component) {...}` at the top level of the file (it
  * doesn't evaluate the file to see what a factory call resolves to).
  * The actual tap-handling logic still lives in one place —
- * handleToggleTap below — each export just supplies its own number.
+ * handleToggleTap below, wrapped by the shared toggleReporter() — each
+ * export's body is one line that just supplies its own number.
  *
  * There are 20 of these, matching this app's own category list exactly
  * (no spares) — add more the same way if a category gets added later.
@@ -85,365 +86,106 @@ function handleToggleTap(props: any, e: React.MouseEvent, n: number) {
     notifyToggleListeners()
 }
 
+// Builds the inner component for toggle number `n`. Called from inside
+// each literal top-level export below, never assigned to an export
+// directly (see header comment for why).
+function toggleReporter(
+    Component: ComponentType<any>,
+    n: number
+): ComponentType<any> {
+    return function CardAlertsToggleReport(props: any) {
+        const isCanvas = RenderTarget.current() === RenderTarget.canvas
+        if (isCanvas) return <Component {...props} />
+
+        return (
+            <Component
+                {...props}
+                onClick={(e: React.MouseEvent) =>
+                    handleToggleTap(props, e, n)
+                }
+            />
+        )
+    }
+}
+
 // Apply a different one of these to each of the app's 20 toggle layers.
 
-export function withCardAlertsToggleReport1(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport1(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 1)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport1(Component: ComponentType<any>) {
+    return toggleReporter(Component, 1)
 }
 
-export function withCardAlertsToggleReport2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport2(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 2)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport2(Component: ComponentType<any>) {
+    return toggleReporter(Component, 2)
 }
 
-export function withCardAlertsToggleReport3(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport3(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 3)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport3(Component: ComponentType<any>) {
+    return toggleReporter(Component, 3)
 }
 
-export function withCardAlertsToggleReport4(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport4(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 4)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport4(Component: ComponentType<any>) {
+    return toggleReporter(Component, 4)
 }
 
-export function withCardAlertsToggleReport5(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport5(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 5)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport5(Component: ComponentType<any>) {
+    return toggleReporter(Component, 5)
 }
 
-export function withCardAlertsToggleReport6(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport6(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 6)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport6(Component: ComponentType<any>) {
+    return toggleReporter(Component, 6)
 }
 
-export function withCardAlertsToggleReport7(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport7(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 7)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport7(Component: ComponentType<any>) {
+    return toggleReporter(Component, 7)
 }
 
-export function withCardAlertsToggleReport8(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport8(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 8)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport8(Component: ComponentType<any>) {
+    return toggleReporter(Component, 8)
 }
 
-export function withCardAlertsToggleReport9(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport9(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 9)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport9(Component: ComponentType<any>) {
+    return toggleReporter(Component, 9)
 }
 
-export function withCardAlertsToggleReport10(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport10(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 10)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport10(Component: ComponentType<any>) {
+    return toggleReporter(Component, 10)
 }
 
-export function withCardAlertsToggleReport11(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport11(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 11)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport11(Component: ComponentType<any>) {
+    return toggleReporter(Component, 11)
 }
 
-export function withCardAlertsToggleReport12(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport12(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 12)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport12(Component: ComponentType<any>) {
+    return toggleReporter(Component, 12)
 }
 
-export function withCardAlertsToggleReport13(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport13(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 13)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport13(Component: ComponentType<any>) {
+    return toggleReporter(Component, 13)
 }
 
-export function withCardAlertsToggleReport14(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport14(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 14)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport14(Component: ComponentType<any>) {
+    return toggleReporter(Component, 14)
 }
 
-export function withCardAlertsToggleReport15(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport15(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 15)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport15(Component: ComponentType<any>) {
+    return toggleReporter(Component, 15)
 }
 
-export function withCardAlertsToggleReport16(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport16(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 16)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport16(Component: ComponentType<any>) {
+    return toggleReporter(Component, 16)
 }
 
-export function withCardAlertsToggleReport17(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport17(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 17)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport17(Component: ComponentType<any>) {
+    return toggleReporter(Component, 17)
 }
 
-export function withCardAlertsToggleReport18(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport18(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 18)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport18(Component: ComponentType<any>) {
+    return toggleReporter(Component, 18)
 }
 
-export function withCardAlertsToggleReport19(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport19(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 19)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport19(Component: ComponentType<any>) {
+    return toggleReporter(Component, 19)
 }
 
-export function withCardAlertsToggleReport20(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return function CardAlertsToggleReport20(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                onClick={(e: React.MouseEvent) =>
-                    handleToggleTap(props, e, 20)
-                }
-            />
-        )
-    }
+export function withCardAlertsToggleReport20(Component: ComponentType<any>) {
+    return toggleReporter(Component, 20)
 }
-

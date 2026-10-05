@@ -42,7 +42,7 @@ Code:
 - `ResetPinToast.tsx` — on the toast layers on Card Controls:
   - `withResetPinToast` → the toast's outer frame. Shows it for 3s
     (`VISIBLE_MS`), then fades it out over `FADE_MS`. Same approach as
-    `CardAlertsToast.tsx`/`TravelNoticeToast.tsx`, with its own key.
+    `card-controls/CardControlsToasts.tsx`'s toasts, with its own key.
   - `withResetPinToastDismiss` → the toast's × button, which closes it
     early.
   - `withResetPinToastProgress` → a plain rectangle along the toast's
@@ -69,7 +69,8 @@ duplicate yet:
   Card Controls, the tutorial copy goes to its Card Controls copy.
 - Both Card Controls pages use the same three `ResetPinToast.tsx`
   overrides, reading the same flag. That works the same way
-  `TravelNoticeToast.tsx` is used undivided in its tutorial.
+  `withTravelNoticeToast` (`card-controls/CardControlsToasts.tsx`) is
+  used undivided in its tutorial.
 
 Spotlight targets, from `tutorials/tutorial-overlays/TutorialTargets.tsx`
 (its "Reset PIN Tutorial" section). The tutorial starts on the Accounts

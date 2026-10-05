@@ -5,7 +5,7 @@ import { RenderTarget } from "framer"
 /**
  * ResetPinToast
  *
- * Reset PIN's copy of CardAlertsToast.tsx / TravelNoticeToast.tsx —
+ * Reset PIN's copy of card-controls/CardControlsToasts.tsx's toasts —
  * same show/hold/fade toast, its own storage key, plus a countdown
  * progress bar. Applied to a "Your PIN has been reset for this card."
  * toast layer on Card Controls (base page, and the tutorial copy of

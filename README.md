@@ -19,11 +19,10 @@ card-controls/          Card-level account actions (settings)
   travel-notice/           "Set a travel notice on your card"
     SetTravelNotice.tsx      The form
     TravelNoticeSection.tsx  Where an active notice is displayed
-    TravelNoticeToast.tsx    Confirmation toast on save
   card-alerts/             "Set card alerts"
     CardAlertsToggleReport.tsx  Per-toggle overrides: is any alert on?
     CardAlertsSave.tsx          Save button, Saving overlay, scroll to top
-    CardAlertsToast.tsx         Confirmation toast on save
+  CardControlsToasts.tsx   Confirmation toasts on save (travel notice + card alerts)
   NOTES.md
 
 reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
