@@ -8,9 +8,30 @@ accounts from the Accounts page.
 
 ### Where to pick up
 **The Account Controls tutorial is finished in Framer** (2026-10-05).
-What's left is merging the PR:
-https://github.com/reeyavyas/framer/pull/9. Use **Create a merge
-commit**. After that, see "Later" below.
+Nothing on Account Preferences or its tutorial is left to build.
+
+### Next steps, in order
+1. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
+   Use **Create a merge commit**. Its description is up to date.
+2. **Re-check the other tutorials' tap steps** in a browser tab:
+   Login (fingerprint), Card Controls (card toggle, Travel Notice,
+   Card Alerts toggles and Save), Reset PIN and Log Off. This PR
+   changed `TutorialOverlay.tsx` for every tutorial: `Click advances
+   step` now hands off on the click instead of finger-down. A plain tap
+   should behave as before; a finger that slides off the target no
+   longer advances. Watch the fingerprint step (it uses `Click advance
+   delay`) and any step whose tap opens an overlay.
+3. **Confirm the Saving overlay doesn't cover the tutorial card** on
+   the rename, drag and hide steps of the Account Controls tutorial.
+   It's the one item in `tutorials/account-controls-tutorial/NOTES.md`
+   still marked unchecked. If it does, move the overlay instance below
+   the TutorialOverlay instances in the layer order.
+4. **Then "Later" below:** the free exploration reset test, once the
+   tutorials page has that button.
+
+New Account Controls work after the merge goes on a fresh
+`account-controls/<feature>` branch from `main`, not on
+`account-controls/account-preferences`.
 
 The tutorial's flow:
 - `accounts-1` → Settings → Account Preferences: Edit, rename, drag
