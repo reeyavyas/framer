@@ -4,11 +4,13 @@ Account-level preferences a user manages from settings. Currently this
 means Account Preferences: reordering the internal accounts, and hiding
 accounts from the Accounts page.
 
-## Status: pick up here (2026-10-05)
+## Status: pick up here (2026-10-06)
 
 ### Where to pick up
 **The Account Controls tutorial is finished in Framer** (2026-10-05).
-Nothing on Account Preferences or its tutorial is left to build.
+Nothing on Account Preferences or its tutorial is left to build, and
+the Congrats page's double redirect is fixed. The only step left on
+this branch is the merge.
 
 ### Next steps, in order
 1. **Merge the PR:** https://github.com/reeyavyas/framer/pull/9 (open).
@@ -47,6 +49,11 @@ New Account Controls work after the merge goes on a fresh
   waits.
 - `AccountPreferencesList.tsx` (base): the same handle tap-area
   controls.
+- `TutorialCongratsAutoRedirect.tsx`: only redirects if the page is
+  still the one its timer started on. The double redirect after
+  tapping "X" on a Congrats page was a second redirect override on a
+  layer inside the congrats component; keep the override on one layer
+  per Congrats page.
 - `TutorialOverlay.tsx`, later: Next on an `Advance on event` step
   finishes the step's action like Skip does, and the scroll freeze
   controls show on every step, without needing a `Page group`.
@@ -88,6 +95,8 @@ New Account Controls work after the merge goes on a fresh
   with `Click advances step` handing off on the click (Login, Card
   Controls, Reset PIN, Log Off), and the Saving overlay doesn't cover
   the tutorial card on the rename, drag and hide steps.
+- **Congrats page fixed:** tapping "X" goes to Tutorials once, with no
+  second reload (a duplicate redirect override was removed in Framer).
 - **Tutorial runs in Framer from `accounts-1` to `accounts-2`** with
   steps 1–7 on Account Preferences built, and `accounts-2` shows the
   new order, the hidden account and the new name (2026-10-02).
