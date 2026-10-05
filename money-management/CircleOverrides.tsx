@@ -755,64 +755,104 @@ function useDraggableCircle(
 // FRAMER EXPORTS
 // ============================================
 
-// Per-circle config: [id, radius, home, origin (entrance start, off the
-// bottom-left), entrance stagger delay ms]. Set 2 ids are suffixed "-v2" so
-// they never collide with Set 1's ids in the shared circles Map.
-type CircleConfig = [
-    string,
-    number,
-    { x: number; y: number },
-    { x: number; y: number },
-    number,
-]
-const CIRCLE_CONFIG: Record<string, CircleConfig> = {
-    AutoCircle: ["auto", 200, { x: 52, y: 55 }, { x: -260, y: CANVAS_HEIGHT + 260 }, 0],
-    DiningCircle: ["dining", 131, { x: 764, y: 129 }, { x: -320, y: CANVAS_HEIGHT + 180 }, 80],
-    HealthCircle: ["health", 175, { x: 437, y: 239 }, { x: -200, y: CANVAS_HEIGHT + 320 }, 160],
-    ShoppingCircle: ["shopping", 210, { x: 116, y: 488 }, { x: -350, y: CANVAS_HEIGHT + 260 }, 240],
-    PersonalCareCircle: ["personal care", 125, { x: 552, y: 598 }, { x: -220, y: CANVAS_HEIGHT + 200 }, 320],
-    UncategorizedCircle: ["uncategorized", 125, { x: 770, y: 437 }, { x: -300, y: CANVAS_HEIGHT + 300 }, 400],
-    // Budget Circles 2 (7 circles, variant 2)
-    AutoCircleV2: ["auto-v2", 125, { x: 71, y: 548 }, { x: -240, y: CANVAS_HEIGHT + 240 }, 0],
-    DiningCircleV2: ["dining-v2", 95, { x: 545, y: 208 }, { x: -300, y: CANVAS_HEIGHT + 160 }, 80],
-    HealthCircleV2: ["health-v2", 120, { x: 293, y: 159 }, { x: -220, y: CANVAS_HEIGHT + 300 }, 160],
-    ShoppingCircleV2: ["shopping-v2", 132.5, { x: 748, y: 532 }, { x: -360, y: CANVAS_HEIGHT + 220 }, 240],
-    PersonalCareCircleV2: ["personalcare-v2", 95, { x: 708, y: 339 }, { x: -260, y: CANVAS_HEIGHT + 180 }, 320],
-    UncategorizedCircleV2: ["uncategorized-v2", 95, { x: 159, y: 351 }, { x: -280, y: CANVAS_HEIGHT + 280 }, 400],
-    BillsCircle: ["bills-v2", 200, { x: 332, y: 397 }, { x: -320, y: CANVAS_HEIGHT + 340 }, 480],
-}
-
-function circleOverride(name: string, Component: ComponentType<any>) {
-    const [id, radius, home, origin, delay] = CIRCLE_CONFIG[name]
+export function AutoCircle(Component: ComponentType<any>): ComponentType<any> {
     return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(id, radius, home, origin, delay, Component, props, ref)
+        useDraggableCircle(
+            "auto",
+            200,
+            { x: 52, y: 55 },
+            { x: -260, y: CANVAS_HEIGHT + 260 },
+            0,
+            Component,
+            props,
+            ref
+        )
     )
 }
 
-// Each export stays a literal top-level function so Framer's override
-// picker lists it.
-export function AutoCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("AutoCircle", Component)
+export function DiningCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "dining",
+            131,
+            { x: 764, y: 129 },
+            { x: -320, y: CANVAS_HEIGHT + 180 },
+            80,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function DiningCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("DiningCircle", Component)
+export function HealthCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "health",
+            175,
+            { x: 437, y: 239 },
+            { x: -200, y: CANVAS_HEIGHT + 320 },
+            160,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function HealthCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("HealthCircle", Component)
+export function ShoppingCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "shopping",
+            210,
+            { x: 116, y: 488 },
+            { x: -350, y: CANVAS_HEIGHT + 260 },
+            240,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function ShoppingCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("ShoppingCircle", Component)
+export function PersonalCareCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "personal care",
+            125,
+            { x: 552, y: 598 },
+            { x: -220, y: CANVAS_HEIGHT + 200 },
+            320,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function PersonalCareCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("PersonalCareCircle", Component)
-}
-
-export function UncategorizedCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("UncategorizedCircle", Component)
+export function UncategorizedCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "uncategorized",
+            125,
+            { x: 770, y: 437 },
+            { x: -300, y: CANVAS_HEIGHT + 300 },
+            400,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
 // ============================================
@@ -822,32 +862,124 @@ export function UncategorizedCircle(Component: ComponentType<any>): ComponentTyp
 // above — ids are suffixed "-v2" so they never collide with Budget
 // Circles 1's ids in the shared circles Map (see the id-collision risk
 // discussed when the two-component split was built).
-export function AutoCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("AutoCircleV2", Component)
+
+export function AutoCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "auto-v2",
+            125,
+            { x: 71, y: 548 },
+            { x: -240, y: CANVAS_HEIGHT + 240 },
+            0,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function DiningCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("DiningCircleV2", Component)
+export function DiningCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "dining-v2",
+            95,
+            { x: 545, y: 208 },
+            { x: -300, y: CANVAS_HEIGHT + 160 },
+            80,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function HealthCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("HealthCircleV2", Component)
+export function HealthCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "health-v2",
+            120,
+            { x: 293, y: 159 },
+            { x: -220, y: CANVAS_HEIGHT + 300 },
+            160,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function ShoppingCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("ShoppingCircleV2", Component)
+export function ShoppingCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "shopping-v2",
+            132.5,
+            { x: 748, y: 532 },
+            { x: -360, y: CANVAS_HEIGHT + 220 },
+            240,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function PersonalCareCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("PersonalCareCircleV2", Component)
+export function PersonalCareCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "personalcare-v2",
+            95,
+            { x: 708, y: 339 },
+            { x: -260, y: CANVAS_HEIGHT + 180 },
+            320,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function UncategorizedCircleV2(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("UncategorizedCircleV2", Component)
+export function UncategorizedCircleV2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "uncategorized-v2",
+            95,
+            { x: 159, y: 351 },
+            { x: -280, y: CANVAS_HEIGHT + 280 },
+            400,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
-export function BillsCircle(Component: ComponentType<any>): ComponentType<any> {
-    return circleOverride("BillsCircle", Component)
+export function BillsCircle(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(
+            "bills-v2",
+            200,
+            { x: 332, y: 397 },
+            { x: -320, y: CANVAS_HEIGHT + 340 },
+            480,
+            Component,
+            props,
+            ref
+        )
+    )
 }
 
 // ============================================
@@ -938,21 +1070,6 @@ export function withBudgetsVariantTrigger(
 // "Budget Circles" into two independent components and controls which one
 // is mounted directly, instead of trying to flip an internal Variant.
 
-// Shared by the two visibility overrides below: true once the bridge
-// event has fired.
-function useBridgeFired() {
-    const [fired, setFired] = useState(false)
-
-    useEffect(() => {
-        if (typeof window === "undefined") return
-        const handler = () => setFired(true)
-        window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
-        return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
-    }, [])
-
-    return fired
-}
-
 // Apply to Budget Circles 1 (the current 6-circle layout, built as its own
 // plain component, no Variant feature). Unmounts itself once the bridge
 // event fires.
@@ -960,7 +1077,14 @@ export function withBudgetsCircles1Visibility(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const hidden = useBridgeFired()
+        const [hidden, setHidden] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setHidden(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
 
         if (hidden) return null
         return <Component {...props} ref={ref} />
@@ -974,7 +1098,14 @@ export function withBudgetsCircles2Visibility(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const visible = useBridgeFired()
+        const [visible, setVisible] = useState(false)
+
+        useEffect(() => {
+            if (typeof window === "undefined") return
+            const handler = () => setVisible(true)
+            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+        }, [])
 
         if (!visible) return null
         return <Component {...props} ref={ref} />
@@ -1028,13 +1159,8 @@ export function withBudgetsSuccessToast(
                 setOpacity(0)
                 // Mount at opacity 0 first, then flip to 1 on the next
                 // frame so the fade-in actually transitions instead of
-                // popping straight to visible. Two frames, not one: this
-                // runs from a window event, so React can batch the mount,
-                // the 0 and a single-frame 1 into one commit and skip the
-                // fade entirely.
-                fadeInFrame = requestAnimationFrame(() => {
-                    fadeInFrame = requestAnimationFrame(() => setOpacity(1))
-                })
+                // popping straight to visible.
+                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
                 hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
             }
 
