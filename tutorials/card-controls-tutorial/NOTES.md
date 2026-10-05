@@ -1,42 +1,70 @@
 # Card Controls Tutorial — Notes
 
-Tutorial-specific duplicates of individual `card-controls/` components,
-for the card-controls guided walkthrough. This is **not** a full copy of
-`card-controls/` — only components that actually need tutorial-specific
-behavior live here. Everything else in the tutorial flow uses the real
-`card-controls/` component directly.
+Notes for the card-controls guided walkthrough. This folder used to
+hold tutorial-specific duplicates of individual `card-controls/`
+components; it holds none now (see below). Everything in the tutorial
+flow uses the real `card-controls/` components, some with a tutorial
+flag switched on.
 
-## Why duplicates instead of props/flags on the base component
+## Duplicates or flags
 
 Base-page components in `card-controls/` and `money-management/` are for
-free exploration — no tutorial concerns baked in. When a tutorial needs
-a component to behave differently, the base component is left untouched
-and a tweaked copy lives here instead, named `<Component>Tutorial.tsx`
-(e.g. `TravelNoticeSection.tsx` → `TravelNoticeSectionTutorial.tsx`). Keep the
-internal function name, `defaultProps` target, and `addPropertyControls`
-target renamed to match the file (Framer's Insert/override picker keys
-off these), and give any component-owned storage keys their own
+free exploration. The original policy was that when a tutorial needs a
+component to behave differently, the base component is left untouched
+and a tweaked copy lives here instead, named `<Component>Tutorial.tsx`,
+with its internal function name, `defaultProps` target (if any) and
+`addPropertyControls` target renamed to match the file (Framer's
+Insert/override picker keys off these), and any component-owned storage keys given their own
 tutorial-specific name so a base-page instance and a tutorial instance
 never clobber each other's state in the same session.
 
-## Current
+**On 2026-10-05 the user chose flags instead for the two travel-notice
+components**: `SetTravelNoticeTutorial.tsx` and
+`TravelNoticeSectionTutorial.tsx` were folded back into
+`SetTravelNotice.tsx` and `TravelNoticeSection.tsx` as a **Tutorial
+copy** (`tutorial`) boolean property control, off by default (off = the
+base behavior, unchanged), and the two copies were deleted. The
+separate-storage-key rule still holds: the flag switches each component
+to its own tutorial-only keys. Other tutorials' duplicates (e.g.
+`tutorials/account-controls-tutorial/`) still follow the duplicate
+convention.
 
-Travel notice is the first tutorial-duplicated flow. It's 2 of the base
-flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
-**not** duplicated (see below).
+## Current — Travel notice
 
-- `SetTravelNoticeTutorial.tsx` — duplicate of
-  `card-controls/travel-notice/SetTravelNotice.tsx`. Every field is
-  pre-populated and frozen instead of user-editable, since this is a
-  walkthrough step, not a form the tutorial user actually fills in:
-  - Start Date = 2 weeks from today; End Date = Start Date + 7 days.
+Each tutorial-page layer uses the base component with **Tutorial copy**
+on. To swap a layer that still uses an old `*Tutorial` component, put
+the base component in its place and set:
+
+- **Set Travel Notice page** (was `SetTravelNoticeTutorial`): insert
+  `card-controls/travel-notice/SetTravelNotice.tsx`, set **Tutorial
+  copy** = on, and set **Save link** and **Cancel link** to the same
+  pages the old layer had (Save → the tutorial's Card Controls page).
+  Copy over any label/color/font/size values that were changed from
+  their defaults; the defaults are the same as the old copy's. The
+  base-only controls (Destinations list, Max trip length, Destinations
+  placeholder, focus/dropdown/calendar colors and fonts, Save (off)
+  colors) have no effect with Tutorial copy on — leave them. **Max
+  destinations** only feeds the helper text there, as it did in the
+  copy. The four marker layers (`TravelStart`/`TravelEnd`/
+  `TravelDestinations`/`TravelSave`) stay where they are: the layout is
+  the same.
+- **Card Controls page in the tutorial** (was
+  `TravelNoticeSectionTutorial`): insert
+  `card-controls/travel-notice/TravelNoticeSection.tsx`, set **Tutorial
+  copy** = on, and copy over any changed style values. The
+  `TravelNoticeShown` marker layer over it stays as is.
+
+What Tutorial copy does:
+
+- `SetTravelNotice.tsx` — every field is pre-populated and frozen
+  instead of user-editable, since this is a walkthrough step, not a
+  form the tutorial user actually fills in:
+  - Start Date = 2 weeks from today; End Date = Start Date + 7 days,
+    filled in after mount (empty on the first render, so the
+    server-rendered HTML and the client's hydration render match).
     Displayed as month + day only ("September 11") — no year, no
     weekday, unlike the base form's long format. Neither date field
-    (nor its calendar icon) opens a calendar dropdown; the dropdown/
-    calendar-panel code path was removed entirely rather than kept
-    dead, along with the now-unused props that only existed to
-    configure it (`destinationOptions`, `tripMaxMonths`,
-    `destinationsPlaceholder`, focus/panel/calendar colors and fonts).
+    (nor its calendar icon) opens a calendar dropdown.
   - Destinations = a fixed set of three chips (Illinois, Kentucky,
     Missouri) that can't be removed or added to — the field doesn't
     open a destinations dropdown either. Each chip still renders its ×
@@ -50,22 +78,20 @@ flow's 3 components — the 3rd, `TravelNoticeToast.tsx`, is deliberately
     `TravelNoticeSection.tsx` has never seen that save. The toast flag
     (`kioskTravelNoticeToastFlag`) stays shared, so `TravelNoticeToast.tsx`
     works unmodified. Cancel is unchanged from the base form.
-- `TravelNoticeSectionTutorial.tsx` — duplicate of
-  `card-controls/travel-notice/TravelNoticeSection.tsx`. Reads the
-  tutorial-only `kioskTravelNoticeTutorial` key (see above) instead of
-  `kioskTravelNotice`; otherwise unchanged. It labels it "Future Plans" whenever
-  the record's start date isn't today, which is always true for
-  `SetTravelNoticeTutorial.tsx`'s fixed 2-weeks-out date — so it shows
-  "Future Plans" (never "Happening Now") automatically. Only its
-  canvas-only `SAMPLE_SUMMARY` placeholder was refreshed, to preview
-  correctly. Its own-shown marker key is
-  `kioskTravelNoticeSectionTutorialShownAt`, distinct from the base page's
-  `kioskTravelNoticeSectionShownAt`.
-- `TravelNoticeToast.tsx` — **not duplicated, on purpose.** The base
+- `TravelNoticeSection.tsx` — reads the tutorial-only
+  `kioskTravelNoticeTutorial` key (see above) instead of
+  `kioskTravelNotice`; otherwise unchanged. It labels it "Future Plans"
+  whenever the record's start date isn't today, which is always true
+  for the tutorial form's fixed 2-weeks-out date — so it shows "Future
+  Plans" (never "Happening Now") automatically. Only its canvas-only
+  sample placeholder differs, to preview correctly. Its own-shown
+  marker key is `kioskTravelNoticeSectionTutorialShownAt`, distinct
+  from the base page's `kioskTravelNoticeSectionShownAt`.
+- `TravelNoticeToast.tsx` — **no tutorial flag, on purpose.** The base
   file's toast behavior after Save is exactly what this tutorial step
-  needs too (both forms write the same `kioskTravelNoticeToastFlag`),
+  needs too (both modes write the same `kioskTravelNoticeToastFlag`),
   so the tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
-  directly. Don't add a tutorial copy of this file unless its behavior
+  directly. Don't add a tutorial mode to this file unless its behavior
   actually needs to diverge.
 
 ## Card Alerts flow — tapping specific toggles on
@@ -89,8 +115,8 @@ real page uses, contaminating a real user's actual alert settings.
 
 The tutorial doesn't need that override at all: the native Framer
 switch already animates its own on/off visual on tap with no override
-involved, and — same call `SetTravelNoticeTutorial.tsx`'s Save already
-made — a frozen walkthrough's Save button can just be hardcoded enabled
+involved, and — same call `SetTravelNotice.tsx`'s tutorial-mode Save
+already made — a frozen walkthrough's Save button can just be hardcoded enabled
 rather than replicating real "is anything on?" validation.
 `withCardAlertsSaveTutorial` in `CardAlertsSave.tsx` implements this —
 it's its own render body, not a thin wrapper sharing the base page's
@@ -124,7 +150,7 @@ So, per toggle the tutorial wants the user to tap:
 attribute is added via a `TutorialTargets.tsx` Code Override applied to
 a real Framer layer. That doesn't work for a field *inside* one of
 these components (e.g. the Start Date row in
-`SetTravelNoticeTutorial.tsx`) — it's plain JSX inside this component's
+`SetTravelNotice.tsx`) — it's plain JSX inside this component's
 own render, not a separately selectable layer on the canvas, so there's
 nothing to attach a Code Override to directly.
 
@@ -139,8 +165,8 @@ which forces `pointer-events: none` on the marker so it can't swallow
 the tap meant for the real field/button it sits on top of.
 
 An earlier in-source `data-tutorial-target="start-date"` on the Start
-Date row in `SetTravelNoticeTutorial.tsx` was never used live and has
-been removed; use `target: "travel-start"` / `"travel-end"` /
+Date row in the old `SetTravelNoticeTutorial.tsx` copy was never used
+live and has been removed; use `target: "travel-start"` / `"travel-end"` /
 `"travel-save"`. Marker-layer positions need to be kept in sync by
 hand if the underlying field ever moves, but unlike an in-source
 attribute they can be positioned/adjusted from Framer's canvas.

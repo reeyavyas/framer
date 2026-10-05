@@ -118,20 +118,22 @@ Card-level account actions a user manages from settings.
 
 ## Tutorial variants
 
-These are the free-exploration base-page components — no tutorial
-concerns. Where the card-controls tutorial needs a component to behave
-differently, a tweaked duplicate lives in
-`tutorials/card-controls-tutorial/` instead (named `<Component>Tutorial.tsx`),
-not here — see `tutorials/card-controls-tutorial/NOTES.md`. Only
-components that actually need a tutorial-specific tweak get a duplicate;
-everything else in the tutorial flow uses these components directly.
+These are the free-exploration base-page components. Where the
+card-controls tutorial needs a component to behave differently, the
+original convention was a tweaked duplicate in
+`tutorials/card-controls-tutorial/` (named `<Component>Tutorial.tsx`),
+not here — see `tutorials/card-controls-tutorial/NOTES.md`. For the two
+travel-notice components the user chose flags instead (2026-10-05):
+`SetTravelNotice.tsx` and `TravelNoticeSection.tsx` each have a
+**Tutorial copy** (`tutorial`) property control, off by default, that
+reproduces what their deleted `*Tutorial.tsx` copies did (frozen,
+pre-filled form; tutorial-only storage keys). That NOTES file lists the
+exact settings for the tutorial pages. Everything else in the tutorial
+flow uses these components directly.
 
-- `TravelNoticeSection.tsx` → `TravelNoticeSectionTutorial.tsx`
-
-(`card-alerts/CardAlertsSave.tsx` predates this convention and instead
-exports both `withCardAlertsSave` and `withCardAlertsSaveTutorial` from
-one file — see the `card-alerts/` section above. New tutorial variants
-should use the separate-file convention instead.)
+(`card-alerts/CardAlertsSave.tsx` likewise exports both
+`withCardAlertsSave` and `withCardAlertsSaveTutorial` from one file —
+see the `card-alerts/` section above.)
 
 ## Branch naming
 
