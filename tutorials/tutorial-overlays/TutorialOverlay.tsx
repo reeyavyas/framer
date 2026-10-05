@@ -1019,6 +1019,31 @@ export default function TutorialOverlay(props: Props) {
         advanceStep,
     ])
 
+    // The Next button. On a step waiting for its page (advanceOnEvent),
+    // Next first asks the page to finish the step's action, the same
+    // request Skip makes. Without that, Next moved on while the page
+    // carried on by itself: on Account Preferences the name kept typing
+    // and saving under the next step, and the drag step stayed locked
+    // until the rename had saved. The page's own event then advances
+    // the step. If nothing on the page claims the request, Next just
+    // advances, as before.
+    const pressNext = React.useCallback(() => {
+        if (nextButtonLink) {
+            window.location.href = nextButtonLink
+            return
+        }
+        if (advanceOnEvent) {
+            const handled = !window.dispatchEvent(
+                new CustomEvent(SKIP_EVENT, {
+                    detail: { event: advanceOnEvent },
+                    cancelable: true,
+                })
+            )
+            if (handled) return
+        }
+        advanceStep()
+    }, [nextButtonLink, advanceOnEvent, advanceStep])
+
     // Scroll-driven hand-off — for a beat like "scroll down to see your
     // other accounts" (scrollDirection "down") or "scroll up to see the
     // card you just created" (scrollDirection "up", e.g. a target pinned
@@ -1540,12 +1565,7 @@ export default function TutorialOverlay(props: Props) {
                                     {showNextButton && (
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                nextButtonLink
-                                                    ? (window.location.href =
-                                                          nextButtonLink)
-                                                    : advanceStep()
-                                            }
+                                            onClick={pressNext}
                                             style={{
                                                 pointerEvents: "auto",
                                                 cursor: "pointer",

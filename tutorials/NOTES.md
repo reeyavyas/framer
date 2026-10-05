@@ -76,7 +76,13 @@ anywhere else on the page.
   `autoAdvanceLink` below — so the same button works as "advance within
   this page group" on every step but the last, and "go to the next
   page" on the last step of a group or on a single-step page with no
-  `pageGroup` at all. The button sits above its own progress bar in a
+  `pageGroup` at all. On a step with `advanceOnEvent`, Next first makes
+  the same request Skip does (`tutorial-skip`), so the page finishes
+  the step's action and its event advances the step; if nothing claims
+  it, Next advances as usual. Before this, Next on the Account Controls
+  tutorial's rename step moved on while the name kept typing and
+  saving underneath, and the drag step stayed locked until it saved.
+  The button sits above its own progress bar in a
   shared wrapper. Space above the button is the card's own `gap: 24`
   (between `cardBody` and this wrapper) plus the wrapper's own
   `marginTop: 8` = 32px; space below the button, before the bar, is the

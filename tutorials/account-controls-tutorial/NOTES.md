@@ -45,7 +45,8 @@ goes back through Settings.
   action for the user, so the end Accounts page still shows it. Skip
   never waits: it applies the change at once, stops any typing, drops
   a save overlay that's showing (`cancelSaveOverlay` in
-  `AccountPreferencesEditMode.tsx`) and advances straight away.
+  `AccountPreferencesEditMode.tsx`) and advances straight away. A Next
+  button on those steps does the same as Skip.
   The property controls are the base list's, plus `Rename account`
   (8665), `Only drag up` (on), `New name` (Main Checking), `Hide account` (7500),
   `Erase speed`, `Type speed` and `Field typing border`.
