@@ -183,25 +183,26 @@ export default function SetTravelNoticeTutorial(props: Props) {
         style,
     } = props
 
-    // Computed once per mount, not re-derived every render — a kiosk
-    // session that happens to stay open across midnight shouldn't have
-    // its "pre-populated" example date silently shift underneath it.
-    const startDate = React.useMemo(
-        () => addDays(startOfDay(new Date()), START_DAYS_FROM_TODAY),
-        []
-    )
-    const endDate = React.useMemo(
-        () => addDays(startDate, TRIP_LENGTH_DAYS),
-        [startDate]
-    )
-    const destinations = TUTORIAL_DESTINATIONS
+    // Starts at null and is filled in after mount, not computed during
+    // render. The published site is server-rendered, so on any day after
+    // publishing, a render-time "today" would differ between the server's
+    // HTML and the client's hydration render — a hydration mismatch
+    // (React error #418/#422; see TravelNoticeSection.tsx's summary
+    // state). The first render (server and hydration) shows empty dates,
+    // like the base form's empty fields. Set once per mount, so a kiosk
+    // session that stays open across midnight doesn't see it shift.
+    const [startDate, setStartDate] = React.useState<Date | null>(null)
+    React.useEffect(() => {
+        setStartDate(addDays(startOfDay(new Date()), START_DAYS_FROM_TODAY))
+    }, [])
+    const endDate = startDate && addDays(startDate, TRIP_LENGTH_DAYS)
 
     function persistAndProceed(e: React.MouseEvent<HTMLAnchorElement>) {
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && startDate && endDate) {
             const payload = {
                 startDate: toISODate(startDate),
                 endDate: toISODate(endDate),
-                destinations,
+                destinations: TUTORIAL_DESTINATIONS,
                 savedAt: Date.now(),
             }
             window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
@@ -216,6 +217,68 @@ export default function SetTravelNoticeTutorial(props: Props) {
         flexShrink: 0,
     }
 
+    // Start Date / End Date field — frozen, not clickable. Empty until
+    // the date is filled in after mount (see startDate above).
+    function dateField(label: string, date: Date | null) {
+        return (
+            <div>
+                <div
+                    style={{
+                        ...labelFont,
+                        color: labelColor,
+                        marginBottom: 12,
+                    }}
+                >
+                    {label}
+                </div>
+                <div
+                    style={{
+                        height: fieldHeight,
+                        display: "flex",
+                        alignItems: "stretch",
+                        boxSizing: "border-box",
+                        background: fieldBackgroundColor,
+                        border: `2px solid ${fieldBorderColor}`,
+                        borderRadius: fieldCornerRadius,
+                        overflow: "hidden",
+                        cursor: "default",
+                    }}
+                >
+                    <span
+                        style={{
+                            ...fieldValueFont,
+                            color: fieldTextColor,
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0 24px",
+                            minWidth: 0,
+                        }}
+                    >
+                        {date ? formatMonthDay(date) : ""}
+                    </span>
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 20px",
+                            background: iconCellBackgroundColor,
+                            borderLeft: `2px solid ${iconDividerColor}`,
+                        }}
+                    >
+                        <CalendarIconOrCustom
+                            style={iconStyle}
+                            color={iconColor}
+                            icon={calendarIcon}
+                        />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div
             style={{
@@ -228,123 +291,8 @@ export default function SetTravelNoticeTutorial(props: Props) {
                 boxSizing: "border-box",
             }}
         >
-            {/* Start Date — frozen, not clickable. Tagged directly (not
-                via a TutorialTargets.tsx Code Override) since this div
-                lives inside this component's own render tree, not as a
-                separately selectable Framer layer — see
-                tutorials/card-controls-tutorial/NOTES.md. */}
-            <div data-tutorial-target="start-date">
-                <div
-                    style={{
-                        ...labelFont,
-                        color: labelColor,
-                        marginBottom: 12,
-                    }}
-                >
-                    {startDateLabel}
-                </div>
-                <div
-                    style={{
-                        height: fieldHeight,
-                        display: "flex",
-                        alignItems: "stretch",
-                        boxSizing: "border-box",
-                        background: fieldBackgroundColor,
-                        border: `2px solid ${fieldBorderColor}`,
-                        borderRadius: fieldCornerRadius,
-                        overflow: "hidden",
-                        cursor: "default",
-                    }}
-                >
-                    <span
-                        style={{
-                            ...fieldValueFont,
-                            color: fieldTextColor,
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "0 24px",
-                            minWidth: 0,
-                        }}
-                    >
-                        {formatMonthDay(startDate)}
-                    </span>
-                    <div
-                        style={{
-                            flexShrink: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 20px",
-                            background: iconCellBackgroundColor,
-                            borderLeft: `2px solid ${iconDividerColor}`,
-                        }}
-                    >
-                        <CalendarIconOrCustom
-                            style={iconStyle}
-                            color={iconColor}
-                            icon={calendarIcon}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* End Date — frozen, not clickable */}
-            <div>
-                <div
-                    style={{
-                        ...labelFont,
-                        color: labelColor,
-                        marginBottom: 12,
-                    }}
-                >
-                    {endDateLabel}
-                </div>
-                <div
-                    style={{
-                        height: fieldHeight,
-                        display: "flex",
-                        alignItems: "stretch",
-                        boxSizing: "border-box",
-                        background: fieldBackgroundColor,
-                        border: `2px solid ${fieldBorderColor}`,
-                        borderRadius: fieldCornerRadius,
-                        overflow: "hidden",
-                        cursor: "default",
-                    }}
-                >
-                    <span
-                        style={{
-                            ...fieldValueFont,
-                            color: fieldTextColor,
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            padding: "0 24px",
-                            minWidth: 0,
-                        }}
-                    >
-                        {formatMonthDay(endDate)}
-                    </span>
-                    <div
-                        style={{
-                            flexShrink: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 20px",
-                            background: iconCellBackgroundColor,
-                            borderLeft: `2px solid ${iconDividerColor}`,
-                        }}
-                    >
-                        <CalendarIconOrCustom
-                            style={iconStyle}
-                            color={iconColor}
-                            icon={calendarIcon}
-                        />
-                    </div>
-                </div>
-            </div>
+            {dateField(startDateLabel, startDate)}
+            {dateField(endDateLabel, endDate)}
 
             {/* Destinations — frozen, not clickable; chips not removable
                 but still show a (non-functional) × for visual parity
@@ -383,7 +331,7 @@ export default function SetTravelNoticeTutorial(props: Props) {
                             alignItems: "center",
                         }}
                     >
-                        {destinations.map((state) => (
+                        {TUTORIAL_DESTINATIONS.map((state) => (
                             <span
                                 key={state}
                                 style={{

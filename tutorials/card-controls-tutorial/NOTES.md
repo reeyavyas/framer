@@ -128,34 +128,22 @@ these components (e.g. the Start Date row in
 own render, not a separately selectable layer on the canvas, so there's
 nothing to attach a Code Override to directly.
 
-Two approaches ended up in play for the travel-notice tutorial —
-**worth reconciling to just one before building the next tutorial**:
+The travel-notice tutorial uses **separate marker layers**: four
+empty, invisible Framer layers — `travel-start`, `travel-end`,
+`travel-destinations`, `travel-save` — positioned on the canvas over
+the Start Date field, End Date field, Destinations field, and Save
+button respectively, each tagged via its own `TutorialTargets.tsx` Code
+Override export (`TravelStart`/`TravelEnd`/`TravelDestinations`/
+`TravelSave`). Each goes through the `withTutorialMarker` helper there,
+which forces `pointer-events: none` on the marker so it can't swallow
+the tap meant for the real field/button it sits on top of.
 
-1. **Hardcoded in-source attribute** (what this repo's code does): the
-   Start Date row in `SetTravelNoticeTutorial.tsx` carries
-   `data-tutorial-target="start-date"` directly in its JSX.
-2. **Separate marker layers** (what actually ended up wired up live, in
-   Framer): four empty, invisible Framer layers —
-   `travel-start`, `travel-end`, `travel-destinations`, `travel-save` —
-   positioned on the canvas over the Start Date field, End Date field,
-   Destinations field, and Save button respectively, each tagged via
-   its own `TutorialTargets.tsx` Code Override export
-   (`TravelStart`/`TravelEnd`/`TravelDestinations`/`TravelSave`). These
-   exports were originally added directly in Framer's code editor and
-   have since been pulled into this repo's copy of `TutorialTargets.tsx`
-   — each goes through the `withTutorialMarker` helper there, which
-   forces `pointer-events: none` on the marker so it can't swallow the
-   tap meant for the real field/button it sits on top of.
-
-Since approach 2 is what's actually live, prefer `target: "travel-start"`
-/ `"travel-end"` / `"travel-save"` on real `TutorialOverlay` instances
-over `target: "start-date"` for now. Marker-layer positions need to be
-kept in sync by hand if the underlying field ever moves; the in-source
-attribute (approach 1) doesn't have that problem but can't be
-positioned/adjusted from Framer's canvas the way a marker layer can —
-that's presumably why the marker-layer approach was chosen. Pick one
-and remove the other once the live TutorialOverlay-not-showing bug
-(below) is resolved.
+An earlier in-source `data-tutorial-target="start-date"` on the Start
+Date row in `SetTravelNoticeTutorial.tsx` was never used live and has
+been removed; use `target: "travel-start"` / `"travel-end"` /
+`"travel-save"`. Marker-layer positions need to be kept in sync by
+hand if the underlying field ever moves, but unlike an in-source
+attribute they can be positioned/adjusted from Framer's canvas.
 
 To chain a scroll-down beat into a spotlight step (e.g. "Scroll Down" as
 step 1, spotlighting Start Date as step 2), drop two `TutorialOverlay`
@@ -163,8 +151,7 @@ instances on the page sharing one `pageGroup` string:
 
 1. Step 1 — `target` blank (no hole), `scrollAdvancesStep: true` +
    `scrollThresholdPercent` set, `stepNumber: 1`.
-2. Step 2 — `target: "travel-start"` (or `"start-date"`, if you
-   reconcile to the in-source approach instead), `stepNumber: 2`.
+2. Step 2 — `target: "travel-start"`, `stepNumber: 2`.
 
 Scrolling past the threshold on step 1 advances the shared `pageGroup`'s
 step counter to 2, at which point step 2 becomes "its turn," measures

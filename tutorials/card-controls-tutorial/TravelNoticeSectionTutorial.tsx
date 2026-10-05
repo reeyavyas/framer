@@ -39,17 +39,17 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * rendered first in that row's stacking order so the line/dots sit on
  * top of it rather than being interrupted by it.
  *
- * Data: reads the ONE sessionStorage record SetTravelNotice.tsx writes
- * on Save —
+ * Data: reads the ONE sessionStorage record SetTravelNoticeTutorial.tsx
+ * writes on Save —
  *
- *   sessionStorage.getItem("kioskTravelNotice")
+ *   sessionStorage.getItem("kioskTravelNoticeTutorial")
  *     -> { startDate, endDate, destinations, savedAt }
  *
  * That's the only key this component depends on. An earlier version
  * additionally required SetTravelNotice.tsx to write a SECOND,
  * dedicated one-shot flag key — that cross-file coordination turned out
  * to be the actual point of failure in practice (confirmed live: the
- * kioskTravelNotice record and a separate toast flag were reliably
+ * travel notice record and a separate toast flag were reliably
  * written on Save, but the extra section flag was not, even after
  * re-syncing the file — pointing at something outside this repo's
  * visibility, like a stale bundle or a duplicate component, rather than
@@ -183,7 +183,10 @@ function buildSummary(stored: StoredNotice): NoticeSummary {
 // from the write (in the component, inside a useEffect that only runs
 // after commit) fixes that regardless of how many times this gets
 // called.
-function readNoticeIfUnshown(): NoticeSummary | null {
+function readNoticeIfUnshown(): {
+    summary: NoticeSummary
+    savedAt: number
+} | null {
     if (typeof window === "undefined") return null
 
     const raw = window.sessionStorage.getItem(STORAGE_KEY)
@@ -200,25 +203,15 @@ function readNoticeIfUnshown(): NoticeSummary | null {
     if (window.sessionStorage.getItem(SHOWN_MARKER_KEY) === String(stored.savedAt)) {
         return null
     }
-    return buildSummary(stored)
+    return { summary: buildSummary(stored), savedAt: stored.savedAt }
 }
 
-// Records that the CURRENT kioskTravelNotice record has now been shown.
+// Records that the notice saved at `savedAt` has now been shown.
 // Called from a useEffect (after commit, not during the speculative
 // render), and safe to call more than once: writing the same value to
 // sessionStorage twice is a no-op the second time.
-function markCurrentNoticeShown(): void {
-    if (typeof window === "undefined") return
-    const raw = window.sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    try {
-        const stored: StoredNotice = JSON.parse(raw)
-        if (typeof stored.savedAt === "number") {
-            window.sessionStorage.setItem(SHOWN_MARKER_KEY, String(stored.savedAt))
-        }
-    } catch {
-        // malformed record — nothing to mark
-    }
+function markNoticeShown(savedAt: number): void {
+    window.sessionStorage.setItem(SHOWN_MARKER_KEY, String(savedAt))
 }
 
 // Single solid dot, optionally with a larger semi-transparent ring
@@ -396,7 +389,6 @@ export default function TravelNoticeSectionTutorial(props: Props) {
         detailPaddingX,
         detailPaddingY,
         style,
-        ...rest
     } = props
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
@@ -419,14 +411,14 @@ export default function TravelNoticeSectionTutorial(props: Props) {
     // sessionStorage here. Marking "shown" is a write, so it happens in
     // this same effect, after the read, rather than inside the useState
     // initializer above, which must stay pure. See
-    // markCurrentNoticeShown()'s comment for why mixing the two caused
+    // readNoticeIfUnshown()'s comment for why mixing the two caused
     // a real bug.
     React.useEffect(() => {
         if (isCanvas) return
         const found = readNoticeIfUnshown()
         if (!found) return
-        setSummary(found)
-        markCurrentNoticeShown()
+        setSummary(found.summary)
+        markNoticeShown(found.savedAt)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -445,14 +437,6 @@ export default function TravelNoticeSectionTutorial(props: Props) {
 
     return (
         <div
-            // Forwards whatever a TutorialTargets.tsx Code Override
-            // injects (data-tutorial-target) onto the actual DOM node.
-            // Without this, TutorialOverlay's querySelector for that
-            // attribute never finds anything: this is a custom code
-            // component, not a native Frame/Stack/Text layer, so unlike
-            // those, nothing forwards unrecognized props to the DOM
-            // automatically — this component has to do it itself.
-            {...rest}
             style={{
                 ...style,
                 width: "100%",
