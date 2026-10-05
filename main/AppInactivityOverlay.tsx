@@ -20,6 +20,21 @@ const easeInOut = (t: number) =>
     t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
 
+const buttonStyle: React.CSSProperties = {
+    fontFamily: "Inter, sans-serif",
+    fontWeight: 600,
+    fontSize: 36,
+    lineHeight: 1.2,
+    textTransform: "uppercase",
+    color: "rgb(5, 147, 144)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    letterSpacing: 0,
+    textDecoration: "none",
+}
+
 /**
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
@@ -61,33 +76,24 @@ export default function AppInactivityOverlay() {
     const countdownIntervalRef = React.useRef<number | null>(null)
 
     const clearInactivityTimeout = React.useCallback(() => {
-        if (
-            typeof window !== "undefined" &&
-            inactivityTimeoutRef.current !== null
-        ) {
+        if (inactivityTimeoutRef.current !== null) {
             window.clearTimeout(inactivityTimeoutRef.current)
             inactivityTimeoutRef.current = null
         }
     }, [])
 
     const clearCountdownInterval = React.useCallback(() => {
-        if (
-            typeof window !== "undefined" &&
-            countdownIntervalRef.current !== null
-        ) {
+        if (countdownIntervalRef.current !== null) {
             window.clearInterval(countdownIntervalRef.current)
             countdownIntervalRef.current = null
         }
     }, [])
 
     const goHome = React.useCallback(() => {
-        if (typeof window !== "undefined") {
-            window.location.href = "/app"
-        }
+        window.location.href = "/app"
     }, [])
 
     const startInactivityTimer = React.useCallback(() => {
-        if (typeof window === "undefined") return
         clearInactivityTimeout()
         const timeoutMs = INACTIVITY_MINUTES * 60 * 1000
         inactivityTimeoutRef.current = window.setTimeout(() => {
@@ -130,7 +136,6 @@ export default function AppInactivityOverlay() {
     // ignored entirely; only an explicit tap on "YES, I'M HERE" closes it.
     React.useEffect(() => {
         if (isCanvas) return
-        if (typeof document === "undefined") return
 
         const onActivity = () => {
             if (!isVisibleRef.current) {
@@ -157,7 +162,7 @@ export default function AppInactivityOverlay() {
     // While visible: fade in and run the countdown.
     React.useEffect(() => {
         if (isCanvas) return
-        if (!isVisible || typeof window === "undefined") {
+        if (!isVisible) {
             clearCountdownInterval()
             return
         }
@@ -193,7 +198,6 @@ export default function AppInactivityOverlay() {
             setCarouselFadeMs(elapsed)
             if (elapsed < totalMs) frame = window.requestAnimationFrame(tick)
         }
-        setCarouselFadeMs(0)
         frame = window.requestAnimationFrame(tick)
         return () => window.cancelAnimationFrame(frame)
     }, [isCanvas, isVisible, onCarouselPage])
@@ -227,14 +231,6 @@ export default function AppInactivityOverlay() {
             window.dispatchEvent(new Event("system-overlay-change"))
         }
     }, [isCanvas, isVisible])
-
-    // Cleanup on unmount.
-    React.useEffect(() => {
-        return () => {
-            clearInactivityTimeout()
-            clearCountdownInterval()
-        }
-    }, [clearInactivityTimeout, clearCountdownInterval])
 
     // On canvas we never run the fade-in effect (no timers there at all),
     // so drive the visual state directly to "fully shown" instead of
@@ -333,39 +329,13 @@ export default function AppInactivityOverlay() {
                 >
                     <button
                         onClick={isCanvas ? undefined : goHome}
-                        style={{
-                            fontFamily: "Inter, sans-serif",
-                            fontWeight: 600,
-                            fontSize: 36,
-                            lineHeight: 1.2,
-                            textTransform: "uppercase",
-                            color: "rgb(5, 147, 144)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            letterSpacing: 0,
-                            textDecoration: "none",
-                        }}
+                        style={buttonStyle}
                     >
                         RETURN HOME
                     </button>
                     <button
                         onClick={isCanvas ? undefined : closeOverlay}
-                        style={{
-                            fontFamily: "Inter, sans-serif",
-                            fontWeight: 600,
-                            fontSize: 36,
-                            lineHeight: 1.2,
-                            textTransform: "uppercase",
-                            color: "rgb(5, 147, 144)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            letterSpacing: 0,
-                            textDecoration: "none",
-                        }}
+                        style={buttonStyle}
                     >
                         YES, I'M HERE
                     </button>
