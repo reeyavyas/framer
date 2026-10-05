@@ -216,18 +216,26 @@ function renderToastDismiss(
     }
 }
 
-export function withTravelNoticeToast(Component: ComponentType<any>) {
+export function withTravelNoticeToast(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return renderToast(Component, "travelNotice")
 }
 
-export function withTravelNoticeToastDismiss(Component: ComponentType<any>) {
+export function withTravelNoticeToastDismiss(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return renderToastDismiss(Component, "travelNotice")
 }
 
-export function withCardAlertsToast(Component: ComponentType<any>) {
+export function withCardAlertsToast(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return renderToast(Component, "cardAlerts")
 }
 
-export function withCardAlertsToastDismiss(Component: ComponentType<any>) {
+export function withCardAlertsToastDismiss(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return renderToastDismiss(Component, "cardAlerts")
 }

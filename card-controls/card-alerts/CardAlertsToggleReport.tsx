@@ -110,82 +110,122 @@ function toggleReporter(
 
 // Apply a different one of these to each of the app's 20 toggle layers.
 
-export function withCardAlertsToggleReport1(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport1(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 1)
 }
 
-export function withCardAlertsToggleReport2(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport2(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 2)
 }
 
-export function withCardAlertsToggleReport3(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport3(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 3)
 }
 
-export function withCardAlertsToggleReport4(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport4(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 4)
 }
 
-export function withCardAlertsToggleReport5(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport5(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 5)
 }
 
-export function withCardAlertsToggleReport6(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport6(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 6)
 }
 
-export function withCardAlertsToggleReport7(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport7(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 7)
 }
 
-export function withCardAlertsToggleReport8(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport8(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 8)
 }
 
-export function withCardAlertsToggleReport9(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport9(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 9)
 }
 
-export function withCardAlertsToggleReport10(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport10(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 10)
 }
 
-export function withCardAlertsToggleReport11(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport11(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 11)
 }
 
-export function withCardAlertsToggleReport12(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport12(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 12)
 }
 
-export function withCardAlertsToggleReport13(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport13(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 13)
 }
 
-export function withCardAlertsToggleReport14(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport14(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 14)
 }
 
-export function withCardAlertsToggleReport15(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport15(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 15)
 }
 
-export function withCardAlertsToggleReport16(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport16(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 16)
 }
 
-export function withCardAlertsToggleReport17(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport17(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 17)
 }
 
-export function withCardAlertsToggleReport18(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport18(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 18)
 }
 
-export function withCardAlertsToggleReport19(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport19(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 19)
 }
 
-export function withCardAlertsToggleReport20(Component: ComponentType<any>) {
+export function withCardAlertsToggleReport20(
+    Component: ComponentType<any>
+): ComponentType<any> {
     return toggleReporter(Component, 20)
 }
