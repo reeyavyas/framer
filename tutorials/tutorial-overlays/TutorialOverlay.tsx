@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { getVirtualScroll, type VirtualScrollHandle } from "./VirtualScroll.tsx"
 
@@ -238,11 +238,6 @@ function findScrollableAt(x: number, y: number): HTMLElement | Window {
         }
     }
     return window
-}
-
-function scrollByOn(target: HTMLElement | Window, top: number, left = 0) {
-    if (target === window) window.scrollBy({ top, left })
-    else (target as HTMLElement).scrollBy({ top, left })
 }
 
 // Card positioning lives on a plain (non-motion) wrapper, never on the
@@ -1117,36 +1112,28 @@ export default function TutorialOverlay(props: Props) {
             !scrollAdvancesStep
         )
             return
+        function checkPercent(percent: number) {
+            const crossed =
+                scrollDirection === "up"
+                    ? percent <= scrollThresholdPercent
+                    : percent >= scrollThresholdPercent
+            if (crossed) advanceStep()
+        }
         function watchVirtual(virtual: VirtualScrollHandle) {
             function checkVirtual() {
-                const percent = virtual.getPercent()
-                const crossed =
-                    scrollDirection === "up"
-                        ? percent <= scrollThresholdPercent
-                        : percent >= scrollThresholdPercent
-                if (crossed) advanceStep()
+                checkPercent(virtual.getPercent())
             }
             checkVirtual()
             return virtual.subscribe(checkVirtual)
         }
         function watchNative() {
             const el = resolveScrollTarget(scrollContainerTarget)
+            // The page's own scroll position lives on <html>.
+            const node =
+                el === window ? document.documentElement : (el as HTMLElement)
             function checkScroll() {
-                let percent: number
-                if (el === window) {
-                    const doc = document.documentElement
-                    const max = doc.scrollHeight - doc.clientHeight
-                    percent = max > 0 ? (window.scrollY / max) * 100 : 100
-                } else {
-                    const node = el as HTMLElement
-                    const max = node.scrollHeight - node.clientHeight
-                    percent = max > 0 ? (node.scrollTop / max) * 100 : 100
-                }
-                const crossed =
-                    scrollDirection === "up"
-                        ? percent <= scrollThresholdPercent
-                        : percent >= scrollThresholdPercent
-                if (crossed) advanceStep()
+                const max = node.scrollHeight - node.clientHeight
+                checkPercent(max > 0 ? (node.scrollTop / max) * 100 : 100)
             }
             checkScroll()
             el.addEventListener("scroll", checkScroll, { passive: true })
@@ -1205,7 +1192,7 @@ export default function TutorialOverlay(props: Props) {
     // (this component's own doc mentions pages with several steps) all 8
     // instances stayed mounted and EACH attached this same window-level
     // listener — meaning a single wheel tick got redirected onto the
-    // real target and applied via scrollByOn up to 8 times over, once
+    // real target and applied via scrollBy up to 8 times over, once
     // per instance, not just once. Scoping to isMyTurn (matching every
     // sibling listener-effect above) fixes both that real scroll-speed
     // bug and, combined with isCanvas, the redundant listener pile-up
@@ -1228,7 +1215,7 @@ export default function TutorialOverlay(props: Props) {
                 return
             }
             scrollTarget = findScrollableAt(e.clientX, e.clientY)
-            scrollByOn(scrollTarget, e.deltaY, e.deltaX)
+            scrollTarget.scrollBy({ top: e.deltaY, left: e.deltaX })
             e.preventDefault()
         }
         function onTouchStart(e: TouchEvent) {
@@ -1248,7 +1235,7 @@ export default function TutorialOverlay(props: Props) {
                 return
             }
             const y = e.touches[0].clientY
-            scrollByOn(scrollTarget, lastY - y)
+            scrollTarget.scrollBy({ top: lastY - y })
             lastY = y
             e.preventDefault()
         }
@@ -1363,6 +1350,18 @@ export default function TutorialOverlay(props: Props) {
     // correct — see the note at the render site for why a canvas preview
     // is possible for the arrow specifically (it needs no real DOM
     // measurement) when the rest of the overlay does not.
+    // The same chevron for both variants; each places and rotates it
+    // with its own <g> transform.
+    const arrowhead = (
+        <path
+            d="M-11,-8 L0,0 L-11,8"
+            fill="none"
+            stroke={arrowColor}
+            strokeWidth={arrowStrokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    )
     const arrowSvg = (
         <svg viewBox="0 0 100 100" width="100%" height="100%">
             {arrowVariant === "bounce" ? (
@@ -1382,14 +1381,7 @@ export default function TutorialOverlay(props: Props) {
                     <g
                         transform={`translate(50,50) rotate(${bounceArrowAngle})`}
                     >
-                        <path
-                            d="M-11,-8 L0,0 L-11,8"
-                            fill="none"
-                            stroke={arrowColor}
-                            strokeWidth={arrowStrokeWidth}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
+                        {arrowhead}
                     </g>
                 </g>
             ) : (
@@ -1414,14 +1406,7 @@ export default function TutorialOverlay(props: Props) {
                     <g
                         transform={`translate(${48.89 + curveArrowheadOffsetX},${54.67 + curveArrowheadOffsetY}) rotate(${curveArrowAngle + curveArrowheadAdjustDeg})`}
                     >
-                        <path
-                            d="M-11,-8 L0,0 L-11,8"
-                            fill="none"
-                            stroke={arrowColor}
-                            strokeWidth={arrowStrokeWidth}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
+                        {arrowhead}
                     </g>
                 </g>
             )}
@@ -1510,189 +1495,180 @@ export default function TutorialOverlay(props: Props) {
                         pointerEvents: "none",
                     }}
                 >
-                    <AnimatePresence>
-                        <motion.div
-                            key="progress-card"
-                            initial={{
-                                opacity: 0,
-                                y:
-                                    cardAnchorY === "top"
-                                        ? -24
-                                        : cardAnchorY === "bottom"
-                                          ? 24
-                                          : 0,
-                            }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{
-                                opacity: 0,
-                                y:
-                                    cardAnchorY === "top"
-                                        ? -24
-                                        : cardAnchorY === "bottom"
-                                          ? 24
-                                          : 0,
-                            }}
-                            transition={{ duration: 0.45, ease: "easeOut" }}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: 24,
-                                padding: "40px 60px",
-                                borderRadius: 24,
-                                background: cardBackgroundColor,
-                                maxWidth: CARD_MAX_WIDTH,
-                                textAlign: "center",
-                                pointerEvents: "none",
-                            }}
-                        >
-                            {(cardTitleLine1 || cardTitleLine2) && (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 4,
-                                    }}
-                                >
-                                    {cardTitleLine1 && (
+                    {/* Enter animation only: the card unmounts together
+                        with this wrapper, so an exit animation would never
+                        get to play. */}
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            y:
+                                cardAnchorY === "top"
+                                    ? -24
+                                    : cardAnchorY === "bottom"
+                                      ? 24
+                                      : 0,
+                        }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.45, ease: "easeOut" }}
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 24,
+                            padding: "40px 60px",
+                            borderRadius: 24,
+                            background: cardBackgroundColor,
+                            maxWidth: CARD_MAX_WIDTH,
+                            textAlign: "center",
+                            pointerEvents: "none",
+                        }}
+                    >
+                        {(cardTitleLine1 || cardTitleLine2) && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 4,
+                                }}
+                            >
+                                {cardTitleLine1 && (
+                                    <div
+                                        style={{
+                                            ...cardTitleLine1Font,
+                                            color: cardTitleLine1Color,
+                                            whiteSpace: "pre-line",
+                                        }}
+                                    >
+                                        {cardTitleLine1}
+                                    </div>
+                                )}
+                                {cardTitleLine2 && (
+                                    <div
+                                        style={{
+                                            ...cardTitleLine2Font,
+                                            color: cardTitleLine2Color,
+                                            whiteSpace: "pre-line",
+                                        }}
+                                    >
+                                        {cardTitleLine2}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {cardBody && (
+                            <div
+                                style={{
+                                    ...cardBodyFont,
+                                    color: cardBodyColor,
+                                    whiteSpace: "pre-line",
+                                }}
+                            >
+                                {cardBody}
+                            </div>
+                        )}
+                        {/* Next button above, progress bar below it —
+                            grouped in their own wrapper (rather than
+                            relying on the card's own 24px gap). Space
+                            above the button is the card's own 24px
+                            gap (between cardBody and this wrapper)
+                            plus this wrapper's own 8px marginTop =
+                            32px. Space below the button, before the
+                            bar, is set explicitly as the button's own
+                            marginBottom (32px, matching the above) —
+                            deliberately a real margin here rather than
+                            the wrapper's flex `gap`, so it's an
+                            unambiguous, directly-inspectable rule on
+                            the one element it's about, not a value
+                            shared across every pair of children in
+                            the wrapper. */}
+                        {(showNextButton ||
+                            (showProgressBar &&
+                                progressBarDurationSeconds > 0)) && (
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    marginTop: 8,
+                                    width: "100%",
+                                }}
+                            >
+                                {showNextButton && (
+                                    <button
+                                        type="button"
+                                        onClick={pressNext}
+                                        style={{
+                                            pointerEvents: "auto",
+                                            cursor: "pointer",
+                                            border: "none",
+                                            padding: "24px 48px",
+                                            marginBottom: 32,
+                                            borderRadius: 999,
+                                            background:
+                                                nextButtonBackgroundColor,
+                                            color: nextButtonTextColor,
+                                            ...nextButtonFont,
+                                        }}
+                                    >
+                                        {nextButtonLabel}
+                                    </button>
+                                )}
+                                {showProgressBar &&
+                                    progressBarDurationSeconds > 0 && (
                                         <div
                                             style={{
-                                                ...cardTitleLine1Font,
-                                                color: cardTitleLine1Color,
-                                                whiteSpace: "pre-line",
-                                            }}
-                                        >
-                                            {cardTitleLine1}
-                                        </div>
-                                    )}
-                                    {cardTitleLine2 && (
-                                        <div
-                                            style={{
-                                                ...cardTitleLine2Font,
-                                                color: cardTitleLine2Color,
-                                                whiteSpace: "pre-line",
-                                            }}
-                                        >
-                                            {cardTitleLine2}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            {cardBody && (
-                                <div
-                                    style={{
-                                        ...cardBodyFont,
-                                        color: cardBodyColor,
-                                        whiteSpace: "pre-line",
-                                    }}
-                                >
-                                    {cardBody}
-                                </div>
-                            )}
-                            {/* Next button above, progress bar below it —
-                                grouped in their own wrapper (rather than
-                                relying on the card's own 24px gap). Space
-                                above the button is the card's own 24px
-                                gap (between cardBody and this wrapper)
-                                plus this wrapper's own 8px marginTop =
-                                32px. Space below the button, before the
-                                bar, is set explicitly as the button's own
-                                marginBottom (32px, matching the above) —
-                                deliberately a real margin here rather than
-                                the wrapper's flex `gap`, so it's an
-                                unambiguous, directly-inspectable rule on
-                                the one element it's about, not a value
-                                shared across every pair of children in
-                                the wrapper. */}
-                            {(showNextButton ||
-                                (showProgressBar &&
-                                    progressBarDurationSeconds > 0)) && (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        marginTop: 8,
-                                        width: "100%",
-                                    }}
-                                >
-                                    {showNextButton && (
-                                        <button
-                                            type="button"
-                                            onClick={pressNext}
-                                            style={{
-                                                pointerEvents: "auto",
-                                                cursor: "pointer",
-                                                border: "none",
-                                                padding: "24px 48px",
-                                                marginBottom: 32,
+                                                width: "100%",
+                                                height: 6,
                                                 borderRadius: 999,
                                                 background:
-                                                    nextButtonBackgroundColor,
-                                                color: nextButtonTextColor,
-                                                ...nextButtonFont,
+                                                    progressBarTrackColor,
+                                                overflow: "hidden",
                                             }}
                                         >
-                                            {nextButtonLabel}
-                                        </button>
-                                    )}
-                                    {showProgressBar &&
-                                        progressBarDurationSeconds > 0 && (
-                                            <div
-                                                style={{
+                                            {/* Purely visual — the
+                                                actual hand-off is the
+                                                separate
+                                                nextStepAfterSeconds
+                                                or autoAdvanceAfterSeconds
+                                                setTimeout effect
+                                                (whichever applies),
+                                                this just animates
+                                                over the same
+                                                progressBarDurationSeconds
+                                                so the two stay in
+                                                sync without a second
+                                                timer driving
+                                                anything. Remounts
+                                                fresh every time this
+                                                step becomes active
+                                                (isMyTurn flipping
+                                                false->true makes the
+                                                whole card subtree
+                                                remount), so it always
+                                                restarts at 0%. */}
+                                            <motion.div
+                                                key={resumeCount}
+                                                initial={{ width: "0%" }}
+                                                animate={{
                                                     width: "100%",
-                                                    height: 6,
-                                                    borderRadius: 999,
-                                                    background:
-                                                        progressBarTrackColor,
-                                                    overflow: "hidden",
                                                 }}
-                                            >
-                                                {/* Purely visual — the
-                                                    actual hand-off is the
-                                                    separate
-                                                    nextStepAfterSeconds
-                                                    or autoAdvanceAfterSeconds
-                                                    setTimeout effect
-                                                    (whichever applies),
-                                                    this just animates
-                                                    over the same
-                                                    progressBarDurationSeconds
-                                                    so the two stay in
-                                                    sync without a second
-                                                    timer driving
-                                                    anything. Remounts
-                                                    fresh every time this
-                                                    step becomes active
-                                                    (isMyTurn flipping
-                                                    false->true makes the
-                                                    whole card subtree
-                                                    remount), so it always
-                                                    restarts at 0%. */}
-                                                <motion.div
-                                                    key={resumeCount}
-                                                    initial={{ width: "0%" }}
-                                                    animate={{
-                                                        width: "100%",
-                                                    }}
-                                                    transition={{
-                                                        duration:
-                                                            progressBarDurationSeconds,
-                                                        ease: "linear",
-                                                    }}
-                                                    style={{
-                                                        height: "100%",
-                                                        background:
-                                                            progressBarColor,
-                                                        borderRadius: 999,
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
+                                                transition={{
+                                                    duration:
+                                                        progressBarDurationSeconds,
+                                                    ease: "linear",
+                                                }}
+                                                style={{
+                                                    height: "100%",
+                                                    background:
+                                                        progressBarColor,
+                                                    borderRadius: 999,
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                            </div>
+                        )}
+                    </motion.div>
                 </div>
             )}
 

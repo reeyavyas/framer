@@ -37,10 +37,22 @@ import type { ComponentType } from "react"
  * already applied to in Framer. Rearrange freely, but keep both as-is.
  */
 
-function withTutorialTarget(id: string) {
+// `marker` is withTutorialMarker's switch (see below).
+function withTutorialTarget(id: string, marker = false) {
     return function (Component: ComponentType<any>): ComponentType<any> {
         return React.forwardRef(function TutorialTarget(props: any, ref: any) {
-            return <Component {...props} ref={ref} data-tutorial-target={id} />
+            return (
+                <Component
+                    {...props}
+                    ref={ref}
+                    data-tutorial-target={id}
+                    style={
+                        marker
+                            ? { ...props.style, pointerEvents: "none" }
+                            : props.style
+                    }
+                />
+            )
         })
     }
 }
@@ -59,18 +71,7 @@ function withTutorialTarget(id: string) {
 // (e.g. MoreTabTarget, CardToggle) — those still need to receive
 // taps/scroll input.
 function withTutorialMarker(id: string) {
-    return function (Component: ComponentType<any>): ComponentType<any> {
-        return React.forwardRef(function TutorialMarker(props: any, ref: any) {
-            return (
-                <Component
-                    {...props}
-                    ref={ref}
-                    data-tutorial-target={id}
-                    style={{ ...props.style, pointerEvents: "none" }}
-                />
-            )
-        })
-    }
+    return withTutorialTarget(id, true)
 }
 
 // Framer's Override dropdown only picks up top-level exported function

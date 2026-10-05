@@ -74,14 +74,11 @@ function useEntranceT(
     return t
 }
 
-function clamp(n: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, n))
-}
-
 // Piecewise-linear interpolation: 0 at center, 1 at |offset| === 1, held
 // flat beyond that (so a 3rd/4th card off to the side doesn't keep scaling).
+// Callers always pass a non-negative |offset|, so only the top needs capping.
 function falloff(absOffset: number) {
-    return clamp(absOffset, 0, 1)
+    return Math.min(absOffset, 1)
 }
 
 // Below `freeZone` (in card-units), a drag tracks the finger exactly 1:1 —
@@ -565,9 +562,10 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
     // pointer-events) and folds `pos` back into range — so an orphaned,
     // late-firing onComplete could mark it settled mid-transit. (A card's
     // reset-to-Front no longer depends on this; it's driven by isCentered,
-    // see the card component.) Explicitly stopping the previous animation (stop, not letting it
-    // complete) guarantees at most one animation ever drives `pos`, so
-    // onComplete only ever fires for a genuinely finished settle.
+    // see the card component.) Explicitly stopping the previous animation
+    // (stop, not letting it complete) guarantees at most one animation
+    // ever drives `pos`, so onComplete only ever fires for a genuinely
+    // finished settle.
     const activeAnimRef = useRef<{ stop: () => void } | null>(null)
     const stopActiveAnim = useCallback(() => {
         activeAnimRef.current?.stop()
@@ -824,13 +822,9 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         ]
     )
 
-    const onTapSide = useCallback(
-        (index: number) => {
-            markInteraction()
-            goTo(index)
-        },
-        [goTo, markInteraction]
-    )
+    // No markInteraction() here or in the arrows: the tap's pointerdown
+    // already reached the container's onPointerDown, which calls it.
+    const onTapSide = useCallback((index: number) => goTo(index), [goTo])
 
     return (
         <div
@@ -916,20 +910,14 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                 >
                     <ArrowButton
                         direction="left"
-                        onClick={() => {
-                            markInteraction()
-                            step(-1)
-                        }}
+                        onClick={() => step(-1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
                     />
                     <ArrowButton
                         direction="right"
-                        onClick={() => {
-                            markInteraction()
-                            step(1)
-                        }}
+                        onClick={() => step(1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
@@ -938,39 +926,6 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
             )}
         </div>
     )
-}
-
-CurvedCarouselV2.defaultProps = {
-    cards: [],
-    cardWidth: 734,
-    cardHeight: 1050,
-    topOffset: 0,
-    cardGap: 8,
-    tiltDeg: 4,
-    curveDepth: 0,
-    sideOpacity: 0.5,
-    edgeFadeWidth: 120,
-    dragEnabled: true,
-    tapDistancePx: 28,
-    dragFreeZone: 0.6,
-    dragResistance: 0.35,
-    frontVariantProp: "variant",
-    frontVariantValue: "Front",
-    entranceEnabled: true,
-    entranceDelay: 0.2,
-    entranceDuration: 0.6,
-    entranceStagger: 0.08,
-    entranceDistanceY: 60,
-    entranceScale: 0.85,
-    entranceEase: "easeOut",
-    showArrows: true,
-    arrowSize: 56,
-    arrowGap: 24,
-    cardToArrowGap: 40,
-    arrowColor: "#FFFFFF",
-    arrowBackground: "rgba(0,0,0,0.35)",
-    autoplayEnabled: false,
-    autoplayIntervalSeconds: 5,
 }
 
 addPropertyControls(CurvedCarouselV2, {

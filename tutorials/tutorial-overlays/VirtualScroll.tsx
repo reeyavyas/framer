@@ -150,10 +150,9 @@ const registry = new Map<string, VirtualScrollHandle>()
 // specific host, a container could briefly register under the
 // OUTGOING page's still-current path during the overlap window.
 function scopedKey(id: string): string {
-    // Defensive, not load-bearing today — every real caller of this
-    // reaches it from inside a useEffect, which never runs during SSR
-    // — but cheap insurance against a future caller that isn't.
-    if (typeof window === "undefined") return id
+    // No SSR guard needed: every real caller of this reaches it from
+    // inside a useEffect or an event handler, which never runs during
+    // SSR.
     return `${window.location.pathname}::${id}`
 }
 

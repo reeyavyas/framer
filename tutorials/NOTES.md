@@ -187,7 +187,9 @@ anywhere else on the page.
   job, just not what was expected of a 0 offset. Both now say
   `"center"` (confirmed as the intended no-target default) so they
   agree, and a repo-wide sweep turned up no other Boolean/Enum/Number
-  control with this same defaultProps-vs-control mismatch.
+  control with this same defaultProps-vs-control mismatch. Since then
+  `TutorialOverlay` and `CurvedCarouselV2` have dropped `defaultProps`
+  altogether, so each control's `defaultValue` is the only default.
 
   The Skip button (`skipStep()`) moves on to the next step, same page
   or next, by doing what the step's own advance would have done: a
