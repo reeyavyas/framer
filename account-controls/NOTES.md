@@ -14,9 +14,10 @@ the Congrats page's double redirect is fixed. The work is merged into
 commit, 2026-10-05).
 
 ### Next steps
-- **The free exploration reset test** (see "Later" below). It waits on
-  the tutorials page getting its free exploration button, which will
-  take a while. It's also listed in the root `NOTES.md`.
+- **Test that the Accounts page starts fresh for each new session**
+  (see "Later" below). It waits on the Tutorials page getting its free
+  exploration button, a kiosk-wide feature, which will take a while.
+  It's also listed in the root `NOTES.md`.
 
 New Account Controls work after the merge goes on a fresh
 `account-controls/<feature>` branch from `main`, not on
@@ -102,12 +103,19 @@ New Account Controls work after the merge goes on a fresh
   new order, the hidden account and the new name (2026-10-02).
 
 ### Later
-- Once the tutorials page has a free exploration button, test that
-  logging off and coming back through it starts from the default
-  order. If that path is all native Links with no page reload, the
-  previous person's order and hidden accounts carry over, and the Log
-  Off button (or the free exploration button) will need an override
-  that resets the saved state. (Also in the root `NOTES.md`.)
+- **The Accounts page's settings must not carry over between
+  sessions.** The account order, names and hidden accounts are settings
+  for the Accounts page (changed from the Account Preferences page),
+  kept in memory in `AccountOrder.tsx`. Once the Tutorials page has its
+  free exploration button (a kiosk-wide feature, not part of Account
+  Controls), test that logging off and coming back through it shows
+  the Accounts page in its default order, with nothing hidden or
+  renamed. If that path is all native Links with no page reload, the
+  previous person's settings carry over, and the Log Off button (or
+  the free exploration button) will need an override that resets them
+  (`resetAccountState("base")`). The tutorial's own settings are
+  already reset by `AccountControlsTutorialReset` on `accounts-1`.
+  (Also in the root `NOTES.md`.)
 
 ## Account Preferences (base page)
 
