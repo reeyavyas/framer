@@ -5,6 +5,7 @@ import React, {
     forwardRef,
     useRef,
     useCallback,
+    startTransition,
 } from "react"
 import { useMotionValue, MotionValue } from "framer-motion"
 import type { ComponentType } from "react"
@@ -129,7 +130,7 @@ function getEdgePull(
     const edgeDepth = Math.max(depthX, depthY)
 
     if (edgeDepth <= 0) {
-        return { isNearEdge: false, pullX: 0, pullY: 0 }
+        return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
     }
 
     const blendX = clamp(depthX / zone, 0, 1)
@@ -151,12 +152,10 @@ function getEdgePull(
         isNearEdge: true,
         pullX: nx * amount,
         pullY: ny * amount,
+        strength: amount,
     }
 }
 
-// One axis of clampWithEdgeBounce: past an edge, squash a little beyond it
-// (up to EDGE_OVERSHOOT_MAX) and kick back inward; inside the soft zone,
-// a gentle inward nudge.
 function bounceAxis(v: number, min: number, max: number) {
     let n = clamp(v, min - EDGE_OVERSHOOT_MAX, max + EDGE_OVERSHOOT_MAX)
     let rebound = 0
@@ -228,7 +227,8 @@ function collisionRamp(c: CircleState, now: number) {
 
 function resolveCollisions(settledIds: Set<string>) {
     const list = Array.from(circles.values())
-    const now = performance.now()
+    const now =
+        typeof performance !== "undefined" ? performance.now() : Date.now()
 
     for (let step = 0; step < COLLISION_ITERATIONS; step++) {
         for (let i = 0; i < list.length; i++) {
@@ -404,6 +404,8 @@ function startLoopIfNeeded() {
         const settledIds = new Set<string>()
 
         circles.forEach((c) => {
+            if (!c) return
+
             if (c.isDragging) {
                 settledIds.add(c.id)
                 const edgeWhileDragging = getEdgePull(
@@ -427,9 +429,7 @@ function startLoopIfNeeded() {
             const circleElapsed = Math.max(0, totalElapsed - c.staggerDelay)
             const rawProgress = Math.min(circleElapsed / ENTRANCE_DURATION, 1)
 
-            // A circle dropped mid-entrance (endDrag sets hasSettled) stays
-            // where it was dropped instead of snapping back onto the arc.
-            if (rawProgress < 1 && !c.hasSettled) {
+            if (rawProgress < 1) {
                 const progress = 1 - Math.pow(1 - rawProgress, 3)
                 c.scale.set(progress)
 
@@ -478,10 +478,14 @@ function startLoopIfNeeded() {
 
         resolveCollisions(settledIds)
 
-        rafId = window.requestAnimationFrame(tick)
+        if (typeof window !== "undefined") {
+            rafId = window.requestAnimationFrame(tick)
+        }
     }
 
-    rafId = window.requestAnimationFrame(tick)
+    if (typeof window !== "undefined") {
+        rafId = window.requestAnimationFrame(tick)
+    }
 }
 
 const DRAG_Z_INDEX = 999
@@ -542,9 +546,16 @@ function useDraggableCircle(
                 removeListenersRef.current()
                 removeListenersRef.current = null
             }
+            const existing = circles.get(id)
+            if (existing) {
+                existing.isDragging = false
+                existing.pointerId = null
+            }
             circles.delete(id)
             if (circles.size === 0 && rafId !== null) {
-                window.cancelAnimationFrame(rafId)
+                if (typeof window !== "undefined") {
+                    window.cancelAnimationFrame(rafId)
+                }
                 rafId = null
                 entranceStartTime = null
             }
@@ -568,7 +579,8 @@ function useDraggableCircle(
         c.isDragging = false
         c.pointerId = null
         c.hasSettled = true
-        c.settledAt = performance.now()
+        c.settledAt =
+            typeof performance !== "undefined" ? performance.now() : Date.now()
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
@@ -577,8 +589,8 @@ function useDraggableCircle(
         c.anchorHomeY = resolved.y
         c.x.set(resolved.x)
         c.y.set(resolved.y)
-        setZIndex(baseZIndex(radius))
-    }, [id, radius])
+        startTransition(() => setZIndex(baseZIndex(radius)))
+    }, [id, radius, x, y])
 
     const onPointerDown = useCallback(
         (event: React.PointerEvent) => {
@@ -596,7 +608,7 @@ function useDraggableCircle(
             c.dragStartX = c.x.get()
             c.dragStartY = c.y.get()
             c.hasSettled = false
-            setZIndex(DRAG_Z_INDEX)
+            startTransition(() => setZIndex(DRAG_Z_INDEX))
 
             const onPointerMove = (moveEvent: PointerEvent) => {
                 const active = circles.get(id)
@@ -663,6 +675,7 @@ function useDraggableCircle(
             }
 
             const cleanup = () => {
+                if (typeof window === "undefined") return
                 window.removeEventListener("pointermove", onPointerMove)
                 window.removeEventListener("pointerup", onPointerUp)
                 window.removeEventListener("pointercancel", onPointerUp)
@@ -671,10 +684,12 @@ function useDraggableCircle(
                 }
             }
 
-            window.addEventListener("pointermove", onPointerMove)
-            window.addEventListener("pointerup", onPointerUp)
-            window.addEventListener("pointercancel", onPointerUp)
-            removeListenersRef.current = cleanup
+            if (typeof window !== "undefined") {
+                window.addEventListener("pointermove", onPointerMove)
+                window.addEventListener("pointerup", onPointerUp)
+                window.addEventListener("pointercancel", onPointerUp)
+                removeListenersRef.current = cleanup
+            }
 
             props.onPointerDown?.(event)
         },
@@ -831,6 +846,7 @@ export function withBudgetsVariantTrigger(
     return forwardRef((props: any, ref: any) => {
         const lastFiredAtRef = useRef(0)
         const fire = useCallback(() => {
+            if (typeof window === "undefined") return
             const now = Date.now()
             if (now - lastFiredAtRef.current < BRIDGE_DEDUPE_MS) return
             lastFiredAtRef.current = now
@@ -885,15 +901,18 @@ export function withBudgetsVariantTrigger(
 // "Budget Circles" into two independent components and controls which one
 // is mounted directly, instead of trying to flip an internal Variant.
 
-// True once the bridge event has fired (shared by the two visibility
-// overrides below).
+// Shared by the two visibility overrides below: true once the bridge
+// event has fired.
 function useBridgeFired() {
     const [fired, setFired] = useState(false)
+
     useEffect(() => {
+        if (typeof window === "undefined") return
         const handler = () => setFired(true)
         window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
         return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
     }, [])
+
     return fired
 }
 
@@ -905,6 +924,7 @@ export function withBudgetsCircles1Visibility(
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
         const hidden = useBridgeFired()
+
         if (hidden) return null
         return <Component {...props} ref={ref} />
     })
@@ -918,6 +938,7 @@ export function withBudgetsCircles2Visibility(
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
         const visible = useBridgeFired()
+
         if (!visible) return null
         return <Component {...props} ref={ref} />
     })
@@ -947,6 +968,7 @@ export function withBudgetsSuccessToast(
         const [opacity, setOpacity] = useState(0)
 
         useEffect(() => {
+            if (typeof window === "undefined") return
             let hideTimer: ReturnType<typeof setTimeout> | null = null
             let unmountTimer: ReturnType<typeof setTimeout> | null = null
             let fadeInFrame: number | null = null
@@ -967,14 +989,10 @@ export function withBudgetsSuccessToast(
                 clearTimers()
                 setMounted(true)
                 setOpacity(0)
-                // Mount at opacity 0 first, then flip to 1 once that has
-                // painted so the fade-in actually transitions instead of
+                // Mount at opacity 0 first, then flip to 1 on the next
+                // frame so the fade-in actually transitions instead of
                 // popping straight to visible.
-                // Two frames, not one: a single rAF can land in the same
-                // commit as the mount, so opacity 0 never paints.
-                fadeInFrame = requestAnimationFrame(() => {
-                    fadeInFrame = requestAnimationFrame(() => setOpacity(1))
-                })
+                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
                 hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
             }
 
@@ -1012,19 +1030,21 @@ export function withToastDismissButton(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const send = () =>
-            window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
         const dismiss = useCallback(
             (event: any) => {
                 props.onClick?.(event)
-                send()
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
             },
             [props]
         )
         const dismissTap = useCallback(
             (event: any, info: any) => {
                 props.onTap?.(event, info)
-                send()
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
+                }
             },
             [props]
         )
