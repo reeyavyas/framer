@@ -2,7 +2,7 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
-import { getVirtualScroll } from "./VirtualScroll.tsx"
+import { getVirtualScroll, type VirtualScrollHandle } from "./VirtualScroll.tsx"
 
 /**
  * TutorialOverlay
@@ -265,6 +265,64 @@ const CARD_MAX_WIDTH = 900
 // the listener in the component that fires that event.
 const SKIP_EVENT = "tutorial-skip"
 
+// Fires SKIP_EVENT asking the page to do this step's action itself (see
+// skipStep). True when a listener claimed it via preventDefault().
+function requestStepAction(advanceOnEvent: string): boolean {
+    return !window.dispatchEvent(
+        new CustomEvent(SKIP_EVENT, {
+            detail: { event: advanceOnEvent },
+            cancelable: true,
+        })
+    )
+}
+
+function pointInRect(r: DOMRect | null, x: number, y: number): boolean {
+    return !!r && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom
+}
+
+// Whether this step has a timer (or event estimate) for the progress
+// bar to show — gates the progress bar's property controls.
+function hasProgressTimer(
+    props: Partial<Record<keyof Props, unknown>>
+): boolean {
+    return !!(
+        props.nextStepAfterSeconds ||
+        props.autoAdvanceAfterSeconds ||
+        (props.advanceOnEvent && props.eventProgressSeconds)
+    )
+}
+
+// A VirtualScroll container can register after a step's effect runs
+// (e.g. it mounts later on the page), so a one-time getVirtualScroll()
+// would miss it for good. Looks once per frame until found, then calls
+// found(handle); if never found, calls notFound() — so a native
+// container starts being watched up to this many frames late.
+// ponytail: fixed frame cap, subscribe to registration in VirtualScroll
+// if a container ever registers later than this.
+const VIRTUAL_SCROLL_LOOKUP_FRAMES = 60
+
+function lookupVirtualScroll(
+    id: string,
+    found: (v: VirtualScrollHandle) => () => void,
+    notFound?: () => () => void
+): () => void {
+    let cleanup: (() => void) | undefined
+    let frames = 0
+    let rafId = 0
+    function look() {
+        const v = getVirtualScroll(id)
+        if (v) cleanup = found(v)
+        else if (!id || ++frames > VIRTUAL_SCROLL_LOOKUP_FRAMES)
+            cleanup = notFound?.()
+        else rafId = requestAnimationFrame(look)
+    }
+    look()
+    return () => {
+        cancelAnimationFrame(rafId)
+        cleanup?.()
+    }
+}
+
 // Skip/exit are the overlay's own system chrome, not per-step tutorial
 // content — kept as a fixed brand color rather than a per-instance
 // property control, since they don't vary step to step.
@@ -500,7 +558,6 @@ export default function TutorialOverlay(props: Props) {
     const [arrowShown, setArrowShown] = React.useState(false)
     const [revealTimerDone, setRevealTimerDone] = React.useState(false)
 
-    const overlayRef = React.useRef<HTMLDivElement>(null)
     const rectRef = React.useRef<DOMRect | null>(null)
 
     // Re-render whenever this page group's current step changes, so the
@@ -508,7 +565,11 @@ export default function TutorialOverlay(props: Props) {
     const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
     React.useEffect(() => {
         if (!pageGroup) return
-        return subscribePageStep(pageGroup, forceUpdate)
+        const unsubscribe = subscribePageStep(pageGroup, forceUpdate)
+        // Catch a step change made between this render and subscribing
+        // (e.g. step 1's reset below, on a client-routed revisit).
+        forceUpdate()
+        return unsubscribe
     }, [pageGroup])
 
     // A fresh page load resets its group to step 1, so a stale counter
@@ -651,11 +712,14 @@ export default function TutorialOverlay(props: Props) {
     // first here for an extra reason beyond the general note above: this
     // one calls window.location.href — letting it fire inside Framer's
     // own editor would navigate the canvas itself away, not a preview.
+    // This and the timer below wait for `revealed`, when the card (and
+    // its progress bar) mounts, so the bar and the advance finish together.
     React.useEffect(() => {
         if (
             isCanvas ||
             !active ||
             !isMyTurn ||
+            !revealed ||
             systemPaused ||
             !autoAdvanceAfterSeconds ||
             !autoAdvanceLink
@@ -672,6 +736,7 @@ export default function TutorialOverlay(props: Props) {
         isCanvas,
         active,
         isMyTurn,
+        revealed,
         systemPaused,
         autoAdvanceAfterSeconds,
         autoAdvanceLink,
@@ -684,6 +749,7 @@ export default function TutorialOverlay(props: Props) {
             isCanvas ||
             !active ||
             !isMyTurn ||
+            !revealed ||
             systemPaused ||
             !nextStepAfterSeconds
         )
@@ -697,6 +763,7 @@ export default function TutorialOverlay(props: Props) {
         isCanvas,
         active,
         isMyTurn,
+        revealed,
         systemPaused,
         nextStepAfterSeconds,
         advanceStep,
@@ -745,8 +812,10 @@ export default function TutorialOverlay(props: Props) {
     // A set skipLink still wins over all of this — handled by the <a>
     // itself below, as before.
     const skipUsedRef = React.useRef(false)
+    const skipBackstopRef = React.useRef<ReturnType<typeof setTimeout>>()
     React.useEffect(() => {
         skipUsedRef.current = false
+        return () => clearTimeout(skipBackstopRef.current)
     }, [isMyTurn])
 
     const tapAdvances =
@@ -770,15 +839,7 @@ export default function TutorialOverlay(props: Props) {
         if (skipUsedRef.current) return
         skipUsedRef.current = true
 
-        if (advanceOnEvent) {
-            const handled = !window.dispatchEvent(
-                new CustomEvent(SKIP_EVENT, {
-                    detail: { event: advanceOnEvent },
-                    cancelable: true,
-                })
-            )
-            if (handled) return
-        }
+        if (advanceOnEvent && requestStepAction(advanceOnEvent)) return
 
         if (scrollAdvancesStep) {
             // 1% past the threshold, so rounding in the scroll position
@@ -801,7 +862,7 @@ export default function TutorialOverlay(props: Props) {
             // didn't cross the threshold (e.g. content shorter than
             // expected), advance anyway, so one-skip-per-step can't leave
             // the user stuck on this step.
-            setTimeout(() => {
+            skipBackstopRef.current = setTimeout(() => {
                 if (pageGroup && getPageStep(pageGroup) === stepNumber)
                     advanceStep()
             }, 1000)
@@ -852,10 +913,16 @@ export default function TutorialOverlay(props: Props) {
             // something else on the page moves on (e.g. the Card Alerts
             // tutorial's step shown under "Saving..."). Skipping would
             // only hide the overlay and leave the page open to taps, so
-            // keep it up and let the page move on by itself.
+            // keep it up and let the page move on by itself. Skip did
+            // nothing, so it stays available.
+            skipUsedRef.current = false
             return
-        } else {
+        } else if (pageGroup) {
             advanceStep()
+        } else {
+            // No group to advance (e.g. a tap step whose target is off
+            // screen on a single-step page): Skip did nothing.
+            skipUsedRef.current = false
         }
     }, [
         isCanvas,
@@ -931,14 +998,9 @@ export default function TutorialOverlay(props: Props) {
                 )
             )
                 return
-            const r = rectRef.current
             const insideHole =
                 revealedRef.current &&
-                !!r &&
-                e.clientX >= r.left &&
-                e.clientX <= r.right &&
-                e.clientY >= r.top &&
-                e.clientY <= r.bottom
+                pointInRect(rectRef.current, e.clientX, e.clientY)
             if (!insideHole) {
                 e.preventDefault()
                 e.stopPropagation()
@@ -989,15 +1051,10 @@ export default function TutorialOverlay(props: Props) {
                 )
             )
                 return
-            const r = rectRef.current
             if (
                 !pending &&
                 revealedRef.current &&
-                r &&
-                e.clientX >= r.left &&
-                e.clientX <= r.right &&
-                e.clientY >= r.top &&
-                e.clientY <= r.bottom
+                pointInRect(rectRef.current, e.clientX, e.clientY)
             ) {
                 const delayMs =
                     Math.max(clickAdvanceDelaySeconds || 0, 0) * 1000
@@ -1032,15 +1089,7 @@ export default function TutorialOverlay(props: Props) {
             window.location.href = nextButtonLink
             return
         }
-        if (advanceOnEvent) {
-            const handled = !window.dispatchEvent(
-                new CustomEvent(SKIP_EVENT, {
-                    detail: { event: advanceOnEvent },
-                    cancelable: true,
-                })
-            )
-            if (handled) return
-        }
+        if (advanceOnEvent && requestStepAction(advanceOnEvent)) return
         advanceStep()
     }, [nextButtonLink, advanceOnEvent, advanceStep])
 
@@ -1068,10 +1117,9 @@ export default function TutorialOverlay(props: Props) {
             !scrollAdvancesStep
         )
             return
-        const virtual = getVirtualScroll(scrollContainerTarget)
-        if (virtual) {
+        function watchVirtual(virtual: VirtualScrollHandle) {
             function checkVirtual() {
-                const percent = virtual!.getPercent()
+                const percent = virtual.getPercent()
                 const crossed =
                     scrollDirection === "up"
                         ? percent <= scrollThresholdPercent
@@ -1081,27 +1129,34 @@ export default function TutorialOverlay(props: Props) {
             checkVirtual()
             return virtual.subscribe(checkVirtual)
         }
-        const el = resolveScrollTarget(scrollContainerTarget)
-        function checkScroll() {
-            let percent: number
-            if (el === window) {
-                const doc = document.documentElement
-                const max = doc.scrollHeight - doc.clientHeight
-                percent = max > 0 ? (window.scrollY / max) * 100 : 100
-            } else {
-                const node = el as HTMLElement
-                const max = node.scrollHeight - node.clientHeight
-                percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+        function watchNative() {
+            const el = resolveScrollTarget(scrollContainerTarget)
+            function checkScroll() {
+                let percent: number
+                if (el === window) {
+                    const doc = document.documentElement
+                    const max = doc.scrollHeight - doc.clientHeight
+                    percent = max > 0 ? (window.scrollY / max) * 100 : 100
+                } else {
+                    const node = el as HTMLElement
+                    const max = node.scrollHeight - node.clientHeight
+                    percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+                }
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                if (crossed) advanceStep()
             }
-            const crossed =
-                scrollDirection === "up"
-                    ? percent <= scrollThresholdPercent
-                    : percent >= scrollThresholdPercent
-            if (crossed) advanceStep()
+            checkScroll()
+            el.addEventListener("scroll", checkScroll, { passive: true })
+            return () => el.removeEventListener("scroll", checkScroll)
         }
-        checkScroll()
-        el.addEventListener("scroll", checkScroll, { passive: true })
-        return () => el.removeEventListener("scroll", checkScroll)
+        return lookupVirtualScroll(
+            scrollContainerTarget,
+            watchVirtual,
+            watchNative
+        )
     }, [
         isCanvas,
         active,
@@ -1127,10 +1182,10 @@ export default function TutorialOverlay(props: Props) {
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive)
             return
-        const virtual = getVirtualScroll(scrollContainerTarget)
-        if (!virtual) return
-        virtual.freezeHere()
-        return () => virtual.unfreeze()
+        return lookupVirtualScroll(scrollContainerTarget, (virtual) => {
+            virtual.freezeHere()
+            return () => virtual.unfreeze()
+        })
     }, [
         isCanvas,
         active,
@@ -1419,7 +1474,6 @@ export default function TutorialOverlay(props: Props) {
                 receiving taps. This div still shows the dim/hole visually;
                 it just no longer decides what's clickable. */}
             <div
-                ref={overlayRef}
                 style={{
                     position: "fixed",
                     inset: 0,
@@ -1871,72 +1925,6 @@ export default function TutorialOverlay(props: Props) {
     )
 }
 
-TutorialOverlay.defaultProps = {
-    active: true,
-    target: "more-tab",
-    revealDelaySeconds: 0,
-    holeShape: "pill",
-    cornerRadius: 0,
-    pageGroup: "",
-    stepNumber: 1,
-    clickAdvancesStep: false,
-    clickAdvanceDelaySeconds: 0,
-    nextStepAfterSeconds: 0,
-    scrollAdvancesStep: false,
-    scrollDirection: "down",
-    scrollThresholdPercent: 50,
-    scrollContainerTarget: "",
-    freezeScrollWhileActive: false,
-    advanceOnEvent: "",
-    eventProgressSeconds: 0,
-    cardTitleLine1: "Let's disable your debit card",
-    cardTitleLine1Color: "#ffffff",
-    cardTitleLine1Font: { fontSize: 42, fontWeight: 700 },
-    cardTitleLine2: "",
-    cardTitleLine2Color: "#ffffff",
-    cardTitleLine2Font: { fontSize: 42, fontWeight: 700 },
-    cardBody: "Tap on More",
-    cardBackgroundColor: "rgba(20,20,28,0.88)",
-    cardBodyColor: "rgba(255,255,255,0.8)",
-    cardBodyFont: { fontSize: 30 },
-    cardAnchorX: "center",
-    cardAnchorY: "center",
-    cardOffsetX: 0,
-    cardOffsetY: 0,
-    showProgressBar: false,
-    progressBarColor: "#ffffff",
-    progressBarTrackColor: "rgba(255,255,255,0.25)",
-    showNextButton: false,
-    nextButtonLabel: "Next",
-    nextButtonTextColor: "#11232D",
-    nextButtonBackgroundColor: "#FFCC40",
-    nextButtonFont: {
-        fontFamily: "Inter",
-        fontWeight: 700,
-        fontSize: 34,
-        lineHeight: 1.2,
-    },
-    showGlow: true,
-    glowVariant: "breathing",
-    glowColor: "rgba(5,147,144,1)",
-    glowIntensity: 2,
-    showArrow: false,
-    arrowVariant: "curve",
-    arrowColor: "rgba(5,147,144,1)",
-    arrowStrokeWidth: 8,
-    arrowSize: 90,
-    arrowRotation: 0,
-    arrowReflectX: false,
-    arrowReflectY: false,
-    arrowDelaySeconds: 1.2,
-    arrowOffsetX: 0,
-    arrowOffsetY: -100,
-    autoAdvanceAfterSeconds: 0,
-    dimColor: "rgba(10, 10, 20, 0.55)",
-    showSkipButton: true,
-    skipLabel: "Skip",
-}
-
 addPropertyControls(TutorialOverlay, {
     active: {
         type: ControlType.Boolean,
@@ -2169,30 +2157,19 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
-        hidden: (props) =>
-            !props.nextStepAfterSeconds &&
-            !props.autoAdvanceAfterSeconds &&
-            !(props.advanceOnEvent && props.eventProgressSeconds),
+        hidden: (props) => !hasProgressTimer(props),
     },
     progressBarColor: {
         type: ControlType.Color,
         title: "Progress bar color",
         defaultValue: "#ffffff",
-        hidden: (props) =>
-            (!props.nextStepAfterSeconds &&
-                !props.autoAdvanceAfterSeconds &&
-                !(props.advanceOnEvent && props.eventProgressSeconds)) ||
-            !props.showProgressBar,
+        hidden: (props) => !hasProgressTimer(props) || !props.showProgressBar,
     },
     progressBarTrackColor: {
         type: ControlType.Color,
         title: "Progress bar track color",
         defaultValue: "rgba(255,255,255,0.25)",
-        hidden: (props) =>
-            (!props.nextStepAfterSeconds &&
-                !props.autoAdvanceAfterSeconds &&
-                !(props.advanceOnEvent && props.eventProgressSeconds)) ||
-            !props.showProgressBar,
+        hidden: (props) => !hasProgressTimer(props) || !props.showProgressBar,
     },
     showNextButton: {
         type: ControlType.Boolean,

@@ -206,6 +206,14 @@ function withVirtualScroll(id: string) {
                 startPos: number
             } | null>(null)
             const listenersRef = React.useRef(new Set<() => void>())
+            // The running scrollToTop/scrollToPercent animation, if any —
+            // stopped by any new input or animation so the two never
+            // fight over posRef.
+            const animationRef = React.useRef<{ stop(): void } | null>(null)
+            const stopAnimation = () => {
+                animationRef.current?.stop()
+                animationRef.current = null
+            }
 
             const setPos = React.useCallback(
                 (v: number) => {
@@ -260,9 +268,17 @@ function withVirtualScroll(id: string) {
                 // entry behind instead of removing it.
                 const key = scopedKey(id)
                 function animateTo(target: number) {
-                    animate(posRef.current, target, {
+                    stopAnimation()
+                    animationRef.current = animate(posRef.current, target, {
                         duration: 0.5,
                         onUpdate: (v) => {
+                            // Same range clamp as setPos (in case the
+                            // content shrank mid-animation), but not its
+                            // frozen check — see scrollToTop.
+                            v = Math.min(
+                                Math.max(v, -EDGE_TOLERANCE_PX),
+                                maxRef.current
+                            )
                             posRef.current = v
                             y.set(-v)
                             listenersRef.current.forEach((fn) => fn())
@@ -301,6 +317,7 @@ function withVirtualScroll(id: string) {
                 }
                 registry.set(key, handle)
                 return () => {
+                    stopAnimation()
                     // Only remove OWN registration, never someone else's
                     // that may have since taken over this key — two
                     // containers landing on the same key (e.g. a
@@ -342,9 +359,14 @@ function withVirtualScroll(id: string) {
 
                 function onWheel(e: WheelEvent) {
                     e.preventDefault()
+                    stopAnimation()
                     setPos(posRef.current + e.deltaY)
                 }
                 function onTouchStart(e: TouchEvent) {
+                    // A second finger never takes over the drag (see the
+                    // header comment) — only the first one drives it.
+                    if (dragRef.current) return
+                    stopAnimation()
                     const touch = e.changedTouches[0]
                     dragRef.current = {
                         id: touch.identifier,

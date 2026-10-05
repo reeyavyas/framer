@@ -275,6 +275,9 @@ anywhere else on the page.
   - **Reset PIN Tutorial** (Accounts → More → Card Controls):
     `MoreTabTarget` and `CardControlsTarget` (shared), `ResetPin`,
     `NewPin`, `ResetPinConfirm`.
+  - **Log Off Tutorial** (Accounts → Settings → Logout, then the
+    confirmation overlay): `SettingsButton` (shared), `Logout`
+    (marker), `YesButton`.
   - **Account Controls Tutorial** (Accounts → Settings → Account
     Preferences, back by the bottom nav's Accounts): `SettingsButton`
     (shared), `AccountPreferencesItem`, `AccountPrefsEdit`,
@@ -348,18 +351,18 @@ anywhere else on the page.
 - `VirtualScroll.tsx` — replaces native scrolling on one Frame with a
   JS-owned position, for a step needing a real zero-tolerance freeze
   (native scroll + a JS veto can't give that without jank — see the
-  file's own top comment). One export per container, same convention
-  as `TutorialTargets.tsx`: `VirtualScrollTravelContent` (id
-  `"scrollable-content"`, Travel Notice page) and
+  file's own top comment). Two exports: `VirtualScrollGeneral` (id
+  `"scrollable-content"`; Travel Notice, Card Controls 1 and Card
+  Controls 3, and the default pick for any new page) and
   `VirtualScrollCardAlertsContent` (id `"card-alerts-scroll"`, Card
-  Alerts tutorial page). **Never apply the same export to a second
-  container** — its id keys a single shared registry entry, so two
-  containers under the same id race for it and whichever last
+  Alerts tutorial page). Registry entries are keyed by page path plus
+  id (see below), so one export can serve many pages, but **never
+  apply the same export to a second container on the same page** —
+  two containers under the same key race for it and whichever last
   registers "wins," leaving the other with a state change that was
-  never really applied to IT. This exact mistake (reusing
-  `VirtualScrollTravelContent` on the Card Alerts page instead of
-  adding a second export) was reported as a Card Alerts step not
-  behaving as configured.
+  never really applied to IT. Before page-scoping, this exact mistake
+  (reusing the Travel Notice export on the Card Alerts page) was
+  reported as a Card Alerts step not behaving as configured.
 
   `TutorialOverlay`'s `freezeScrollWhileActive`/`freezeHere`/
   `unfreeze` stops motion in BOTH directions, scoped strictly to the
@@ -413,12 +416,12 @@ unverified assumption this leans on (URL-before-mount timing during a
 Framer page transition — unchanged from the discussion below, just
 shipped anyway on the standard-client-routing assumption).
 
-Each page's export (`VirtualScrollTravelContent`,
-`VirtualScrollCardAlertsContent`, `VirtualScrollCardControls1Content`,
-`VirtualScrollCardControls3Content`) still carries its own id string —
-that's no longer required for correctness, but was kept as-is rather
-than collapsed to one shared export, mainly so no existing canvas
-Override selection needs to change. Card Alerts' id in particular stays
+The former per-page exports (`VirtualScrollTravelContent`,
+`VirtualScrollCardControls1Content`, `VirtualScrollCardControls3Content`)
+have since been collapsed into the one shared `VirtualScrollGeneral`
+(id `"scrollable-content"`), since page-scoping made their distinct ids
+unnecessary. `VirtualScrollCardAlertsContent` keeps its own id. Card
+Alerts' id in particular stays
 its own dedicated one on purpose: `CardAlertsSave.tsx` hand-types that
 same id as `VIRTUAL_SCROLL_ID` to reach it via `window.__getVirtualScroll`
 for its Saving-overlay scroll-to-top, and that lookup depends on the id
@@ -440,7 +443,7 @@ needing a new id invented at that point.
 
 Practical effect going forward: a brand new page's "Scrollable Content"
 layer no longer needs a new export written for it. Any existing export
-above (e.g. `VirtualScrollTravelContent`) can be applied to a new page's
+above (e.g. `VirtualScrollGeneral`) can be applied to a new page's
 layer as-is in Framer's Override picker — the id no longer needs to be
 unique per page, so there's nothing left to forget to change.
 
