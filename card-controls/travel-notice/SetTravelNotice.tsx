@@ -32,7 +32,7 @@ import { addPropertyControls, ControlType } from "framer"
  *
  *   sessionStorage.getItem("kioskTravelNoticeToastFlag") -> "1"
  *
- * Read once, cleared, and used by TravelNoticeToast.tsx's
+ * Read once, cleared, and used by CardControlsToasts.tsx's
  * withTravelNoticeToast override (applied on whatever page the Save link
  * lands on) to trigger the "Your travel notice has been created" toast.
  *
@@ -75,7 +75,7 @@ import { addPropertyControls, ControlType } from "framer"
  * (which reads "kioskTravelNotice" and would otherwise show it once as
  * if the user had set it). TravelNoticeSection.tsx with its own
  * `tutorial` on reads this same tutorial key. The toast flag key stays
- * shared, so TravelNoticeToast.tsx (unchanged, shared with the base
+ * shared, so CardControlsToasts.tsx (unchanged, shared with the base
  * flow) picks it up exactly the same way — Save doesn't need a disabled
  * state here since the fixed values make it valid from the very first
  * render.

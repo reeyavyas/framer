@@ -160,7 +160,7 @@ export function TravelNotice(
     return withTutorialTarget("travel-notice")(Component)
 }
 
-// Steps 5–8 are MARKERS over SetTravelNoticeTutorial.tsx's individual
+// Steps 5–8 are MARKERS over SetTravelNotice.tsx's (Tutorial copy on) individual
 // fields. Start Date, End Date, Destinations and the Save button aren't
 // separately selectable Framer layers — they're plain JSX inside one
 // component's render — so each gets an empty marker frame positioned
@@ -191,7 +191,7 @@ export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
 }
 
 // Step 9 — MARKER: Card Controls 2 page, over the
-// TravelNoticeSectionTutorial component showing the saved notice
+// TravelNoticeSection component (Tutorial copy on) showing the saved notice
 export function TravelNoticeShown(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -221,7 +221,7 @@ export function SetCardAlerts(
 // real Set Card Alerts page uses, contaminating a real user's actual
 // alert settings. The tutorial doesn't need it anyway: Save on a frozen
 // walkthrough page can just be hardcoded enabled (see
-// SetTravelNoticeTutorial.tsx's Save for precedent), and the native
+// SetTravelNotice.tsx's Tutorial copy Save for precedent), and the native
 // switch already animates its own on/off state on tap with no override
 // needed for that part.
 //

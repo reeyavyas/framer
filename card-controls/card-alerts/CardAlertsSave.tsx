@@ -28,8 +28,8 @@ import {
  *    tutorials/card-controls-tutorial/NOTES.md, "Card Alerts flow"),
  *    so anyToggleOn() can never go true there — gating on it would
  *    leave Save permanently muted. It renders unconditionally enabled
- *    instead, same reasoning as SetTravelNoticeTutorial.tsx's frozen
- *    Save: nothing real to validate on a walkthrough step. Both are
+ *    instead, same reasoning as SetTravelNotice.tsx's frozen
+ *    Tutorial copy Save: nothing real to validate on a walkthrough step. Both are
  *    plain top-level `function` exports rather than a factory-produced
  *    `const` — Framer's Code Override picker only lists exports shaped
  *    exactly like `function name(Component) {...}` at the top level of
@@ -224,7 +224,7 @@ export function withCardAlertsSave(
 // tapping them doesn't contaminate the real page's shared flags — but
 // that also means anyToggleOn() can never go true here, and a gated
 // Save would stay muted forever. This is a frozen walkthrough step, the
-// same reasoning SetTravelNoticeTutorial.tsx's Save already used: no
+// same reasoning SetTravelNotice.tsx's Tutorial copy Save uses: no
 // real "is anything on?" state to validate, so just render enabled.
 export function withCardAlertsSaveTutorial(
     Component: ComponentType<any>

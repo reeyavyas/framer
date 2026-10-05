@@ -59,9 +59,8 @@ tutorials/               The tutorial system
   account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
     AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
     AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
-  card-controls-tutorial/   Tutorial-only copies for the Card Controls tutorial
-    SetTravelNoticeTutorial.tsx      Frozen, pre-filled travel notice form
-    TravelNoticeSectionTutorial.tsx  Shows the tutorial's practice notice
+  card-controls-tutorial/   Notes only: the Card Controls tutorial uses the base
+                            travel notice components with "Tutorial copy" on
   NOTES.md
 
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing

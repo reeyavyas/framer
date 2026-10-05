@@ -179,7 +179,7 @@ export function getVirtualScroll(
 // doesn't exist at all (not just "hasn't been touched yet"), so an
 // unconditional assignment here crashes rendering on every page any
 // tutorial-overlays file loads on, published or not. Same class of bug
-// TravelNoticeSectionTutorial.tsx already documents for
+// TravelNoticeSection.tsx already documents for
 // sessionStorage: this line runs at module-evaluation time, which
 // happens during SSR too, not only in the browser.
 if (typeof window !== "undefined") {
@@ -307,7 +307,7 @@ function withVirtualScroll(id: string) {
                         // plain `() => listenersRef.current.delete(fn)`
                         // type-checks as `() => boolean` (Set.delete's own
                         // return value), which useEffect's cleanup return
-                        // type rejects. Same footgun TravelNoticeToast.tsx
+                        // type rejects. Same footgun CardControlsToasts.tsx
                         // already documents.
                         return () => {
                             listenersRef.current.delete(fn)

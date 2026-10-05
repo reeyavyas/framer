@@ -76,7 +76,7 @@ What Tutorial copy does:
     `kioskTravelNotice`: sharing that key made the tutorial's practice
     notice show up once on the real Card Controls page, whose
     `TravelNoticeSection.tsx` has never seen that save. The toast flag
-    (`kioskTravelNoticeToastFlag`) stays shared, so `TravelNoticeToast.tsx`
+    (`kioskTravelNoticeToastFlag`) stays shared, so `CardControlsToasts.tsx`
     works unmodified. Cancel is unchanged from the base form.
 - `TravelNoticeSection.tsx` — reads the tutorial-only
   `kioskTravelNoticeTutorial` key (see above) instead of
@@ -87,10 +87,10 @@ What Tutorial copy does:
   sample placeholder differs, to preview correctly. Its own-shown
   marker key is `kioskTravelNoticeSectionTutorialShownAt`, distinct
   from the base page's `kioskTravelNoticeSectionShownAt`.
-- `TravelNoticeToast.tsx` — **no tutorial flag, on purpose.** The base
+- `CardControlsToasts.tsx` (travel notice toast) — **no tutorial flag, on purpose.** The base
   file's toast behavior after Save is exactly what this tutorial step
   needs too (both modes write the same `kioskTravelNoticeToastFlag`),
-  so the tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
+  so the tutorial flow uses `card-controls/CardControlsToasts.tsx`
   directly. Don't add a tutorial mode to this file unless its behavior
   actually needs to diverge.
 

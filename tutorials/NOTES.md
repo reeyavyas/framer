@@ -568,19 +568,19 @@ the likely starting point for.
 
 ## `card-controls-tutorial/`
 
-Tutorial-specific duplicates of individual `card-controls/` base-page
-components — only the ones that actually need to behave differently
-inside the tutorial flow, not a full copy of the folder. See
-`card-controls-tutorial/NOTES.md`.
+Notes only. This folder used to hold tutorial-specific duplicates of
+`card-controls/` components (`SetTravelNoticeTutorial.tsx`,
+`TravelNoticeSectionTutorial.tsx`); on 2026-10-05 they were folded
+back into the base components as a "Tutorial copy" setting:
 
-- `SetTravelNoticeTutorial.tsx` — duplicate of
-  `card-controls/travel-notice/SetTravelNotice.tsx`, with every field
-  pre-populated and frozen (fixed dates/destinations, no dropdowns).
-- `TravelNoticeSectionTutorial.tsx` — duplicate of
-  `card-controls/travel-notice/TravelNoticeSection.tsx`.
-- `TravelNoticeToast.tsx` is deliberately *not* duplicated here — the
-  tutorial flow uses `card-controls/travel-notice/TravelNoticeToast.tsx`
-  directly. See `card-controls-tutorial/NOTES.md`.
+- `card-controls/travel-notice/SetTravelNotice.tsx` with Tutorial copy
+  on: every field pre-populated and frozen (fixed dates/destinations,
+  no dropdowns).
+- `card-controls/travel-notice/TravelNoticeSection.tsx` with Tutorial
+  copy on: reads the tutorial's own notice.
+- The toast was never duplicated — the tutorial flow uses
+  `card-controls/CardControlsToasts.tsx` directly. See
+  `card-controls-tutorial/NOTES.md`.
 
 ## `account-controls-tutorial/`
 
