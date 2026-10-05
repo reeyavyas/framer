@@ -158,6 +158,11 @@ New Account Controls work after the merge goes on a fresh
   where the tap area fills the row from top to bottom; any more would
   take taps from the rows above and below. The tutorial list has the
   same controls.
+  The list's property controls and defaults (`ACCOUNT_LIST_CONTROLS`,
+  `ACCOUNT_LIST_DEFAULTS`) and its eye and ≡ icons live in
+  `AccountPreferencesEditMode.tsx`, and `normalizeOrder`/`sameOrder` in
+  `AccountOrder.tsx`, so the tutorial list can import them: it only
+  imports from those two files. Paste those two files before the lists.
 - `AccountPreferencesEditMode.tsx` holds the Overrides for edit mode and
   the save overlay. Timing is controlled by `SAVING_MS`, `SAVED_MS` and
   `FADE_MS`, which you edit directly.

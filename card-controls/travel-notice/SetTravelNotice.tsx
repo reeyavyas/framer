@@ -32,7 +32,7 @@ import { addPropertyControls, ControlType } from "framer"
  *
  *   sessionStorage.getItem("kioskTravelNoticeToastFlag") -> "1"
  *
- * Read once, cleared, and used by TravelNoticeToast.tsx's
+ * Read once, cleared, and used by CardControlsToasts.tsx's
  * withTravelNoticeToast override (applied on whatever page the Save link
  * lands on) to trigger the "Your travel notice has been created" toast.
  *
@@ -43,14 +43,58 @@ import { addPropertyControls, ControlType } from "framer"
  * on purpose: an earlier version needed a second flag key from this
  * file, and that cross-file coordination was the actual point of
  * failure in practice.
+ *
+ * Tutorial copy (the "Tutorial copy" property control, `tutorial`): the
+ * card-controls tutorial's Set Travel Notice page uses this same
+ * component with `tutorial` on (see
+ * `tutorials/card-controls-tutorial/NOTES.md`). Unlike the base form,
+ * every field is then pre-populated and frozen — this is a walkthrough
+ * step, not something the tutorial user actually fills in:
+ *
+ *   - Start Date is fixed to two weeks from today.
+ *   - End Date is fixed to 7 days after Start Date.
+ *   - Destinations is a fixed set of three states — Illinois, Kentucky,
+ *     Missouri — that can't be changed.
+ *
+ * Nothing is tappable except Save/Cancel: no calendar dropdown (on
+ * either date field or its icon), no destinations dropdown, no chip
+ * removal. The calendar icon (still swappable via the property control,
+ * same as the base form) and each chip's × are still drawn even though
+ * neither responds to a tap, so the step still visually matches the
+ * real page.
+ *
+ * Date display is "September 11" — month + day only, no year or
+ * weekday — unlike the base form's long format
+ * ("Friday, September 11, 2026"), since there's no benefit to a year or
+ * weekday on a fixed, always-current-relative example date.
+ *
+ * Save writes the same shape of sessionStorage record the base form
+ * does, but under its own tutorial-only key
+ * ("kioskTravelNoticeTutorial") so the tutorial's fixed practice notice
+ * never shows up in the real Card Controls page's TravelNoticeSection
+ * (which reads "kioskTravelNotice" and would otherwise show it once as
+ * if the user had set it). TravelNoticeSection.tsx with its own
+ * `tutorial` on reads this same tutorial key. The toast flag key stays
+ * shared, so CardControlsToasts.tsx (unchanged, shared with the base
+ * flow) picks it up exactly the same way — Save doesn't need a disabled
+ * state here since the fixed values make it valid from the very first
+ * render.
  */
 
 const STORAGE_KEY = "kioskTravelNotice"
 const STORAGE_TOAST_FLAG_KEY = "kioskTravelNoticeToastFlag"
 
+// Tutorial copy's fixed values — see "Tutorial copy" above.
+const TUTORIAL_STORAGE_KEY = "kioskTravelNoticeTutorial"
+const TUTORIAL_DESTINATIONS = ["Illinois", "Kentucky", "Missouri"]
+const START_DAYS_FROM_TODAY = 14
+const TRIP_LENGTH_DAYS = 7
+
 type FieldKey = "start" | "end" | "destinations"
 
 interface Props {
+    tutorial: boolean
+
     destinationOptions: string[]
     maxDestinations: number
     tripMaxMonths: number
@@ -136,30 +180,8 @@ interface Props {
 // Date helpers — plain Date math, no dependency, since this is a bare
 // Framer code file with no package.json to pull in a date library.
 // ---------------------------------------------------------------------
+// Two-letter labels — toLocaleDateString's "short" weekday is "Sun".
 const WEEKDAY_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-const WEEKDAY_FULL = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-]
-const MONTH_NAMES = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-]
 
 function startOfDay(d: Date): Date {
     return new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -207,14 +229,30 @@ function getMaxAllowedDate(today: Date): Date {
     return new Date(isDecember ? year + 1 : year, 11, 31)
 }
 
+// "9/11/26"
 function formatFieldShort(d: Date): string {
-    return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`
+    return d.toLocaleDateString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "2-digit",
+    })
 }
+// "Friday, September 11, 2026"
 function formatFieldLong(d: Date): string {
-    return `${WEEKDAY_FULL[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+    return d.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    })
 }
+// "September 2026"
 function formatMonthYear(d: Date): string {
-    return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
+    return d.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+}
+// "September 11" — month + day only, no year, no weekday (tutorial copy).
+function formatMonthDay(d: Date): string {
+    return d.toLocaleDateString("en-US", { month: "long", day: "numeric" })
 }
 function toISODate(d: Date): string {
     const pad = (n: number) => String(n).padStart(2, "0")
@@ -266,6 +304,39 @@ function CalendarPanel({
     const canGoPrev = startOfMonth(viewMonth) > startOfMonth(minDate)
     const canGoNext = startOfMonth(viewMonth) < startOfMonth(maxDate)
 
+    // Previous (-1) / next (1) month arrow.
+    function monthButton(step: -1 | 1) {
+        const canGo = step < 0 ? canGoPrev : canGoNext
+        return (
+            <button
+                type="button"
+                aria-label={step < 0 ? "Previous month" : "Next month"}
+                disabled={!canGo}
+                onClick={() =>
+                    canGo &&
+                    onChangeViewMonth(
+                        new Date(
+                            viewMonth.getFullYear(),
+                            viewMonth.getMonth() + step,
+                            1
+                        )
+                    )
+                }
+                style={{
+                    background: "transparent",
+                    border: "none",
+                    padding: 8,
+                    cursor: canGo ? "pointer" : "default",
+                    opacity: canGo ? 1 : 0.3,
+                    ...props.calendarHeaderFont,
+                    color: props.calendarHeaderColor,
+                }}
+            >
+                {step < 0 ? "‹" : "›"}
+            </button>
+        )
+    }
+
     return (
         <div
             style={{
@@ -290,32 +361,7 @@ function CalendarPanel({
                     marginBottom: 16,
                 }}
             >
-                <button
-                    type="button"
-                    aria-label="Previous month"
-                    disabled={!canGoPrev}
-                    onClick={() =>
-                        canGoPrev &&
-                        onChangeViewMonth(
-                            new Date(
-                                viewMonth.getFullYear(),
-                                viewMonth.getMonth() - 1,
-                                1
-                            )
-                        )
-                    }
-                    style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 8,
-                        cursor: canGoPrev ? "pointer" : "default",
-                        opacity: canGoPrev ? 1 : 0.3,
-                        ...props.calendarHeaderFont,
-                        color: props.calendarHeaderColor,
-                    }}
-                >
-                    {"‹"}
-                </button>
+                {monthButton(-1)}
                 <div
                     style={{
                         ...props.calendarHeaderFont,
@@ -324,32 +370,7 @@ function CalendarPanel({
                 >
                     {formatMonthYear(viewMonth)}
                 </div>
-                <button
-                    type="button"
-                    aria-label="Next month"
-                    disabled={!canGoNext}
-                    onClick={() =>
-                        canGoNext &&
-                        onChangeViewMonth(
-                            new Date(
-                                viewMonth.getFullYear(),
-                                viewMonth.getMonth() + 1,
-                                1
-                            )
-                        )
-                    }
-                    style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 8,
-                        cursor: canGoNext ? "pointer" : "default",
-                        opacity: canGoNext ? 1 : 0.3,
-                        ...props.calendarHeaderFont,
-                        color: props.calendarHeaderColor,
-                    }}
-                >
-                    {"›"}
-                </button>
+                {monthButton(1)}
             </div>
 
             <div
@@ -540,6 +561,110 @@ function DestinationsPanel({
     )
 }
 
+// ---------------------------------------------------------------------
+// Start Date / End Date field: label, tappable value box with the
+// calendar icon cell, and its CalendarPanel (children) while open.
+// A disabled field (End Date before a start is picked) is dimmed.
+// In the tutorial copy it's frozen, not clickable, and shows
+// "September 11" (see "Tutorial copy" above); empty until the date is
+// filled in after mount (see startDate in SetTravelNotice).
+// ---------------------------------------------------------------------
+function DateField({
+    label,
+    date,
+    open,
+    enabled,
+    onTap,
+    props,
+    children,
+}: {
+    label: string
+    date: Date | null
+    open: boolean
+    enabled: boolean
+    onTap: () => void
+    props: Props
+    children: React.ReactNode
+}) {
+    const frozen = props.tutorial
+    return (
+        <div style={{ position: "relative" }}>
+            <div
+                style={{
+                    ...props.labelFont,
+                    color: props.labelColor,
+                    marginBottom: 12,
+                }}
+            >
+                {label}
+            </div>
+            <div style={{ position: "relative" }}>
+                <div
+                    onClick={onTap}
+                    style={{
+                        height: props.fieldHeight,
+                        display: "flex",
+                        alignItems: "stretch",
+                        boxSizing: "border-box",
+                        background: props.fieldBackgroundColor,
+                        border: `2px solid ${
+                            open
+                                ? props.fieldFocusBorderColor
+                                : props.fieldBorderColor
+                        }`,
+                        borderRadius: props.fieldCornerRadius,
+                        overflow: "hidden",
+                        cursor: enabled && !frozen ? "pointer" : "default",
+                        opacity: enabled ? 1 : 0.45,
+                    }}
+                >
+                    <span
+                        style={{
+                            ...props.fieldValueFont,
+                            color: props.fieldTextColor,
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "0 24px",
+                            minWidth: 0,
+                        }}
+                    >
+                        {date
+                            ? frozen
+                                ? formatMonthDay(date)
+                                : open
+                                  ? formatFieldShort(date)
+                                  : formatFieldLong(date)
+                            : ""}
+                    </span>
+                    <div
+                        style={{
+                            flexShrink: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 20px",
+                            background: props.iconCellBackgroundColor,
+                            borderLeft: `2px solid ${props.iconDividerColor}`,
+                        }}
+                    >
+                        <CalendarIconOrCustom
+                            style={{
+                                width: props.iconSize,
+                                height: props.iconSize,
+                                flexShrink: 0,
+                            }}
+                            color={props.iconColor}
+                            icon={props.calendarIcon}
+                        />
+                    </div>
+                </div>
+                {open && children}
+            </div>
+        </div>
+    )
+}
+
 /**
  * @framerSupportedLayoutWidth any
  * @framerSupportedLayoutHeight any
@@ -548,6 +673,7 @@ function DestinationsPanel({
  */
 export default function SetTravelNotice(props: Props) {
     const {
+        tutorial,
         destinationOptions,
         maxDestinations,
         tripMaxMonths,
@@ -560,16 +686,12 @@ export default function SetTravelNotice(props: Props) {
         cancelLabel,
         saveLink,
         cancelLink,
-        calendarIcon,
         labelColor,
         fieldBackgroundColor,
         fieldBorderColor,
         fieldFocusBorderColor,
-        fieldTextColor,
         placeholderColor,
         iconColor,
-        iconCellBackgroundColor,
-        iconDividerColor,
         chipBackgroundColor,
         chipTextColor,
         chipRemoveColor,
@@ -597,8 +719,30 @@ export default function SetTravelNotice(props: Props) {
     } = props
 
     const [startDate, setStartDate] = React.useState<Date | null>(null)
-    const [endDate, setEndDate] = React.useState<Date | null>(null)
-    const [destinations, setDestinations] = React.useState<string[]>([])
+    const [pickedEndDate, setEndDate] = React.useState<Date | null>(null)
+    const [pickedDestinations, setDestinations] = React.useState<string[]>(
+        []
+    )
+
+    // Tutorial copy: Start Date starts at null and is filled in after
+    // mount, not computed during render. The published site is
+    // server-rendered, so on any day after publishing, a render-time
+    // "today" would differ between the server's HTML and the client's
+    // hydration render — a hydration mismatch (React error #418/#422;
+    // see TravelNoticeSection.tsx's summary state). The first render
+    // (server and hydration) shows empty dates, like the base form's
+    // empty fields. Set once per mount, so a kiosk session that stays
+    // open across midnight doesn't see it shift. End Date and
+    // Destinations follow from it and never change.
+    React.useEffect(() => {
+        if (tutorial) {
+            setStartDate(addDays(startOfDay(new Date()), START_DAYS_FROM_TODAY))
+        }
+    }, [tutorial])
+    const endDate = tutorial
+        ? startDate && addDays(startDate, TRIP_LENGTH_DAYS)
+        : pickedEndDate
+    const destinations = tutorial ? TUTORIAL_DESTINATIONS : pickedDestinations
     const [openField, setOpenField] = React.useState<FieldKey | null>(null)
     const [startViewMonth, setStartViewMonth] = React.useState(() =>
         startOfMonth(new Date())
@@ -614,14 +758,16 @@ export default function SetTravelNotice(props: Props) {
     const startMin = today
     const startMax = maxAllowedDate
     const endMin = startDate || today
-    const endMax = startDate
-        ? new Date(
-              Math.min(
-                  addMonthsClamped(startDate, tripMaxMonths).getTime(),
-                  maxAllowedDate.getTime()
-              )
-          )
-        : maxAllowedDate
+    // Latest end date a given start allows: tripMaxMonths out, but never
+    // past the kiosk-wide ceiling.
+    const endCapFor = (start: Date) =>
+        new Date(
+            Math.min(
+                addMonthsClamped(start, tripMaxMonths).getTime(),
+                maxAllowedDate.getTime()
+            )
+        )
+    const endMax = startDate ? endCapFor(startDate) : maxAllowedDate
 
     // Changing the start date can invalidate an already-chosen end date
     // (now before it, or now past the tripMaxMonths/ceiling window) —
@@ -631,13 +777,7 @@ export default function SetTravelNotice(props: Props) {
         setEndDate((prev) => {
             if (!prev) return prev
             if (isBeforeDay(prev, startDate)) return null
-            const cap = new Date(
-                Math.min(
-                    addMonthsClamped(startDate, tripMaxMonths).getTime(),
-                    maxAllowedDate.getTime()
-                )
-            )
-            if (isAfterDay(prev, cap)) return null
+            if (isAfterDay(prev, endCapFor(startDate))) return null
             return prev
         })
         setEndViewMonth(startOfMonth(startDate))
@@ -681,7 +821,10 @@ export default function SetTravelNotice(props: Props) {
         setDestinations((prev) => prev.filter((s) => s !== state))
     }
 
-    const isValid = !!startDate && !!endDate && destinations.length > 0
+    // The tutorial copy's Save has no disabled state — its fixed values
+    // are always valid, so it's always styled "enabled".
+    const isValid =
+        tutorial || (!!startDate && !!endDate && destinations.length > 0)
 
     function persistAndProceed(e: React.MouseEvent<HTMLAnchorElement>) {
         if (!isValid) {
@@ -695,7 +838,10 @@ export default function SetTravelNotice(props: Props) {
                 destinations,
                 savedAt: Date.now(),
             }
-            window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+            window.sessionStorage.setItem(
+                tutorial ? TUTORIAL_STORAGE_KEY : STORAGE_KEY,
+                JSON.stringify(payload)
+            )
             window.sessionStorage.setItem(STORAGE_TOAST_FLAG_KEY, "1")
         }
         if (!saveLink) e.preventDefault()
@@ -706,6 +852,12 @@ export default function SetTravelNotice(props: Props) {
         height: iconSize,
         flexShrink: 0,
     }
+    const xIcon = (
+        <XIcon
+            style={{ width: iconSize * 0.5, height: iconSize * 0.5 }}
+            color={chipRemoveColor}
+        />
+    )
 
     return (
         <div
@@ -720,179 +872,66 @@ export default function SetTravelNotice(props: Props) {
                 boxSizing: "border-box",
             }}
         >
-            {/* Start Date */}
-            <div style={{ position: "relative" }}>
-                <div
-                    style={{
-                        ...labelFont,
-                        color: labelColor,
-                        marginBottom: 12,
+            {/* Start Date. Not tagged with data-tutorial-target: this row
+                lives inside this component's own render tree, not as a
+                separately selectable Framer layer, so the tutorial
+                spotlights it with a separate marker layer (TravelStart)
+                instead — see tutorials/card-controls-tutorial/NOTES.md. */}
+            <DateField
+                label={startDateLabel}
+                date={startDate}
+                open={openField === "start"}
+                enabled
+                onTap={() =>
+                    !tutorial &&
+                    setOpenField((f) => (f === "start" ? null : "start"))
+                }
+                props={props}
+            >
+                <CalendarPanel
+                    viewMonth={startViewMonth}
+                    onChangeViewMonth={setStartViewMonth}
+                    selectedDate={startDate}
+                    minDate={startMin}
+                    maxDate={startMax}
+                    onSelectDate={(d) => {
+                        setStartDate(d)
+                        setOpenField(null)
                     }}
-                >
-                    {startDateLabel}
-                </div>
-                <div style={{ position: "relative" }}>
-                    <div
-                        onClick={() =>
-                            setOpenField((f) =>
-                                f === "start" ? null : "start"
-                            )
-                        }
-                        style={{
-                            height: fieldHeight,
-                            display: "flex",
-                            alignItems: "stretch",
-                            boxSizing: "border-box",
-                            background: fieldBackgroundColor,
-                            border: `2px solid ${
-                                openField === "start"
-                                    ? fieldFocusBorderColor
-                                    : fieldBorderColor
-                            }`,
-                            borderRadius: fieldCornerRadius,
-                            overflow: "hidden",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <span
-                            style={{
-                                ...fieldValueFont,
-                                color: fieldTextColor,
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "0 24px",
-                                minWidth: 0,
-                            }}
-                        >
-                            {startDate
-                                ? openField === "start"
-                                    ? formatFieldShort(startDate)
-                                    : formatFieldLong(startDate)
-                                : ""}
-                        </span>
-                        <div
-                            style={{
-                                flexShrink: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "0 20px",
-                                background: iconCellBackgroundColor,
-                                borderLeft: `2px solid ${iconDividerColor}`,
-                            }}
-                        >
-                            <CalendarIconOrCustom
-                                style={iconStyle}
-                                color={iconColor}
-                                icon={calendarIcon}
-                            />
-                        </div>
-                    </div>
-                    {openField === "start" && (
-                        <CalendarPanel
-                            viewMonth={startViewMonth}
-                            onChangeViewMonth={setStartViewMonth}
-                            selectedDate={startDate}
-                            minDate={startMin}
-                            maxDate={startMax}
-                            onSelectDate={(d) => {
-                                setStartDate(d)
-                                setOpenField(null)
-                            }}
-                            props={props}
-                        />
-                    )}
-                </div>
-            </div>
+                    props={props}
+                />
+            </DateField>
 
             {/* End Date */}
-            <div style={{ position: "relative" }}>
-                <div
-                    style={{
-                        ...labelFont,
-                        color: labelColor,
-                        marginBottom: 12,
+            <DateField
+                label={endDateLabel}
+                date={endDate}
+                open={openField === "end" && !!startDate}
+                enabled={tutorial || !!startDate}
+                onTap={() =>
+                    !tutorial &&
+                    startDate &&
+                    setOpenField((f) => (f === "end" ? null : "end"))
+                }
+                props={props}
+            >
+                <CalendarPanel
+                    viewMonth={endViewMonth}
+                    onChangeViewMonth={setEndViewMonth}
+                    selectedDate={endDate}
+                    minDate={endMin}
+                    maxDate={endMax}
+                    onSelectDate={(d) => {
+                        setEndDate(d)
+                        setOpenField(null)
                     }}
-                >
-                    {endDateLabel}
-                </div>
-                <div style={{ position: "relative" }}>
-                    <div
-                        onClick={() =>
-                            startDate &&
-                            setOpenField((f) => (f === "end" ? null : "end"))
-                        }
-                        style={{
-                            height: fieldHeight,
-                            display: "flex",
-                            alignItems: "stretch",
-                            boxSizing: "border-box",
-                            background: fieldBackgroundColor,
-                            border: `2px solid ${
-                                openField === "end"
-                                    ? fieldFocusBorderColor
-                                    : fieldBorderColor
-                            }`,
-                            borderRadius: fieldCornerRadius,
-                            overflow: "hidden",
-                            cursor: startDate ? "pointer" : "default",
-                            opacity: startDate ? 1 : 0.45,
-                        }}
-                    >
-                        <span
-                            style={{
-                                ...fieldValueFont,
-                                color: fieldTextColor,
-                                flex: 1,
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "0 24px",
-                                minWidth: 0,
-                            }}
-                        >
-                            {endDate
-                                ? openField === "end"
-                                    ? formatFieldShort(endDate)
-                                    : formatFieldLong(endDate)
-                                : ""}
-                        </span>
-                        <div
-                            style={{
-                                flexShrink: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "0 20px",
-                                background: iconCellBackgroundColor,
-                                borderLeft: `2px solid ${iconDividerColor}`,
-                            }}
-                        >
-                            <CalendarIconOrCustom
-                                style={iconStyle}
-                                color={iconColor}
-                                icon={calendarIcon}
-                            />
-                        </div>
-                    </div>
-                    {openField === "end" && startDate && (
-                        <CalendarPanel
-                            viewMonth={endViewMonth}
-                            onChangeViewMonth={setEndViewMonth}
-                            selectedDate={endDate}
-                            minDate={endMin}
-                            maxDate={endMax}
-                            onSelectDate={(d) => {
-                                setEndDate(d)
-                                setOpenField(null)
-                            }}
-                            props={props}
-                        />
-                    )}
-                </div>
-            </div>
+                    props={props}
+                />
+            </DateField>
 
-            {/* Destinations */}
+            {/* Destinations — in the tutorial copy, frozen, not
+                clickable; chips not removable but still show a
+                (non-functional) × for visual parity with the real app. */}
             <div style={{ position: "relative" }}>
                 <div
                     style={{
@@ -906,6 +945,7 @@ export default function SetTravelNotice(props: Props) {
                 <div style={{ position: "relative" }}>
                     <div
                         onClick={() =>
+                            !tutorial &&
                             !atMaxDestinations &&
                             setOpenField((f) =>
                                 f === "destinations" ? null : "destinations"
@@ -926,7 +966,10 @@ export default function SetTravelNotice(props: Props) {
                                     : fieldBorderColor
                             }`,
                             borderRadius: fieldCornerRadius,
-                            cursor: atMaxDestinations ? "default" : "pointer",
+                            cursor:
+                                tutorial || atMaxDestinations
+                                    ? "default"
+                                    : "pointer",
                         }}
                     >
                         <div
@@ -970,27 +1013,39 @@ export default function SetTravelNotice(props: Props) {
                                     >
                                         {state} - United States
                                     </span>
-                                    <button
-                                        type="button"
-                                        aria-label={`Remove ${state}`}
-                                        onClick={() => removeDestination(state)}
-                                        style={{
-                                            background: "transparent",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            padding: 4,
-                                            display: "flex",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <XIcon
+                                    {tutorial ? (
+                                        // Tutorial copy: drawn but not
+                                        // clickable — a plain span, not a
+                                        // <button>.
+                                        <span
+                                            aria-hidden="true"
                                             style={{
-                                                width: iconSize * 0.5,
-                                                height: iconSize * 0.5,
+                                                padding: 4,
+                                                display: "flex",
+                                                alignItems: "center",
                                             }}
-                                            color={chipRemoveColor}
-                                        />
-                                    </button>
+                                        >
+                                            {xIcon}
+                                        </span>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            aria-label={`Remove ${state}`}
+                                            onClick={() =>
+                                                removeDestination(state)
+                                            }
+                                            style={{
+                                                background: "transparent",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                padding: 4,
+                                                display: "flex",
+                                                alignItems: "center",
+                                            }}
+                                        >
+                                            {xIcon}
+                                        </button>
+                                    )}
                                 </span>
                             ))}
                         </div>
@@ -1028,7 +1083,9 @@ export default function SetTravelNotice(props: Props) {
                 )}
             </div>
 
-            {/* Save / Cancel */}
+            {/* Save / Cancel — in the tutorial copy Save is always
+                enabled (fixed values are always valid); Cancel is
+                unchanged from the base form. */}
             <div
                 style={{
                     display: "flex",
@@ -1181,84 +1238,12 @@ function XIcon({
     )
 }
 
-SetTravelNotice.defaultProps = {
-    destinationOptions: [
-        "California",
-        "Florida",
-        "Georgia",
-        "Illinois",
-        "Kentucky",
-        "Michigan",
-        "Missouri",
-        "Ohio",
-        "Tennessee",
-        "Texas",
-    ],
-    maxDestinations: 10,
-    tripMaxMonths: 3,
-    startDateLabel: "Start Date",
-    endDateLabel: "End Date",
-    destinationsLabel: "Destinations",
-    destinationsPlaceholder: "Enter your destination",
-    destinationsHelperTemplate: "Add up to {n} destinations",
-    saveLabel: "Save",
-    cancelLabel: "Cancel",
-    labelColor: "#3c3f44",
-    fieldBackgroundColor: "#ffffff",
-    fieldBorderColor: "#d7dade",
-    fieldFocusBorderColor: "#2f6fed",
-    fieldTextColor: "#22262b",
-    placeholderColor: "#9aa0a6",
-    iconColor: "#6b7076",
-    iconCellBackgroundColor: "#f5f6f7",
-    iconDividerColor: "#d7dade",
-    chipBackgroundColor: "#eef1f4",
-    chipTextColor: "#22262b",
-    chipRemoveColor: "#6b7076",
-    panelBackgroundColor: "#ffffff",
-    panelBorderColor: "#e2e5e8",
-    calendarHeaderColor: "#22262b",
-    calendarWeekdayColor: "#8a8f95",
-    calendarDayColor: "#22262b",
-    calendarDayMutedColor: "#c3c7cb",
-    calendarSelectedBackgroundColor: "#1f4fa8",
-    calendarSelectedTextColor: "#ffffff",
-    calendarTodayRingColor: "#1f4fa8",
-    calendarFooterColor: "#22262b",
-    optionTextColor: "#22262b",
-    optionSubTextColor: "#8a8f95",
-    optionHighlightColor: "#eaf1ff",
-    saveEnabledBackgroundColor: "#1f4fa8",
-    saveEnabledTextColor: "#ffffff",
-    saveDisabledBackgroundColor: "#d7dade",
-    saveDisabledTextColor: "#9aa0a6",
-    cancelBorderColor: "#1f4fa8",
-    cancelTextColor: "#1f4fa8",
-    labelFont: { fontFamily: "Inter", fontSize: 34, fontWeight: 500 },
-    fieldValueFont: { fontFamily: "Inter", fontSize: 34, fontWeight: 400 },
-    chipFont: { fontFamily: "Inter", fontSize: 30, fontWeight: 500 },
-    helperTextFont: { fontFamily: "Inter", fontSize: 26, fontWeight: 400 },
-    calendarHeaderFont: { fontFamily: "Inter", fontSize: 32, fontWeight: 600 },
-    calendarWeekdayFont: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
-    calendarDayFont: { fontFamily: "Inter", fontSize: 28, fontWeight: 400 },
-    calendarFooterFont: { fontFamily: "Inter", fontSize: 28, fontWeight: 600 },
-    destinationOptionFont: { fontFamily: "Inter", fontSize: 32, fontWeight: 400 },
-    buttonFont: { fontFamily: "Inter", fontSize: 34, fontWeight: 600 },
-    fieldHeight: 108,
-    fieldGap: 44,
-    fieldCornerRadius: 12,
-    chipCornerRadius: 999,
-    panelCornerRadius: 16,
-    calendarDayCornerRadius: 999,
-    calendarPanelWidth: 700,
-    buttonHeight: 100,
-    buttonCornerRadius: 12,
-    buttonPaddingX: 56,
-    buttonGap: 24,
-    iconSize: 40,
-}
-
 addPropertyControls(SetTravelNotice, {
+    tutorial: {
+        type: ControlType.Boolean,
+        title: "Tutorial copy",
+        defaultValue: false,
+    },
     destinationOptions: {
         type: ControlType.Array,
         title: "Destinations list",
@@ -1499,70 +1484,70 @@ addPropertyControls(SetTravelNotice, {
         title: "Label font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 34 },
+        defaultValue: { fontFamily: "Inter", fontSize: 34, fontWeight: 500 },
     },
     fieldValueFont: {
         type: ControlType.Font,
         title: "Field value font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 34 },
+        defaultValue: { fontFamily: "Inter", fontSize: 34, fontWeight: 400 },
     },
     chipFont: {
         type: ControlType.Font,
         title: "Chip font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 30 },
+        defaultValue: { fontFamily: "Inter", fontSize: 30, fontWeight: 500 },
     },
     helperTextFont: {
         type: ControlType.Font,
         title: "Helper text font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 26 },
+        defaultValue: { fontFamily: "Inter", fontSize: 26, fontWeight: 400 },
     },
     calendarHeaderFont: {
         type: ControlType.Font,
         title: "Calendar header font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 32 },
+        defaultValue: { fontFamily: "Inter", fontSize: 32, fontWeight: 600 },
     },
     calendarWeekdayFont: {
         type: ControlType.Font,
         title: "Calendar weekday font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 24 },
+        defaultValue: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
     },
     calendarDayFont: {
         type: ControlType.Font,
         title: "Calendar day font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 28 },
+        defaultValue: { fontFamily: "Inter", fontSize: 28, fontWeight: 400 },
     },
     calendarFooterFont: {
         type: ControlType.Font,
         title: "Calendar footer font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 28 },
+        defaultValue: { fontFamily: "Inter", fontSize: 28, fontWeight: 600 },
     },
     destinationOptionFont: {
         type: ControlType.Font,
         title: "Dropdown option font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 32 },
+        defaultValue: { fontFamily: "Inter", fontSize: 32, fontWeight: 400 },
     },
     buttonFont: {
         type: ControlType.Font,
         title: "Button font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 34 },
+        defaultValue: { fontFamily: "Inter", fontSize: 34, fontWeight: 600 },
     },
     fieldHeight: {
         type: ControlType.Number,

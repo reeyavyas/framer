@@ -34,7 +34,6 @@ export default function SplashProgressBar(props) {
 
     const progress = useMotionValue(0)
     const fillWidth = useTransform(progress, [0, 1], ["0%", "100%"])
-    const glowLeft = useTransform(progress, [0, 1], ["0%", "100%"])
 
     React.useEffect(() => {
         progress.set(0)
@@ -107,7 +106,7 @@ export default function SplashProgressBar(props) {
                     style={{
                         position: "absolute",
                         top: "50%",
-                        left: glowLeft,
+                        left: fillWidth,
                         width: glowSize,
                         height: glowSize,
                         borderRadius: "50%",
@@ -120,23 +119,6 @@ export default function SplashProgressBar(props) {
             )}
         </div>
     )
-}
-
-SplashProgressBar.defaultProps = {
-    barColor: "#6C5CE7",
-    barColor2: "#00E5FF",
-    trackColor: "rgba(255,255,255,0.12)",
-    cornerRadius: 999,
-    duration: 2,
-    delay: 0,
-    easing: "linear",
-    loop: false,
-    loopPause: 0,
-    shimmer: true,
-    glow: true,
-    glowColor: "#00E5FF",
-    glowSize: 14,
-    glowBlur: 18,
 }
 
 addPropertyControls(SplashProgressBar, {

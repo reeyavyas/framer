@@ -623,6 +623,16 @@ function useDraggableCircle(
         (event: React.PointerEvent) => {
             const c = circles.get(id)
             if (!c) return
+            // No grabbing until this circle's own entrance has finished:
+            // a drag during it fought the entrance arc (the circle jumped
+            // back onto the arc on release). Same clock as tick() uses.
+            if (
+                entranceStartTime === null ||
+                performance.now() - entranceStartTime <
+                    c.staggerDelay + ENTRANCE_DURATION
+            ) {
+                return
+            }
             if (removeListenersRef.current) {
                 removeListenersRef.current()
                 removeListenersRef.current = null

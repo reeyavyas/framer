@@ -63,9 +63,8 @@ Site-wide, page-agnostic components — not owned by any single feature.
   composition, where the splash screen is its own hand-built frame
   (native Framer animations, `SplashProgressBar.tsx`, custom glow
   pulses) — this component was never being switched to a "splash"
-  state to show it. The `variant` prop/enum (`lockScreen`/`splash`)
-  still exists on this component for now but has no splash content
-  behind it; treat `lockScreen` as the only meaningful value. Guards
+  state to show it. The leftover `variant` prop/enum has since been
+  removed too. Guards
   its own hydration internally (see **Hydration guard** above): the
   default export is a thin wrapper (`useIsMounted` +
   placeholder-or-render), and all the actual rendering logic lives in
@@ -92,9 +91,10 @@ Site-wide, page-agnostic components — not owned by any single feature.
     it's tuned. Has no background fill of its own — drop your own
     wallpaper/gradient layer underneath it in Framer and it shows
     through untouched. Dragging the panel up past a distance/velocity
-    threshold fires the `onSwipeUp` event control; every release
-    springs back to rest with a little overshoot, whether or not the
-    swipe cleared the threshold.
+    threshold fires the `onSwipeUp` event control and carries the pane
+    on off-screen, where it stays (so `onSwipeUp` should navigate away
+    or swap this instance out); a release short of the threshold
+    springs back with a little overshoot.
   - **Swipe Glass** — the lock screen is a pane of glass that lifts
     off the wallpaper as it's dragged (modelled on the iOS 26 unlock).
     The pane brightens the wallpaper behind it (with just a touch of

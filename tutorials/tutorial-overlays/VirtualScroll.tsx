@@ -150,10 +150,9 @@ const registry = new Map<string, VirtualScrollHandle>()
 // specific host, a container could briefly register under the
 // OUTGOING page's still-current path during the overlap window.
 function scopedKey(id: string): string {
-    // Defensive, not load-bearing today — every real caller of this
-    // reaches it from inside a useEffect, which never runs during SSR
-    // — but cheap insurance against a future caller that isn't.
-    if (typeof window === "undefined") return id
+    // No SSR guard needed: every real caller of this reaches it from
+    // inside a useEffect or an event handler, which never runs during
+    // SSR.
     return `${window.location.pathname}::${id}`
 }
 
@@ -180,7 +179,7 @@ export function getVirtualScroll(
 // doesn't exist at all (not just "hasn't been touched yet"), so an
 // unconditional assignment here crashes rendering on every page any
 // tutorial-overlays file loads on, published or not. Same class of bug
-// TravelNoticeSectionTutorial.tsx already documents for
+// TravelNoticeSection.tsx already documents for
 // sessionStorage: this line runs at module-evaluation time, which
 // happens during SSR too, not only in the browser.
 if (typeof window !== "undefined") {
@@ -206,6 +205,14 @@ function withVirtualScroll(id: string) {
                 startPos: number
             } | null>(null)
             const listenersRef = React.useRef(new Set<() => void>())
+            // The running scrollToTop/scrollToPercent animation, if any —
+            // stopped by any new input or animation so the two never
+            // fight over posRef.
+            const animationRef = React.useRef<{ stop(): void } | null>(null)
+            const stopAnimation = () => {
+                animationRef.current?.stop()
+                animationRef.current = null
+            }
 
             const setPos = React.useCallback(
                 (v: number) => {
@@ -260,9 +267,17 @@ function withVirtualScroll(id: string) {
                 // entry behind instead of removing it.
                 const key = scopedKey(id)
                 function animateTo(target: number) {
-                    animate(posRef.current, target, {
+                    stopAnimation()
+                    animationRef.current = animate(posRef.current, target, {
                         duration: 0.5,
                         onUpdate: (v) => {
+                            // Same range clamp as setPos (in case the
+                            // content shrank mid-animation), but not its
+                            // frozen check — see scrollToTop.
+                            v = Math.min(
+                                Math.max(v, -EDGE_TOLERANCE_PX),
+                                maxRef.current
+                            )
                             posRef.current = v
                             y.set(-v)
                             listenersRef.current.forEach((fn) => fn())
@@ -292,7 +307,7 @@ function withVirtualScroll(id: string) {
                         // plain `() => listenersRef.current.delete(fn)`
                         // type-checks as `() => boolean` (Set.delete's own
                         // return value), which useEffect's cleanup return
-                        // type rejects. Same footgun TravelNoticeToast.tsx
+                        // type rejects. Same footgun CardControlsToasts.tsx
                         // already documents.
                         return () => {
                             listenersRef.current.delete(fn)
@@ -301,6 +316,7 @@ function withVirtualScroll(id: string) {
                 }
                 registry.set(key, handle)
                 return () => {
+                    stopAnimation()
                     // Only remove OWN registration, never someone else's
                     // that may have since taken over this key — two
                     // containers landing on the same key (e.g. a
@@ -342,9 +358,14 @@ function withVirtualScroll(id: string) {
 
                 function onWheel(e: WheelEvent) {
                     e.preventDefault()
+                    stopAnimation()
                     setPos(posRef.current + e.deltaY)
                 }
                 function onTouchStart(e: TouchEvent) {
+                    // A second finger never takes over the drag (see the
+                    // header comment) — only the first one drives it.
+                    if (dragRef.current) return
+                    stopAnimation()
                     const touch = e.changedTouches[0]
                     dragRef.current = {
                         id: touch.identifier,

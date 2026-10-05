@@ -7,7 +7,7 @@ with the detail on what's in it; this file is just the map.
 ## Groups
 
 - **`card-controls/`** — Account-level card actions a user manages from
-  settings (travel notice now; card alerts planned). See
+  settings (travel notice and card alerts). See
   `card-controls/NOTES.md`.
 - **`reset-pin/`** — "Reset PIN" for the debit card, plus the toast
   with a countdown bar that it shows on Card Controls. **A card-controls
@@ -21,7 +21,7 @@ with the detail on what's in it; this file is just the map.
 - **`money-management/`** — Budgeting UI, currently the draggable "Budget
   Circles" spending categories. See `money-management/NOTES.md`.
 - **`main/`** — Site-wide, page-agnostic pieces not owned by any one
-  feature (backgrounds, the kiosk inactivity redirect). See
+  feature (the lock screen and splash, the kiosk inactivity redirect). See
   `main/NOTES.md`.
 - **`tutorials/`** — The tutorial system, in two independent subgroups:
   - `tutorials-main-page/` — builds the Tutorials landing page itself

@@ -19,7 +19,10 @@ card-controls/          Card-level account actions (settings)
   travel-notice/           "Set a travel notice on your card"
     SetTravelNotice.tsx      The form
     TravelNoticeSection.tsx  Where an active notice is displayed
-    TravelNoticeToast.tsx    Confirmation toast on save
+  card-alerts/             "Set card alerts"
+    CardAlertsToggleReport.tsx  Per-toggle overrides: is any alert on?
+    CardAlertsSave.tsx          Save button, Saving overlay, scroll to top
+  CardControlsToasts.tsx   Confirmation toasts on save (travel notice + card alerts)
   NOTES.md
 
 reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
@@ -39,11 +42,10 @@ money-management/       Budgeting UI
   NOTES.md
 
 main/                    Site-wide, page-agnostic pieces
-  backgrounds/              Animated gradient presets (via @firecms/neat)
-    NeatGradient1.tsx
-    bluemotionbackgeound.tsx
-    bluemotionbackground2.tsx
   AppInactivityOverlay.tsx  Idle-timeout kiosk redirect to /app
+  LockScreen.tsx            Phone lock screen: clock, notifications, swipe up
+  SplashProgressBar.tsx     Gradient-fill progress bar on the splash
+  SplashTimedRedirect.tsx   Override: splash redirects to login after a delay
   NOTES.md
 
 tutorials/               The tutorial system
@@ -53,9 +55,12 @@ tutorials/               The tutorial system
     TutorialOverlay.tsx        Per-step instruction card + hole + glow
     TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
     TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
+    VirtualScroll.tsx          Transform-based scroll container a tutorial can freeze and drive
   account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
     AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
     AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
+  card-controls-tutorial/   Notes only: the Card Controls tutorial uses the base
+                            travel notice components with "Tutorial copy" on
   NOTES.md
 
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing

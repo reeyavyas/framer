@@ -76,25 +76,31 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
  * On the canvas this always renders with sample data so it stays
  * stylable via the property controls below; the real read/hide/fill-in
  * behavior only runs in Preview/Published.
+ *
+ * Tutorial copy (the "Tutorial copy" property control, `tutorial`): the
+ * card-controls tutorial's Card Controls page uses this same component
+ * with `tutorial` on (see `tutorials/card-controls-tutorial/NOTES.md`).
+ * It then reads its record from the tutorial-only
+ * "kioskTravelNoticeTutorial" sessionStorage key (written by
+ * SetTravelNotice.tsx with its own `tutorial` on) instead of the base
+ * "kioskTravelNotice", so the tutorial's practice notice never leaks
+ * into the real Card Controls page. Otherwise it's unchanged: it
+ * already labels the record "Future Plans" whenever its startDate
+ * isn't today. SetTravelNotice.tsx's tutorial mode always writes a
+ * startDate two weeks out, so this naturally shows "Future Plans" —
+ * never "Happening Now" — with no changes needed here. Only the
+ * canvas-only sample (TUTORIAL_SAMPLE_SUMMARY below) differs, to
+ * preview correctly. Its own-shown marker key is
+ * "kioskTravelNoticeSectionTutorialShownAt" — distinct from the base
+ * page's own marker key so the two don't clobber each other's "already
+ * shown" state within the same session.
  */
 
 const STORAGE_KEY = "kioskTravelNotice"
 const SHOWN_MARKER_KEY = "kioskTravelNoticeSectionShownAt"
-
-const MONTH_NAMES = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-]
+// Tutorial copy's keys — see "Tutorial copy" in the header comment.
+const TUTORIAL_STORAGE_KEY = "kioskTravelNoticeTutorial"
+const TUTORIAL_SHOWN_MARKER_KEY = "kioskTravelNoticeSectionTutorialShownAt"
 
 interface StoredNotice {
     startDate: string
@@ -113,10 +119,13 @@ function parseISODate(iso: string): Date {
     const [y, m, d] = iso.split("-").map(Number)
     return new Date(y, m - 1, d)
 }
+// "September 02, 2026" — day zero-padded.
 function formatDisplayDate(iso: string): string {
-    const d = parseISODate(iso)
-    const day = String(d.getDate()).padStart(2, "0")
-    return `${MONTH_NAMES[d.getMonth()]} ${day}, ${d.getFullYear()}`
+    return parseISODate(iso).toLocaleDateString("en-US", {
+        month: "long",
+        day: "2-digit",
+        year: "numeric",
+    })
 }
 function todayISO(): string {
     const now = new Date()
@@ -151,7 +160,8 @@ function buildSummary(stored: StoredNotice): NoticeSummary {
 // No module-level mutable state on purpose — a `let` here would be
 // shared for the lifetime of the whole loaded bundle, not reset per
 // page visit. The one-shot marker instead lives in sessionStorage
-// itself (SHOWN_MARKER_KEY), keyed by the record's own `savedAt`.
+// itself (SHOWN_MARKER_KEY, or TUTORIAL_SHOWN_MARKER_KEY for the
+// tutorial copy), keyed by the record's own `savedAt`.
 //
 // Deliberately READ-ONLY — no sessionStorage writes here. An earlier
 // version wrote the marker right inside this same function, called
@@ -167,10 +177,16 @@ function buildSummary(stored: StoredNotice): NoticeSummary {
 // from the write (in the component, inside a useEffect that only runs
 // after commit) fixes that regardless of how many times this gets
 // called.
-function readNoticeIfUnshown(): NoticeSummary | null {
+function readNoticeIfUnshown(
+    storageKey: string,
+    shownMarkerKey: string
+): {
+    summary: NoticeSummary
+    savedAt: number
+} | null {
     if (typeof window === "undefined") return null
 
-    const raw = window.sessionStorage.getItem(STORAGE_KEY)
+    const raw = window.sessionStorage.getItem(storageKey)
     if (!raw) return null
 
     let stored: StoredNotice
@@ -181,28 +197,18 @@ function readNoticeIfUnshown(): NoticeSummary | null {
     }
     if (typeof stored.savedAt !== "number") return null
 
-    if (window.sessionStorage.getItem(SHOWN_MARKER_KEY) === String(stored.savedAt)) {
+    if (window.sessionStorage.getItem(shownMarkerKey) === String(stored.savedAt)) {
         return null
     }
-    return buildSummary(stored)
+    return { summary: buildSummary(stored), savedAt: stored.savedAt }
 }
 
-// Records that the CURRENT kioskTravelNotice record has now been shown.
+// Records that the notice saved at `savedAt` has now been shown.
 // Called from a useEffect (after commit, not during the speculative
 // render), and safe to call more than once: writing the same value to
 // sessionStorage twice is a no-op the second time.
-function markCurrentNoticeShown(): void {
-    if (typeof window === "undefined") return
-    const raw = window.sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    try {
-        const stored: StoredNotice = JSON.parse(raw)
-        if (typeof stored.savedAt === "number") {
-            window.sessionStorage.setItem(SHOWN_MARKER_KEY, String(stored.savedAt))
-        }
-    } catch {
-        // malformed record — nothing to mark
-    }
+function markNoticeShown(shownMarkerKey: string, savedAt: number): void {
+    window.sessionStorage.setItem(shownMarkerKey, String(savedAt))
 }
 
 // Single solid dot, optionally with a larger semi-transparent ring
@@ -296,8 +302,22 @@ const SAMPLE_SUMMARY: NoticeSummary = {
     dateRangeText: "September 02, 2026 - November 03, 2026",
     destinations: ["Illinois - United States", "Texas - United States"],
 }
+// Canvas-only placeholder for the tutorial copy, matching what
+// SetTravelNotice.tsx's tutorial mode saves (2 weeks out, 7 days, its
+// three fixed states).
+const TUTORIAL_SAMPLE_SUMMARY: NoticeSummary = {
+    headerLabel: "Future Plans",
+    dateRangeText: "October 11, 2026 - October 18, 2026",
+    destinations: [
+        "Illinois - United States",
+        "Kentucky - United States",
+        "Missouri - United States",
+    ],
+}
 
 interface Props {
+    tutorial: boolean
+
     destinationsLabel: string
     footerLabel: string
 
@@ -344,6 +364,7 @@ interface Props {
  */
 export default function TravelNoticeSection(props: Props) {
     const {
+        tutorial,
         destinationsLabel,
         footerLabel,
         dotColor,
@@ -376,6 +397,7 @@ export default function TravelNoticeSection(props: Props) {
         detailPaddingX,
         detailPaddingY,
         style,
+        ...rest
     } = props
 
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
@@ -391,21 +413,27 @@ export default function TravelNoticeSection(props: Props) {
     // Deferring the real read to the useEffect below means the first
     // render (server AND client hydration) always matches: nothing.
     const [summary, setSummary] = React.useState<NoticeSummary | null>(
-        isCanvas ? SAMPLE_SUMMARY : null
+        isCanvas ? (tutorial ? TUTORIAL_SAMPLE_SUMMARY : SAMPLE_SUMMARY) : null
     )
 
     // Runs after mount (client-only, post-hydration) — safe to touch
     // sessionStorage here. Marking "shown" is a write, so it happens in
     // this same effect, after the read, rather than inside the useState
     // initializer above, which must stay pure. See
-    // markCurrentNoticeShown()'s comment for why mixing the two caused
+    // readNoticeIfUnshown()'s comment for why mixing the two caused
     // a real bug.
     React.useEffect(() => {
         if (isCanvas) return
-        const found = readNoticeIfUnshown()
+        const shownMarkerKey = tutorial
+            ? TUTORIAL_SHOWN_MARKER_KEY
+            : SHOWN_MARKER_KEY
+        const found = readNoticeIfUnshown(
+            tutorial ? TUTORIAL_STORAGE_KEY : STORAGE_KEY,
+            shownMarkerKey
+        )
         if (!found) return
-        setSummary(found)
-        markCurrentNoticeShown()
+        setSummary(found.summary)
+        markNoticeShown(shownMarkerKey, found.savedAt)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -424,6 +452,14 @@ export default function TravelNoticeSection(props: Props) {
 
     return (
         <div
+            // Forwards whatever a TutorialTargets.tsx Code Override
+            // injects (data-tutorial-target) onto the actual DOM node.
+            // Without this, TutorialOverlay's querySelector for that
+            // attribute never finds anything: this is a custom code
+            // component, not a native Frame/Stack/Text layer, so unlike
+            // those, nothing forwards unrecognized props to the DOM
+            // automatically — this component has to do it itself.
+            {...rest}
             style={{
                 ...style,
                 width: "100%",
@@ -592,46 +628,12 @@ export default function TravelNoticeSection(props: Props) {
     )
 }
 
-TravelNoticeSection.defaultProps = {
-    destinationsLabel: "Destinations:",
-    footerLabel: "That's All!",
-    dotColor: "#2f8f8b",
-    dotHaloColor: "rgba(47, 143, 139, 0.22)",
-    dotHaloSize: 34,
-    lineColor: "#c7e3e1",
-    headerTextColor: "#22262b",
-    dateRangeTextColor: "#22262b",
-    destinationsLabelColor: "#6b7076",
-    destinationsTextColor: "#22262b",
-    footerTextColor: "#22262b",
-    backgroundColor: "#f2f3f5",
-    detailBackgroundColor: "#ffffff",
-    detailBorderColor: "#e2e5e8",
-    detailBorderWidth: 1,
-    headerFont: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
-    dateRangeFont: {
-        fontFamily: "Inter",
-        fontSize: 26,
-        fontWeight: 700,
-        fontStyle: "italic",
-    },
-    destinationsLabelFont: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
-    destinationsTextFont: { fontFamily: "Inter", fontSize: 24, fontWeight: 400 },
-    footerFont: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
-    dotSize: 16,
-    lineWidth: 2,
-    railContentGap: 20,
-    detailGap: 10,
-    destinationGap: 4,
-    rowGap: 20,
-    paddingX: 32,
-    paddingTop: 28,
-    paddingBottom: 28,
-    detailPaddingX: 24,
-    detailPaddingY: 20,
-}
-
 addPropertyControls(TravelNoticeSection, {
+    tutorial: {
+        type: ControlType.Boolean,
+        title: "Tutorial copy",
+        defaultValue: false,
+    },
     destinationsLabel: {
         type: ControlType.String,
         title: "Destinations label",
@@ -716,35 +718,40 @@ addPropertyControls(TravelNoticeSection, {
         title: "Header font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 30 },
+        defaultValue: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
     },
     dateRangeFont: {
         type: ControlType.Font,
         title: "Date range font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 26 },
+        defaultValue: {
+            fontFamily: "Inter",
+            fontSize: 26,
+            fontWeight: 700,
+            fontStyle: "italic",
+        },
     },
     destinationsLabelFont: {
         type: ControlType.Font,
         title: "Destinations label font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 24 },
+        defaultValue: { fontFamily: "Inter", fontSize: 24, fontWeight: 700 },
     },
     destinationsTextFont: {
         type: ControlType.Font,
         title: "Destinations text font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 24 },
+        defaultValue: { fontFamily: "Inter", fontSize: 24, fontWeight: 400 },
     },
     footerFont: {
         type: ControlType.Font,
         title: "Footer font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 30 },
+        defaultValue: { fontFamily: "Inter", fontSize: 30, fontWeight: 700 },
     },
     dotSize: {
         type: ControlType.Number,

@@ -1,5 +1,6 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
+import type { ObjectControlDescription } from "framer"
 import {
     motion,
     useMotionValue,
@@ -124,21 +125,11 @@ function formatDate(d: Date) {
 }
 
 function trailingSpacingFix(font: any): number {
-    const ls = font?.letterSpacing
-    if (ls === undefined || ls === null || ls === "") return 0
-    const num = typeof ls === "number" ? ls : parseFloat(ls)
-    if (Number.isNaN(num)) return 0
-    return -num
-}
-
-// Simple RGBA fallback helper string generator
-function rgba(r: number, g: number, b: number, a: number) {
-    return `rgba(${r}, ${g}, ${b}, ${a})`
+    return -(parseFloat(font?.letterSpacing) || 0)
 }
 
 function LockScreenInner(props) {
     const {
-        variant = "lockScreen",
         // Flattened Time controls
         useLiveTime,
         customTime,
@@ -179,13 +170,13 @@ function LockScreenInner(props) {
         onSwipeUp,
     } = props
 
-    const isLockScreen = variant !== "splash"
     const prefersReducedMotion = usePrefersReducedMotion()
 
     // Live-tick whenever either the clock or the date is set to "live" —
     // otherwise a live date paired with a custom time would never update.
-    // Disabled entirely on the splash variant, which has no clock at all.
-    const now = useTicker(isLockScreen && (useLiveTime || useLiveDate))
+    // (It used to be disabled entirely on the since-removed splash
+    // variant, which had no clock at all.)
+    const now = useTicker(useLiveTime || useLiveDate)
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
 
@@ -199,6 +190,12 @@ function LockScreenInner(props) {
         notification5,
     ].filter((n) => n && n.enabled !== false)
 
+    // Restarts the timers below when any enabled notification's delay or
+    // stay duration is edited, not just when the count changes.
+    const notificationTimingKey = enabledNotifications
+        .map((n) => `${n.delaySeconds}/${n.holdSeconds}`)
+        .join(",")
+
     // How many of enabledNotifications have arrived and are on-screen.
     const [visibleCount, setVisibleCount] = React.useState(0)
 
@@ -207,13 +204,12 @@ function LockScreenInner(props) {
     // stack has arrived it holds for the longest stay duration among them,
     // then clears so the sequence can arrive again from empty.
     React.useEffect(() => {
-        if (!isLockScreen || enabledNotifications.length === 0) return
+        if (enabledNotifications.length === 0) return
         const total = enabledNotifications.length
 
         if (visibleCount < total) {
             const next = enabledNotifications[visibleCount]
-            const delaySeconds =
-                next.delaySeconds === undefined ? 1.1 : next.delaySeconds
+            const delaySeconds = next.delaySeconds ?? 1.1
             const id = window.setTimeout(() => {
                 setVisibleCount((c) => c + 1)
             }, delaySeconds * 1000)
@@ -221,15 +217,14 @@ function LockScreenInner(props) {
         }
 
         const holdSeconds = enabledNotifications.reduce(
-            (max, n) =>
-                Math.max(max, n.holdSeconds === undefined ? 4.5 : n.holdSeconds),
+            (max, n) => Math.max(max, n.holdSeconds ?? 4.5),
             0
         )
         const id = window.setTimeout(() => {
             setVisibleCount(0)
         }, holdSeconds * 1000)
         return () => window.clearTimeout(id)
-    }, [isLockScreen, enabledNotifications.length, visibleCount])
+    }, [notificationTimingKey, visibleCount])
 
     // Track motion drag values to handle visual fading while swiping up
     const dragY = useMotionValue(0)
@@ -278,21 +273,16 @@ function LockScreenInner(props) {
     // like the notification card. A bright top rim plus a faint dark
     // underside rim reads as physical edge thickness instead of a flat
     // border.
-    const glassTint = rgba(255, 255, 255, glass.tintOpacity)
+    const glassTint = `rgba(255, 255, 255, ${glass.tintOpacity})`
     // Real Liquid Glass on the lock screen reads as a soft, largely
     // uniform frosted surface — barely a hint of brightening right at the
     // top edge, not a visible glowing patch. Kept subtle and tightly
     // contained for that reason.
-    const glassGlint = rgba(
-        255,
-        255,
-        255,
-        Math.min(glass.tintOpacity + 0.14, 0.5)
-    )
-    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), linear-gradient(180deg, ${glassTint} 0%, ${glassTint} 100%)`
-    const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
+    const glassGlint = `rgba(255, 255, 255, ${Math.min(glass.tintOpacity + 0.14, 0.5)})`
+    const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), ${glassTint}`
+    const glassBorderColor = `rgba(255, 255, 255, ${glass.borderOpacity})`
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
-    const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
+    const glassRim = `inset 0 1px 1px rgba(255, 255, 255, ${Math.min(glass.innerHighlight + 0.25, 1)}), inset 0 -1px 1px rgba(0,0,0,0.08)`
     const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), ${glassRim}`
     // A softer drop shadow just for the notification card — the shared
     // glass shadow (tuned for the small, high-contrast flashlight/camera
@@ -315,6 +305,45 @@ function LockScreenInner(props) {
         // will-change tells the browser to allocate that layer up front.
         willChange: "backdrop-filter",
     }
+
+    // One frosted round quick-action button (flashlight / camera): the
+    // uploaded image if set, else the built-in glyph. A plain render
+    // function rather than a component, so the button isn't remounted
+    // (and its backdrop blur re-promoted) on every render.
+    const glassIconButton = (image, alt: string, Glyph: typeof CameraGlyph) => (
+        <div
+            style={{
+                width: icons.buttonSize,
+                height: icons.buttonSize,
+                borderRadius: icons.buttonSize,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                ...buttonGlassStyle,
+            }}
+        >
+            {image ? (
+                <img
+                    src={image.src}
+                    alt={alt}
+                    style={{
+                        width: icons.iconSize,
+                        height: icons.iconSize,
+                        objectFit: "contain",
+                        filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
+                    }}
+                />
+            ) : (
+                <div
+                    style={{
+                        filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
+                    }}
+                >
+                    <Glyph size={icons.iconSize} color={icons.iconColor} />
+                </div>
+            )}
+        </div>
+    )
 
     // Handles the release of the drag gesture
     const handleDragEnd = (event, info) => {
@@ -464,10 +493,7 @@ function LockScreenInner(props) {
                 {enabledNotifications.length > 0 && (
                     <div
                         style={{
-                            marginBottom:
-                                layout.notificationGap === undefined
-                                    ? 72
-                                    : layout.notificationGap,
+                            marginBottom: layout.notificationGap ?? 72,
                             // Break out of the content layer's side inset —
                             // notifications should sit closer to the actual
                             // screen edges (20pt each side) than the wider
@@ -501,10 +527,7 @@ function LockScreenInner(props) {
                                 // instead of staying pinned at the bottom.
                                 .reverse()
                                 .map(({ n, slot }) => {
-                                    const cornerRadius =
-                                        n.cornerRadius === undefined
-                                            ? 50
-                                            : n.cornerRadius
+                                    const cornerRadius = n.cornerRadius ?? 25
                                     // Nests the icon's rounding to the
                                     // card's rather than a fixed value, so
                                     // they stay visually concentric as the
@@ -517,9 +540,9 @@ function LockScreenInner(props) {
                                             key={slot}
                                             layout
                                             // `layout` is back for smooth
-                                            // sibling reflow, but this card
-                                            // no longer has its own `y`
-                                            // travel on entrance — that
+                                            // sibling reflow. An earlier version
+                                            // gave this card a bigger `y`
+                                            // travel on entrance (32) — that
                                             // separate y motion was a much
                                             // shorter trip than the sibling
                                             // below has to make via `layout`
@@ -530,15 +553,15 @@ function LockScreenInner(props) {
                                             // finished at different
                                             // wall-clock moments and briefly
                                             // overlapped. This card now
-                                            // appears directly at its
-                                            // correct flex position (only
+                                            // appears close to its
+                                            // correct flex position (mostly
                                             // scaling in from center, which
                                             // is symmetric and doesn't
                                             // drift its edges toward the
                                             // sibling), so the sibling's
-                                            // `layout` reflow is the only
+                                            // `layout` reflow is the main
                                             // real motion happening — smooth
-                                            // again, with nothing left to
+                                            // again, with little left to
                                             // desync against.
                                             // Non-reduced-motion entrance/exit
                                             // deliberately never animates
@@ -841,77 +864,13 @@ function LockScreenInner(props) {
                     }}
                 >
                     {/* Flashlight Action */}
-                    <div
-                        style={{
-                            width: icons.buttonSize,
-                            height: icons.buttonSize,
-                            borderRadius: icons.buttonSize,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            ...buttonGlassStyle,
-                        }}
-                    >
-                        {icons.flashlightImage ? (
-                            <img
-                                src={icons.flashlightImage.src}
-                                alt="Flashlight"
-                                style={{
-                                    width: icons.iconSize,
-                                    height: icons.iconSize,
-                                    objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            >
-                                <FlashlightGlyph
-                                    size={icons.iconSize}
-                                    color={icons.iconColor}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    {glassIconButton(
+                        icons.flashlightImage,
+                        "Flashlight",
+                        FlashlightGlyph
+                    )}
                     {/* Camera Action */}
-                    <div
-                        style={{
-                            width: icons.buttonSize,
-                            height: icons.buttonSize,
-                            borderRadius: icons.buttonSize,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            ...buttonGlassStyle,
-                        }}
-                    >
-                        {icons.cameraImage ? (
-                            <img
-                                src={icons.cameraImage.src}
-                                alt="Camera"
-                                style={{
-                                    width: icons.iconSize,
-                                    height: icons.iconSize,
-                                    objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            >
-                                <CameraGlyph
-                                    size={icons.iconSize}
-                                    color={icons.iconColor}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    {glassIconButton(icons.cameraImage, "Camera", CameraGlyph)}
                 </div>
                 {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
                 <motion.div
@@ -988,7 +947,7 @@ function LockScreenInner(props) {
 // Component
 /**
  * Fixed to the kiosk's native resolution — same convention as
- * AppInactivityOverlay.tsx — so dropping either variant onto the canvas
+ * AppInactivityOverlay.tsx — so dropping it onto the canvas
  * defaults to the real screen size instead of an arbitrary frame.
  *
  * @framerSupportedLayoutWidth fixed
@@ -998,7 +957,7 @@ function LockScreenInner(props) {
  */
 // Hydration guard baked directly into the component instead of relying
 // on a separately-applied Framer code override — LockScreen has live
-// date/time on the lockScreen variant, so it needs this regardless, and
+// date/time, so it needs this regardless, and
 // keeping it in-file leaves the layer's one available code-override
 // slot free for something else (e.g. a redirect override on the same
 // instance). Renders an invisible placeholder matching the requested
@@ -1021,148 +980,17 @@ export default function LockScreen(props) {
     return <LockScreenInner {...props} />
 }
 
-// Default Setup Canvas Configuration
-LockScreen.defaultProps = {
-    variant: "lockScreen",
-    useLiveTime: true,
-    use24Hour: false,
-    customTime: "9:41",
-    timeFont: {
-        fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-        fontSize: 236,
-        lineHeight: "1em",
-        letterSpacing: "-6px",
-        variant: "Semibold",
-    },
-    timeColor: "#FFFFFF",
-    clockOpacity: 1,
-    useLiveDate: true,
-    customDate: "Tue Jul 7",
-    dateFont: {
-        fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-        fontSize: 42,
-        lineHeight: "1.2em",
-        letterSpacing: "0.3px",
-        variant: "Semibold",
-    },
-    dateColor: "#FFFFFF",
-    dateOpacity: 1,
-    notification1: {
-        enabled: true,
-        appName: "Messages",
-        title: "Alex",
-        message: "Don't forget practice starts at 6!",
-        timeLabel: "now",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification2: {
-        enabled: true,
-        appName: "Reminders",
-        title: "Pack water bottle",
-        message: "For today's practice",
-        timeLabel: "2m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification3: {
-        enabled: true,
-        appName: "Calendar",
-        title: "Team Practice",
-        message: "Starts in 15 minutes at the gym",
-        timeLabel: "5m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification4: {
-        enabled: true,
-        appName: "Weather",
-        title: "72° and Sunny",
-        message: "Great day to be outside",
-        timeLabel: "8m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification5: {
-        enabled: true,
-        appName: "Mail",
-        title: "Coach Lee",
-        message: "Check your inbox for the updated schedule",
-        timeLabel: "12m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    layout: {
-        topInset: 110,
-        sideInset: 48,
-        bottomInset: 140,
-        dateTimeGap: 16,
-        notificationGap: 72,
-    },
-    icons: {
-        buttonSize: 128,
-        iconSize: 60,
-        iconColor: "#FFFFFF",
-        flashlightImage: null,
-        cameraImage: null,
-    },
-    glass: {
-        panelOpacity: 1,
-        tintOpacity: 0.14,
-        borderOpacity: 0.35,
-        borderWidth: 1,
-        blur: 40,
-        saturation: 200,
-        shadowY: 14,
-        shadowBlur: 36,
-        shadowOpacity: 0.25,
-        innerHighlight: 0.5,
-    },
-    swipeGlass: {
-        enabled: true,
-        formDistance: 80,
-        brightness: 118,
-        contrast: 104,
-        cornerRadius: 150,
-        clockOpacity: 0.75,
-    },
-    homeIndicator: {
-        width: 404,
-        height: 15,
-        cornerRadius: 8,
-        color: "#FFFFFF",
-        opacity: 0.9,
-        bottomOffset: 26,
-    },
-    swipeHintText: "Swipe up to open",
-    swipeHintFont: {
-        fontSize: 30,
-        lineHeight: "1.2em",
-        letterSpacing: "0px",
-        variant: "Regular",
-    },
-    swipeHintColor: "#FFFFFF",
-    swipeHintOpacity: 0.8,
-    swipeHintGap: 28,
-    swipeHintBounce: true,
-}
-
 // Fixed slots instead of an Array control, matching the convention used
 // elsewhere in this codebase — each slot keeps its own defaultValue, so
 // "reset to default" on one notification doesn't collapse both onto a
 // single shared default.
-function notificationControl(title: string, defaults: any) {
+function notificationControl(
+    title: string,
+    defaults: any
+): ObjectControlDescription {
     return {
         type: ControlType.Object,
         title,
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             enabled: {
                 type: ControlType.Boolean,
@@ -1223,19 +1051,33 @@ function notificationControl(title: string, defaults: any) {
 }
 
 // Property Controls Panel Definition
-addPropertyControls(LockScreen, {
-    variant: {
-        type: ControlType.Enum,
-        title: "Variant",
-        options: ["lockScreen", "splash"],
-        optionTitles: ["Lock Screen", "Splash"],
-        defaultValue: "lockScreen",
+// The SF Pro stack has no place in a Font control's defaultValue (Framer's
+// type doesn't allow fontFamily there), so the two clock fonts keep it
+// here, as the old full defaultProps block did.
+const SF_STACK =
+    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif'
+LockScreen.defaultProps = {
+    timeFont: {
+        fontFamily: SF_STACK,
+        fontSize: 236,
+        lineHeight: "1em",
+        letterSpacing: "-6px",
+        variant: "Semibold",
     },
+    dateFont: {
+        fontFamily: SF_STACK,
+        fontSize: 42,
+        lineHeight: "1.2em",
+        letterSpacing: "0.3px",
+        variant: "Semibold",
+    },
+}
+
+addPropertyControls(LockScreen, {
     // NEW Framer Action Link Handler Control
     onSwipeUp: {
         type: ControlType.EventHandler,
         title: "On Swipe Up",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveTime: {
         type: ControlType.Boolean,
@@ -1243,19 +1085,17 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     customTime: {
         type: ControlType.String,
         title: "Custom Time",
         defaultValue: "9:41",
-        hidden: (p) => p.variant !== "lockScreen" || p.useLiveTime,
+        hidden: (p) => !!p.useLiveTime,
     },
     use24Hour: {
         type: ControlType.Boolean,
         title: "24-Hour",
         defaultValue: false,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     timeFont: {
         type: ControlType.Font,
@@ -1268,13 +1108,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "-6px",
             variant: "Semibold",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     timeColor: {
         type: ControlType.Color,
         title: "Time Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     clockOpacity: {
         type: ControlType.Number,
@@ -1283,7 +1121,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     useLiveDate: {
         type: ControlType.Boolean,
@@ -1291,13 +1128,12 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "Live",
         disabledTitle: "Custom",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     customDate: {
         type: ControlType.String,
         title: "Custom Date",
         defaultValue: "Tue Jul 7",
-        hidden: (p) => p.variant !== "lockScreen" || p.useLiveDate,
+        hidden: (p) => !!p.useLiveDate,
     },
     dateFont: {
         type: ControlType.Font,
@@ -1310,13 +1146,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0.3px",
             variant: "Semibold",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     dateColor: {
         type: ControlType.Color,
         title: "Date Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     dateOpacity: {
         type: ControlType.Number,
@@ -1325,32 +1159,60 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
-    notification1: notificationControl(
-        "Fake Notification 1",
-        LockScreen.defaultProps.notification1
-    ),
-    notification2: notificationControl(
-        "Fake Notification 2",
-        LockScreen.defaultProps.notification2
-    ),
-    notification3: notificationControl(
-        "Fake Notification 3",
-        LockScreen.defaultProps.notification3
-    ),
-    notification4: notificationControl(
-        "Fake Notification 4",
-        LockScreen.defaultProps.notification4
-    ),
-    notification5: notificationControl(
-        "Fake Notification 5",
-        LockScreen.defaultProps.notification5
-    ),
+    notification1: notificationControl("Fake Notification 1", {
+        enabled: true,
+        appName: "Messages",
+        title: "Alex",
+        message: "Don't forget practice starts at 6!",
+        timeLabel: "now",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification2: notificationControl("Fake Notification 2", {
+        enabled: true,
+        appName: "Reminders",
+        title: "Pack water bottle",
+        message: "For today's practice",
+        timeLabel: "2m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification3: notificationControl("Fake Notification 3", {
+        enabled: true,
+        appName: "Calendar",
+        title: "Team Practice",
+        message: "Starts in 15 minutes at the gym",
+        timeLabel: "5m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification4: notificationControl("Fake Notification 4", {
+        enabled: true,
+        appName: "Weather",
+        title: "72° and Sunny",
+        message: "Great day to be outside",
+        timeLabel: "8m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification5: notificationControl("Fake Notification 5", {
+        enabled: true,
+        appName: "Mail",
+        title: "Coach Lee",
+        message: "Check your inbox for the updated schedule",
+        timeLabel: "12m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
     layout: {
         type: ControlType.Object,
         title: "Layout & Insets",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             topInset: {
                 type: ControlType.Number,
@@ -1397,7 +1259,6 @@ addPropertyControls(LockScreen, {
     icons: {
         type: ControlType.Object,
         title: "Icons",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             buttonSize: {
                 type: ControlType.Number,
@@ -1433,7 +1294,6 @@ addPropertyControls(LockScreen, {
     glass: {
         type: ControlType.Object,
         title: "Glass Panel",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             panelOpacity: {
                 type: ControlType.Number,
@@ -1520,7 +1380,6 @@ addPropertyControls(LockScreen, {
     swipeGlass: {
         type: ControlType.Object,
         title: "Swipe Glass",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             enabled: {
                 type: ControlType.Boolean,
@@ -1580,7 +1439,6 @@ addPropertyControls(LockScreen, {
     homeIndicator: {
         type: ControlType.Object,
         title: "Home Indicator",
-        hidden: (p) => p.variant !== "lockScreen",
         controls: {
             width: {
                 type: ControlType.Number,
@@ -1633,7 +1491,6 @@ addPropertyControls(LockScreen, {
         type: ControlType.String,
         title: "Swipe Hint Text",
         defaultValue: "Swipe up to open",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintFont: {
         type: ControlType.Font,
@@ -1646,13 +1503,11 @@ addPropertyControls(LockScreen, {
             letterSpacing: "0px",
             variant: "Regular",
         },
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintColor: {
         type: ControlType.Color,
         title: "Swipe Hint Color",
         defaultValue: "#FFFFFF",
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintOpacity: {
         type: ControlType.Number,
@@ -1661,7 +1516,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 1,
         step: 0.01,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintGap: {
         type: ControlType.Number,
@@ -1670,7 +1524,6 @@ addPropertyControls(LockScreen, {
         min: 0,
         max: 150,
         step: 1,
-        hidden: (p) => p.variant !== "lockScreen",
     },
     swipeHintBounce: {
         type: ControlType.Boolean,
@@ -1678,6 +1531,5 @@ addPropertyControls(LockScreen, {
         defaultValue: true,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (p) => p.variant !== "lockScreen",
     },
 })

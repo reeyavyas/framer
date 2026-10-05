@@ -51,14 +51,34 @@ function mod(n: number, m: number) {
     return ((n % m) + m) % m
 }
 
-function clamp(n: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, n))
+// Entrance progress (0 = start state, 1 = resting), animated 0 -> 1
+// after delaySeconds. Shared by the cards and the arrows.
+function useEntranceT(
+    enabled: boolean,
+    delaySeconds: number,
+    duration: number,
+    ease: string
+) {
+    const t = useMotionValue(enabled ? 0 : 1)
+    useEffect(() => {
+        if (!enabled) {
+            t.set(1)
+            return
+        }
+        t.set(0)
+        const timer = setTimeout(() => {
+            animate(t, 1, { duration, ease: ease as any })
+        }, delaySeconds * 1000)
+        return () => clearTimeout(timer)
+    }, [enabled, delaySeconds, duration, ease, t])
+    return t
 }
 
 // Piecewise-linear interpolation: 0 at center, 1 at |offset| === 1, held
 // flat beyond that (so a 3rd/4th card off to the side doesn't keep scaling).
+// Callers always pass a non-negative |offset|, so only the top needs capping.
 function falloff(absOffset: number) {
-    return clamp(absOffset, 0, 1)
+    return Math.min(absOffset, 1)
 }
 
 // Below `freeZone` (in card-units), a drag tracks the finger exactly 1:1 —
@@ -166,32 +186,13 @@ function CarouselCard({
     // delay/duration/etc. in the property panel replays it for instant
     // feedback — but on a real (published) mount those props are stable,
     // so it plays exactly once, on arrival.
-    const entranceT = useMotionValue(entranceEnabled ? 0 : 1)
-    useEffect(() => {
-        if (!entranceEnabled) {
-            entranceT.set(1)
-            return
-        }
-        entranceT.set(0)
-        const initialAbsOffset = Math.abs(wrapDelta(index, count))
-        const delayMs = (entranceDelay + initialAbsOffset * entranceStagger) * 1000
-        const timer = setTimeout(() => {
-            animate(entranceT, 1, {
-                duration: entranceDuration,
-                ease: entranceEase as any,
-            })
-        }, delayMs)
-        return () => clearTimeout(timer)
-    }, [
+    const initialAbsOffset = Math.abs(wrapDelta(index, count))
+    const entranceT = useEntranceT(
         entranceEnabled,
-        entranceDelay,
+        entranceDelay + initialAbsOffset * entranceStagger,
         entranceDuration,
-        entranceStagger,
-        entranceEase,
-        index,
-        count,
-        entranceT,
-    ])
+        entranceEase
+    )
 
     // In-plane tilt only (no 3D perspective) — a slight fan, not a size
     // change or a 3D turn. Starts flat and rotates into its tilt as part
@@ -535,26 +536,16 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
     // The single source of truth for layout: a continuous "which index is
     // centered" value. Drag moves it directly; snapping/arrows animate it.
     const pos = useMotionValue(0)
-    const containerRef = useRef<HTMLDivElement | null>(null)
 
     // Arrows fade in on the same schedule as the center card (no extra
     // stagger — they're not part of the fan), so the controls arrive
     // together with the card that's actually usable first.
-    const arrowEntranceT = useMotionValue(entranceEnabled ? 0 : 1)
-    useEffect(() => {
-        if (!entranceEnabled) {
-            arrowEntranceT.set(1)
-            return
-        }
-        arrowEntranceT.set(0)
-        const timer = setTimeout(() => {
-            animate(arrowEntranceT, 1, {
-                duration: entranceDuration,
-                ease: entranceEase as any,
-            })
-        }, entranceDelay * 1000)
-        return () => clearTimeout(timer)
-    }, [entranceEnabled, entranceDelay, entranceDuration, entranceEase, arrowEntranceT])
+    const arrowEntranceT = useEntranceT(
+        entranceEnabled,
+        entranceDelay,
+        entranceDuration,
+        entranceEase
+    )
 
     // True only when nothing is dragging or animating — gates which card
     // (if any) is allowed real pointer-events, so a native click can never
@@ -566,14 +557,15 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
     // start while the PREVIOUS settle animation is technically still
     // running — and if that old animation is never explicitly stopped, its
     // onComplete can still fire later, at an unpredictable moment, since
-    // nothing here was capturing/cancelling it. onComplete is exactly what
-    // marks a card "settled off-center" and triggers its reset-to-Front —
-    // so an orphaned, late-firing onComplete meant a card could pass
-    // through its off-center dwell without ever actually getting reset,
-    // then still show Back whenever it later cycled back to center.
-    // Explicitly stopping the previous animation (stop, not letting it
-    // complete) guarantees at most one animation ever drives `pos`, so
-    // onComplete only ever fires for a genuinely finished settle.
+    // nothing here was capturing/cancelling it. onComplete is what marks
+    // the carousel settled (isSettled, which gates which card gets real
+    // pointer-events) and folds `pos` back into range — so an orphaned,
+    // late-firing onComplete could mark it settled mid-transit. (A card's
+    // reset-to-Front no longer depends on this; it's driven by isCentered,
+    // see the card component.) Explicitly stopping the previous animation
+    // (stop, not letting it complete) guarantees at most one animation
+    // ever drives `pos`, so onComplete only ever fires for a genuinely
+    // finished settle.
     const activeAnimRef = useRef<{ stop: () => void } | null>(null)
     const stopActiveAnim = useCallback(() => {
         activeAnimRef.current?.stop()
@@ -740,13 +732,17 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
             // tap on a button would eat its own click via the exact
             // machinery meant to protect against real drags.
             pos.set(Math.round(s.startPos))
+            // Re-sync goTo's target with where pos actually landed — a drag
+            // that interrupted an arrow/autoplay animation left it pointing
+            // at that animation's target, so the next step would skip a card.
+            targetIndexRef.current = mod(Math.round(s.startPos), count)
             setIsSettled(true)
             return false
         }
 
         goTo(Math.round(s.startPos) + stepDelta)
         return true
-    }, [goTo, pos])
+    }, [count, goTo, pos])
 
     const onPointerDown = useCallback(
         (e: React.PointerEvent) => {
@@ -826,17 +822,12 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
         ]
     )
 
-    const onTapSide = useCallback(
-        (index: number) => {
-            markInteraction()
-            goTo(index)
-        },
-        [goTo, markInteraction]
-    )
+    // No markInteraction() here or in the arrows: the tap's pointerdown
+    // already reached the container's onPointerDown, which calls it.
+    const onTapSide = useCallback((index: number) => goTo(index), [goTo])
 
     return (
         <div
-            ref={containerRef}
             onPointerDown={onPointerDown}
             style={{
                 position: "relative",
@@ -919,20 +910,14 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
                 >
                     <ArrowButton
                         direction="left"
-                        onClick={() => {
-                            markInteraction()
-                            step(-1)
-                        }}
+                        onClick={() => step(-1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
                     />
                     <ArrowButton
                         direction="right"
-                        onClick={() => {
-                            markInteraction()
-                            step(1)
-                        }}
+                        onClick={() => step(1)}
                         size={arrowSize}
                         color={arrowColor}
                         background={arrowBackground}
@@ -941,39 +926,6 @@ export default function CurvedCarouselV2(props: CurvedCarouselV2Props) {
             )}
         </div>
     )
-}
-
-CurvedCarouselV2.defaultProps = {
-    cards: [],
-    cardWidth: 734,
-    cardHeight: 1050,
-    topOffset: 0,
-    cardGap: 8,
-    tiltDeg: 4,
-    curveDepth: 0,
-    sideOpacity: 0.5,
-    edgeFadeWidth: 120,
-    dragEnabled: true,
-    tapDistancePx: 28,
-    dragFreeZone: 0.6,
-    dragResistance: 0.35,
-    frontVariantProp: "variant",
-    frontVariantValue: "Front",
-    entranceEnabled: true,
-    entranceDelay: 0.2,
-    entranceDuration: 0.6,
-    entranceStagger: 0.08,
-    entranceDistanceY: 60,
-    entranceScale: 0.85,
-    entranceEase: "easeOut",
-    showArrows: true,
-    arrowSize: 56,
-    arrowGap: 24,
-    cardToArrowGap: 40,
-    arrowColor: "#FFFFFF",
-    arrowBackground: "rgba(0,0,0,0.35)",
-    autoplayEnabled: false,
-    autoplayIntervalSeconds: 5,
 }
 
 addPropertyControls(CurvedCarouselV2, {

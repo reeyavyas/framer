@@ -12,9 +12,8 @@ Card-level account actions a user manages from settings.
     initializer) so the client's first render always matches the
     server-rendered HTML — otherwise React throws a hydration mismatch
     (#418/#422), since `sessionStorage` doesn't exist during SSR.
-  - `TravelNoticeToast.tsx` — confirmation toast on save. Subscribes to
-    the toast-phase listener *before* arming it from storage, so the
-    synchronous "visible" notification arming can fire isn't missed.
+  - Its confirmation toast on save is in `CardControlsToasts.tsx` (see
+    below).
   - Pulled from `claude/lucid-ride-48wl0l`, the branch both fixes above
     actually shipped on — not `travel-notice`, which predates them.
 
@@ -81,12 +80,30 @@ Card-level account actions a user manages from settings.
     `scrollCardAlertsToTop()` the instant the Saving overlay appears, so
     the page is back at the top by the time
     `SAVE_DELAY_MS` elapses and it navigates away.
-  - `CardAlertsToast.tsx` — confirmation toast on Card Controls once
-    Save's delay elapses. Same mechanism as `TravelNoticeToast.tsx`,
-    separate storage key.
+  - Its confirmation toast on Card Controls, once Save's delay
+    elapses, is in `CardControlsToasts.tsx` (see below).
   - No sessionStorage record of the actual alert selections — this is a
     tap-through walkthrough, not a persisted setting (unlike Travel
     Notice's own record).
+
+- `CardControlsToasts.tsx` — both features' confirmation toasts, in
+  one file (merged from `travel-notice/TravelNoticeToast.tsx` and
+  `card-alerts/CardAlertsToast.tsx`, which are gone). Same export names
+  as before: `withTravelNoticeToast` / `withTravelNoticeToastDismiss`
+  (flag `kioskTravelNoticeToastFlag`) and `withCardAlertsToast` /
+  `withCardAlertsToastDismiss` (flag `kioskCardAlertsToastFlag`). One
+  shared phase machine, keyed per toast, so each toast keeps its own
+  phase and storage key. **Framer layers that used the old files must
+  re-point their override to this file** (same function name), and the
+  two old files removed from Framer's Code panel.
+  - Subscribes to the toast-phase listener *before* arming it from
+    storage, so the synchronous "visible" notification arming can fire
+    isn't missed.
+  - Arms once per page load per toast, not per mount like
+    `reset-pin/ResetPinToast.tsx`: both saves reach Card Controls by a
+    hard navigation, which resets module state anyway, and per-mount
+    arming would let a second mount of the same toast frame in one load
+    reset a showing toast to hidden.
 
 ## Sub-features that live elsewhere
 
@@ -101,20 +118,22 @@ Card-level account actions a user manages from settings.
 
 ## Tutorial variants
 
-These are the free-exploration base-page components — no tutorial
-concerns. Where the card-controls tutorial needs a component to behave
-differently, a tweaked duplicate lives in
-`tutorials/card-controls-tutorial/` instead (named `<Component>Tutorial.tsx`),
-not here — see `tutorials/card-controls-tutorial/NOTES.md`. Only
-components that actually need a tutorial-specific tweak get a duplicate;
-everything else in the tutorial flow uses these components directly.
+These are the free-exploration base-page components. Where the
+card-controls tutorial needs a component to behave differently, the
+original convention was a tweaked duplicate in
+`tutorials/card-controls-tutorial/` (named `<Component>Tutorial.tsx`),
+not here — see `tutorials/card-controls-tutorial/NOTES.md`. For the two
+travel-notice components the user chose flags instead (2026-10-05):
+`SetTravelNotice.tsx` and `TravelNoticeSection.tsx` each have a
+**Tutorial copy** (`tutorial`) property control, off by default, that
+reproduces what their deleted `*Tutorial.tsx` copies did (frozen,
+pre-filled form; tutorial-only storage keys). That NOTES file lists the
+exact settings for the tutorial pages. Everything else in the tutorial
+flow uses these components directly.
 
-- `TravelNoticeSection.tsx` → `TravelNoticeSectionTutorial.tsx`
-
-(`card-alerts/CardAlertsSave.tsx` predates this convention and instead
-exports both `withCardAlertsSave` and `withCardAlertsSaveTutorial` from
-one file — see the `card-alerts/` section above. New tutorial variants
-should use the separate-file convention instead.)
+(`card-alerts/CardAlertsSave.tsx` likewise exports both
+`withCardAlertsSave` and `withCardAlertsSaveTutorial` from one file —
+see the `card-alerts/` section above.)
 
 ## Branch naming
 

@@ -37,10 +37,22 @@ import type { ComponentType } from "react"
  * already applied to in Framer. Rearrange freely, but keep both as-is.
  */
 
-function withTutorialTarget(id: string) {
+// `marker` is withTutorialMarker's switch (see below).
+function withTutorialTarget(id: string, marker = false) {
     return function (Component: ComponentType<any>): ComponentType<any> {
         return React.forwardRef(function TutorialTarget(props: any, ref: any) {
-            return <Component {...props} ref={ref} data-tutorial-target={id} />
+            return (
+                <Component
+                    {...props}
+                    ref={ref}
+                    data-tutorial-target={id}
+                    style={
+                        marker
+                            ? { ...props.style, pointerEvents: "none" }
+                            : props.style
+                    }
+                />
+            )
         })
     }
 }
@@ -59,18 +71,7 @@ function withTutorialTarget(id: string) {
 // (e.g. MoreTabTarget, CardToggle) — those still need to receive
 // taps/scroll input.
 function withTutorialMarker(id: string) {
-    return function (Component: ComponentType<any>): ComponentType<any> {
-        return React.forwardRef(function TutorialMarker(props: any, ref: any) {
-            return (
-                <Component
-                    {...props}
-                    ref={ref}
-                    data-tutorial-target={id}
-                    style={{ ...props.style, pointerEvents: "none" }}
-                />
-            )
-        })
-    }
+    return withTutorialTarget(id, true)
 }
 
 // Framer's Override dropdown only picks up top-level exported function
@@ -159,7 +160,7 @@ export function TravelNotice(
     return withTutorialTarget("travel-notice")(Component)
 }
 
-// Steps 5–8 are MARKERS over SetTravelNoticeTutorial.tsx's individual
+// Steps 5–8 are MARKERS over SetTravelNotice.tsx's (Tutorial copy on) individual
 // fields. Start Date, End Date, Destinations and the Save button aren't
 // separately selectable Framer layers — they're plain JSX inside one
 // component's render — so each gets an empty marker frame positioned
@@ -190,7 +191,7 @@ export function TravelSave(Component: ComponentType<any>): ComponentType<any> {
 }
 
 // Step 9 — MARKER: Card Controls 2 page, over the
-// TravelNoticeSectionTutorial component showing the saved notice
+// TravelNoticeSection component (Tutorial copy on) showing the saved notice
 export function TravelNoticeShown(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -220,7 +221,7 @@ export function SetCardAlerts(
 // real Set Card Alerts page uses, contaminating a real user's actual
 // alert settings. The tutorial doesn't need it anyway: Save on a frozen
 // walkthrough page can just be hardcoded enabled (see
-// SetTravelNoticeTutorial.tsx's Save for precedent), and the native
+// SetTravelNotice.tsx's Tutorial copy Save for precedent), and the native
 // switch already animates its own on/off state on tap with no override
 // needed for that part.
 //

@@ -1,6 +1,6 @@
 import * as React from "react"
 import type { ComponentType } from "react"
-import { RenderTarget } from "framer"
+import { ControlType, RenderTarget, type PropertyControls } from "framer"
 
 /**
  * AccountPreferencesEditMode
@@ -95,11 +95,9 @@ export function subscribeEditMode(onChange: () => void): () => void {
 }
 
 export function resetEditMode() {
-    // Also invalidates any timer from an overlay interrupted mid-save.
-    saveGeneration++
     editing = false
-    savePhase = "hidden"
-    notify()
+    // Also invalidates any timer from an overlay interrupted mid-save.
+    cancelSaveOverlay()
 }
 
 // No isSaving() guard: while the overlay is up it catches the tap
@@ -124,21 +122,21 @@ export function startSaveOverlay() {
     const generation = ++saveGeneration
     savePhase = "saving"
     notify()
-    window.setTimeout(() => {
-        if (generation !== saveGeneration) return
-        savePhase = "saved"
-        notify()
-    }, SAVING_MS)
-    window.setTimeout(() => {
-        if (generation !== saveGeneration) return
-        savePhase = "fading"
-        notify()
-    }, SAVING_MS + SAVED_MS)
-    window.setTimeout(() => {
-        if (generation !== saveGeneration) return
-        savePhase = "hidden"
-        notify()
-    }, SAVING_MS + SAVED_MS + FADE_MS)
+    // Each phase starts when the previous one's time is up.
+    const phases = [
+        ["saved", SAVING_MS],
+        ["fading", SAVED_MS],
+        ["hidden", FADE_MS],
+    ] as const
+    let at = 0
+    for (const [phase, ms] of phases) {
+        at += ms
+        window.setTimeout(() => {
+            if (generation !== saveGeneration) return
+            savePhase = phase
+            notify()
+        }, at)
+    }
 }
 
 // Re-renders the caller on every edit-mode/overlay change.
@@ -265,4 +263,191 @@ export function withAccountPrefsHideWhileEditing(
 
         return <Component {...props} style={{ ...props.style, display: "none" }} />
     }
+}
+
+// ─── Shared by AccountPreferencesList and its tutorial copy ──────────
+// They live here because the tutorial copy only imports from this file
+// and AccountOrder.tsx (see AccountPreferencesListTutorial.tsx's
+// header). Both lists' property controls and defaults; the tutorial
+// adds its own on top.
+
+export function EyeIcon({
+    size,
+    color,
+    off,
+    image,
+}: {
+    size: number
+    color: string
+    off: boolean
+    image?: { src: string; srcSet?: string; alt?: string }
+}) {
+    // A custom icon from the "Eye icon" / "Eye off icon" controls, if set.
+    // It's drawn as-is at Eye size, so "Icons" color doesn't apply to it.
+    if (image?.src) {
+        return (
+            <img
+                src={image.src}
+                srcSet={image.srcSet}
+                alt={image.alt ?? ""}
+                draggable={false}
+                style={{ width: size, height: size, objectFit: "contain", display: "block" }}
+            />
+        )
+    }
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+                d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"
+                stroke={color}
+                strokeWidth={1.8}
+                strokeLinejoin="round"
+            />
+            <circle cx={12} cy={12} r={3.4} fill={color} />
+            {off && (
+                <line
+                    x1={3}
+                    y1={3}
+                    x2={21}
+                    y2={21}
+                    stroke={color}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                />
+            )}
+        </svg>
+    )
+}
+
+export function HandleIcon({ size, color }: { size: number; color: string }) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+            <rect x={3} y={6} width={18} height={2} rx={1} fill={color} />
+            <rect x={3} y={11} width={18} height={2} rx={1} fill={color} />
+            <rect x={3} y={16} width={18} height={2} rx={1} fill={color} />
+        </svg>
+    )
+}
+
+export const ACCOUNT_LIST_DEFAULTS = {
+    accounts: [
+        { accountId: "7500", name: "Platinum Rewards Checking" },
+        { accountId: "8665", name: "Vertical Checking" },
+        { accountId: "5101", name: "Regular Shares" },
+        { accountId: "5007", name: "Freddie Mac" },
+    ],
+    canvasPreview: "view" as "view" | "edit",
+    numberPrefix: "#",
+
+    viewBackground: "#FFFFFF",
+    editBackground: "#F4F5F7",
+    dividerColor: "#DCDEE2",
+    dividerWidth: 2,
+    textColor: "#333333",
+    labelColor: "#444444",
+    fieldBorderColor: "#7A7A7A",
+    fieldBackground: "rgba(255,255,255,0)",
+    iconColor: "#6B6B6B",
+    hiddenOpacity: 0.5,
+
+    nameFont: { fontSize: 30 },
+    labelFont: { fontSize: 20 },
+    fieldFont: { fontSize: 28 },
+
+    paddingX: 40,
+    viewPaddingY: 28,
+    editPaddingY: 20,
+    gap: 24,
+    iconSize: 44,
+    handleSize: 40,
+    handleHitPaddingX: 16,
+    handleHitPaddingY: 20,
+    fieldHeight: 64,
+    fieldRadius: 2,
+    fieldPaddingX: 16,
+    labelGap: 8,
+}
+
+export const ACCOUNT_LIST_CONTROLS: PropertyControls = {
+    accounts: {
+        type: ControlType.Array,
+        title: "Accounts",
+        control: {
+            type: ControlType.Object,
+            controls: {
+                accountId: { type: ControlType.String, title: "Last 4 (id)" },
+                name: { type: ControlType.String, title: "Name" },
+            },
+        },
+        defaultValue: ACCOUNT_LIST_DEFAULTS.accounts,
+    },
+    canvasPreview: {
+        type: ControlType.Enum,
+        title: "Canvas preview",
+        options: ["view", "edit"],
+        optionTitles: ["View", "Edit"],
+        defaultValue: "view",
+        displaySegmentedControl: true,
+    },
+    numberPrefix: {
+        type: ControlType.String,
+        title: "Number prefix",
+        defaultValue: "#",
+    },
+
+    viewBackground: { type: ControlType.Color, title: "View row fill", defaultValue: ACCOUNT_LIST_DEFAULTS.viewBackground },
+    editBackground: { type: ControlType.Color, title: "Edit row fill", defaultValue: ACCOUNT_LIST_DEFAULTS.editBackground },
+    dividerColor: { type: ControlType.Color, title: "Divider", defaultValue: ACCOUNT_LIST_DEFAULTS.dividerColor },
+    dividerWidth: { type: ControlType.Number, title: "Divider width", min: 0, max: 8, defaultValue: ACCOUNT_LIST_DEFAULTS.dividerWidth },
+    textColor: { type: ControlType.Color, title: "Text", defaultValue: ACCOUNT_LIST_DEFAULTS.textColor },
+    labelColor: { type: ControlType.Color, title: "Label", defaultValue: ACCOUNT_LIST_DEFAULTS.labelColor },
+    fieldBorderColor: { type: ControlType.Color, title: "Field border", defaultValue: ACCOUNT_LIST_DEFAULTS.fieldBorderColor },
+    fieldBackground: { type: ControlType.Color, title: "Field fill", defaultValue: ACCOUNT_LIST_DEFAULTS.fieldBackground },
+    iconColor: { type: ControlType.Color, title: "Icons", defaultValue: ACCOUNT_LIST_DEFAULTS.iconColor },
+    eyeImage: {
+        type: ControlType.ResponsiveImage,
+        title: "Eye icon",
+        description: "Shown account. Blank = built-in eye.",
+    },
+    eyeOffImage: {
+        type: ControlType.ResponsiveImage,
+        title: "Eye off icon",
+        description: "Hidden account. Blank = built-in crossed eye.",
+    },
+    hiddenOpacity: { type: ControlType.Number, title: "Hidden opacity", min: 0, max: 1, step: 0.05, defaultValue: ACCOUNT_LIST_DEFAULTS.hiddenOpacity },
+
+    nameFont: {
+        type: ControlType.Font,
+        title: "Name font (view)",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 30 },
+    },
+    labelFont: {
+        type: ControlType.Font,
+        title: "Label font (edit)",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 20 },
+    },
+    fieldFont: {
+        type: ControlType.Font,
+        title: "Field font (edit)",
+        controls: "extended",
+        defaultFontType: "sans-serif",
+        defaultValue: { fontSize: 28 },
+    },
+
+    paddingX: { type: ControlType.Number, title: "Side padding", min: 0, max: 120, defaultValue: ACCOUNT_LIST_DEFAULTS.paddingX },
+    viewPaddingY: { type: ControlType.Number, title: "View row padding", min: 0, max: 80, defaultValue: ACCOUNT_LIST_DEFAULTS.viewPaddingY },
+    editPaddingY: { type: ControlType.Number, title: "Edit row padding", min: 0, max: 80, defaultValue: ACCOUNT_LIST_DEFAULTS.editPaddingY },
+    gap: { type: ControlType.Number, title: "Icon gap", min: 0, max: 80, defaultValue: ACCOUNT_LIST_DEFAULTS.gap },
+    iconSize: { type: ControlType.Number, title: "Eye size", min: 12, max: 100, defaultValue: ACCOUNT_LIST_DEFAULTS.iconSize },
+    handleSize: { type: ControlType.Number, title: "Handle size", min: 12, max: 100, defaultValue: ACCOUNT_LIST_DEFAULTS.handleSize },
+    handleHitPaddingX: { type: ControlType.Number, title: "Handle tap width", min: 0, max: 40, defaultValue: ACCOUNT_LIST_DEFAULTS.handleHitPaddingX },
+    handleHitPaddingY: { type: ControlType.Number, title: "Handle tap height", min: 0, max: 80, defaultValue: ACCOUNT_LIST_DEFAULTS.handleHitPaddingY },
+    fieldHeight: { type: ControlType.Number, title: "Field height", min: 20, max: 160, defaultValue: ACCOUNT_LIST_DEFAULTS.fieldHeight },
+    fieldRadius: { type: ControlType.Number, title: "Field radius", min: 0, max: 40, defaultValue: ACCOUNT_LIST_DEFAULTS.fieldRadius },
+    fieldPaddingX: { type: ControlType.Number, title: "Field padding", min: 0, max: 60, defaultValue: ACCOUNT_LIST_DEFAULTS.fieldPaddingX },
+    labelGap: { type: ControlType.Number, title: "Label gap", min: 0, max: 40, defaultValue: ACCOUNT_LIST_DEFAULTS.labelGap },
 }
