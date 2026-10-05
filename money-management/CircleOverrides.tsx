@@ -5,7 +5,6 @@ import React, {
     forwardRef,
     useRef,
     useCallback,
-    startTransition,
 } from "react"
 import { useMotionValue, MotionValue } from "framer-motion"
 import type { ComponentType } from "react"
@@ -431,8 +430,6 @@ function startLoopIfNeeded() {
         const settledIds = new Set<string>()
 
         circles.forEach((c) => {
-            if (!c) return
-
             if (c.isDragging) {
                 settledIds.add(c.id)
                 const edgeWhileDragging = getEdgePull(
@@ -456,7 +453,9 @@ function startLoopIfNeeded() {
             const circleElapsed = Math.max(0, totalElapsed - c.staggerDelay)
             const rawProgress = Math.min(circleElapsed / ENTRANCE_DURATION, 1)
 
-            if (rawProgress < 1) {
+            // A circle dropped mid-entrance (endDrag sets hasSettled) stays
+            // where it was dropped instead of snapping back onto the arc.
+            if (rawProgress < 1 && !c.hasSettled) {
                 const progress = 1 - Math.pow(1 - rawProgress, 3)
                 c.scale.set(progress)
 
@@ -505,14 +504,10 @@ function startLoopIfNeeded() {
 
         resolveCollisions(settledIds)
 
-        if (typeof window !== "undefined") {
-            rafId = window.requestAnimationFrame(tick)
-        }
-    }
-
-    if (typeof window !== "undefined") {
         rafId = window.requestAnimationFrame(tick)
     }
+
+    rafId = window.requestAnimationFrame(tick)
 }
 
 const DRAG_Z_INDEX = 999
@@ -580,9 +575,7 @@ function useDraggableCircle(
             }
             circles.delete(id)
             if (circles.size === 0 && rafId !== null) {
-                if (typeof window !== "undefined") {
-                    window.cancelAnimationFrame(rafId)
-                }
+                window.cancelAnimationFrame(rafId)
                 rafId = null
                 entranceStartTime = null
             }
@@ -606,8 +599,7 @@ function useDraggableCircle(
         c.isDragging = false
         c.pointerId = null
         c.hasSettled = true
-        c.settledAt =
-            typeof performance !== "undefined" ? performance.now() : Date.now()
+        c.settledAt = performance.now()
         const dropped = clampToContainer(c.x.get(), c.y.get(), radius)
         const resolved = resolveDropPosition(id, radius, dropped.x, dropped.y)
         c.homeX = resolved.x
@@ -616,8 +608,8 @@ function useDraggableCircle(
         c.anchorHomeY = resolved.y
         c.x.set(resolved.x)
         c.y.set(resolved.y)
-        startTransition(() => setZIndex(baseZIndex(radius)))
-    }, [id, radius, x, y])
+        setZIndex(baseZIndex(radius))
+    }, [id, radius])
 
     const onPointerDown = useCallback(
         (event: React.PointerEvent) => {
@@ -635,7 +627,7 @@ function useDraggableCircle(
             c.dragStartX = c.x.get()
             c.dragStartY = c.y.get()
             c.hasSettled = false
-            startTransition(() => setZIndex(DRAG_Z_INDEX))
+            setZIndex(DRAG_Z_INDEX)
 
             const onPointerMove = (moveEvent: PointerEvent) => {
                 const active = circles.get(id)
@@ -745,231 +737,93 @@ function useDraggableCircle(
 // FRAMER EXPORTS
 // ============================================
 
+// Per-circle config: [id, radius, home, origin (entrance start, off the
+// bottom-left), entrance stagger delay ms]. Set 2 ids are suffixed "-v2" so
+// they never collide with Set 1's ids in the shared circles Map.
+type CircleConfig = [
+    string,
+    number,
+    { x: number; y: number },
+    { x: number; y: number },
+    number,
+]
+const CIRCLE_CONFIG: Record<string, CircleConfig> = {
+    AutoCircle: ["auto", 200, { x: 52, y: 55 }, { x: -260, y: CANVAS_HEIGHT + 260 }, 0],
+    DiningCircle: ["dining", 131, { x: 764, y: 129 }, { x: -320, y: CANVAS_HEIGHT + 180 }, 80],
+    HealthCircle: ["health", 175, { x: 437, y: 239 }, { x: -200, y: CANVAS_HEIGHT + 320 }, 160],
+    ShoppingCircle: ["shopping", 210, { x: 116, y: 488 }, { x: -350, y: CANVAS_HEIGHT + 260 }, 240],
+    PersonalCareCircle: ["personal care", 125, { x: 552, y: 598 }, { x: -220, y: CANVAS_HEIGHT + 200 }, 320],
+    UncategorizedCircle: ["uncategorized", 125, { x: 770, y: 437 }, { x: -300, y: CANVAS_HEIGHT + 300 }, 400],
+    // Budget Circles 2 (7 circles, variant 2)
+    AutoCircleV2: ["auto-v2", 125, { x: 71, y: 548 }, { x: -240, y: CANVAS_HEIGHT + 240 }, 0],
+    DiningCircleV2: ["dining-v2", 95, { x: 545, y: 208 }, { x: -300, y: CANVAS_HEIGHT + 160 }, 80],
+    HealthCircleV2: ["health-v2", 120, { x: 293, y: 159 }, { x: -220, y: CANVAS_HEIGHT + 300 }, 160],
+    ShoppingCircleV2: ["shopping-v2", 132.5, { x: 748, y: 532 }, { x: -360, y: CANVAS_HEIGHT + 220 }, 240],
+    PersonalCareCircleV2: ["personalcare-v2", 95, { x: 708, y: 339 }, { x: -260, y: CANVAS_HEIGHT + 180 }, 320],
+    UncategorizedCircleV2: ["uncategorized-v2", 95, { x: 159, y: 351 }, { x: -280, y: CANVAS_HEIGHT + 280 }, 400],
+    BillsCircle: ["bills-v2", 200, { x: 332, y: 397 }, { x: -320, y: CANVAS_HEIGHT + 340 }, 480],
+}
+
+function circleOverride(name: string, Component: ComponentType<any>) {
+    const [id, radius, home, origin, delay] = CIRCLE_CONFIG[name]
+    return forwardRef((props: any, ref: any) =>
+        useDraggableCircle(id, radius, home, origin, delay, Component, props, ref)
+    )
+}
+
+// Each export stays a literal top-level function so Framer's override
+// picker lists it.
 export function AutoCircle(Component: ComponentType<any>): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "auto",
-            200,
-            { x: 52, y: 55 },
-            { x: -260, y: CANVAS_HEIGHT + 260 },
-            0,
-            Component,
-            props,
-            ref
-        )
-    )
+    return circleOverride("AutoCircle", Component)
 }
 
-export function DiningCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "dining",
-            131,
-            { x: 764, y: 129 },
-            { x: -320, y: CANVAS_HEIGHT + 180 },
-            80,
-            Component,
-            props,
-            ref
-        )
-    )
+export function DiningCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("DiningCircle", Component)
 }
 
-export function HealthCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "health",
-            175,
-            { x: 437, y: 239 },
-            { x: -200, y: CANVAS_HEIGHT + 320 },
-            160,
-            Component,
-            props,
-            ref
-        )
-    )
+export function HealthCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("HealthCircle", Component)
 }
 
-export function ShoppingCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "shopping",
-            210,
-            { x: 116, y: 488 },
-            { x: -350, y: CANVAS_HEIGHT + 260 },
-            240,
-            Component,
-            props,
-            ref
-        )
-    )
+export function ShoppingCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("ShoppingCircle", Component)
 }
 
-export function PersonalCareCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "personal care",
-            125,
-            { x: 552, y: 598 },
-            { x: -220, y: CANVAS_HEIGHT + 200 },
-            320,
-            Component,
-            props,
-            ref
-        )
-    )
+export function PersonalCareCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("PersonalCareCircle", Component)
 }
 
-export function UncategorizedCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "uncategorized",
-            125,
-            { x: 770, y: 437 },
-            { x: -300, y: CANVAS_HEIGHT + 300 },
-            400,
-            Component,
-            props,
-            ref
-        )
-    )
+export function UncategorizedCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("UncategorizedCircle", Component)
 }
 
-// ============================================
 // Budget Circles 2 (7 circles, variant 2)
-// ============================================
-// Same useDraggableCircle mechanics and entrance animation as the six
-// above — ids are suffixed "-v2" so they never collide with Budget
-// Circles 1's ids in the shared circles Map (see the id-collision risk
-// discussed when the two-component split was built).
-
-export function AutoCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "auto-v2",
-            125,
-            { x: 71, y: 548 },
-            { x: -240, y: CANVAS_HEIGHT + 240 },
-            0,
-            Component,
-            props,
-            ref
-        )
-    )
+export function AutoCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("AutoCircleV2", Component)
 }
 
-export function DiningCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "dining-v2",
-            95,
-            { x: 545, y: 208 },
-            { x: -300, y: CANVAS_HEIGHT + 160 },
-            80,
-            Component,
-            props,
-            ref
-        )
-    )
+export function DiningCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("DiningCircleV2", Component)
 }
 
-export function HealthCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "health-v2",
-            120,
-            { x: 293, y: 159 },
-            { x: -220, y: CANVAS_HEIGHT + 300 },
-            160,
-            Component,
-            props,
-            ref
-        )
-    )
+export function HealthCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("HealthCircleV2", Component)
 }
 
-export function ShoppingCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "shopping-v2",
-            132.5,
-            { x: 748, y: 532 },
-            { x: -360, y: CANVAS_HEIGHT + 220 },
-            240,
-            Component,
-            props,
-            ref
-        )
-    )
+export function ShoppingCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("ShoppingCircleV2", Component)
 }
 
-export function PersonalCareCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "personalcare-v2",
-            95,
-            { x: 708, y: 339 },
-            { x: -260, y: CANVAS_HEIGHT + 180 },
-            320,
-            Component,
-            props,
-            ref
-        )
-    )
+export function PersonalCareCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("PersonalCareCircleV2", Component)
 }
 
-export function UncategorizedCircleV2(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "uncategorized-v2",
-            95,
-            { x: 159, y: 351 },
-            { x: -280, y: CANVAS_HEIGHT + 280 },
-            400,
-            Component,
-            props,
-            ref
-        )
-    )
+export function UncategorizedCircleV2(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("UncategorizedCircleV2", Component)
 }
 
-export function BillsCircle(
-    Component: ComponentType<any>
-): ComponentType<any> {
-    return forwardRef((props: any, ref: any) =>
-        useDraggableCircle(
-            "bills-v2",
-            200,
-            { x: 332, y: 397 },
-            { x: -320, y: CANVAS_HEIGHT + 340 },
-            480,
-            Component,
-            props,
-            ref
-        )
-    )
+export function BillsCircle(Component: ComponentType<any>): ComponentType<any> {
+    return circleOverride("BillsCircle", Component)
 }
 
 // ============================================
@@ -1147,10 +1001,14 @@ export function withBudgetsSuccessToast(
                 clearTimers()
                 setMounted(true)
                 setOpacity(0)
-                // Mount at opacity 0 first, then flip to 1 on the next
-                // frame so the fade-in actually transitions instead of
+                // Mount at opacity 0 first, then flip to 1 once that has
+                // painted so the fade-in actually transitions instead of
                 // popping straight to visible.
-                fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+                // Two frames, not one: a single rAF can land in the same
+                // commit as the mount, so opacity 0 never paints.
+                fadeInFrame = requestAnimationFrame(() => {
+                    fadeInFrame = requestAnimationFrame(() => setOpacity(1))
+                })
                 hideTimer = setTimeout(startFadeOut, TOAST_VISIBLE_MS)
             }
 
