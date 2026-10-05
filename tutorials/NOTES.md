@@ -319,7 +319,10 @@ anywhere else on the page.
   props onto the ONE layer it's attached to, it can't add a sibling
   element — draw the skip button as a real layer instead (any shape + a
   native Framer Link to the same exit path), on top of the animation on
-  the canvas. Getting the user TO this page is the tutorial step's own
+  the canvas. The timer only redirects if the page is still the one it
+  started on: tapping that "X" navigates client-side, and the override's
+  cleanup didn't reliably cancel the timer, so it used to fire anyway
+  and reload `/tutorials` a few seconds after the user got there. Getting the user TO this page is the tutorial step's own
   job, not this override's — a `TutorialOverlay.tsx` step already does
   real page navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch

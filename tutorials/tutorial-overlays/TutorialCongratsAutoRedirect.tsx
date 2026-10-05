@@ -31,12 +31,23 @@ const EXIT_LINK = "/tutorials"
  * onto the ONE layer it's attached to, it can't add a sibling element.
  * Draw that as a real layer instead: any shape + a native Framer Link
  * pointed at EXIT_LINK, placed on top of the animation on the canvas.
+ *
+ * The timer only redirects if the page is still the one it started on.
+ * That "X" Link navigates client-side, and the effect's clearTimeout
+ * cleanup didn't reliably run when it did, so the timer outlived the
+ * Congrats page and fired anyway: tapping "X" reached /tutorials, then
+ * the page reloaded a few seconds later. Checking the path at fire time
+ * makes that harmless whether or not the cleanup runs.
  */
 export function TutorialCongratsAutoRedirect(): Override {
     useEffect(() => {
         if (RenderTarget.current() === RenderTarget.canvas) return
         if (!AUTO_REDIRECT_SECONDS || !EXIT_LINK) return
+        const startPath = window.location.pathname
         const t = setTimeout(() => {
+            // Left already (e.g. by the "X"): don't reload wherever the
+            // user is now.
+            if (window.location.pathname !== startPath) return
             window.location.href = EXIT_LINK
         }, AUTO_REDIRECT_SECONDS * 1000)
         return () => clearTimeout(t)
