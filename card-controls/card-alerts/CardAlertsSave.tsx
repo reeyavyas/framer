@@ -16,14 +16,14 @@ import {
  *  - withCardAlertsSave / withCardAlertsSaveTutorial — apply one of
  *    these to a Save button's own frame, depending on which Set Card
  *    Alerts page it's on. withCardAlertsSave (base page, navigates to
- *    CARD_CONTROLS_LINK) reads CardAlertsToggleReport's shared on-count
- *    (is any toggle on?) to switch between enabled/disabled visuals,
- *    the same isValid-driven styling SetTravelNotice.tsx uses for its
- *    own Save link — real validation, since the base page's toggles
- *    really do call into that shared on-count via
- *    withCardAlertsToggleReportN. withCardAlertsSaveTutorial (tutorial
- *    page, navigates to CARD_CONTROLS_TUTORIAL_LINK) is NOT a thin
- *    wrapper around the same body: the tutorial page's 3 tappable
+ *    CARD_CONTROLS_LINK) reads CardAlertsToggleReport's anyToggleOn()
+ *    to switch between enabled/disabled visuals, the same
+ *    isValid-driven styling SetTravelNotice.tsx uses for its own Save
+ *    link — real validation, since the base page's toggles really do
+ *    report through withCardAlertsToggleReportN.
+ *    withCardAlertsSaveTutorial (tutorial page, navigates to
+ *    CARD_CONTROLS_TUTORIAL_LINK) shares the same body but ungated:
+ *    the tutorial page's 3 tappable
  *    toggles deliberately don't use withCardAlertsToggleReportN (see
  *    tutorials/card-controls-tutorial/NOTES.md, "Card Alerts flow"),
  *    so anyToggleOn() can never go true there — gating on it would
@@ -39,8 +39,8 @@ import {
  *    enabled shows the Saving overlay, waits SAVE_DELAY_MS (edit the
  *    constant directly — same convention as TravelNoticeToast.tsx's
  *    VISIBLE_MS/FADE_MS), sets the one-shot toast flag, then navigates
- *    to its own destination. Tapping withCardAlertsSave while disabled
- *    does nothing.
+ *    to its own destination. Tapping withCardAlertsSave while disabled,
+ *    or either one a second time, does nothing.
  *
  *    IMPORTANT — remove any native Link set on either Save layer in
  *    Framer's Properties panel. A native Link navigates on tap through
@@ -139,17 +139,22 @@ function setSavingOverlayVisible(visible: boolean) {
 // Shared body for both Save exports below — takes the destination as a
 // plain argument so it isn't a factory whose RETURN VALUE gets assigned
 // to a const (see the header comment on why that shape goes missing
-// from Framer's Override picker).
+// from Framer's Override picker). `gated` is false for the tutorial
+// copy: see withCardAlertsSaveTutorial.
 function renderCardAlertsSave(
     Component: ComponentType<any>,
-    destination: string
+    destination: string,
+    gated: boolean
 ): ComponentType<any> {
     return function CardAlertsSave(props: any) {
         const isCanvas = RenderTarget.current() === RenderTarget.canvas
         const [, forceUpdate] = React.useReducer((n) => n + 1, 0)
+        // Set on the first enabled tap, so a double tap can't schedule
+        // a second navigation.
+        const savingRef = React.useRef(false)
 
         React.useEffect(() => {
-            if (isCanvas) return
+            if (isCanvas || !gated) return
             // Fresh visit to the page: every switch has just remounted
             // showing Off, so start the flags there too (see
             // resetToggles in CardAlertsToggleReport.tsx). Subscribe
@@ -162,7 +167,7 @@ function renderCardAlertsSave(
 
         if (isCanvas) return <Component {...props} />
 
-        const enabled = anyToggleOn()
+        const enabled = !gated || anyToggleOn()
 
         return (
             <Component
@@ -182,7 +187,8 @@ function renderCardAlertsSave(
                     // props.onClick here could let a native Link fire its
                     // own navigation before that delay is up.
                     e.preventDefault()
-                    if (!enabled) return
+                    if (!enabled || savingRef.current) return
+                    savingRef.current = true
                     setSavingOverlayVisible(true)
                     // Starts the moment the overlay appears, not after —
                     // SAVE_DELAY_MS below is the only pause before
@@ -206,52 +212,24 @@ function renderCardAlertsSave(
 export function withCardAlertsSave(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return renderCardAlertsSave(Component, CARD_CONTROLS_LINK)
+    return renderCardAlertsSave(Component, CARD_CONTROLS_LINK, true)
 }
 
-// NOT renderCardAlertsSave — that body gates `enabled` on anyToggleOn(),
-// which only ever changes inside handleToggleTap, called exclusively by
-// the 20 numbered withCardAlertsToggleReportN overrides. The tutorial
-// page's 3 tappable toggles deliberately have that override removed and
-// replaced with TutorialTargets.tsx's CardAlertsToggleTarget1/2/3 (see
+// Not gated on anyToggleOn(), which only ever changes inside
+// handleToggleTap, called exclusively by the 20 numbered
+// withCardAlertsToggleReportN overrides. The tutorial page's 3 tappable
+// toggles deliberately have that override removed and replaced with
+// TutorialTargets.tsx's CardAlertsToggleTarget1/2/3 (see
 // tutorials/card-controls-tutorial/NOTES.md, "Card Alerts flow") so
-// tapping them doesn't contaminate the real page's shared on-count —
-// but that also means they never touch onCount at all, so anyToggleOn()
-// can never go true here and Save stayed muted forever, regardless of
-// how many switches were tapped. This is a frozen walkthrough step, the
+// tapping them doesn't contaminate the real page's shared flags — but
+// that also means anyToggleOn() can never go true here, and a gated
+// Save would stay muted forever. This is a frozen walkthrough step, the
 // same reasoning SetTravelNoticeTutorial.tsx's Save already used: no
 // real "is anything on?" state to validate, so just render enabled.
 export function withCardAlertsSaveTutorial(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return function CardAlertsSaveTutorial(props: any) {
-        const isCanvas = RenderTarget.current() === RenderTarget.canvas
-        if (isCanvas) return <Component {...props} />
-
-        return (
-            <Component
-                {...props}
-                style={{
-                    ...props.style,
-                    background: ENABLED_BACKGROUND,
-                    color: ENABLED_TEXT,
-                    cursor: "pointer",
-                }}
-                onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-                    e.preventDefault()
-                    setSavingOverlayVisible(true)
-                    scrollCardAlertsToTop()
-                    window.setTimeout(() => {
-                        window.sessionStorage.setItem(
-                            STORAGE_TOAST_FLAG_KEY,
-                            "1"
-                        )
-                        window.location.href = CARD_CONTROLS_TUTORIAL_LINK
-                    }, SAVE_DELAY_MS)
-                }}
-            />
-        )
-    }
+    return renderCardAlertsSave(Component, CARD_CONTROLS_TUTORIAL_LINK, false)
 }
 
 export function withCardAlertsSavingOverlay(
