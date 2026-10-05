@@ -371,13 +371,17 @@ anywhere else on the page.
   Freeze only reaches a VirtualScroll container when the step's
   `Scroll container ID` is that container's id (`scrollable-content`
   for `VirtualScrollGeneral`), not the override's name. Left blank, or
-  set to anything else, it freezes only the page's native scroll, and
+  set to anything else, it does nothing at all (freeze is
+  VirtualScroll-only; there's no native-scroll freeze), and
   VirtualScroll keeps moving the content. This is also the fix for a
   page where nothing should scroll but the content still shifts a few
   pixels: a `VirtualScrollGeneral` carried over on a component or a
-  duplicated page. Either remove the override there, or give the page
-  a `pageGroup` and freeze the step with `scrollable-content` (needed
-  when the override sits on a shared component).
+  duplicated page. Either remove the override there, or freeze the
+  step with `scrollable-content` (needed when the override sits on a
+  shared component). The freeze and `Scroll container ID` controls only
+  show in the Properties panel once `Page group` is set, so a
+  single-step page needs a page group just to reveal them. The freeze
+  itself doesn't use the page group.
 
   `scrollToTop()` animates position back to 0 — used by
   `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the
