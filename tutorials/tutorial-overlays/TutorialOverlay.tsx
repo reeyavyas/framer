@@ -2044,17 +2044,21 @@ addPropertyControls(TutorialOverlay, {
         title: "Scroll container ID",
         defaultValue: "",
         placeholder: "blank = whole page",
+        // Shown for a scroll step (which needs a page group) or a freeze
+        // (which doesn't).
         hidden: (props) =>
-            !props.pageGroup ||
-            (!props.scrollAdvancesStep && !props.freezeScrollWhileActive),
+            !(props.pageGroup && props.scrollAdvancesStep) &&
+            !props.freezeScrollWhileActive,
     },
+    // Shown on every step, single-step pages included: the freeze
+    // doesn't use the page group. It only reaches a VirtualScroll
+    // container, so set Scroll container ID (e.g. "scrollable-content").
     freezeScrollWhileActive: {
         type: ControlType.Boolean,
         title: "Freeze scroll while active",
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (props) => !props.pageGroup,
     },
     advanceOnEvent: {
         type: ControlType.String,

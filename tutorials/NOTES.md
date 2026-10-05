@@ -378,10 +378,9 @@ anywhere else on the page.
   pixels: a `VirtualScrollGeneral` carried over on a component or a
   duplicated page. Either remove the override there, or freeze the
   step with `scrollable-content` (needed when the override sits on a
-  shared component). The freeze and `Scroll container ID` controls only
-  show in the Properties panel once `Page group` is set, so a
-  single-step page needs a page group just to reveal them. The freeze
-  itself doesn't use the page group.
+  shared component). The freeze control shows on every step, single-step
+  pages included; `Scroll container ID` shows once the freeze is on (or
+  on a scroll step). Neither needs a `Page group` any more.
 
   `scrollToTop()` animates position back to 0 — used by
   `card-controls/card-alerts/CardAlertsSave.tsx`'s Save handler so the
