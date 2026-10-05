@@ -35,6 +35,9 @@ const FADE_MS = 400
 type ToastPhase = "hidden" | "visible" | "fading"
 let toastPhase: ToastPhase = "hidden"
 let toastArmedForThisLoad = false
+// Bumped by arming and by dismissing, so a timer from one can't act
+// after the other (same guard as ResetPinToast.tsx).
+let toastGeneration = 0
 const toastListeners = new Set<() => void>()
 
 function setToastPhase(phase: ToastPhase) {
@@ -55,9 +58,23 @@ function armToastFromStorageOnce() {
     const flag = window.sessionStorage.getItem(STORAGE_TOAST_FLAG_KEY)
     if (flag !== "1") return
     window.sessionStorage.removeItem(STORAGE_TOAST_FLAG_KEY)
+    const generation = ++toastGeneration
     setToastPhase("visible")
-    window.setTimeout(() => setToastPhase("fading"), VISIBLE_MS)
-    window.setTimeout(() => setToastPhase("hidden"), VISIBLE_MS + FADE_MS)
+    window.setTimeout(() => {
+        if (generation === toastGeneration) setToastPhase("fading")
+    }, VISIBLE_MS)
+    window.setTimeout(() => {
+        if (generation === toastGeneration) setToastPhase("hidden")
+    }, VISIBLE_MS + FADE_MS)
+}
+
+function dismissToast() {
+    if (toastPhase !== "visible") return
+    const generation = ++toastGeneration
+    setToastPhase("fading")
+    window.setTimeout(() => {
+        if (generation === toastGeneration) setToastPhase("hidden")
+    }, FADE_MS)
 }
 
 export function withCardAlertsToast(
@@ -110,8 +127,7 @@ export function withCardAlertsToastDismiss(
                 }}
                 onClick={(e: React.MouseEvent) => {
                     props.onClick?.(e)
-                    setToastPhase("fading")
-                    window.setTimeout(() => setToastPhase("hidden"), FADE_MS)
+                    dismissToast()
                 }}
             />
         )
