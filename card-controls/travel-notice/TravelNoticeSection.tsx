@@ -167,7 +167,10 @@ function buildSummary(stored: StoredNotice): NoticeSummary {
 // from the write (in the component, inside a useEffect that only runs
 // after commit) fixes that regardless of how many times this gets
 // called.
-function readNoticeIfUnshown(): NoticeSummary | null {
+function readNoticeIfUnshown(): {
+    summary: NoticeSummary
+    savedAt: number
+} | null {
     if (typeof window === "undefined") return null
 
     const raw = window.sessionStorage.getItem(STORAGE_KEY)
@@ -184,25 +187,14 @@ function readNoticeIfUnshown(): NoticeSummary | null {
     if (window.sessionStorage.getItem(SHOWN_MARKER_KEY) === String(stored.savedAt)) {
         return null
     }
-    return buildSummary(stored)
+    return { summary: buildSummary(stored), savedAt: stored.savedAt }
 }
 
-// Records that the CURRENT kioskTravelNotice record has now been shown.
+// Records that the notice saved at `savedAt` has now been shown.
 // Called from a useEffect (after commit, not during the speculative
-// render), and safe to call more than once: writing the same value to
-// sessionStorage twice is a no-op the second time.
-function markCurrentNoticeShown(): void {
-    if (typeof window === "undefined") return
-    const raw = window.sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return
-    try {
-        const stored: StoredNotice = JSON.parse(raw)
-        if (typeof stored.savedAt === "number") {
-            window.sessionStorage.setItem(SHOWN_MARKER_KEY, String(stored.savedAt))
-        }
-    } catch {
-        // malformed record — nothing to mark
-    }
+// render), and safe to call more than once.
+function markNoticeShown(savedAt: number): void {
+    window.sessionStorage.setItem(SHOWN_MARKER_KEY, String(savedAt))
 }
 
 // Single solid dot, optionally with a larger semi-transparent ring
@@ -398,14 +390,14 @@ export default function TravelNoticeSection(props: Props) {
     // sessionStorage here. Marking "shown" is a write, so it happens in
     // this same effect, after the read, rather than inside the useState
     // initializer above, which must stay pure. See
-    // markCurrentNoticeShown()'s comment for why mixing the two caused
+    // readNoticeIfUnshown()'s comment for why mixing the two caused
     // a real bug.
     React.useEffect(() => {
         if (isCanvas) return
         const found = readNoticeIfUnshown()
         if (!found) return
-        setSummary(found)
-        markCurrentNoticeShown()
+        setSummary(found.summary)
+        markNoticeShown(found.savedAt)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
