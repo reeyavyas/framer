@@ -125,16 +125,7 @@ function formatDate(d: Date) {
 }
 
 function trailingSpacingFix(font: any): number {
-    const ls = font?.letterSpacing
-    if (ls === undefined || ls === null || ls === "") return 0
-    const num = typeof ls === "number" ? ls : parseFloat(ls)
-    if (Number.isNaN(num)) return 0
-    return -num
-}
-
-// Simple RGBA fallback helper string generator
-function rgba(r: number, g: number, b: number, a: number) {
-    return `rgba(${r}, ${g}, ${b}, ${a})`
+    return -(parseFloat(font?.letterSpacing) || 0)
 }
 
 function LockScreenInner(props) {
@@ -183,6 +174,8 @@ function LockScreenInner(props) {
 
     // Live-tick whenever either the clock or the date is set to "live" —
     // otherwise a live date paired with a custom time would never update.
+    // (It used to be disabled entirely on the since-removed splash
+    // variant, which had no clock at all.)
     const now = useTicker(useLiveTime || useLiveDate)
     const displayDate = useLiveDate ? formatDate(now) : customDate
     const timeString = useLiveTime ? formatTime(now, use24Hour) : customTime
@@ -216,8 +209,7 @@ function LockScreenInner(props) {
 
         if (visibleCount < total) {
             const next = enabledNotifications[visibleCount]
-            const delaySeconds =
-                next.delaySeconds === undefined ? 1.1 : next.delaySeconds
+            const delaySeconds = next.delaySeconds ?? 1.1
             const id = window.setTimeout(() => {
                 setVisibleCount((c) => c + 1)
             }, delaySeconds * 1000)
@@ -225,8 +217,7 @@ function LockScreenInner(props) {
         }
 
         const holdSeconds = enabledNotifications.reduce(
-            (max, n) =>
-                Math.max(max, n.holdSeconds === undefined ? 4.5 : n.holdSeconds),
+            (max, n) => Math.max(max, n.holdSeconds ?? 4.5),
             0
         )
         const id = window.setTimeout(() => {
@@ -282,21 +273,16 @@ function LockScreenInner(props) {
     // like the notification card. A bright top rim plus a faint dark
     // underside rim reads as physical edge thickness instead of a flat
     // border.
-    const glassTint = rgba(255, 255, 255, glass.tintOpacity)
+    const glassTint = `rgba(255, 255, 255, ${glass.tintOpacity})`
     // Real Liquid Glass on the lock screen reads as a soft, largely
     // uniform frosted surface — barely a hint of brightening right at the
     // top edge, not a visible glowing patch. Kept subtle and tightly
     // contained for that reason.
-    const glassGlint = rgba(
-        255,
-        255,
-        255,
-        Math.min(glass.tintOpacity + 0.14, 0.5)
-    )
+    const glassGlint = `rgba(255, 255, 255, ${Math.min(glass.tintOpacity + 0.14, 0.5)})`
     const glassBackground = `radial-gradient(160% 70% at 50% -30%, ${glassGlint} 0%, rgba(255,255,255,0) 30%), ${glassTint}`
-    const glassBorderColor = rgba(255, 255, 255, glass.borderOpacity)
+    const glassBorderColor = `rgba(255, 255, 255, ${glass.borderOpacity})`
     const glassBlurFilter = `blur(${glass.blur}px) saturate(${glass.saturation}%)`
-    const glassRim = `inset 0 1px 1px ${rgba(255, 255, 255, Math.min(glass.innerHighlight + 0.25, 1))}, inset 0 -1px 1px rgba(0,0,0,0.08)`
+    const glassRim = `inset 0 1px 1px rgba(255, 255, 255, ${Math.min(glass.innerHighlight + 0.25, 1)}), inset 0 -1px 1px rgba(0,0,0,0.08)`
     const glassShadow = `0 ${glass.shadowY}px ${glass.shadowBlur}px rgba(0,0,0,${glass.shadowOpacity}), ${glassRim}`
     // A softer drop shadow just for the notification card — the shared
     // glass shadow (tuned for the small, high-contrast flashlight/camera
@@ -319,6 +305,45 @@ function LockScreenInner(props) {
         // will-change tells the browser to allocate that layer up front.
         willChange: "backdrop-filter",
     }
+
+    // One frosted round quick-action button (flashlight / camera): the
+    // uploaded image if set, else the built-in glyph. A plain render
+    // function rather than a component, so the button isn't remounted
+    // (and its backdrop blur re-promoted) on every render.
+    const glassIconButton = (image, alt: string, Glyph: typeof CameraGlyph) => (
+        <div
+            style={{
+                width: icons.buttonSize,
+                height: icons.buttonSize,
+                borderRadius: icons.buttonSize,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                ...buttonGlassStyle,
+            }}
+        >
+            {image ? (
+                <img
+                    src={image.src}
+                    alt={alt}
+                    style={{
+                        width: icons.iconSize,
+                        height: icons.iconSize,
+                        objectFit: "contain",
+                        filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
+                    }}
+                />
+            ) : (
+                <div
+                    style={{
+                        filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
+                    }}
+                >
+                    <Glyph size={icons.iconSize} color={icons.iconColor} />
+                </div>
+            )}
+        </div>
+    )
 
     // Handles the release of the drag gesture
     const handleDragEnd = (event, info) => {
@@ -468,10 +493,7 @@ function LockScreenInner(props) {
                 {enabledNotifications.length > 0 && (
                     <div
                         style={{
-                            marginBottom:
-                                layout.notificationGap === undefined
-                                    ? 72
-                                    : layout.notificationGap,
+                            marginBottom: layout.notificationGap ?? 72,
                             // Break out of the content layer's side inset —
                             // notifications should sit closer to the actual
                             // screen edges (20pt each side) than the wider
@@ -517,15 +539,63 @@ function LockScreenInner(props) {
                                         <motion.div
                                             key={slot}
                                             layout
-                                            // Entrance is transform-only
-                                            // (y/scale), never opacity: fading
-                                            // a freshly-mounted backdrop-filter
-                                            // subtree makes Chromium paint the
-                                            // card sharp and the blur catch up
-                                            // a beat later. The y travel is
-                                            // kept small (14) next to the
-                                            // sibling's ~200px `layout` reflow
-                                            // so the two don't visibly overlap.
+                                            // `layout` is back for smooth
+                                            // sibling reflow. An earlier version
+                                            // gave this card a bigger `y`
+                                            // travel on entrance (32) — that
+                                            // separate y motion was a much
+                                            // shorter trip than the sibling
+                                            // below has to make via `layout`
+                                            // (roughly this card's own
+                                            // height + the stack gap), so
+                                            // even with matched springs and
+                                            // synced start times the two
+                                            // finished at different
+                                            // wall-clock moments and briefly
+                                            // overlapped. This card now
+                                            // appears close to its
+                                            // correct flex position (mostly
+                                            // scaling in from center, which
+                                            // is symmetric and doesn't
+                                            // drift its edges toward the
+                                            // sibling), so the sibling's
+                                            // `layout` reflow is the main
+                                            // real motion happening — smooth
+                                            // again, with little left to
+                                            // desync against.
+                                            // Non-reduced-motion entrance/exit
+                                            // deliberately never animates
+                                            // opacity on this element (it
+                                            // carries the glass chrome one
+                                            // level down, but the parent's
+                                            // opacity still forces the
+                                            // browser to recomposite that
+                                            // backdrop-filter child through
+                                            // a changing alpha every frame).
+                                            // Animating opacity over a
+                                            // freshly-mounted backdrop-filter
+                                            // subtree is the specific thing
+                                            // Chromium struggles to keep up
+                                            // with — the card renders sharp
+                                            // and the blur visibly catches
+                                            // up a beat later. Transform-only
+                                            // motion (y/scale) composites as
+                                            // a cheap bitmap transform
+                                            // instead, so the blur is
+                                            // already correct on the first
+                                            // frame it's visible. The y is
+                                            // positive — the card rises up
+                                            // into place from just below its
+                                            // resting position, rather than
+                                            // dropping down from above.
+                                            // Small on purpose (14, not the
+                                            // old 32) — big enough to read
+                                            // as a settle, small enough
+                                            // relative to the sibling's
+                                            // ~200px `layout` reflow that it
+                                            // doesn't meaningfully
+                                            // reintroduce the overlap a
+                                            // larger offset caused.
                                             initial={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
@@ -536,10 +606,20 @@ function LockScreenInner(props) {
                                                     ? { opacity: 1 }
                                                     : { y: 0, scale: 1 }
                                             }
-                                            // Exit can fade: by now the blur
-                                            // layer is long since live, and all
-                                            // cards clear together so there's
-                                            // no sibling reflow to race.
+                                            // Exit doesn't have the cold-
+                                            // layer problem above — by the
+                                            // time a card leaves, its
+                                            // backdrop-filter layer has been
+                                            // live for seconds, so fading it
+                                            // out here is safe and reads
+                                            // better than an abrupt pop.
+                                            // It also doesn't have the
+                                            // reflow-distance mismatch: all
+                                            // visible cards clear together
+                                            // (see the visibleCount reset),
+                                            // so there's no sibling making
+                                            // room for this one to race
+                                            // against.
                                             exit={
                                                 prefersReducedMotion
                                                     ? { opacity: 0 }
@@ -565,20 +645,48 @@ function LockScreenInner(props) {
                                                           layout: {
                                                               type: "spring",
                                                               stiffness: 420,
-                                                              // ~0.9 damping
-                                                              // ratio: little
-                                                              // overshoot, so
-                                                              // the reflow
-                                                              // doesn't swing
-                                                              // into the next
-                                                              // card.
+                                                              // Softened from
+                                                              // 32 (damping
+                                                              // ratio ~0.78)
+                                                              // to 37 (~0.9)
+                                                              // — still a
+                                                              // little
+                                                              // overshoot,
+                                                              // much less of
+                                                              // it, so the
+                                                              // sibling
+                                                              // reflow is
+                                                              // less likely
+                                                              // to swing past
+                                                              // its resting
+                                                              // spot and
+                                                              // briefly
+                                                              // overlap the
+                                                              // card next to
+                                                              // it.
                                                               damping: 37,
                                                           },
-                                                          // The card's own
-                                                          // small y/scale
-                                                          // settle can use a
-                                                          // softer spring
-                                                          // than the reflow.
+                                                          // This card's own
+                                                          // y/scale no longer
+                                                          // shares vertical
+                                                          // space with the
+                                                          // `layout` reflow
+                                                          // (it's a tiny 14px
+                                                          // offset next to a
+                                                          // ~200px reflow),
+                                                          // so it's free to
+                                                          // use a softer,
+                                                          // slightly slower
+                                                          // spring for a
+                                                          // more graceful
+                                                          // settle instead
+                                                          // of matching
+                                                          // layout's snappier
+                                                          // one. Also
+                                                          // softened (damping
+                                                          // ratio ~0.75 ->
+                                                          // ~0.9) for the
+                                                          // same reason.
                                                           default: {
                                                               type: "spring",
                                                               stiffness: 300,
@@ -756,77 +864,13 @@ function LockScreenInner(props) {
                     }}
                 >
                     {/* Flashlight Action */}
-                    <div
-                        style={{
-                            width: icons.buttonSize,
-                            height: icons.buttonSize,
-                            borderRadius: icons.buttonSize,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            ...buttonGlassStyle,
-                        }}
-                    >
-                        {icons.flashlightImage ? (
-                            <img
-                                src={icons.flashlightImage.src}
-                                alt="Flashlight"
-                                style={{
-                                    width: icons.iconSize,
-                                    height: icons.iconSize,
-                                    objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            >
-                                <FlashlightGlyph
-                                    size={icons.iconSize}
-                                    color={icons.iconColor}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    {glassIconButton(
+                        icons.flashlightImage,
+                        "Flashlight",
+                        FlashlightGlyph
+                    )}
                     {/* Camera Action */}
-                    <div
-                        style={{
-                            width: icons.buttonSize,
-                            height: icons.buttonSize,
-                            borderRadius: icons.buttonSize,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            ...buttonGlassStyle,
-                        }}
-                    >
-                        {icons.cameraImage ? (
-                            <img
-                                src={icons.cameraImage.src}
-                                alt="Camera"
-                                style={{
-                                    width: icons.iconSize,
-                                    height: icons.iconSize,
-                                    objectFit: "contain",
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            />
-                        ) : (
-                            <div
-                                style={{
-                                    filter: `drop-shadow(0 1px 1px rgba(0,0,0,0.08))`,
-                                }}
-                            >
-                                <CameraGlyph
-                                    size={icons.iconSize}
-                                    color={icons.iconColor}
-                                />
-                            </div>
-                        )}
-                    </div>
+                    {glassIconButton(icons.cameraImage, "Camera", CameraGlyph)}
                 </div>
                 {/* Unlock Hint: chevron + text, bouncing gently to invite the swipe */}
                 <motion.div
@@ -936,138 +980,6 @@ export default function LockScreen(props) {
     return <LockScreenInner {...props} />
 }
 
-// Default Setup Canvas Configuration
-LockScreen.defaultProps = {
-    useLiveTime: true,
-    use24Hour: false,
-    customTime: "9:41",
-    timeFont: {
-        fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-        fontSize: 236,
-        lineHeight: "1em",
-        letterSpacing: "-6px",
-        variant: "Semibold",
-    },
-    timeColor: "#FFFFFF",
-    clockOpacity: 1,
-    useLiveDate: true,
-    customDate: "Tue Jul 7",
-    dateFont: {
-        fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif',
-        fontSize: 42,
-        lineHeight: "1.2em",
-        letterSpacing: "0.3px",
-        variant: "Semibold",
-    },
-    dateColor: "#FFFFFF",
-    dateOpacity: 1,
-    notification1: {
-        enabled: true,
-        appName: "Messages",
-        title: "Alex",
-        message: "Don't forget practice starts at 6!",
-        timeLabel: "now",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification2: {
-        enabled: true,
-        appName: "Reminders",
-        title: "Pack water bottle",
-        message: "For today's practice",
-        timeLabel: "2m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification3: {
-        enabled: true,
-        appName: "Calendar",
-        title: "Team Practice",
-        message: "Starts in 15 minutes at the gym",
-        timeLabel: "5m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification4: {
-        enabled: true,
-        appName: "Weather",
-        title: "72° and Sunny",
-        message: "Great day to be outside",
-        timeLabel: "8m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    notification5: {
-        enabled: true,
-        appName: "Mail",
-        title: "Coach Lee",
-        message: "Check your inbox for the updated schedule",
-        timeLabel: "12m",
-        cornerRadius: 25,
-        delaySeconds: 1.1,
-        holdSeconds: 4.5,
-    },
-    layout: {
-        topInset: 110,
-        sideInset: 48,
-        bottomInset: 140,
-        dateTimeGap: 16,
-        notificationGap: 72,
-    },
-    icons: {
-        buttonSize: 128,
-        iconSize: 60,
-        iconColor: "#FFFFFF",
-        flashlightImage: null,
-        cameraImage: null,
-    },
-    glass: {
-        panelOpacity: 1,
-        tintOpacity: 0.14,
-        borderOpacity: 0.35,
-        borderWidth: 1,
-        blur: 40,
-        saturation: 200,
-        shadowY: 14,
-        shadowBlur: 36,
-        shadowOpacity: 0.25,
-        innerHighlight: 0.5,
-    },
-    swipeGlass: {
-        enabled: true,
-        formDistance: 80,
-        brightness: 118,
-        contrast: 104,
-        cornerRadius: 150,
-        clockOpacity: 0.75,
-    },
-    homeIndicator: {
-        width: 404,
-        height: 15,
-        cornerRadius: 8,
-        color: "#FFFFFF",
-        opacity: 0.9,
-        bottomOffset: 26,
-    },
-    swipeHintText: "Swipe up to open",
-    swipeHintFont: {
-        fontSize: 30,
-        lineHeight: "1.2em",
-        letterSpacing: "0px",
-        variant: "Regular",
-    },
-    swipeHintColor: "#FFFFFF",
-    swipeHintOpacity: 0.8,
-    swipeHintGap: 28,
-    swipeHintBounce: true,
-}
-
 // Fixed slots instead of an Array control, matching the convention used
 // elsewhere in this codebase — each slot keeps its own defaultValue, so
 // "reset to default" on one notification doesn't collapse both onto a
@@ -1139,6 +1051,28 @@ function notificationControl(
 }
 
 // Property Controls Panel Definition
+// The SF Pro stack has no place in a Font control's defaultValue (Framer's
+// type doesn't allow fontFamily there), so the two clock fonts keep it
+// here, as the old full defaultProps block did.
+const SF_STACK =
+    '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif'
+LockScreen.defaultProps = {
+    timeFont: {
+        fontFamily: SF_STACK,
+        fontSize: 236,
+        lineHeight: "1em",
+        letterSpacing: "-6px",
+        variant: "Semibold",
+    },
+    dateFont: {
+        fontFamily: SF_STACK,
+        fontSize: 42,
+        lineHeight: "1.2em",
+        letterSpacing: "0.3px",
+        variant: "Semibold",
+    },
+}
+
 addPropertyControls(LockScreen, {
     // NEW Framer Action Link Handler Control
     onSwipeUp: {
@@ -1226,26 +1160,56 @@ addPropertyControls(LockScreen, {
         max: 1,
         step: 0.01,
     },
-    notification1: notificationControl(
-        "Fake Notification 1",
-        LockScreen.defaultProps.notification1
-    ),
-    notification2: notificationControl(
-        "Fake Notification 2",
-        LockScreen.defaultProps.notification2
-    ),
-    notification3: notificationControl(
-        "Fake Notification 3",
-        LockScreen.defaultProps.notification3
-    ),
-    notification4: notificationControl(
-        "Fake Notification 4",
-        LockScreen.defaultProps.notification4
-    ),
-    notification5: notificationControl(
-        "Fake Notification 5",
-        LockScreen.defaultProps.notification5
-    ),
+    notification1: notificationControl("Fake Notification 1", {
+        enabled: true,
+        appName: "Messages",
+        title: "Alex",
+        message: "Don't forget practice starts at 6!",
+        timeLabel: "now",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification2: notificationControl("Fake Notification 2", {
+        enabled: true,
+        appName: "Reminders",
+        title: "Pack water bottle",
+        message: "For today's practice",
+        timeLabel: "2m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification3: notificationControl("Fake Notification 3", {
+        enabled: true,
+        appName: "Calendar",
+        title: "Team Practice",
+        message: "Starts in 15 minutes at the gym",
+        timeLabel: "5m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification4: notificationControl("Fake Notification 4", {
+        enabled: true,
+        appName: "Weather",
+        title: "72° and Sunny",
+        message: "Great day to be outside",
+        timeLabel: "8m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
+    notification5: notificationControl("Fake Notification 5", {
+        enabled: true,
+        appName: "Mail",
+        title: "Coach Lee",
+        message: "Check your inbox for the updated schedule",
+        timeLabel: "12m",
+        cornerRadius: 25,
+        delaySeconds: 1.1,
+        holdSeconds: 4.5,
+    }),
     layout: {
         type: ControlType.Object,
         title: "Layout & Insets",

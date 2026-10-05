@@ -129,7 +129,7 @@ function getEdgePull(
     const edgeDepth = Math.max(depthX, depthY)
 
     if (edgeDepth <= 0) {
-        return { isNearEdge: false, pullX: 0, pullY: 0, strength: 0 }
+        return { isNearEdge: false, pullX: 0, pullY: 0 }
     }
 
     const blendX = clamp(depthX / zone, 0, 1)
@@ -151,71 +151,46 @@ function getEdgePull(
         isNearEdge: true,
         pullX: nx * amount,
         pullY: ny * amount,
-        strength: amount,
     }
+}
+
+// One axis of clampWithEdgeBounce: past an edge, squash a little beyond it
+// (up to EDGE_OVERSHOOT_MAX) and kick back inward; inside the soft zone,
+// a gentle inward nudge.
+function bounceAxis(v: number, min: number, max: number) {
+    let n = clamp(v, min - EDGE_OVERSHOOT_MAX, max + EDGE_OVERSHOOT_MAX)
+    let rebound = 0
+    if (n < min) {
+        const overshoot = min - n
+        n = min - Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
+        rebound = Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
+    } else if (n > max) {
+        const overshoot = n - max
+        n = max + Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
+        rebound = -Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
+    } else {
+        const dMin = n - min
+        const dMax = max - n
+        if (dMin < EDGE_SOFT_ZONE) {
+            rebound =
+                ((EDGE_SOFT_ZONE - dMin) / EDGE_SOFT_ZONE) *
+                EDGE_BOUNCE_PUSH *
+                0.2
+        } else if (dMax < EDGE_SOFT_ZONE) {
+            rebound =
+                -((EDGE_SOFT_ZONE - dMax) / EDGE_SOFT_ZONE) *
+                EDGE_BOUNCE_PUSH *
+                0.2
+        }
+    }
+    return { n, rebound }
 }
 
 function clampWithEdgeBounce(x: number, y: number, radius: number) {
     const bounds = getBoundsForRadius(radius)
-    const hardMinX = bounds.minX - EDGE_OVERSHOOT_MAX
-    const hardMinY = bounds.minY - EDGE_OVERSHOOT_MAX
-    const hardMaxX = bounds.maxX + EDGE_OVERSHOOT_MAX
-    const hardMaxY = bounds.maxY + EDGE_OVERSHOOT_MAX
-
-    let nx = clamp(x, hardMinX, hardMaxX)
-    let ny = clamp(y, hardMinY, hardMaxY)
-    let reboundX = 0
-    let reboundY = 0
-
-    if (nx < bounds.minX) {
-        const overshoot = bounds.minX - nx
-        nx = bounds.minX - Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
-        reboundX = Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
-    } else if (nx > bounds.maxX) {
-        const overshoot = nx - bounds.maxX
-        nx = bounds.maxX + Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
-        reboundX = -Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
-    } else {
-        const dLeft = nx - bounds.minX
-        const dRight = bounds.maxX - nx
-        if (dLeft < EDGE_SOFT_ZONE) {
-            reboundX =
-                ((EDGE_SOFT_ZONE - dLeft) / EDGE_SOFT_ZONE) *
-                EDGE_BOUNCE_PUSH *
-                0.2
-        } else if (dRight < EDGE_SOFT_ZONE) {
-            reboundX =
-                -((EDGE_SOFT_ZONE - dRight) / EDGE_SOFT_ZONE) *
-                EDGE_BOUNCE_PUSH *
-                0.2
-        }
-    }
-
-    if (ny < bounds.minY) {
-        const overshoot = bounds.minY - ny
-        ny = bounds.minY - Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
-        reboundY = Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
-    } else if (ny > bounds.maxY) {
-        const overshoot = ny - bounds.maxY
-        ny = bounds.maxY + Math.min(EDGE_OVERSHOOT_MAX, overshoot * 0.45)
-        reboundY = -Math.min(EDGE_BOUNCE_PUSH, overshoot * 0.7)
-    } else {
-        const dTop = ny - bounds.minY
-        const dBottom = bounds.maxY - ny
-        if (dTop < EDGE_SOFT_ZONE) {
-            reboundY =
-                ((EDGE_SOFT_ZONE - dTop) / EDGE_SOFT_ZONE) *
-                EDGE_BOUNCE_PUSH *
-                0.2
-        } else if (dBottom < EDGE_SOFT_ZONE) {
-            reboundY =
-                -((EDGE_SOFT_ZONE - dBottom) / EDGE_SOFT_ZONE) *
-                EDGE_BOUNCE_PUSH *
-                0.2
-        }
-    }
-
-    return { x: nx, y: ny, reboundX, reboundY }
+    const bx = bounceAxis(x, bounds.minX, bounds.maxX)
+    const by = bounceAxis(y, bounds.minY, bounds.maxY)
+    return { x: bx.n, y: by.n, reboundX: bx.rebound, reboundY: by.rebound }
 }
 
 function idAngle(id: string) {
@@ -253,8 +228,7 @@ function collisionRamp(c: CircleState, now: number) {
 
 function resolveCollisions(settledIds: Set<string>) {
     const list = Array.from(circles.values())
-    const now =
-        typeof performance !== "undefined" ? performance.now() : Date.now()
+    const now = performance.now()
 
     for (let step = 0; step < COLLISION_ITERATIONS; step++) {
         for (let i = 0; i < list.length; i++) {
@@ -568,11 +542,6 @@ function useDraggableCircle(
                 removeListenersRef.current()
                 removeListenersRef.current = null
             }
-            const existing = circles.get(id)
-            if (existing) {
-                existing.isDragging = false
-                existing.pointerId = null
-            }
             circles.delete(id)
             if (circles.size === 0 && rafId !== null) {
                 window.cancelAnimationFrame(rafId)
@@ -694,7 +663,6 @@ function useDraggableCircle(
             }
 
             const cleanup = () => {
-                if (typeof window === "undefined") return
                 window.removeEventListener("pointermove", onPointerMove)
                 window.removeEventListener("pointerup", onPointerUp)
                 window.removeEventListener("pointercancel", onPointerUp)
@@ -703,12 +671,10 @@ function useDraggableCircle(
                 }
             }
 
-            if (typeof window !== "undefined") {
-                window.addEventListener("pointermove", onPointerMove)
-                window.addEventListener("pointerup", onPointerUp)
-                window.addEventListener("pointercancel", onPointerUp)
-                removeListenersRef.current = cleanup
-            }
+            window.addEventListener("pointermove", onPointerMove)
+            window.addEventListener("pointerup", onPointerUp)
+            window.addEventListener("pointercancel", onPointerUp)
+            removeListenersRef.current = cleanup
 
             props.onPointerDown?.(event)
         },
@@ -797,7 +763,13 @@ export function UncategorizedCircle(Component: ComponentType<any>): ComponentTyp
     return circleOverride("UncategorizedCircle", Component)
 }
 
+// ============================================
 // Budget Circles 2 (7 circles, variant 2)
+// ============================================
+// Same useDraggableCircle mechanics and entrance animation as the six
+// above — ids are suffixed "-v2" so they never collide with Budget
+// Circles 1's ids in the shared circles Map (see the id-collision risk
+// discussed when the two-component split was built).
 export function AutoCircleV2(Component: ComponentType<any>): ComponentType<any> {
     return circleOverride("AutoCircleV2", Component)
 }
@@ -859,7 +831,6 @@ export function withBudgetsVariantTrigger(
     return forwardRef((props: any, ref: any) => {
         const lastFiredAtRef = useRef(0)
         const fire = useCallback(() => {
-            if (typeof window === "undefined") return
             const now = Date.now()
             if (now - lastFiredAtRef.current < BRIDGE_DEDUPE_MS) return
             lastFiredAtRef.current = now
@@ -914,6 +885,18 @@ export function withBudgetsVariantTrigger(
 // "Budget Circles" into two independent components and controls which one
 // is mounted directly, instead of trying to flip an internal Variant.
 
+// True once the bridge event has fired (shared by the two visibility
+// overrides below).
+function useBridgeFired() {
+    const [fired, setFired] = useState(false)
+    useEffect(() => {
+        const handler = () => setFired(true)
+        window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
+        return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
+    }, [])
+    return fired
+}
+
 // Apply to Budget Circles 1 (the current 6-circle layout, built as its own
 // plain component, no Variant feature). Unmounts itself once the bridge
 // event fires.
@@ -921,15 +904,7 @@ export function withBudgetsCircles1Visibility(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const [hidden, setHidden] = useState(false)
-
-        useEffect(() => {
-            if (typeof window === "undefined") return
-            const handler = () => setHidden(true)
-            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
-            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
-        }, [])
-
+        const hidden = useBridgeFired()
         if (hidden) return null
         return <Component {...props} ref={ref} />
     })
@@ -942,15 +917,7 @@ export function withBudgetsCircles2Visibility(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
-        const [visible, setVisible] = useState(false)
-
-        useEffect(() => {
-            if (typeof window === "undefined") return
-            const handler = () => setVisible(true)
-            window.addEventListener(BUDGETS_VARIANT_EVENT, handler)
-            return () => window.removeEventListener(BUDGETS_VARIANT_EVENT, handler)
-        }, [])
-
+        const visible = useBridgeFired()
         if (!visible) return null
         return <Component {...props} ref={ref} />
     })
@@ -980,7 +947,6 @@ export function withBudgetsSuccessToast(
         const [opacity, setOpacity] = useState(0)
 
         useEffect(() => {
-            if (typeof window === "undefined") return
             let hideTimer: ReturnType<typeof setTimeout> | null = null
             let unmountTimer: ReturnType<typeof setTimeout> | null = null
             let fadeInFrame: number | null = null
@@ -1046,21 +1012,19 @@ export function withToastDismissButton(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return forwardRef((props: any, ref: any) => {
+        const send = () =>
+            window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
         const dismiss = useCallback(
             (event: any) => {
                 props.onClick?.(event)
-                if (typeof window !== "undefined") {
-                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
-                }
+                send()
             },
             [props]
         )
         const dismissTap = useCallback(
             (event: any, info: any) => {
                 props.onTap?.(event, info)
-                if (typeof window !== "undefined") {
-                    window.dispatchEvent(new CustomEvent(TOAST_DISMISS_EVENT))
-                }
+                send()
             },
             [props]
         )

@@ -121,23 +121,6 @@ export default function SplashProgressBar(props) {
     )
 }
 
-SplashProgressBar.defaultProps = {
-    barColor: "#6C5CE7",
-    barColor2: "#00E5FF",
-    trackColor: "rgba(255,255,255,0.12)",
-    cornerRadius: 999,
-    duration: 2,
-    delay: 0,
-    easing: "linear",
-    loop: false,
-    loopPause: 0,
-    shimmer: true,
-    glow: true,
-    glowColor: "#00E5FF",
-    glowSize: 14,
-    glowBlur: 18,
-}
-
 addPropertyControls(SplashProgressBar, {
     barColor: {
         type: ControlType.Color,

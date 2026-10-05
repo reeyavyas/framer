@@ -73,19 +73,11 @@ export default function AppInactivityOverlay() {
     }, [isVisible])
 
     const inactivityTimeoutRef = React.useRef<number | null>(null)
-    const countdownIntervalRef = React.useRef<number | null>(null)
 
     const clearInactivityTimeout = React.useCallback(() => {
         if (inactivityTimeoutRef.current !== null) {
             window.clearTimeout(inactivityTimeoutRef.current)
             inactivityTimeoutRef.current = null
-        }
-    }, [])
-
-    const clearCountdownInterval = React.useCallback(() => {
-        if (countdownIntervalRef.current !== null) {
-            window.clearInterval(countdownIntervalRef.current)
-            countdownIntervalRef.current = null
         }
     }, [])
 
@@ -122,13 +114,13 @@ export default function AppInactivityOverlay() {
 
     // Called ONLY by the "YES, I'M HERE" button. Closes the overlay,
     // resets the countdown, and restarts the inactivity clock.
+    // (The countdown interval is stopped by the visible effect's cleanup.)
     const closeOverlay = React.useCallback(() => {
-        clearCountdownInterval()
         setAnimateIn(false)
         setIsVisible(false)
         setCountdown(COUNTDOWN_SECONDS)
         startInactivityTimer()
-    }, [clearCountdownInterval, startInactivityTimer])
+    }, [startInactivityTimer])
 
     // Attach activity listeners once. Activity only matters while the
     // overlay is HIDDEN — it just delays the next time it appears.
@@ -143,18 +135,16 @@ export default function AppInactivityOverlay() {
             }
         }
 
-        document.addEventListener("pointermove", onActivity, true)
-        document.addEventListener("pointerdown", onActivity, true)
-        document.addEventListener("touchstart", onActivity, true)
-        document.addEventListener("keydown", onActivity, true)
+        const events = ["pointermove", "pointerdown", "touchstart", "keydown"]
+        for (const e of events) document.addEventListener(e, onActivity, true)
 
         startInactivityTimer()
 
         return () => {
-            document.removeEventListener("pointermove", onActivity, true)
-            document.removeEventListener("pointerdown", onActivity, true)
-            document.removeEventListener("touchstart", onActivity, true)
-            document.removeEventListener("keydown", onActivity, true)
+            for (const e of events) {
+                document.removeEventListener(e, onActivity, true)
+            }
+            // Cleanup on unmount.
             clearInactivityTimeout()
         }
     }, [isCanvas, startInactivityTimer, clearInactivityTimeout])
@@ -162,26 +152,23 @@ export default function AppInactivityOverlay() {
     // While visible: fade in and run the countdown.
     React.useEffect(() => {
         if (isCanvas) return
-        if (!isVisible) {
-            clearCountdownInterval()
-            return
-        }
+        if (!isVisible) return
 
         setAnimateIn(false)
         const animationFrame = window.requestAnimationFrame(() => {
             setAnimateIn(true)
         })
 
-        clearCountdownInterval()
-        countdownIntervalRef.current = window.setInterval(() => {
+        const countdownInterval = window.setInterval(() => {
             setCountdown((prev) => Math.max(0, prev - 1))
         }, 1000)
 
+        // Cleanup on close and on unmount.
         return () => {
             window.cancelAnimationFrame(animationFrame)
-            clearCountdownInterval()
+            window.clearInterval(countdownInterval)
         }
-    }, [isCanvas, isVisible, clearCountdownInterval])
+    }, [isCanvas, isVisible])
 
     // Carousel page only: step the fade-in every frame (see
     // startInactivityTimer for why it avoids CSS transitions there).
@@ -205,11 +192,8 @@ export default function AppInactivityOverlay() {
     // Countdown hit 0 while visible -> go home automatically.
     React.useEffect(() => {
         if (isCanvas) return
-        if (isVisible && countdown <= 0) {
-            clearCountdownInterval()
-            goHome()
-        }
-    }, [isCanvas, countdown, isVisible, clearCountdownInterval, goHome])
+        if (isVisible && countdown <= 0) goHome()
+    }, [isCanvas, countdown, isVisible, goHome])
 
     // Announce open/closed to the rest of the page, so a tutorial step
     // (TutorialOverlay.tsx) can pause underneath while this is up — its
@@ -344,6 +328,11 @@ export default function AppInactivityOverlay() {
         </>
     )
 
+    // CANVAS: same backdrop + card, but sized to 100% of this layer's own
+    // box instead of position:fixed/100vw/100vh. Fixed positioning doesn't
+    // reliably fill space inside Framer's canvas (it's broken by the
+    // canvas's own zoom/pan transform), which is what left blank space
+    // showing through before. This version just fills the local frame.
     const overlayFrame = (
         <div
             // Lets TutorialOverlay's own click-blocker (a capture-phase
@@ -351,14 +340,18 @@ export default function AppInactivityOverlay() {
             // outside its hole) recognize this as a separate system
             // overlay and let clicks on it through, instead of
             // swallowing them before they ever reach this DOM subtree.
-            data-system-overlay="true"
+            data-system-overlay={isCanvas ? undefined : "true"}
             style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                zIndex: 99999,
+                ...(isCanvas
+                    ? { position: "relative", width: "100%", height: "100%" }
+                    : {
+                          position: "fixed",
+                          top: 0,
+                          left: 0,
+                          width: "100vw",
+                          height: "100vh",
+                          zIndex: 99999,
+                      }),
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -368,33 +361,12 @@ export default function AppInactivityOverlay() {
         </div>
     )
 
-    // CANVAS: same backdrop + card, but sized to 100% of this layer's own
-    // box instead of position:fixed/100vw/100vh. Fixed positioning doesn't
-    // reliably fill space inside Framer's canvas (it's broken by the
-    // canvas's own zoom/pan transform), which is what left blank space
-    // showing through before. This version just fills the local frame.
-    if (isCanvas) {
-        return (
-            <div
-                style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                {overlayInner}
-            </div>
-        )
-    }
+    if (isCanvas) return overlayFrame
 
     // PREVIEW / LIVE SITE: the real thing, driven by the inactivity timer,
     // portaled to <body> so it covers the whole viewport regardless of
     // where this layer sits in the page.
     if (!isVisible) return null
-    if (typeof document === "undefined") return null
 
     return ReactDOM.createPortal(overlayFrame, document.body)
 }
