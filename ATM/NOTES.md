@@ -57,7 +57,7 @@ near the top of the file.
 | One glow brighter/dimmer, moved, recoloured | `ORBS`: `x`/`y` position, `r` size, `color`, `k` strength (top right is `k: 0.5`) |
 | Glow softness | `FALLOFF` (fade curve) and the `glowSoft` blur (`stdDeviation={55}`) |
 | Wing shimmer brightness / count | **Wing Shimmer**, **Shimmers / Loop** properties; colour is Light Teal |
-| More or less navy in the background | `BG`: navy holds to the second key (`0.55`); the blend runs to `x = 680` (larger = more navy at the right edge) |
+| More or less navy in the background | `BG`: navy holds to the second key (`0.5`); the blend runs to `x = 680` (larger = more navy at the right edge) |
 | Angle of the background blend | `BG_ANGLE` (degrees upward toward the right; `0` is horizontal) |
 | Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
 | Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |

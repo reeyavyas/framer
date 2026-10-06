@@ -91,7 +91,7 @@ const ACCENTS = [0, 3, 6, 7]
 // holds past half way and the frame's right edge is only lightly teal. It is tilted
 // BG_ANGLE degrees upward (navy lower left, teal upper right), pivoting on the frame's centre.
 const BG: { grad: Key[]; g: number[] } = {
-    grad: [[0, "navy"], [0.55, "navy"], [1, "teal", "in"]],
+    grad: [[0, "navy"], [0.5, "navy"], [1, "teal", "in"]],
     g: [0, 0, 680, 0],
 }
 const BG_ANGLE = 14
