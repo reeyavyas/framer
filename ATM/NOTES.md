@@ -58,26 +58,15 @@ from the mobile-app kiosk that every other group in this repo serves.
     the screen, so its shimmer is only seen near the bottom-right
     corner.
 - `ATMTapIcon.tsx` — the "Tap anywhere to begin" icon, its own
-  component (icon only, no background or text). The designer's hand
-  holds still: white line, **navy fill** (`#002c44`), with the ripple
-  passing behind it; a soft egg-yolk glow at the **index
-  fingertip** breathes and sends out **two stroke rings**, one shortly
-  after the other (2.8 s loop). The frame fits the **hand only** (200×260
-  by default, no padding); the glow and rings spill outside it, so the
-  frame's overflow must be set to visible in Framer.
-  Ripple size is option A from the preview: the rings grow to about
-  1.5× the hand's height across (**Ripple Size** = 1). Under the OS
-  "reduce motion" setting it shows the hand with a still glow.
-
-- `ATMTapTarget.tsx` — trial of a hand-free version of the same icon
-  ("Target press", option E of five hand-free ideas: touch point,
-  water drop, sonar, spark, target press). A light-teal touch target
-  squeezes like a button, an egg-yolk dot flashes inside it and two
-  egg-yolk rings burst out (2.8 s loop). The frame fits the target
-  circle (120×120 by default); the rings spill outside it, so set
-  overflow to visible. Being tried on the Framer canvas with the
-  designer's own text layered on top. Properties: **Ripple Size**,
-  **Loop (s)**, **Target**, **Ripple**.
+  component (icon only, no background or text; the designer's text
+  goes on top in Framer). It shows what a touch does, **not a target
+  or button**: the user can tap anywhere on the screen to move on. A
+  light-teal circle squeezes like a fingertip pressing, an egg-yolk dot
+  flashes inside it and two egg-yolk rings burst out (2.8 s loop). The
+  frame fits the circle (120×120 by default); the rings spill outside
+  it, so overflow must be visible. Under the OS "reduce motion" setting
+  it shows a still frame. The earlier hand version is in git history
+  (commit `2636637`).
 
 ## Using it in Framer
 
@@ -92,12 +81,12 @@ from the mobile-app kiosk that every other group in this repo serves.
   property with that name would clash with it.
 - Under the OS "reduce motion" setting it shows one still frame.
 - `ATMTapIcon.tsx` works the same way: paste it into its own code file
-  and place it over the background. Set the frame's **overflow to
-  visible** so the ripple can draw outside the hand's box. Keep the
-  frame at the hand's shape (200×260); in a frame of another shape the
-  hand sits on the bottom edge, with spare space above (and evenly to
-  the sides), never below. Its colours
-  (**Hand**, **Ripple**) also accept colour styles.
+  (same file name as the earlier hand version, so pasting over it
+  keeps the component and its Ripple Size, Loop and Ripple values) and
+  place it over the background. Set the frame's **overflow to
+  visible** so the rings can draw outside the circle, and keep the
+  frame square. Its colours (**Circle**, **Ripple**) also accept
+  colour styles.
 
 ## Checking a change before handing it over
 
@@ -135,12 +124,13 @@ near the top of the file.
 
 | Feedback | Where |
 |---|---|
-| Ripple bigger/smaller | **Ripple Size** property (1 = option A, about 1.5× the hand's height) |
+| Ripple bigger/smaller | **Ripple Size** property (1 = rings grow to about 3× the circle) |
 | Speed of the loop | **Loop (s)** property (default 2.8 s) |
-| Hand line, hand fill or ripple colour | **Hand**, **Hand Fill**, **Ripple** properties (fill is navy, ripple is egg yolk); a fully transparent **Hand Fill** gives the outline-only hand |
+| Circle or ripple colour | **Circle**, **Ripple** properties (light teal, egg yolk) |
+| How far the circle squeezes | `PRESS` |
 | Gap between the two rings | `RING_GAP` (share of the loop) |
-| Ring / glow thickness or size | `RING_STROKE`, `RING_START`, `GLOW_R` |
-| Where the ripple starts | `TIP` (in the hand SVG's 1788×2500 units) |
+| Line thickness, dot size | `CIRCLE_STROKE`, `RING_STROKE`, `DOT_R` |
+| Feel of the press / the burst | `SPRING`, `OUT` (cubic-bezier curves) |
 
 ## How it was made
 
@@ -226,6 +216,11 @@ In the order they were made with the designer:
   were shown; **navy fill** with the white line was chosen (white fill
   lost the finger lines; the outline let the ripple show through the
   hand).
+- **Tap icon without a hand**: five hand-free ideas were shown (touch
+  point, water drop, sonar, spark, target press). **Target press** was
+  chosen and **replaced the hand version in `ATMTapIcon.tsx`** (same
+  file name). It is not a target or button: the whole screen is
+  tappable, so code and properties call it a circle, not a target.
 - **Colour-style bug (fixed)**: changing a colour property to one of the
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
