@@ -57,15 +57,15 @@ from the mobile-app kiosk that every other group in this repo serves.
   - Known and accepted: most of wing 2's bottom line (line 2) runs below
     the screen, so its shimmer is only seen near the bottom-right
     corner.
-- In progress: the "Tap anywhere to begin" icon, its own component (icon
-  only, no background or text). Chosen so far: the "soft pulse" motion
-  (the hand holds still; a glow breathes and sends out the ripple), the
-  designer's own outline hand SVG in white, and an egg-yolk ripple of
-  **two stroke rings**, one shortly after the other, that reaches well
-  beyond the hand. The hand is centred in the frame; the ripple comes
-  from the **index fingertip** (centring the ripple on the hand was
-  tried and dropped). Ripple size is
-  being picked next.
+- `ATMTapIcon.tsx` — the "Tap anywhere to begin" icon, its own
+  component (icon only, no background or text). The designer's outline
+  hand holds still in white; a soft egg-yolk glow at the **index
+  fingertip** breathes and sends out **two stroke rings**, one shortly
+  after the other (2.8 s loop). The hand is centred in the frame and
+  the view is sized so the whole ripple always fits, at any frame size.
+  Ripple size is option A from the preview: the rings grow to about
+  1.5× the hand's height across (**Ripple Size** = 1). Under the OS
+  "reduce motion" setting it shows the hand with a still glow.
 
 ## Using it in Framer
 
@@ -79,6 +79,10 @@ from the mobile-app kiosk that every other group in this repo serves.
   Framer passes its own `style` prop to every code component, and a
   property with that name would clash with it.
 - Under the OS "reduce motion" setting it shows one still frame.
+- `ATMTapIcon.tsx` works the same way: paste it into its own code file
+  and place it over the background. Give it a square frame; the hand
+  is centred and the ripple is kept inside the frame. Its colours
+  (**Hand**, **Ripple**) also accept colour styles.
 
 ## Checking a change before handing it over
 
@@ -111,6 +115,17 @@ near the top of the file.
 | Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |
 | Hide lines | **Wing Lines**, **Accent Lines** properties |
 | A picked colour shows up wrong | `toRgb` (how a Framer colour value is read) |
+
+## Where to change things (`ATMTapIcon.tsx`)
+
+| Feedback | Where |
+|---|---|
+| Ripple bigger/smaller | **Ripple Size** property (1 = option A, about 1.5× the hand's height) |
+| Speed of the loop | **Loop (s)** property (default 2.8 s) |
+| Hand or ripple colour | **Hand**, **Ripple** properties (ripple is egg yolk) |
+| Gap between the two rings | `RING_GAP` (share of the loop) |
+| Ring / glow thickness or size | `RING_STROKE`, `RING_START`, `GLOW_R` |
+| Where the ripple starts | `TIP` (in the hand SVG's 1788×2500 units) |
 
 ## How it was made
 
@@ -180,6 +195,14 @@ In the order they were made with the designer:
   mostly navy, and tilted **14°** upward (`BG_ANGLE`).
 - **Accepted as is**: wing 2's bottom line is mostly below the screen,
   so its shimmer only shows in the bottom-right corner.
+- **Tap icon**: three motions were shown (Press, Finger to ripple, Soft
+  pulse); **Soft pulse** was chosen. The designer supplied the hand SVG.
+  Ripple colour is **egg yolk** `#ffcc40`, added to the brand colours
+  as an accent only. No background or "Tap anywhere to begin" text in
+  the component. The ripple was made much bigger (three sizes shown,
+  **A** chosen), then given **two rings**. Centring the ripple on the
+  hand was tried; it comes from the **index fingertip** instead, with
+  the hand centred in the frame.
 - **Colour-style bug (fixed)**: changing a colour property to one of the
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
