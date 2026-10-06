@@ -94,6 +94,32 @@ near the top of the file.
 | Hide lines | **Wing Lines**, **Accent Lines** properties |
 | A picked colour shows up wrong | `toRgb` (how a Framer colour value is read) |
 
+## How it was made
+
+Claude Code skills used along the way (they shaped the previews and the
+approach more than the component's code):
+
+- **design-taste-frontend**: invoked by the designer at the start. It
+  guided the early calls: asking about colours instead of guessing,
+  avoiding generic defaults, honouring reduced motion, and only
+  animating position and opacity so it runs smoothly. (`gpt-taste`
+  was named in the same request but never loaded.)
+- **artifact-design**: came with the Artifact tool when building the
+  two preview pages (the tuning page and the side-by-side component
+  page): their layout, typography and publishing rules.
+- **ponytail**: a mode that was on for the session, not called on
+  purpose. It pushes toward the simplest code that works, which is why
+  the component is one self-contained file with no new libraries.
+
+No skill wrote the component itself. It is SVG shapes and gradients
+built from the wing SVG's curves, in a React code component following
+this repo's conventions (Framer property controls, `useReducedMotion`
+from framer-motion, which Framer already provides). One loop phase
+drives all the motion, which is what makes the loop seamless. Checks
+used esbuild to compile it and Playwright with Chromium to render it,
+screenshot it and compare frames pixel by pixel (seamless loop, the
+14° tilt, the colour-style fix).
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
