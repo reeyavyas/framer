@@ -69,6 +69,16 @@ from the mobile-app kiosk that every other group in this repo serves.
   1.5× the hand's height across (**Ripple Size** = 1). Under the OS
   "reduce motion" setting it shows the hand with a still glow.
 
+- `ATMTapTarget.tsx` — trial of a hand-free version of the same icon
+  ("Target press", option E of five hand-free ideas: touch point,
+  water drop, sonar, spark, target press). A light-teal touch target
+  squeezes like a button, an egg-yolk dot flashes inside it and two
+  egg-yolk rings burst out (2.8 s loop). The frame fits the target
+  circle (120×120 by default); the rings spill outside it, so set
+  overflow to visible. Being tried on the Framer canvas with the
+  designer's own text layered on top. Properties: **Ripple Size**,
+  **Loop (s)**, **Target**, **Ripple**.
+
 ## Using it in Framer
 
 - Paste `ATMWingBackground.tsx` into a code file in the Framer project
