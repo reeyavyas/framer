@@ -23,7 +23,8 @@ from the mobile-app kiosk that every other group in this repo serves.
   - Both: three soft glows (light teal top right at half strength,
     light blue upper left and lower middle) and a light-teal shimmer
     running left to right along the wing lines.
-  - Background: a wide horizontal navy-to-teal blend. Gradients are
+  - Background: a very wide horizontal navy-to-teal blend that runs past
+    the right edge, so most of the frame is navy. Gradients are
     expanded into many eased stops so no colour change has a visible
     starting line. Navy (`#002c44`) is the dominant colour.
   - **Seamless loop**: everything is a function of one phase that runs

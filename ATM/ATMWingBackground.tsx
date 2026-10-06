@@ -87,10 +87,11 @@ const WINGS: Shape[] = [
 const SHAPES = [...FILLS, ...WINGS] // the order their gradients are indexed in
 const ACCENTS = [0, 3, 6, 7]
 
-// Background: a wide navy-to-teal blend running past the right edge, starting gently ~40% across.
+// Background: a very wide navy-to-teal blend. It runs well past the right edge (to x = 680), so navy
+// holds to about half way and the frame's right edge is only about a quarter teal.
 const BG: { grad: Key[]; g: number[] } = {
-    grad: [[0, "navy"], [0.35, "navy"], [1, "teal", "in"]],
-    g: [0, 0, 600, 0],
+    grad: [[0, "navy"], [0.45, "navy"], [1, "teal", "in"]],
+    g: [0, 0, 680, 0],
 }
 
 // Glows: home position, drift, radius, colour, pulse phase, strength.
