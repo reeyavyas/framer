@@ -49,6 +49,29 @@ from the mobile-app kiosk that every other group in this repo serves.
 - Next: the "Tap anywhere to begin" layer on top (a finger icon that
   loops into a tap-ripple), as its own component.
 
+## Using it in Framer
+
+- Paste `ATMWingBackground.tsx` into a code file in the Framer project
+  and drop the component into the ATM's screen cutout. To pick up a
+  change from this repo, paste the latest version of the file over the
+  old one; placed instances keep their property values.
+- Colours can be typed in or picked from the project's colour styles;
+  both work (see the colour note above).
+- The **Style** property is named `motionStyle` in code, not `style`:
+  Framer passes its own `style` prop to every code component, and a
+  property with that name would clash with it.
+- Under the OS "reduce motion" setting it shows one still frame.
+
+## Checking a change before handing it over
+
+- The loop must stay seamless: any new motion has to be a function of
+  the loop phase θ at a whole-number frequency (`cos(k·θ)`,
+  `sin(k·θ)`), or repeat exactly once per loop like the shimmer. A
+  quick check is to compare `frameAt(θ, settings)` with
+  `frameAt(θ + 2π, settings)`: every value must match.
+- Try the colour properties with a colour style as well as a typed hex
+  value; the gradients and glows should look the same either way.
+
 ## Where to change things (`ATMWingBackground.tsx`)
 
 Most tuning is a property in Framer's panel; the rest is a constant
@@ -69,6 +92,7 @@ near the top of the file.
 | Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
 | Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |
 | Hide lines | **Wing Lines**, **Accent Lines** properties |
+| A picked colour shows up wrong | `toRgb` (how a Framer colour value is read) |
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
@@ -112,6 +136,10 @@ In the order they were made with the designer:
   mostly navy, and tilted **14°** upward (`BG_ANGLE`).
 - **Accepted as is**: wing 2's bottom line is mostly below the screen,
   so its shimmer only shows in the bottom-right corner.
+- **Colour-style bug (fixed)**: changing a colour property to one of the
+  project's colour styles produced unrelated neon colours, because the
+  colour reader took digits from the style's token id. It now reads the
+  style's real colour, and short hex too.
 
 ## Branch
 
