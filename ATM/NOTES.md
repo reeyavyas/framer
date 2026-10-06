@@ -67,6 +67,10 @@ from the mobile-app kiosk that every other group in this repo serves.
   it, so overflow must be visible. Under the OS "reduce motion" setting
   it shows a still frame. The earlier hand version is in git history
   (commit `2636637`).
+- **Open, to pick up next session**: the designer isn't sure yet about
+  the hand-free ripple versus the navy-filled hand (commit `2636637`).
+  Decide which one stays in `ATMTapIcon.tsx`, then tune it with the
+  designer's text on top.
 
 ## Using it in Framer
 
