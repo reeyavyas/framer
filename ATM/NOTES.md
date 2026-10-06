@@ -42,6 +42,63 @@ from the mobile-app kiosk that every other group in this repo serves.
 - Next: the "Tap anywhere to begin" layer on top (a finger icon that
   loops into a tap-ripple), as its own component.
 
+## Where to change things (`ATMWingBackground.tsx`)
+
+Most tuning is a property in Framer's panel; the rest is a constant
+near the top of the file.
+
+| Feedback | Where |
+|---|---|
+| Flow or Aurora | **Style** property |
+| Speed of the loop | **Loop (s)** property (default 12 s) |
+| How far the wings tilt / how far the light rolls | **Movement** property; tilt is `amp * 3` degrees and lift `amp * 6` in `frameAt` |
+| Easing | **Easing** property |
+| Glow brightness, all glows | **Glow** property |
+| One glow brighter/dimmer, moved, recoloured | `ORBS`: `x`/`y` position, `r` size, `color`, `k` strength (top right is `k: 0.5`) |
+| Glow softness | `FALLOFF` (fade curve) and the `glowSoft` blur (`stdDeviation={55}`) |
+| Wing shimmer brightness / count | **Wing Shimmer**, **Shimmers / Loop** properties; colour is Light Teal |
+| More or less navy in the background | `BG`: navy holds to the second key (`0.45`); the blend runs to `x = 680` (larger = more navy at the right edge) |
+| Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
+| Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |
+| Hide lines | **Wing Lines**, **Accent Lines** properties |
+
+## Decisions log (so feedback doesn't undo them by accident)
+
+In the order they were made with the designer:
+
+- **Brief**: replace the old diagonal blue lines with an animated wing;
+  filled, layered shapes with no harsh lines; seamless loop with no
+  stops; vibrant light and pulsing glows. Brand colours: navy `#002c44`
+  and teal `#059390` (primary), light teal `#3bbfc0` and light blue
+  `#0079a9` (glows), midnight `#11232d` (dark contrast).
+- **No "Tap anywhere to begin" in this component.** That is a separate
+  layer to build later (finger icon looping into a tap-ripple).
+- **Four styles were explored**: Breathe (layers sway), Flow, Light
+  trails (comets along the lines), Aurora. **Flow** was chosen;
+  **Aurora** kept as the second option.
+- **No morphing.** The first Flow bent the curves; the shapes must keep
+  their exact form. A very subtle "tilt only" version was rejected as
+  too subtle, so Flow keeps a clear wingbeat, done as rigid motion.
+- **The two wings move in sync** (same transform at the same moment).
+- **Accent lines (1, 4, 7, 8) never move** and have **no animation at
+  all**: a shimmer and then a travelling highlight along them were both
+  tried and rejected.
+- **Double-wing fix**: still shapes that shared an edge with a moving
+  wing made each wing edge show twice; they were removed.
+- **Wing shimmer**: left to right along the wing lines, light teal.
+  Mint `#bce2d7` was tried and rejected. It must be continuous (a
+  single sweep left a visible gap/restart each loop).
+- **Glows**: very diffused, spread over the frame (not only the
+  bottom); lower middle is light blue; top right is half strength.
+- **Colour balance**: navy is the dominant colour, more than teal.
+  Teal only toward the right. The background blend is horizontal; the
+  shapes' own gradients follow each shape (making every gradient
+  horizontal was tried and rejected). No light-blue stripe between navy
+  and teal (it read as a harsh band). Every gradient is eased so there
+  is no visible line where a colour starts.
+- **Accepted as is**: wing 2's bottom line is mostly below the screen,
+  so its shimmer only shows in the bottom-right corner.
+
 ## Branch
 
 ATM work goes on the `atm` branch.
