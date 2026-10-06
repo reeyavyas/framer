@@ -5,7 +5,8 @@ import { motion, useReducedMotion } from "framer-motion"
 // The "Tap anywhere to begin" icon for the ATM screen: the designer's outline hand, held still, with
 // a soft glow at the index fingertip that breathes and sends out two egg-yolk rings. Icon only: no
 // background, no text. The view is cropped tight to the hand and the ripple's largest ring, so the
-// icon has no padding around it.
+// icon has no padding around it. If the frame is a different shape, the spare space goes above
+// the icon (it sits on the frame's bottom edge), never below.
 
 // The designer's hand SVG (drawn on a 1788×2500 canvas).
 const HAND =
@@ -66,7 +67,7 @@ export default function ATMTapIcon(props: Props) {
     }
 
     return (
-        <svg viewBox={viewBox} style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }} aria-hidden="true">
+        <svg viewBox={viewBox} preserveAspectRatio="xMidYMax meet" style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }} aria-hidden="true">
             {reduceMotion ? (
                 <circle cx={TIP[0]} cy={TIP[1]} r={GLOW_R} style={{ fill: rippleColor }} opacity={0.3} />
             ) : (

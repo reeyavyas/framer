@@ -82,8 +82,9 @@ from the mobile-app kiosk that every other group in this repo serves.
 - Under the OS "reduce motion" setting it shows one still frame.
 - `ATMTapIcon.tsx` works the same way: paste it into its own code file
   and place it over the background. Keep its frame at the icon's
-  shape (about 300×332 at Ripple Size 1); other shapes letterbox it,
-  centred. Its colours
+  shape (about 300×332 at Ripple Size 1). In a frame of another shape
+  the icon sits on the frame's bottom edge: spare space goes above (and
+  evenly to the sides), never below. Its colours
   (**Hand**, **Ripple**) also accept colour styles.
 
 ## Checking a change before handing it over
@@ -206,7 +207,8 @@ In the order they were made with the designer:
   hand was tried; it comes from the **index fingertip** instead. The
   hand was first centred in a square frame; that left empty space
   below it, so the frame is now **cropped tight** to the hand and the
-  largest ring (no padding).
+  largest ring (no padding), and anchored to the frame's bottom edge
+  so there is never space below the hand.
 - **Colour-style bug (fixed)**: changing a colour property to one of the
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
