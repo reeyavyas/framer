@@ -59,9 +59,11 @@ from the mobile-app kiosk that every other group in this repo serves.
     corner.
 - In progress: the "Tap anywhere to begin" icon, its own component (icon
   only, no background or text). Chosen so far: the "soft pulse" motion
-  (the hand holds still; a glow under the fingertip breathes and sends
-  out a ring), the designer's own outline hand SVG in white, and an
-  egg-yolk ripple that reaches well beyond the hand. Ripple size is
+  (the hand holds still; a glow breathes and sends out a ring), the
+  designer's own outline hand SVG in white, and an egg-yolk ripple that
+  reaches well beyond the hand. The hand and the ripple are both centred
+  in the frame (the ripple comes from the hand's centre, not the
+  fingertip). Ripple size is
   being picked next.
 
 ## Using it in Framer
