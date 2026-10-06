@@ -23,8 +23,9 @@ from the mobile-app kiosk that every other group in this repo serves.
   - Both: three soft glows (light teal top right at half strength,
     light blue upper left and lower middle) and a light-teal shimmer
     running left to right along the wing lines.
-  - Background: a very wide horizontal navy-to-teal blend that runs past
-    the right edge, so most of the frame is navy. Gradients are
+  - Background: a very wide navy-to-teal blend, tilted 14° upward (navy
+    lower left, teal upper right). Navy holds to 60% of the blend and the
+    blend runs past the right edge, so most of the frame is navy. Gradients are
     expanded into many eased stops so no colour change has a visible
     starting line. Navy (`#002c44`) is the dominant colour.
   - **Seamless loop**: everything is a function of one phase that runs
@@ -98,6 +99,11 @@ In the order they were made with the designer:
   horizontal was tried and rejected). No light-blue stripe between navy
   and teal (it read as a harsh band). Every gradient is eased so there
   is no visible line where a colour starts.
+- **How far navy holds in the background** was pushed out step by step:
+  the blend first started around 40%, then navy held to 45%, 50%, and
+  finally **60%** of the gradient (current). The background is also
+  stretched past the right edge (`x = 680`) so the right edge stays
+  mostly navy, and tilted **14°** upward (`BG_ANGLE`).
 - **Accepted as is**: wing 2's bottom line is mostly below the screen,
   so its shimmer only shows in the bottom-right corner.
 
