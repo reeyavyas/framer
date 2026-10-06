@@ -2,8 +2,8 @@ import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
 
-// The "Tap anywhere to begin" icon for the ATM screen: the designer's outline hand, held still, with
-// a soft glow at the index fingertip that breathes and sends out two egg-yolk rings. Icon only: no
+// The "Tap anywhere to begin" icon for the ATM screen: the designer's hand (white line, navy fill),
+// held still, with a soft glow at the index fingertip that breathes and sends out two egg-yolk rings. Icon only: no
 // background, no text. The frame fits the hand exactly; the glow and rings spill outside it, so
 // set the frame's overflow to visible in Framer. If the frame is a different shape, the spare
 // space goes above the hand (it sits on the frame's bottom edge), never below.
@@ -23,6 +23,7 @@ type Props = {
     rippleSize: number
     loopSeconds: number
     handColor: string
+    handFill: string
     rippleColor: string
 }
 
@@ -33,7 +34,7 @@ type Props = {
  * @framerIntrinsicHeight 260
  */
 export default function ATMTapIcon(props: Props) {
-    const { rippleSize, loopSeconds, handColor, rippleColor } = props
+    const { rippleSize, loopSeconds, handColor, handFill, rippleColor } = props
     const reduceMotion = useReducedMotion()
 
     // Ring end radius in hand units: 1 = the ring grows to about 1.5× the hand's height across.
@@ -80,7 +81,7 @@ export default function ATMTapIcon(props: Props) {
                     {ring(RING_GAP)}
                 </>
             )}
-            <path d={HAND} fill="none" style={{ stroke: handColor }} strokeWidth={HAND_STROKE} strokeLinejoin="round" />
+            <path d={HAND} style={{ fill: handFill, stroke: handColor }} strokeWidth={HAND_STROKE} strokeLinejoin="round" />
         </svg>
     )
 }
@@ -89,6 +90,7 @@ ATMTapIcon.defaultProps = {
     rippleSize: 1,
     loopSeconds: 2.8,
     handColor: "#ffffff",
+    handFill: "#002c44",
     rippleColor: "#ffcc40",
 }
 
@@ -111,5 +113,6 @@ addPropertyControls(ATMTapIcon, {
         defaultValue: 2.8,
     },
     handColor: { type: ControlType.Color, title: "Hand", defaultValue: "#ffffff" },
+    handFill: { type: ControlType.Color, title: "Hand Fill", defaultValue: "#002c44" },
     rippleColor: { type: ControlType.Color, title: "Ripple", defaultValue: "#ffcc40" },
 })

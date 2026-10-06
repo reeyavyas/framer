@@ -58,8 +58,9 @@ from the mobile-app kiosk that every other group in this repo serves.
     the screen, so its shimmer is only seen near the bottom-right
     corner.
 - `ATMTapIcon.tsx` — the "Tap anywhere to begin" icon, its own
-  component (icon only, no background or text). The designer's outline
-  hand holds still in white; a soft egg-yolk glow at the **index
+  component (icon only, no background or text). The designer's hand
+  holds still: white line, **navy fill** (`#002c44`), with the ripple
+  passing behind it; a soft egg-yolk glow at the **index
   fingertip** breathes and sends out **two stroke rings**, one shortly
   after the other (2.8 s loop). The frame fits the **hand only** (200×260
   by default, no padding); the glow and rings spill outside it, so the
@@ -126,7 +127,7 @@ near the top of the file.
 |---|---|
 | Ripple bigger/smaller | **Ripple Size** property (1 = option A, about 1.5× the hand's height) |
 | Speed of the loop | **Loop (s)** property (default 2.8 s) |
-| Hand or ripple colour | **Hand**, **Ripple** properties (ripple is egg yolk) |
+| Hand line, hand fill or ripple colour | **Hand**, **Hand Fill**, **Ripple** properties (fill is navy, ripple is egg yolk); a fully transparent **Hand Fill** gives the outline-only hand |
 | Gap between the two rings | `RING_GAP` (share of the loop) |
 | Ring / glow thickness or size | `RING_STROKE`, `RING_START`, `GLOW_R` |
 | Where the ripple starts | `TIP` (in the hand SVG's 1788×2500 units) |
@@ -211,6 +212,10 @@ In the order they were made with the designer:
   largest ring (no padding), and anchored to the frame's bottom edge.
   Finally the frame was fitted to the **hand alone**, with the ripple
   drawn outside it (overflow visible in Framer).
+- **Tap icon hand fill**: outline, white fill, navy fill and teal fill
+  were shown; **navy fill** with the white line was chosen (white fill
+  lost the finger lines; the outline let the ripple show through the
+  hand).
 - **Colour-style bug (fixed)**: changing a colour property to one of the
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
