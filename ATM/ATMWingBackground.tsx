@@ -130,10 +130,23 @@ function expand(keys: Key[], fadeLast: boolean) {
     })
 }
 
-const toRgb = (c: string) =>
-    c[0] === "#"
-        ? [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16))
-        : (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number)
+// Reads a colour from any form Framer hands a Color property: "#rgb", "#rrggbb" (with or without
+// alpha), "rgb()/rgba()", or a project colour style, which arrives as "var(--token-…, <colour>)".
+// For a colour style the real colour is the fallback after the comma; reading digits out of the
+// token's id instead is what produced the wrong, neon colours.
+function toRgb(c: string): number[] {
+    const s = c.trim()
+    const style = s.match(/^var\([^,]+,\s*(.+)\)$/)
+    if (style) return toRgb(style[1])
+    const hex = s.match(/^#([0-9a-f]{3,8})$/i)
+    if (hex) {
+        const h = hex[1].length <= 4 ? [...hex[1]].map((x) => x + x).join("") : hex[1]
+        return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16))
+    }
+    const rgb = s.match(/rgba?\(([^)]+)\)/i)
+    if (rgb) return rgb[1].split(/[\s,/]+/).filter(Boolean).slice(0, 3).map(Number)
+    return [0, 0, 0]
+}
 const mix = (a: string, b: string, t: number) => {
     const A = toRgb(a)
     const B = toRgb(b)

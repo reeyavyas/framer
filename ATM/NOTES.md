@@ -37,6 +37,12 @@ from the mobile-app kiosk that every other group in this repo serves.
     only sets transforms and opacities on a few elements. Honours
     reduced motion (shows a still frame). Unique gradient ids per
     instance via `useId`.
+  - Colour properties accept anything Framer passes: hex (short or
+    long), `rgb()`/`rgba()`, and project colour styles, which arrive as
+    `var(--token-…, <colour>)` (`toRgb` reads the colour after the
+    comma). Before this was handled, picking a colour style read digits
+    from the token's id and gave wrong, neon colours in the gradients
+    and glows. Colour alpha is ignored; each shape has its own opacity.
   - Known and accepted: most of wing 2's bottom line (line 2) runs below
     the screen, so its shimmer is only seen near the bottom-right
     corner.
