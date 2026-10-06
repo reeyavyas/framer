@@ -63,6 +63,10 @@ tutorials/               The tutorial system
                             travel notice components with "Tutorial copy" on
   NOTES.md
 
+ATM/                     The ATM kiosk portion (separate from the mobile-app kiosk)
+  ATMAttractScreen.tsx     Idle "attract" screen: animated loops, tap-ripple transition
+  NOTES.md
+
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing
   circle-physics-experiments/  Earlier attempts superseded by money-management/CircleOverrides.tsx
   tutorials-main-page/      CurvedCarousel.tsx (V1, superseded by CurvedCarouselV2.tsx above)

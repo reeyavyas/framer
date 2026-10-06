@@ -31,6 +31,10 @@ with the detail on what's in it; this file is just the map.
     underneath is untouched, and these components spotlight one target
     at a time instead of letting the user tap anywhere.
   See `tutorials/NOTES.md`.
+- **`ATM/`** — The second kiosk portion: an ATM that teaches Gen Alpha
+  users how to use an ATM, plus money tips and slide-style lessons.
+  Everything else in this repo serves the mobile-app kiosk. See
+  `ATM/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
@@ -70,6 +74,9 @@ tutorial-overlays/<feature>
 One exception: `reset-pin/` work uses `card-controls/<feature>`
 (e.g. `card-controls/reset-pin`), because Reset PIN is a card-controls
 sub-feature, even though its files live in `reset-pin/`.
+
+ATM work (`ATM/`) is the one other exception: it goes on the `atm`
+branch.
 
 Never use any other branch name. Every branch follows the
 `<group>/<feature>` pattern above.
