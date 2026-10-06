@@ -4,9 +4,9 @@ import { motion, useReducedMotion } from "framer-motion"
 
 // The "Tap anywhere to begin" icon for the ATM screen: the designer's outline hand, held still, with
 // a soft glow at the index fingertip that breathes and sends out two egg-yolk rings. Icon only: no
-// background, no text. The view is cropped tight to the hand and the ripple's largest ring, so the
-// icon has no padding around it. If the frame is a different shape, the spare space goes above
-// the icon (it sits on the frame's bottom edge), never below.
+// background, no text. The frame fits the hand exactly; the glow and rings spill outside it, so
+// set the frame's overflow to visible in Framer. If the frame is a different shape, the spare
+// space goes above the hand (it sits on the frame's bottom edge), never below.
 
 // The designer's hand SVG (drawn on a 1788×2500 canvas).
 const HAND =
@@ -29,8 +29,8 @@ type Props = {
 /**
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
- * @framerIntrinsicWidth 300
- * @framerIntrinsicHeight 332
+ * @framerIntrinsicWidth 200
+ * @framerIntrinsicHeight 260
  */
 export default function ATMTapIcon(props: Props) {
     const { rippleSize, loopSeconds, handColor, rippleColor } = props
@@ -38,12 +38,8 @@ export default function ATMTapIcon(props: Props) {
 
     // Ring end radius in hand units: 1 = the ring grows to about 1.5× the hand's height across.
     const ringEnd = 1150 * rippleSize
-    // Tight box around the hand and the largest ring (outer edge of its stroke): no padding.
-    const reach = ringEnd + RING_STROKE / 2
-    const x0 = Math.min(HAND_BOX[0], TIP[0] - reach)
-    const y0 = Math.min(HAND_BOX[1], TIP[1] - reach)
-    const x1 = Math.max(HAND_BOX[2], TIP[0] + reach)
-    const y1 = Math.max(HAND_BOX[3], TIP[1] + reach)
+    // The view is the hand's own box; the ripple draws outside it (overflow visible).
+    const [x0, y0, x1, y1] = HAND_BOX
     const viewBox = `${x0} ${y0} ${x1 - x0} ${y1 - y0}`
 
     const ring = (delay: number) => {
