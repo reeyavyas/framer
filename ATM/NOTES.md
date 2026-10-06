@@ -4,6 +4,17 @@ The second portion of the kiosk: an ATM where Gen Alpha users learn to
 use an ATM, plus general money tips and slide-style lessons. Separate
 from the mobile-app kiosk that every other group in this repo serves.
 
+## Brand colours
+
+| Name | Hex | Use |
+|---|---|---|
+| Navy | `#002c44` | Primary, dominant |
+| Teal | `#059390` | Primary |
+| Light teal | `#3bbfc0` | Glows, shimmer |
+| Light blue | `#0079a9` | Glows |
+| Midnight | `#11232d` | Dark contrast |
+| Egg yolk | `#ffcc40` | Accent only (the tap icon's ripple) |
+
 ## Current
 
 - `ATMWingBackground.tsx` — the ATM screen's animated wing background
@@ -46,8 +57,12 @@ from the mobile-app kiosk that every other group in this repo serves.
   - Known and accepted: most of wing 2's bottom line (line 2) runs below
     the screen, so its shimmer is only seen near the bottom-right
     corner.
-- Next: the "Tap anywhere to begin" layer on top (a finger icon that
-  loops into a tap-ripple), as its own component.
+- In progress: the "Tap anywhere to begin" icon, its own component (icon
+  only, no background or text). Chosen so far: the "soft pulse" motion
+  (the hand holds still; a glow under the fingertip breathes and sends
+  out a ring), the designer's own outline hand SVG in white, and an
+  egg-yolk ripple that reaches well beyond the hand. Ripple size is
+  being picked next.
 
 ## Using it in Framer
 
