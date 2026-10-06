@@ -58,6 +58,7 @@ near the top of the file.
 | Glow softness | `FALLOFF` (fade curve) and the `glowSoft` blur (`stdDeviation={55}`) |
 | Wing shimmer brightness / count | **Wing Shimmer**, **Shimmers / Loop** properties; colour is Light Teal |
 | More or less navy in the background | `BG`: navy holds to the second key (`0.45`); the blend runs to `x = 680` (larger = more navy at the right edge) |
+| Angle of the background blend | `BG_ANGLE` (degrees upward toward the right; `0` is horizontal) |
 | Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
 | Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |
 | Hide lines | **Wing Lines**, **Accent Lines** properties |
@@ -91,7 +92,8 @@ In the order they were made with the designer:
 - **Glows**: very diffused, spread over the frame (not only the
   bottom); lower middle is light blue; top right is half strength.
 - **Colour balance**: navy is the dominant colour, more than teal.
-  Teal only toward the right. The background blend is horizontal; the
+  Teal only toward the right. The background blend runs left to right,
+  tilted about 14° upward (navy lower left, teal upper right); the
   shapes' own gradients follow each shape (making every gradient
   horizontal was tried and rejected). No light-blue stripe between navy
   and teal (it read as a harsh band). Every gradient is eased so there

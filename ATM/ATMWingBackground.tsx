@@ -88,11 +88,13 @@ const SHAPES = [...FILLS, ...WINGS] // the order their gradients are indexed in
 const ACCENTS = [0, 3, 6, 7]
 
 // Background: a very wide navy-to-teal blend. It runs well past the right edge (to x = 680), so navy
-// holds to about half way and the frame's right edge is only about a quarter teal.
+// holds to about half way and the frame's right edge is only about a quarter teal. It is tilted
+// BG_ANGLE degrees upward (navy lower left, teal upper right), pivoting on the frame's centre.
 const BG: { grad: Key[]; g: number[] } = {
     grad: [[0, "navy"], [0.45, "navy"], [1, "teal", "in"]],
     g: [0, 0, 680, 0],
 }
+const BG_ANGLE = 14
 
 // Glows: home position, drift, radius, colour, pulse phase, strength.
 const ORBS: { x: number; y: number; dx: number; dy: number; r: number; color: ColorKey; ph: number; k: number }[] = [
@@ -319,7 +321,7 @@ export default function ATMWingBackground(props: Props) {
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
             >
                 <defs>
-                    {gradient("bg", BG, false, "")}
+                    {gradient("bg", BG, false, `rotate(${-BG_ANGLE} 249.5 232.5)`)}
                     {SHAPES.map((s, i) =>
                         gradient(`shape${i}`, s, true, first.grads[i], (el) => (gradRefs.current[i] = el))
                     )}
