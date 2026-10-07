@@ -77,11 +77,23 @@ from the mobile-app kiosk that every other group in this repo serves.
 - The tap icon and the "Tap anywhere to begin" text are placed in the
   ATM screen in Framer. The ATM page is 1080×1920; the designer's flat
   ATM image and a debit card image are the artwork for the next step.
-- **In exploration (not built in Framer yet)**: attract-state lights on
-  the ATM hardware and the transition after a tap. They are previewed
-  on the "ATM Attract Lab" page (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9),
-  which runs the real wing background and tap icon on the screen. The
-  designer will choose after seeing them; see the decisions log.
+- `ATMAttract.tsx` — the whole ATM page (1080×1920): the ATM artwork,
+  the screen, the lights on the machine while it waits, and the
+  transition when the page is tapped anywhere. The screen is the
+  designer's own frame (wing background, tap icon and "Tap anywhere to
+  begin"), connected through the **Screen** property, so it zooms with
+  the machine. Lights: slot lights breathing in turn, card slot flash,
+  light-blue screen glow on the metal, glare on the glass (each one a
+  switch). **Transition** is **A + B + E** (chosen): the card rises
+  upright and tipped back, slides into the slot, the CARD light blinks,
+  the screen shows "Reading your card", then the egg-yolk ripple
+  spreads from the middle of the page while the ATM centres and zooms
+  in. Every other option is kept in the same property to swap to: A,
+  B, A + B, E, E + B. The ripple and zoom reveal a flat **Next Page
+  Color**, and the browser then goes to **Next Page**. Under "reduce
+  motion" every transition is a short fade. The exploration page for
+  these options is the "ATM Attract Lab"
+  (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9).
 
 ## Using it in Framer
 
@@ -109,6 +121,27 @@ from the mobile-app kiosk that every other group in this repo serves.
   frame's shape; keep it about 200×260 so the hand fills it. Its
   colours (**Hand**, **Hand Fill**, **Circle**, **Ripple**) also accept
   colour styles.
+
+- `ATMAttract.tsx` (the ATM page):
+  1. Paste it into a new code file named `ATMAttract` and place the
+     component on the ATM page at 1080×1920 (fill the page).
+  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG). **Card
+     Image**: the debit card PNG. Remove the old ATM image layer from
+     the page; the component draws it.
+  3. **Screen**: move the existing screen frame (wing background, tap
+     icon, "Tap anywhere to begin") off the page onto the canvas, keep
+     it 441×365, and connect it here. It is drawn inside the ATM's
+     screen and zooms with the machine.
+  4. **Next Page**: the path of the page after the ATM, e.g.
+     `/atm/start` (as in the browser's address bar). **Next Page
+     Color**: that page's background colour, so the hand-off is
+     seamless. With Next Page empty, the transition plays and then
+     returns to the ATM, which is handy for trying it in Preview.
+  5. Don't add a Link or tap interaction to the component; it handles
+     the tap and the navigation itself (same reason as in
+     `card-controls/card-alerts/CardAlertsSave.tsx`).
+  6. **Transition** swaps between A + B + E (default), A + B, A, B, E
+     and E + B.
 
 ## Checking a change before handing it over
 
@@ -165,6 +198,23 @@ near the top of the file.
 | Timing of the press, squeeze and dot | the `[time, value]` keys in `frameAt` (times are shares of the loop; the tap lands at `0.3`) |
 | Feel of the press / the spread | `SPRING`, `OUT` (cubic-bezier curves) |
 | Still frame under reduce motion | `STILL` |
+
+## Where to change things (`ATMAttract.tsx`)
+
+| Feedback | Where |
+|---|---|
+| Swap the transition | **Transition** property |
+| Turn a light off | **Slot Lights**, **Card Slot Flash**, **Screen Glow**, **Glass Glare** properties |
+| Light colours | **Slot Light** (green), **Glow** (light blue) properties |
+| Glow strength / speed | the `spill` box-shadow and keyframes in `css()` (6 s loop, 8% to 100%) |
+| Ripple colours | **Ripple**, **Inner Ring** properties |
+| Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
+| Ripple / zoom speed | the `play(…)` lengths and `seg(t, start, end)` times in `rippleZoom`, `zoomIn`, `rippleFlood` |
+| Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
+| Card timing / how far it slides in | `cardIn` (`seg` times; `push` distance) |
+| "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
+| What is revealed | **Next Page Color** (flat colour), then **Next Page** |
+| Positions on the artwork | `SCREEN`, `STRIPS`, `SLOT_X`, `SLOT_Y`, the chevron `<svg>` (all in the 1080×1920 artwork's pixels) |
 
 ## How it was made
 
@@ -341,6 +391,13 @@ In the order they were made with the designer:
   from the moment it appears (it used to tip back only at the slot).
 - **Shortlist**: the designer is leaning toward **A + B + E** or
   **A + B** for the tap transition.
+
+- **A + B + E chosen, built in Framer** as `ATMAttract.tsx`. The
+  other transitions stay in the component's **Transition** property
+  (the designer may swap to A + B or another). The keypad glint is not
+  in it (removed in review). Because a code component can't show
+  another page, the ripple and zoom reveal a flat colour that matches
+  the next page's background, then the browser goes to that page.
 
 ## Branch
 
