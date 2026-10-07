@@ -312,6 +312,12 @@ In the order they were made with the designer:
   screen), A + B together, and E (card slides into the card slot)
   pending how the card looks. A tap anywhere on the page counts. The
   page after the tap is a new full-screen page with no ATM on it.
+- **Attract and transition, first review**: keypad glint removed. The
+  screen light on the metal was made much stronger (it now fades from
+  nearly off to full every 6 s). The zoom (B) first slides the ATM so
+  the screen is centred on the page, then zooms straight in, instead of
+  moving and zooming at once. The page after the tap is the designer's
+  own design; the preview shows only a plain stand-in.
 
 ## Branch
 
