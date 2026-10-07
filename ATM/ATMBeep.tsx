@@ -1,39 +1,23 @@
-import * as React from "react"
-import type { ComponentType } from "react"
 import { RenderTarget } from "framer"
 
-// Soft ATM key beeps as code overrides (right panel -> Code -> Override -> this file).
-// The tone is made by the browser (Web Audio), so there are no sound files and no delay:
-// it plays the moment the layer is pressed, like a real keypad. Any tap behaviour already on
-// the layer (a Link, an interaction, another override's onClick) still works; the beep is
-// added on press, before it.
+// The ATM page's soft sounds (ATMAttract.tsx plays them in step with its transition). The tone
+// is made by the browser (Web Audio), so there are no sound files and no delay.
 //
-//   withATMKeyBeep      one short beep: number keys, side keys, most buttons
-//   withATMEnterBeep    two rising beeps: ENTER / confirm
-//   withATMCancelBeep   two low beeps: CANCEL / CLEAR
-//
-// Browsers only allow sound after the first tap on a page, so the very first press starts the
-// sound and beeps from then on. Nothing plays on Framer's canvas.
+// Browsers only allow sound after the first tap on a page, so the very first tap starts the
+// sound and it plays from then on. Nothing plays on Framer's canvas.
 
-const VOLUME = 0.05 // 0..1; keep it low so the beep stays in the background
-const KEY = { hz: 1750, ms: 70 } // a soft, high piezo-like tick
-const ENTER = [
-    { hz: 1500, ms: 60 },
-    { hz: 2000, ms: 70 },
-]
-const CANCEL = [
-    { hz: 700, ms: 80 },
-    { hz: 700, ms: 80 },
-]
+const VOLUME = 0.05 // 0..1; keep it low so the sounds stay in the background
 const GAP_MS = 45 // pause between the two beeps of a pair
 
-// Sounds for moments on the ATM page (ATMAttract.tsx plays these itself).
 export const ATM_SOUNDS = {
-    key: [KEY], // a press
-    enter: ENTER, // accepted, moving on
-    cancel: CANCEL,
+    key: [{ hz: 1750, ms: 70 }], // the tap: a soft, high piezo-like beep
     cardIn: [{ hz: 520, ms: 140 }], // low, soft: the card being drawn into the slot
     blink: [{ hz: 2200, ms: 35 }], // tiny tick with each flash of the card light
+    enter: [
+        // card read, moving on: two rising beeps
+        { hz: 1500, ms: 60 },
+        { hz: 2000, ms: 70 },
+    ],
 }
 
 let ctx: AudioContext | null = null
@@ -48,7 +32,7 @@ const audio = () => {
 
 // Plays tones one after another. Each fades in and out over a few milliseconds so it never
 // clicks, and uses a sine wave so it is gentle rather than harsh.
-export function playATMBeep(tones: { hz: number; ms: number }[] = [KEY]) {
+export function playATMBeep(tones: { hz: number; ms: number }[]) {
     const ac = audio()
     if (!ac) return
     let t = ac.currentTime + 0.005
@@ -67,30 +51,4 @@ export function playATMBeep(tones: { hz: number; ms: number }[] = [KEY]) {
         osc.stop(end + 0.01)
         t = end + GAP_MS / 1000
     }
-}
-
-function withBeep(Component: ComponentType<any>, tones: { hz: number; ms: number }[]): ComponentType<any> {
-    return function ATMBeep(props: any) {
-        return (
-            <Component
-                {...props}
-                onPointerDown={(e: React.PointerEvent) => {
-                    playATMBeep(tones)
-                    props.onPointerDown?.(e)
-                }}
-            />
-        )
-    }
-}
-
-export function withATMKeyBeep(Component: ComponentType<any>): ComponentType<any> {
-    return withBeep(Component, [KEY])
-}
-
-export function withATMEnterBeep(Component: ComponentType<any>): ComponentType<any> {
-    return withBeep(Component, ENTER)
-}
-
-export function withATMCancelBeep(Component: ComponentType<any>): ComponentType<any> {
-    return withBeep(Component, CANCEL)
 }

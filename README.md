@@ -65,7 +65,7 @@ tutorials/               The tutorial system
 
 ATM/                     The ATM kiosk portion (separate from the mobile-app kiosk)
   ATMAttract.tsx           The ATM page: waiting lights and the tap transition (A+B+E; others selectable)
-  ATMBeep.tsx              Soft ATM key beep overrides (key, enter, cancel)
+  ATMBeep.tsx              The ATM page's soft sounds (used by ATMAttract.tsx)
   ATMTapIcon.tsx           "Tap anywhere to begin" icon (hand pressing into a rippling circle)
   ATMWingBackground.tsx    Animated wing background for the ATM screen (Flow / Aurora)
   NOTES.md
