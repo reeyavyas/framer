@@ -329,8 +329,8 @@ export default function ATMAttract(props: Props) {
         if (busy.current) return
         busy.current = true
         // With the card (E, E + B, A + B + E): one beep as the card goes in, another as the
-        // card has been read and the ripple / zoom / fade starts, about 1 s apart so they
-        // read as two separate moments. Without the card, one beep acknowledges the tap.
+        // ripple / zoom / fade ends and the next page takes over. Without the card, one beep
+        // acknowledges the tap.
         const withCard = !reduceMotion && (transition === "E" || transition === "EB" || transition === "ABE")
         if (!withCard) beep()
         if (reduceMotion) await fadeIn()
@@ -339,16 +339,16 @@ export default function ATMAttract(props: Props) {
         else if (transition === "AB") await rippleZoom()
         else if (transition === "E") {
             await cardIn()
-            beep()
             await fadeIn()
+            beep()
         } else if (transition === "EB") {
             await cardIn()
-            beep()
             await zoomIn()
+            beep()
         } else {
             await cardIn()
-            beep()
             await rippleZoom(ABE_RIPPLE_SECONDS)
+            beep()
         }
         if (!alive.current) return
         // The page stays covered in the next page's look until Framer has switched to it.
