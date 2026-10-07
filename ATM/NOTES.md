@@ -321,6 +321,15 @@ In the order they were made with the designer:
 - **Card goes in upright** (E): the card first went into the slot
   sideways (long edge first); real cards go in short edge first, so it
   now goes in upright, with the logo end leading.
+- **Second review**: the card tips back in real perspective as it goes
+  in (its far edge narrows to about 60% of the near edge, like the
+  white card drawn on the machine) instead of a flat squash. The screen
+  light on the metal is now light blue and stronger. In A + B the
+  ripple is no longer cut to the screen: it is A's full-page ripple,
+  slowed so the ATM is seen centring and zooming in behind it, and it
+  stays on the spot of the ATM it started from. New combination
+  **A + B + E**: the card goes in, then the ripple spreads from the
+  card slot while the ATM zooms in.
 
 ## Branch
 
