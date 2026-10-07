@@ -74,8 +74,14 @@ from the mobile-app kiosk that every other group in this repo serves.
   frame (`STILL`, with the circle and both rings showing). Earlier
   versions are in git history: the still hand (commit `2636637`) and
   the hand-free circle (commit `25af7ae`).
-- **Open, to pick up next session**: tune the tap icon with the
-  designer's "Tap anywhere to begin" text on top, in the ATM screen.
+- The tap icon and the "Tap anywhere to begin" text are placed in the
+  ATM screen in Framer. The ATM page is 1080×1920; the designer's flat
+  ATM image and a debit card image are the artwork for the next step.
+- **In exploration (not built in Framer yet)**: attract-state lights on
+  the ATM hardware and the transition after a tap. They are previewed
+  on the "ATM Attract Lab" page (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9),
+  which runs the real wing background and tap icon on the screen. The
+  designer will choose after seeing them; see the decisions log.
 
 ## Using it in Framer
 
@@ -296,6 +302,16 @@ In the order they were made with the designer:
   short `(el) => (x = el)` form returns a value, which newer React
   treats as a cleanup function. They now use block bodies that return
   nothing; behaviour is unchanged.
+- **Attract state and tap transition (exploring)**: after a
+  brainstorm, the designer ruled out a breathing "Tap anywhere" text, a
+  rotating line under it, the wings flying off as the transition, and a
+  monitor-style power-up. Still open: hardware lights (slot lights
+  breathing in turn, card slot flashing, screen light on the metal,
+  keypad glint, glare on the screen glass) and the transitions A
+  (egg-yolk ripple floods from the tap point), B (zoom into the
+  screen), A + B together, and E (card slides into the card slot)
+  pending how the card looks. A tap anywhere on the page counts. The
+  page after the tap is a new full-screen page with no ATM on it.
 
 ## Branch
 
