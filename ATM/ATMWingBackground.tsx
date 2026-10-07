@@ -380,6 +380,17 @@ export default function ATMWingBackground(props: Props) {
 
                 <rect x={-200} y={-200} width={900} height={900} fill={`url(#${id("bg")})`} />
 
+                {/* Layers, back to front: background, still shapes, accent lines, glows, wings.
+                    The glows sit above the still shapes so no still edge cuts them off, and
+                    behind the wings for the layered look. */}
+                <g>
+                    {FILLS.map((f, i) => (
+                        <path key={i} d={f.d} fill={`url(#${id(`shape${i}`)})`} opacity={f.op} />
+                    ))}
+                </g>
+
+                <g>{ACCENTS.map((ci) => line(ci, accentLines))}</g>
+
                 <g style={{ mixBlendMode: "screen" }}>
                     {ORBS.map((_, i) => (
                         <circle
@@ -395,11 +406,6 @@ export default function ATMWingBackground(props: Props) {
                     ))}
                 </g>
 
-                <g>
-                    {FILLS.map((f, i) => (
-                        <path key={i} d={f.d} fill={`url(#${id(`shape${i}`)})`} opacity={f.op} />
-                    ))}
-                </g>
 
                 {WINGS.map((w, wi) => (
                     <g
@@ -433,7 +439,6 @@ export default function ATMWingBackground(props: Props) {
                     </g>
                 ))}
 
-                <g>{ACCENTS.map((ci) => line(ci, accentLines))}</g>
             </svg>
         </div>
     )
