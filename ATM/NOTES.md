@@ -25,7 +25,8 @@ from the mobile-app kiosk that every other group in this repo serves.
   - Lines 5–6 edge **wing 1**, lines 2–3 edge **wing 2**. Each wing is
     one solid shape. Lines 1, 4, 7 and 8 are still **accent lines**
     and never animate (a travelling highlight on them was tried and
-    dropped).
+    dropped). Turning **Accent Lines** off also hides the two still
+    shapes whose edges they trace; wings, shimmer and glows stay.
   - **Style → Flow**: both wings tilt and lift together, in sync, as
     rigid shapes (they never change shape). An earlier version bent
     the curves themselves; the brief is no morphing.
@@ -84,18 +85,28 @@ from the mobile-app kiosk that every other group in this repo serves.
   begin"), connected through the **Screen** property, so it zooms with
   the machine. Lights: slot lights breathing in turn, card slot flash,
   light-blue screen glow on the metal, glare on the glass (each one a
-  switch). **Transition** is **A + B + E** (chosen): the card rises
-  upright and tipped back, slides into the slot, the CARD light blinks,
-  the screen shows "Reading your card", then the egg-yolk ripple
-  spreads from the middle of the page while the ATM centres and zooms
-  in. Every other option is kept in the same property to swap to: A,
-  B, A + B, E, E + B. The ripple and zoom reveal **Next Page Look** (a
-  frame that looks like the next page; a flat **Next Page Color** when
-  none is connected), then Framer switches to **Next Page** without
-  reloading. Under "reduce
-  motion" every transition is a short fade. The exploration page for
-  these options is the "ATM Attract Lab"
-  (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9).
+  switch). **Transition** is **A + B + E** (chosen), about 3.1 s from
+  tap to next page:
+  - 0 to 1.9 s, the card step: the card (120×190) rises from below the
+    slot, upright and tipped back in perspective, slides into the slot,
+    the CARD light blinks three times, and the screen shows "Reading
+    your card" for 0.5 s.
+  - 1.9 to 3.1 s: the egg-yolk ripple spreads from the middle of the
+    page (540, 960) while the ATM centres and zooms in.
+  - Beeps (800 Hz pure tone, 60 ms, volume 0.5, matched to a reference
+    keypad beep): one as the card goes in (0.9 s), one as the ripple
+    ends (3.1 s).
+
+  Every other option is kept in the same property to swap to: A, B,
+  A + B, E, E + B. The ripple and zoom reveal **Next Page Look** (a
+  frame showing the next page's first frame, e.g. a screenshot taken
+  before its own animations play; a flat **Next Page Color** when none
+  is connected), then Framer switches to **Next Page** without
+  reloading. Under "reduce motion" every transition is a short fade.
+  The exploration page for these options is the "ATM Attract Lab"
+  (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9); it predates the
+  Framer build, so its timings, card size and sounds are older than the
+  component's.
 
 ## Using it in Framer
 
@@ -164,6 +175,12 @@ from the mobile-app kiosk that every other group in this repo serves.
 - Type-check the file with React 19's types (`@types/react@19`), as
   Framer's editor does: there should be no warnings. This catches
   callback `ref`s that return a value (see "Using it in Framer").
+- For `ATMAttract.tsx`, run the real component in a browser with the
+  ATM and card images, a stand-in screen frame, a stand-in Next Page
+  Look (one that forces itself visible, as Framer frames do) and a fake
+  Framer router. Check: the ATM shows at rest, each transition reveals
+  the look and then asks the router for Next Page, and the beeps fire
+  at their moments (log the oscillator start times and gain).
 - Review in the tuning page (the "ATM Wing Motion Lab" preview). It
   runs the actual component, and every control on it is one of the
   component's Framer properties, so it always matches what Framer
@@ -263,6 +280,27 @@ drives all the motion, which is what makes the loop seamless. Checks
 used esbuild to compile it and Playwright with Chromium to render it,
 screenshot it and compare frames pixel by pixel (seamless loop, the
 14° tilt, the colour-style fix).
+
+`ATMAttract.tsx` (the ATM page) was made the same way: the options were
+explored on the "ATM Attract Lab" page, then built as one code component
+and checked by running it in Chromium with Playwright (frames of every
+transition, the page switch, beep timings) and type-checked with React
+19's types. The beep was matched to the designer's reference MP3 by
+measuring it (ffmpeg to decode, numpy for pitch, length and loudness)
+rather than by ear; audio previews were rendered to WAV files for the
+designer to listen to. Skills: **design-taste-frontend** was invoked by
+the designer when choosing the attract and transition options;
+**artifact-design** came with the lab page; **ponytail** was on all
+session (it is why the sounds live inside `ATMAttract.tsx` rather than a
+second file, and why the unused beep overrides were removed).
+
+## Status
+
+The ATM page is built and working in Framer: wing background, tap
+icon, lights, the A + B + E transition and the beeps. There are no
+open tasks. Further changes depend on feedback the designer receives;
+the decisions log below records what was tried and chosen, so that
+feedback can be applied without undoing earlier decisions.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
