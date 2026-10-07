@@ -328,8 +328,10 @@ In the order they were made with the designer:
   ripple is no longer cut to the screen: it is A's full-page ripple,
   slowed so the ATM is seen centring and zooming in behind it, and it
   stays on the spot of the ATM it started from. New combination
-  **A + B + E**: the card goes in, then the ripple spreads from the
-  card slot while the ATM zooms in.
+  **A + B + E**: the card goes in, then the ripple spreads while the
+  ATM zooms in. It first started at the card slot; it now starts at the
+  centre of the 1080×1920 page (540, 960) and stays there while the ATM
+  moves behind it.
 
 ## Branch
 
