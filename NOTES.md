@@ -33,7 +33,8 @@ with the detail on what's in it; this file is just the map.
   See `tutorials/NOTES.md`.
 - **`ATM/`** — The second kiosk portion: an ATM that teaches Gen Alpha
   users to use an ATM, plus money tips and lessons. Currently holds the
-  animated wing background for the ATM screen. See `ATM/NOTES.md`.
+  animated wing background for the ATM screen and its "Tap anywhere
+  to begin" icon. See `ATM/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
@@ -77,4 +78,4 @@ sub-feature, even though its files live in `reset-pin/`.
 ATM work (`ATM/`) is the other exception: it goes on the `atm` branch.
 
 Never use any other branch name. Every branch follows the
-`<group>/<feature>` pattern above.
+`<group>/<feature>` pattern above, apart from these two exceptions.
