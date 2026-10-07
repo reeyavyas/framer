@@ -385,11 +385,15 @@ export default function ATMWingBackground(props: Props) {
                 {/* Layers, back to front: background, still shapes, accent lines, glows, wings.
                     The glows sit above the still shapes so no still edge cuts them off, and
                     behind the wings for the layered look. */}
-                <g>
-                    {FILLS.map((f, i) => (
-                        <path key={i} d={f.d} fill={`url(#${id(`shape${i}`)})`} opacity={f.op} />
-                    ))}
-                </g>
+                {/* The still shapes' edges follow the accent lines, so they go with them: with
+                    Accent Lines off, a bare shape edge would show as a line of its own. */}
+                {accentLines && (
+                    <g>
+                        {FILLS.map((f, i) => (
+                            <path key={i} d={f.d} fill={`url(#${id(`shape${i}`)})`} opacity={f.op} />
+                        ))}
+                    </g>
+                )}
 
                 <g>{ACCENTS.map((ci) => line(ci, accentLines))}</g>
 
@@ -527,6 +531,7 @@ addPropertyControls(ATMWingBackground, {
     accentLines: {
         type: ControlType.Boolean,
         title: "Accent Lines",
+        description: "Off also hides the two still shapes they edge.",
         defaultValue: true,
     },
     navy: { type: ControlType.Color, title: "Navy", defaultValue: "#002c44" },

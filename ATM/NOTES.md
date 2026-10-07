@@ -188,7 +188,7 @@ near the top of the file.
 | Angle of the background blend | `BG_ANGLE` (degrees upward toward the right; `0` is horizontal) |
 | Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
 | Brand colours | **Navy / Teal / Light Teal / Light Blue / Midnight** properties |
-| Hide lines | **Wing Lines**, **Accent Lines** properties |
+| Hide lines | **Wing Lines**, **Accent Lines** properties (Accent Lines off also hides the two still shapes) |
 | A picked colour shows up wrong | `toRgb` (how a Framer colour value is read) |
 
 ## Where to change things (`ATMTapIcon.tsx`)
@@ -451,6 +451,11 @@ In the order they were made with the designer:
   Tap = beep, card in = beep, card light = three short blips, card read
   = beep-beep. Volume lowered to 0.03, since a square wave sounds
   louder.
+- **Accent Lines off hides the still shapes too**: the two still
+  shapes (top right, bottom left) have edges that follow accent lines 8
+  and 1. With only the lines hidden, the bare shape edge still showed
+  as a line of its own. Now Accent Lines off hides the shapes as well;
+  the wings, their shimmer, the glows and the background blend stay.
 - **Two beeps, matched to a reference**: the designer sent a Pixabay
   ATM keypad beep (alex_jauk, "atm keypad beep"). Measured: a clean,
   pure tone at 800 Hz, about 60 ms, flat, switched on and off sharply
