@@ -318,6 +318,9 @@ In the order they were made with the designer:
   the screen is centred on the page, then zooms straight in, instead of
   moving and zooming at once. The page after the tap is the designer's
   own design; the preview shows only a plain stand-in.
+- **Card goes in upright** (E): the card first went into the slot
+  sideways (long edge first); real cards go in short edge first, so it
+  now goes in upright, with the logo end leading.
 
 ## Branch
 
