@@ -61,17 +61,21 @@ from the mobile-app kiosk that every other group in this repo serves.
 - `ATMTapIcon.tsx` — the "Tap anywhere to begin" icon, its own
   component (icon only, no background or text; the designer's text
   goes on top in Framer). It shows what a touch does, **not a target
-  or button**: the user can tap anywhere on the screen to move on. A
-  light-teal circle squeezes like a fingertip pressing, an egg-yolk dot
-  flashes inside it and two egg-yolk rings burst out (2.8 s loop). The
-  frame fits the circle (120×120 by default); the rings spill outside
-  it, so overflow must be visible. Under the OS "reduce motion" setting
-  it shows a still frame. The earlier hand version is in git history
-  (commit `2636637`).
-- **Open, to pick up next session**: the designer isn't sure yet about
-  the hand-free ripple versus the navy-filled hand (commit `2636637`).
-  Decide which one stays in `ATMTapIcon.tsx`, then tune it with the
-  designer's text on top.
+  or button**: the user can tap anywhere on the screen to move on. This
+  is **option X ("B + P")**: the designer's hand (white line, navy
+  fill) presses into a light-teal circle at the index fingertip; the
+  circle squeezes, an egg-yolk dot flashes, and two egg-yolk rings
+  spread a short way, hold, then fade together (2.8 s loop). The frame
+  fits the hand exactly (200×260 by default) and the hand is **centred**
+  in it; the circle and rings draw outside it, so overflow must be
+  visible. Like the wing background, one `frameAt(t)` drives all the
+  motion (`t` runs 0 → 1 per loop and every track ends where it
+  starts), and under the OS "reduce motion" setting it shows one still
+  frame (`STILL`, with the circle and both rings showing). Earlier
+  versions are in git history: the still hand (commit `2636637`) and
+  the hand-free circle (commit `25af7ae`).
+- **Open, to pick up next session**: tune the tap icon with the
+  designer's "Tap anywhere to begin" text on top, in the ATM screen.
 
 ## Using it in Framer
 
@@ -90,12 +94,14 @@ from the mobile-app kiosk that every other group in this repo serves.
   because newer React treats a value returned from a ref function as a
   cleanup function, and Framer flags the short `(el) => (x = el)` form
   with a yellow underline.
-- `ATMTapIcon.tsx` works the same way: paste it into its own code file
-  (same file name as the earlier hand version, so pasting over it
-  keeps the component and its Ripple Size, Loop and Ripple values) and
-  place it over the background. Set the frame's **overflow to
-  visible** so the rings can draw outside the circle, and keep the
-  frame square. Its colours (**Circle**, **Ripple**) also accept
+- `ATMTapIcon.tsx` works the same way: paste it over the existing
+  `ATMTapIcon` code file (same file name, so placed instances keep
+  their Ripple Size, Loop, Circle and Ripple values; **Hand** and
+  **Hand Fill** come back with their defaults) and place it over the
+  background. Set the frame's **overflow to visible** so the circle and
+  rings can draw outside the hand. The hand stays centred whatever the
+  frame's shape; keep it about 200×260 so the hand fills it. Its
+  colours (**Hand**, **Hand Fill**, **Circle**, **Ripple**) also accept
   colour styles.
 
 ## Checking a change before handing it over
@@ -104,7 +110,8 @@ from the mobile-app kiosk that every other group in this repo serves.
   the loop phase θ at a whole-number frequency (`cos(k·θ)`,
   `sin(k·θ)`), or repeat exactly once per loop like the shimmer. A
   quick check is to compare `frameAt(θ, settings)` with
-  `frameAt(θ + 2π, settings)`: every value must match.
+  `frameAt(θ + 2π, settings)`: every value must match. For the tap
+  icon, `frameAt(0, rippleSize)` must equal `frameAt(1, rippleSize)`.
 - Try the colour properties with a colour style as well as a typed hex
   value; the gradients and glows should look the same either way.
 - Type-check the file with React 19's types (`@types/react@19`), as
@@ -141,13 +148,17 @@ near the top of the file.
 
 | Feedback | Where |
 |---|---|
-| Ripple bigger/smaller | **Ripple Size** property (1 = rings grow to about 3× the circle) |
+| How far the rings spread | **Ripple Size** property (scales how far past the circle they go); the sizes at 1 are `end` on each of `RINGS` (620 and 440, circle is 260) |
 | Speed of the loop | **Loop (s)** property (default 2.8 s) |
-| Circle or ripple colour | **Circle**, **Ripple** properties (light teal, egg yolk) |
-| How far the circle squeezes | `PRESS` |
-| Gap between the two rings | `RING_GAP` (share of the loop) |
-| Line thickness, dot size | `CIRCLE_STROKE`, `RING_STROKE`, `DOT_R` |
-| Feel of the press / the burst | `SPRING`, `OUT` (cubic-bezier curves) |
+| Colours | **Hand** (line), **Hand Fill**, **Circle**, **Ripple** properties (white, navy, light teal, egg yolk) |
+| How far the hand presses in | `PRESS` (scale toward the fingertip at the tap) |
+| Circle size / how far it squeezes | `CIRCLE_R`, `CIRCLE_SQUEEZE` |
+| When each ring starts, how bright it gets, line thickness | `start`, `peak`, `width` on each of `RINGS` |
+| How long the rings hold before fading | `FADE` (share of the loop) |
+| Line thickness, dot size | `HAND_STROKE`, `CIRCLE_STROKE`, `DOT_R` |
+| Timing of the press, squeeze and dot | the `[time, value]` keys in `frameAt` (times are shares of the loop; the tap lands at `0.3`) |
+| Feel of the press / the spread | `SPRING`, `OUT` (cubic-bezier curves) |
+| Still frame under reduce motion | `STILL` |
 
 ## How it was made
 
@@ -164,6 +175,11 @@ approach more than the component's code):
   page): their layout, typography and publishing rules. The tuning page
   first had its own copy of the animation; it was later rebuilt to run
   the real component so the two can't drift apart.
+- **high-end-visual-design** and **design-taste-frontend**: invoked by
+  the designer on the tap icon options page (the 25-option comparison).
+  The first restyled it; the second then trimmed it back (fewer labels,
+  shorter copy, no decoration that didn't help the comparison). Neither
+  changed the icon's own design.
 - **ponytail**: a mode that was on for the session, not called on
   purpose. It pushes toward the simplest code that works, which is why
   the component is one self-contained file with no new libraries.
@@ -256,6 +272,16 @@ In the order they were made with the designer:
   chosen and **replaced the hand version in `ATMTapIcon.tsx`** (same
   file name). It is not a target or button: the whole screen is
   tappable, so code and properties call it a circle, not a target.
+- **Tap icon, hand plus ripple (current)**: the designer wasn't sure
+  about the hand-free circle versus the hand, so more hand-plus-ripple
+  options were shown on one comparison page: 7, then 23 in all,
+  grouped by hand motion, ripple style and accent (letters A–W). The
+  designer liked **B** (hand pressing into the light-teal circle) and
+  **P** (rings that spread a short way, hold and fade together), and
+  chose their mix, **X**: B's circle and dot with P's settling rings.
+  The hand is now **centred** in its frame (no longer anchored to the
+  bottom edge). The previews showed the icon with no text, background
+  or padding, as it sits in Framer.
 - **Colour-style bug (fixed)**: changing a colour property to one of the
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
