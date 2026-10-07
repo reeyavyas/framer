@@ -27,6 +27,15 @@ const CANCEL = [
 ]
 const GAP_MS = 45 // pause between the two beeps of a pair
 
+// Sounds for moments on the ATM page (ATMAttract.tsx plays these itself).
+export const ATM_SOUNDS = {
+    key: [KEY], // a press
+    enter: ENTER, // accepted, moving on
+    cancel: CANCEL,
+    cardIn: [{ hz: 520, ms: 140 }], // low, soft: the card being drawn into the slot
+    blink: [{ hz: 2200, ms: 35 }], // tiny tick with each flash of the card light
+}
+
 let ctx: AudioContext | null = null
 const audio = () => {
     if (typeof window === "undefined" || RenderTarget.current() === RenderTarget.canvas) return null

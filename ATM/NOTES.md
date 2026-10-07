@@ -103,7 +103,8 @@ from the mobile-app kiosk that every other group in this repo serves.
   and leaves the layer's own tap behaviour (links, interactions) alone.
   Volume is `VOLUME` (0.05); pitch and length are `KEY`, `ENTER`,
   `CANCEL`. Browsers only allow sound after the first tap on a page,
-  so the first press also switches sound on.
+  so the first press also switches sound on. The ATM page plays its
+  own sounds from here too (see the **Sounds** row below).
 
 ## Using it in Framer
 
@@ -234,6 +235,9 @@ near the top of the file.
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
 | Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
+| Sounds on / off | **Sounds** property |
+| Which sound plays when | `sound(…)` calls in `run` and `cardIn`: tap = key beep; card starts into the slot = low soft tone; each flash of the CARD light = tiny tick; card read, ripple/zoom starts = two rising beeps |
+| What each sound is (pitch, length, volume) | `ATM_SOUNDS` and `VOLUME` in `ATMBeep.tsx` |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
@@ -443,6 +447,11 @@ In the order they were made with the designer:
   1.1 s). The card's movement is unchanged; the card step now ends
   about 1.9 s after the tap, and A + B + E hands over to the next page
   about 3.1 s after the tap.
+- **Sounds, in step with the transition** (A + B + E): a soft key beep
+  on the tap, a low soft tone as the card starts into the slot (0.9 s),
+  a tiny tick with each of the CARD light's three flashes (1.3, 1.5,
+  1.7 s), and two rising beeps when the card has been read and the
+  ripple starts (1.9 s). Quiet on purpose. Switch off with **Sounds**.
 
 ## Branch
 

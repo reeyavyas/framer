@@ -2,6 +2,7 @@ import * as React from "react"
 import * as Framer from "framer"
 import { addPropertyControls, ControlType } from "framer"
 import { useReducedMotion } from "framer-motion"
+import { ATM_SOUNDS, playATMBeep } from "./ATMBeep.tsx"
 
 // The whole ATM page (1080×1920): the designer's ATM artwork, the screen (a frame connected
 // from the canvas, holding the wing background, tap icon and "Tap anywhere to begin"), the
@@ -61,6 +62,7 @@ interface Props {
     cardSlotFlash: boolean
     screenGlow: boolean
     glare: boolean
+    sounds: boolean
     slotColor: string
     glowColor: string
     readingText: string
@@ -255,9 +257,15 @@ export default function ATMAttract(props: Props) {
         // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
         const readStart = at(1.7)
+        let cardSound = false
+        let lastFlash = -1
         card.style.opacity = "1"
         await play(Math.max(at(2.2), readStart + READING_SECONDS), (t) => {
             const a = seg(t, 0, at(0.9), OUT)
+            if (t >= at(1.1) && !cardSound) {
+                cardSound = true
+                sound(ATM_SOUNDS.cardIn) // as the card starts into the slot
+            }
             const push = seg(t, at(1.1), at(1.75), IN) * 265
             const y = lerp(from.y, rest, a)
             const s = lerp(from.s, 1, a)
@@ -265,6 +273,11 @@ export default function ATMAttract(props: Props) {
             card.style.filter = `drop-shadow(0 ${lerp(26, 6, a)}px ${lerp(30, 10, a)}px rgb(0 0 0 / .35)) brightness(${1 - seg(t, at(1.1), at(1.65)) * 0.45})`
             const b = seg(t, at(1.6), at(2.2))
             const blinking = b > 0 && b < 1
+            const flash = Math.floor(b * 6) // 0, 2, 4 are the light's three flashes
+            if (blinking && flash !== lastFlash) {
+                lastFlash = flash
+                if (flash % 2 === 0) sound(ATM_SOUNDS.blink)
+            }
             if (strip) {
                 strip.style.animation = blinking ? "none" : ""
                 strip.style.opacity = blinking ? (Math.floor(b * 6) % 2 === 0 ? "1" : "0.1") : ""
@@ -282,21 +295,29 @@ export default function ATMAttract(props: Props) {
         })
     }
 
+    const sound = (tones: { hz: number; ms: number }[]) => {
+        if (props.sounds) playATMBeep(tones)
+    }
+
     const run = async (x: number, y: number) => {
         if (busy.current) return
         busy.current = true
+        sound(ATM_SOUNDS.key) // the tap itself
         if (reduceMotion) await fadeIn()
         else if (transition === "A") await rippleFlood(x, y)
         else if (transition === "B") await zoomIn()
         else if (transition === "AB") await rippleZoom()
         else if (transition === "E") {
             await cardIn()
+            sound(ATM_SOUNDS.enter) // card read: moving on
             await fadeIn()
         } else if (transition === "EB") {
             await cardIn()
+            sound(ATM_SOUNDS.enter)
             await zoomIn()
         } else {
             await cardIn()
+            sound(ATM_SOUNDS.enter)
             await rippleZoom(ABE_RIPPLE_SECONDS)
         }
         if (!alive.current) return
@@ -521,6 +542,7 @@ ATMAttract.defaultProps = {
     cardSlotFlash: true,
     screenGlow: true,
     glare: true,
+    sounds: true,
     slotColor: "#7cf25e",
     glowColor: "#0079a9",
     readingText: "Reading your card",
@@ -549,6 +571,7 @@ addPropertyControls(ATMAttract, {
     cardSlotFlash: { type: ControlType.Boolean, title: "Card Slot Flash", defaultValue: true },
     screenGlow: { type: ControlType.Boolean, title: "Screen Glow", defaultValue: true },
     glare: { type: ControlType.Boolean, title: "Glass Glare", defaultValue: true },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
     slotColor: { type: ControlType.Color, title: "Slot Light", defaultValue: "#7cf25e" },
     glowColor: { type: ControlType.Color, title: "Glow", defaultValue: "#0079a9" },
     readingText: { type: ControlType.String, title: "Reading Text", defaultValue: "Reading your card" },
