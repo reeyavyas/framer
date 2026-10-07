@@ -107,6 +107,9 @@ from the mobile-app kiosk that every other group in this repo serves.
   `frameAt(θ + 2π, settings)`: every value must match.
 - Try the colour properties with a colour style as well as a typed hex
   value; the gradients and glows should look the same either way.
+- Type-check the file with React 19's types (`@types/react@19`), as
+  Framer's editor does: there should be no warnings. This catches
+  callback `ref`s that return a value (see "Using it in Framer").
 - Review in the tuning page (the "ATM Wing Motion Lab" preview). It
   runs the actual component, and every control on it is one of the
   component's Framer properties, so it always matches what Framer
@@ -257,6 +260,11 @@ In the order they were made with the designer:
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
   style's real colour, and short hex too.
+- **Ref warnings (fixed)**: Framer showed yellow underlines on three
+  `ref`s (glows, wings, gradients). They were warnings, not errors; the
+  short `(el) => (x = el)` form returns a value, which newer React
+  treats as a cleanup function. They now use block bodies that return
+  nothing; behaviour is unchanged.
 - **Aurora's glows move like Flow's.** Aurora used to drift the glows
   1.8× wider than Flow; the designer asked for the same glow movement,
   so both styles now drift, resize and pulse the glows identically. The
