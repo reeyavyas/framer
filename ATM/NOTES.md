@@ -222,7 +222,7 @@ near the top of the file.
 | Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Sounds on / off | **Sounds** property |
-| When it beeps | `beep()` calls: with the card (E, E + B, A + B + E) once as the card goes in and once as "Reading your card" appears (in `cardIn`); without it (A, B, A + B) once on the tap (in `run`) |
+| When it beeps | `beep()` calls: with the card (E, E + B, A + B + E) once as the card goes in (in `cardIn`) and once as the ripple / zoom / fade starts after "Reading your card" (in `run`); without it (A, B, A + B) once on the tap |
 | Beep loudness | **Beep Volume** property (0 to 1; default 0.5, the reference's loudest beep) |
 | What the beep is | `BEEP_HZ` (800), `BEEP_MS` (60); a pure tone made by the browser, no sound files |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
@@ -467,6 +467,10 @@ In the order they were made with the designer:
   reference's four beeps match volumes 0.37 to 0.49; 0.5 matches the
   loudest. (Its 0.7 peak is a single spike, and 0.7 would be louder
   than any beep in it.)
+- **Beeps spread apart**: the second beep played as "Reading your
+  card" appeared, only 0.46 s after the first, so the two blurred into
+  one double beep. It now plays as the ripple starts, after the reading
+  message, about 1 s after the card-in beep.
 
 ## Branch
 

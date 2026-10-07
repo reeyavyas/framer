@@ -290,17 +290,12 @@ export default function ATMAttract(props: Props) {
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
         const readStart = at(1.7)
         let cardBeep = false
-        let readingBeep = false
         card.style.opacity = "1"
         await play(Math.max(at(2.2), readStart + READING_SECONDS), (t) => {
             const a = seg(t, 0, at(0.9), OUT)
             if (t >= at(1.1) && !cardBeep) {
                 cardBeep = true
                 beep() // the card goes into the slot
-            }
-            if (t >= readStart && !readingBeep) {
-                readingBeep = true
-                beep() // "Reading your card" appears
             }
             const push = seg(t, at(1.1), at(1.75), IN) * 265
             const y = lerp(from.y, rest, a)
@@ -333,8 +328,9 @@ export default function ATMAttract(props: Props) {
     const run = async (x: number, y: number) => {
         if (busy.current) return
         busy.current = true
-        // With the card (E, E + B, A + B + E) the card step beeps twice: card in, then reading.
-        // Without it, one beep acknowledges the tap.
+        // With the card (E, E + B, A + B + E): one beep as the card goes in, another as the
+        // card has been read and the ripple / zoom / fade starts, about 1 s apart so they
+        // read as two separate moments. Without the card, one beep acknowledges the tap.
         const withCard = !reduceMotion && (transition === "E" || transition === "EB" || transition === "ABE")
         if (!withCard) beep()
         if (reduceMotion) await fadeIn()
@@ -343,12 +339,15 @@ export default function ATMAttract(props: Props) {
         else if (transition === "AB") await rippleZoom()
         else if (transition === "E") {
             await cardIn()
+            beep()
             await fadeIn()
         } else if (transition === "EB") {
             await cardIn()
+            beep()
             await zoomIn()
         } else {
             await cardIn()
+            beep()
             await rippleZoom(ABE_RIPPLE_SECONDS)
         }
         if (!alive.current) return
