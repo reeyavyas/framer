@@ -62,6 +62,7 @@ interface Props {
     screenGlow: boolean
     glare: boolean
     sounds: boolean
+    beepVolume: number
     slotColor: string
     glowColor: string
     readingText: string
@@ -78,10 +79,9 @@ interface Props {
 // tap also switches sound on. Nothing plays on Framer's canvas.
 const BEEP_HZ = 800
 const BEEP_MS = 60
-const VOLUME = 0.05 // 0..1; kept low so the beep stays in the background
 
 let audioCtx: AudioContext | null = null
-function playBeep() {
+function playBeep(volume: number) {
     if (typeof window === "undefined" || RenderTarget.current() === RenderTarget.canvas) return
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AC) return
@@ -96,8 +96,8 @@ function playBeep() {
     const end = t + BEEP_MS / 1000
     // a few milliseconds of fade at each edge: sharp like a beep, but no click
     gain.gain.setValueAtTime(0, t)
-    gain.gain.linearRampToValueAtTime(VOLUME, t + 0.004)
-    gain.gain.setValueAtTime(VOLUME, end - 0.006)
+    gain.gain.linearRampToValueAtTime(volume, t + 0.004)
+    gain.gain.setValueAtTime(volume, end - 0.006)
     gain.gain.linearRampToValueAtTime(0, end)
     osc.connect(gain).connect(ac.destination)
     osc.start(t)
@@ -327,7 +327,7 @@ export default function ATMAttract(props: Props) {
     }
 
     const beep = () => {
-        if (props.sounds) playBeep()
+        if (props.sounds && props.beepVolume > 0) playBeep(props.beepVolume)
     }
 
     const run = async (x: number, y: number) => {
@@ -574,6 +574,7 @@ ATMAttract.defaultProps = {
     screenGlow: true,
     glare: true,
     sounds: true,
+    beepVolume: 0.2,
     slotColor: "#7cf25e",
     glowColor: "#0079a9",
     readingText: "Reading your card",
@@ -603,6 +604,15 @@ addPropertyControls(ATMAttract, {
     screenGlow: { type: ControlType.Boolean, title: "Screen Glow", defaultValue: true },
     glare: { type: ControlType.Boolean, title: "Glass Glare", defaultValue: true },
     sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    beepVolume: {
+        type: ControlType.Number,
+        title: "Beep Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: 0.2,
+        hidden: (props: Props) => !props.sounds,
+    },
     slotColor: { type: ControlType.Color, title: "Slot Light", defaultValue: "#7cf25e" },
     glowColor: { type: ControlType.Color, title: "Glow", defaultValue: "#0079a9" },
     readingText: { type: ControlType.String, title: "Reading Text", defaultValue: "Reading your card" },
