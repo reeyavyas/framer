@@ -72,52 +72,36 @@ interface Props {
 }
 
 // ---- sounds ----
-// Beeps made by the browser (Web Audio): no sound files, no delay. Browsers only allow
-// sound after the first tap on a page, so the first tap also switches sound on. Nothing plays
-// on Framer's canvas.
-const VOLUME = 0.03 // 0..1; kept low: a square-wave beep sounds louder than its number suggests
-const BEEP_HZ = 1200 // one pitch for every beep, like an ATM's keypad buzzer
-const GAP_MS = 70 // pause between the beeps of a pair
-type Tone = { hz: number; ms: number }
-// Traditional beeps: one flat pitch, a square wave (the buzzy electronic tone of a keypad
-// buzzer), on and off almost instantly.
-const SOUNDS: Record<"key" | "cardIn" | "blink" | "enter", Tone[]> = {
-    key: [{ hz: BEEP_HZ, ms: 110 }], // the tap: beep
-    cardIn: [{ hz: BEEP_HZ, ms: 110 }], // the card starts into the slot: beep
-    blink: [{ hz: BEEP_HZ, ms: 40 }], // a short blip with each flash of the card light
-    enter: [
-        // card read, moving on: beep-beep
-        { hz: BEEP_HZ, ms: 90 },
-        { hz: BEEP_HZ, ms: 90 },
-    ],
-}
+// One ATM keypad beep, made by the browser (Web Audio): no sound files, no delay. Modelled on
+// a reference keypad beep: a clean, pure tone (sine) around 800 Hz, about 60 ms long, switched
+// on and off sharply. Browsers only allow sound after the first tap on a page, so the first
+// tap also switches sound on. Nothing plays on Framer's canvas.
+const BEEP_HZ = 800
+const BEEP_MS = 60
+const VOLUME = 0.05 // 0..1; kept low so the beep stays in the background
 
 let audioCtx: AudioContext | null = null
-// Plays tones one after another. Each switches on and off over a few milliseconds: fast
-// enough to sound like a hard electronic beep, but without a click at the edges.
-function playTones(tones: Tone[]) {
+function playBeep() {
     if (typeof window === "undefined" || RenderTarget.current() === RenderTarget.canvas) return
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AC) return
     audioCtx ??= new AC()
     const ac = audioCtx
     if (ac.state === "suspended") void ac.resume()
-    let t = ac.currentTime + 0.005
-    for (const { hz, ms } of tones) {
-        const osc = ac.createOscillator()
-        const gain = ac.createGain()
-        osc.type = "square"
-        osc.frequency.value = hz
-        const end = t + ms / 1000
-        gain.gain.setValueAtTime(0, t)
-        gain.gain.linearRampToValueAtTime(VOLUME, t + 0.003)
-        gain.gain.setValueAtTime(VOLUME, end - 0.008)
-        gain.gain.exponentialRampToValueAtTime(0.0001, end)
-        osc.connect(gain).connect(ac.destination)
-        osc.start(t)
-        osc.stop(end + 0.01)
-        t = end + GAP_MS / 1000
-    }
+    const osc = ac.createOscillator()
+    const gain = ac.createGain()
+    osc.type = "sine"
+    osc.frequency.value = BEEP_HZ
+    const t = ac.currentTime + 0.005
+    const end = t + BEEP_MS / 1000
+    // a few milliseconds of fade at each edge: sharp like a beep, but no click
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(VOLUME, t + 0.004)
+    gain.gain.setValueAtTime(VOLUME, end - 0.006)
+    gain.gain.linearRampToValueAtTime(0, end)
+    osc.connect(gain).connect(ac.destination)
+    osc.start(t)
+    osc.stop(end + 0.01)
 }
 
 // ---- timing helpers ----
@@ -305,14 +289,18 @@ export default function ATMAttract(props: Props) {
         // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
         const readStart = at(1.7)
-        let cardSound = false
-        let lastFlash = -1
+        let cardBeep = false
+        let readingBeep = false
         card.style.opacity = "1"
         await play(Math.max(at(2.2), readStart + READING_SECONDS), (t) => {
             const a = seg(t, 0, at(0.9), OUT)
-            if (t >= at(1.1) && !cardSound) {
-                cardSound = true
-                sound(SOUNDS.cardIn) // as the card starts into the slot
+            if (t >= at(1.1) && !cardBeep) {
+                cardBeep = true
+                beep() // the card goes into the slot
+            }
+            if (t >= readStart && !readingBeep) {
+                readingBeep = true
+                beep() // "Reading your card" appears
             }
             const push = seg(t, at(1.1), at(1.75), IN) * 265
             const y = lerp(from.y, rest, a)
@@ -321,11 +309,6 @@ export default function ATMAttract(props: Props) {
             card.style.filter = `drop-shadow(0 ${lerp(26, 6, a)}px ${lerp(30, 10, a)}px rgb(0 0 0 / .35)) brightness(${1 - seg(t, at(1.1), at(1.65)) * 0.45})`
             const b = seg(t, at(1.6), at(2.2))
             const blinking = b > 0 && b < 1
-            const flash = Math.floor(b * 6) // 0, 2, 4 are the light's three flashes
-            if (blinking && flash !== lastFlash) {
-                lastFlash = flash
-                if (flash % 2 === 0) sound(SOUNDS.blink)
-            }
             if (strip) {
                 strip.style.animation = blinking ? "none" : ""
                 strip.style.opacity = blinking ? (Math.floor(b * 6) % 2 === 0 ? "1" : "0.1") : ""
@@ -343,29 +326,29 @@ export default function ATMAttract(props: Props) {
         })
     }
 
-    const sound = (tones: Tone[]) => {
-        if (props.sounds) playTones(tones)
+    const beep = () => {
+        if (props.sounds) playBeep()
     }
 
     const run = async (x: number, y: number) => {
         if (busy.current) return
         busy.current = true
-        sound(SOUNDS.key) // the tap itself
+        // With the card (E, E + B, A + B + E) the card step beeps twice: card in, then reading.
+        // Without it, one beep acknowledges the tap.
+        const withCard = !reduceMotion && (transition === "E" || transition === "EB" || transition === "ABE")
+        if (!withCard) beep()
         if (reduceMotion) await fadeIn()
         else if (transition === "A") await rippleFlood(x, y)
         else if (transition === "B") await zoomIn()
         else if (transition === "AB") await rippleZoom()
         else if (transition === "E") {
             await cardIn()
-            sound(SOUNDS.enter) // card read: moving on
             await fadeIn()
         } else if (transition === "EB") {
             await cardIn()
-            sound(SOUNDS.enter)
             await zoomIn()
         } else {
             await cardIn()
-            sound(SOUNDS.enter)
             await rippleZoom(ABE_RIPPLE_SECONDS)
         }
         if (!alive.current) return

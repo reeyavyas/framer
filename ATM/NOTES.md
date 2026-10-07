@@ -222,8 +222,8 @@ near the top of the file.
 | Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Sounds on / off | **Sounds** property |
-| Which sound plays when | `sound(…)` calls in `run` and `cardIn`: tap = key beep; card starts into the slot = low soft tone; each flash of the CARD light = tiny tick; card read, ripple/zoom starts = two rising beeps |
-| What each sound is (pitch, length, volume) | `BEEP_HZ` (1200), `SOUNDS` (lengths) and `VOLUME` (0.03); square-wave beeps made by the browser, no sound files |
+| When it beeps | `beep()` calls: with the card (E, E + B, A + B + E) once as the card goes in and once as "Reading your card" appears (in `cardIn`); without it (A, B, A + B) once on the tap (in `run`) |
+| What the beep is | `BEEP_HZ` (800), `BEEP_MS` (60), `VOLUME` (0.05); a pure tone made by the browser, no sound files |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
@@ -450,6 +450,14 @@ In the order they were made with the designer:
   Tap = beep, card in = beep, card light = three short blips, card read
   = beep-beep. Volume lowered to 0.03, since a square wave sounds
   louder.
+- **Two beeps, matched to a reference**: the designer sent a Pixabay
+  ATM keypad beep (alex_jauk, "atm keypad beep"). Measured: a clean,
+  pure tone at 800 Hz, about 60 ms, flat, switched on and off sharply
+  (not buzzy). The beep now matches it (800 Hz sine, 60 ms). The three
+  card-light blips, the tap beep and the closing beep-beep were
+  dropped: with the card, it beeps once as the card goes in and once as
+  "Reading your card" appears. A, B and A + B (no card) beep once on
+  the tap. The reference file itself is not used or stored.
 
 ## Branch
 
