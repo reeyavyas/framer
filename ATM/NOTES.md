@@ -332,6 +332,8 @@ In the order they were made with the designer:
   ATM zooms in. It first started at the card slot; it now starts at the
   centre of the 1080×1920 page (540, 960) and stays there while the ATM
   moves behind it.
+  A + B now starts its ripple at the same page centre too, wherever the
+  tap lands (it first followed the tapped spot on the ATM).
 
 ## Branch
 
