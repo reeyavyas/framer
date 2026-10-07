@@ -31,8 +31,8 @@ from the mobile-app kiosk that every other group in this repo serves.
     the curves themselves; the brief is no morphing.
   - **Style → Aurora**: nothing moves; the light inside each shape
     slowly rolls across it, and the glows drift a little wider.
-  - Both: three soft light blue glows at the same strength (top right,
-    upper left and lower middle) and a light-teal shimmer
+  - Both: three soft glows at the same strength (light teal top right,
+    light blue upper left and lower middle) and a light-teal shimmer
     running left to right along the wing lines.
   - Background: a very wide navy-to-teal blend, tilted 14° upward (navy
     lower left, teal upper right). Navy holds to 60% of the blend and the
@@ -116,7 +116,7 @@ near the top of the file.
 | Glow brightness, all glows | **Glow** property |
 | One glow brighter/dimmer, moved, recoloured | `ORBS`: `x`/`y` position, `r` size, `color`, `k` strength (all three are `k: 1`) |
 | Glow softness | `FALLOFF` (fade curve) and the `glowSoft` blur (`stdDeviation={55}`) |
-| Wing shimmer brightness / count | **Wing Shimmer**, **Shimmers / Loop** properties; colour is Light Teal |
+| Wing shimmer brightness / count / colour | **Wing Shimmer**, **Shimmers / Loop**, **Shimmer Color** properties (Shimmer Color is separate from Light Teal; default light teal `#3bbfc0`) |
 | More or less navy in the background | `BG`: navy holds to the second key (`0.6`); the blend runs to `x = 680` (larger = more navy at the right edge) |
 | Angle of the background blend | `BG_ANGLE` (degrees upward toward the right; `0` is horizontal) |
 | Colour mix inside a wing or still shape | `grad` keys on `WINGS` / `FILLS` (`[offset, colour]`); `g` is the gradient direction |
@@ -191,9 +191,13 @@ In the order they were made with the designer:
 - **Glows**: very diffused, spread over the frame (not only the
   bottom); lower middle is light blue. The top-right glow was light teal at
   half strength, then changed to light blue at full strength like the
-  other two (it was barely visible on the teal corner). All three glows
-  are now light blue at the same strength. If it reads as too much
-  glow, the fallback the designer named is light teal at full strength.
+  other two (it was barely visible on the teal corner), and then to
+  **light teal at full strength** (current). All three glows now have
+  the same strength: light teal top right, light blue upper left and
+  lower middle. It is no longer toned down.
+- **Shimmer colour is its own property** (**Shimmer Color**), separate
+  from Light Teal, so the shimmer can change without changing the lines
+  and the top-right glow. Default is light teal.
 - **Colour balance**: navy is the dominant colour, more than teal.
   Teal only toward the right. The background blend runs left to right,
   tilted about 14° upward (navy lower left, teal upper right); the
