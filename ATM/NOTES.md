@@ -85,6 +85,11 @@ from the mobile-app kiosk that every other group in this repo serves.
   Framer passes its own `style` prop to every code component, and a
   property with that name would clash with it.
 - Under the OS "reduce motion" setting it shows one still frame.
+- Framer's editor should show no warnings on these files. Callback
+  `ref`s are written with a block body (`(el) => { ref.current = el }`)
+  because newer React treats a value returned from a ref function as a
+  cleanup function, and Framer flags the short `(el) => (x = el)` form
+  with a yellow underline.
 - `ATMTapIcon.tsx` works the same way: paste it into its own code file
   (same file name as the earlier hand version, so pasting over it
   keeps the component and its Ripple Size, Loop and Ripple values) and

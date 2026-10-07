@@ -338,7 +338,9 @@ export default function ATMWingBackground(props: Props) {
                 <defs>
                     {gradient("bg", BG, false, `rotate(${-BG_ANGLE} 249.5 232.5)`)}
                     {SHAPES.map((s, i) =>
-                        gradient(`shape${i}`, s, true, first.grads[i], (el) => (gradRefs.current[i] = el))
+                        gradient(`shape${i}`, s, true, first.grads[i], (el) => {
+                            gradRefs.current[i] = el
+                        })
                     )}
                     {ORBS.map((o, i) => {
                         const core = mix(col[o.color], "#ffffff", 0.35)
@@ -395,7 +397,9 @@ export default function ATMWingBackground(props: Props) {
                     {ORBS.map((_, i) => (
                         <circle
                             key={i}
-                            ref={(el) => (orbRefs.current[i] = el)}
+                            ref={(el) => {
+                                orbRefs.current[i] = el
+                            }}
                             cx={first.orbs[i].cx}
                             cy={first.orbs[i].cy}
                             r={first.orbs[i].r}
@@ -410,7 +414,9 @@ export default function ATMWingBackground(props: Props) {
                 {WINGS.map((w, wi) => (
                     <g
                         key={wi}
-                        ref={(el) => (wingRefs.current[wi] = el)}
+                        ref={(el) => {
+                            wingRefs.current[wi] = el
+                        }}
                         transform={first.wing || undefined}
                     >
                         <path d={w.d} fill={`url(#${id(`shape${FILLS.length + wi}`)})`} opacity={w.op} />
