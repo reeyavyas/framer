@@ -59,8 +59,8 @@ with the detail on what's in it; this file is just the map.
 
 ## Branch naming
 
-New feature branches are prefixed by group, matching the folder they'll
-land in:
+Every branch must be `<group>/<feature>` or `<group>`, using one of
+these, named after the folder the work lands in:
 
 ```
 card-controls/<feature>
@@ -69,13 +69,11 @@ money-management/<feature>
 main/<feature>
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
+atm
 ```
 
-One exception: `reset-pin/` work uses `card-controls/<feature>`
+`reset-pin/` work uses `card-controls/<feature>`
 (e.g. `card-controls/reset-pin`), because Reset PIN is a card-controls
 sub-feature, even though its files live in `reset-pin/`.
 
-ATM work (`ATM/`) is the other exception: it goes on the `atm` branch.
-
-Never use any other branch name. Every branch follows the
-`<group>/<feature>` pattern above, apart from these two exceptions.
+Never use any other branch name.
