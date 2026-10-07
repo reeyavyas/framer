@@ -188,12 +188,12 @@ function frameAt(theta: number, s: Settings) {
             : ""
     )
 
-    const drift = aurora ? 1.8 : 1
+    // Glows drift the same way in both styles.
     const orbs = ORBS.map((o) => {
         const p = (1 - Math.cos(s.pulsesPerLoop * theta + o.ph)) / 2 // 0..1 pulse
         return {
-            cx: (o.x + drift * amp * o.dx * Math.sin(theta + o.ph)).toFixed(2),
-            cy: (o.y + drift * amp * o.dy * Math.sin(2 * theta + o.ph)).toFixed(2),
+            cx: (o.x + amp * o.dx * Math.sin(theta + o.ph)).toFixed(2),
+            cy: (o.y + amp * o.dy * Math.sin(2 * theta + o.ph)).toFixed(2),
             r: (o.r * (0.88 + 0.24 * ease(p))).toFixed(2),
             opacity: (0.65 + 0.35 * p).toFixed(3),
         }

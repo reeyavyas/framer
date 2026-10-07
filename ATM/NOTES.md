@@ -30,7 +30,8 @@ from the mobile-app kiosk that every other group in this repo serves.
     rigid shapes (they never change shape). An earlier version bent
     the curves themselves; the brief is no morphing.
   - **Style → Aurora**: nothing moves; the light inside each shape
-    slowly rolls across it, and the glows drift a little wider.
+    slowly rolls across it. The glows drift and pulse exactly as in Flow
+    (Aurora used to drift them 1.8× wider; matched to Flow by request).
   - Both: three soft glows at the same strength (light teal top right,
     light blue upper left and lower middle) and a light-teal shimmer
     running left to right along the wing lines.
