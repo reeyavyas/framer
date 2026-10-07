@@ -260,16 +260,16 @@ In the order they were made with the designer:
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
   style's real colour, and short hex too.
-- **Ref warnings (fixed)**: Framer showed yellow underlines on three
-  `ref`s (glows, wings, gradients). They were warnings, not errors; the
-  short `(el) => (x = el)` form returns a value, which newer React
-  treats as a cleanup function. They now use block bodies that return
-  nothing; behaviour is unchanged.
 - **Aurora's glows move like Flow's.** Aurora used to drift the glows
   1.8× wider than Flow; the designer asked for the same glow movement,
   so both styles now drift, resize and pulse the glows identically. The
   only difference between the styles is the wings (Flow tilts them;
   Aurora holds them still and rolls the light through the shapes).
+- **Ref warnings (fixed)**: Framer showed yellow underlines on three
+  `ref`s (glows, wings, gradients). They were warnings, not errors; the
+  short `(el) => (x = el)` form returns a value, which newer React
+  treats as a cleanup function. They now use block bodies that return
+  nothing; behaviour is unchanged.
 
 ## Branch
 
