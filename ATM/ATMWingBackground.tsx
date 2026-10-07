@@ -98,7 +98,7 @@ const BG_ANGLE = 14
 
 // Glows: home position, drift, radius, colour, pulse phase, strength.
 const ORBS: { x: number; y: number; dx: number; dy: number; r: number; color: ColorKey; ph: number; k: number }[] = [
-    { x: 420, y: 70, dx: 40, dy: 26, r: 300, color: "lteal", ph: 0, k: 0.5 },
+    { x: 420, y: 70, dx: 40, dy: 26, r: 300, color: "lblue", ph: 0, k: 1 },
     { x: 110, y: 150, dx: 34, dy: 30, r: 280, color: "lblue", ph: 2.1, k: 1 },
     { x: 300, y: 370, dx: 46, dy: 22, r: 270, color: "lblue", ph: 4.2, k: 1 },
 ]

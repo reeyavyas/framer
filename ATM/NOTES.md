@@ -31,8 +31,8 @@ from the mobile-app kiosk that every other group in this repo serves.
     the curves themselves; the brief is no morphing.
   - **Style → Aurora**: nothing moves; the light inside each shape
     slowly rolls across it, and the glows drift a little wider.
-  - Both: three soft glows (light teal top right at half strength,
-    light blue upper left and lower middle) and a light-teal shimmer
+  - Both: three soft light blue glows at the same strength (top right,
+    upper left and lower middle) and a light-teal shimmer
     running left to right along the wing lines.
   - Background: a very wide navy-to-teal blend, tilted 14° upward (navy
     lower left, teal upper right). Navy holds to 60% of the blend and the
@@ -114,7 +114,7 @@ near the top of the file.
 | How far the wings tilt / how far the light rolls | **Movement** property; tilt is `amp * 3` degrees and lift `amp * 6` in `frameAt` |
 | Easing | **Easing** property |
 | Glow brightness, all glows | **Glow** property |
-| One glow brighter/dimmer, moved, recoloured | `ORBS`: `x`/`y` position, `r` size, `color`, `k` strength (top right is `k: 0.5`) |
+| One glow brighter/dimmer, moved, recoloured | `ORBS`: `x`/`y` position, `r` size, `color`, `k` strength (all three are `k: 1`) |
 | Glow softness | `FALLOFF` (fade curve) and the `glowSoft` blur (`stdDeviation={55}`) |
 | Wing shimmer brightness / count | **Wing Shimmer**, **Shimmers / Loop** properties; colour is Light Teal |
 | More or less navy in the background | `BG`: navy holds to the second key (`0.6`); the blend runs to `x = 680` (larger = more navy at the right edge) |
@@ -189,7 +189,11 @@ In the order they were made with the designer:
   Mint `#bce2d7` was tried and rejected. It must be continuous (a
   single sweep left a visible gap/restart each loop).
 - **Glows**: very diffused, spread over the frame (not only the
-  bottom); lower middle is light blue; top right is half strength.
+  bottom); lower middle is light blue. The top-right glow was light teal at
+  half strength, then changed to light blue at full strength like the
+  other two (it was barely visible on the teal corner). All three glows
+  are now light blue at the same strength. If it reads as too much
+  glow, the fallback the designer named is light teal at full strength.
 - **Colour balance**: navy is the dominant colour, more than teal.
   Teal only toward the right. The background blend runs left to right,
   tilted about 14° upward (navy lower left, teal upper right); the
