@@ -102,6 +102,10 @@ from the mobile-app kiosk that every other group in this repo serves.
   `frameAt(θ + 2π, settings)`: every value must match.
 - Try the colour properties with a colour style as well as a typed hex
   value; the gradients and glows should look the same either way.
+- Review in the tuning page (the "ATM Wing Motion Lab" preview). It
+  runs the actual component, and every control on it is one of the
+  component's Framer properties, so it always matches what Framer
+  shows. Rebuild it from the component whenever the file changes.
 
 ## Where to change things (`ATMWingBackground.tsx`)
 
@@ -149,7 +153,9 @@ approach more than the component's code):
   was named in the same request but never loaded.)
 - **artifact-design**: came with the Artifact tool when building the
   two preview pages (the tuning page and the side-by-side component
-  page): their layout, typography and publishing rules.
+  page): their layout, typography and publishing rules. The tuning page
+  first had its own copy of the animation; it was later rebuilt to run
+  the real component so the two can't drift apart.
 - **ponytail**: a mode that was on for the session, not called on
   purpose. It pushes toward the simplest code that works, which is why
   the component is one self-contained file with no new libraries.
@@ -246,6 +252,11 @@ In the order they were made with the designer:
   project's colour styles produced unrelated neon colours, because the
   colour reader took digits from the style's token id. It now reads the
   style's real colour, and short hex too.
+- **Aurora's glows move like Flow's.** Aurora used to drift the glows
+  1.8× wider than Flow; the designer asked for the same glow movement,
+  so both styles now drift, resize and pulse the glows identically. The
+  only difference between the styles is the wings (Flow tilts them;
+  Aurora holds them still and rolls the light through the shapes).
 
 ## Branch
 
