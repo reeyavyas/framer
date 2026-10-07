@@ -574,7 +574,7 @@ ATMAttract.defaultProps = {
     screenGlow: true,
     glare: true,
     sounds: true,
-    beepVolume: 0.2,
+    beepVolume: 0.7,
     slotColor: "#7cf25e",
     glowColor: "#0079a9",
     readingText: "Reading your card",
@@ -610,7 +610,7 @@ addPropertyControls(ATMAttract, {
         min: 0,
         max: 1,
         step: 0.05,
-        defaultValue: 0.2,
+        defaultValue: 0.7, // the reference beep's level; 1 is as loud as the browser goes
         hidden: (props: Props) => !props.sounds,
     },
     slotColor: { type: ControlType.Color, title: "Slot Light", defaultValue: "#7cf25e" },

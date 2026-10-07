@@ -223,7 +223,7 @@ near the top of the file.
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Sounds on / off | **Sounds** property |
 | When it beeps | `beep()` calls: with the card (E, E + B, A + B + E) once as the card goes in and once as "Reading your card" appears (in `cardIn`); without it (A, B, A + B) once on the tap (in `run`) |
-| Beep loudness | **Beep Volume** property (0 to 1; default 0.2) |
+| Beep loudness | **Beep Volume** property (0 to 1; default 0.7, the reference's level) |
 | What the beep is | `BEEP_HZ` (800), `BEEP_MS` (60); a pure tone made by the browser, no sound files |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
@@ -461,7 +461,9 @@ In the order they were made with the designer:
   the tap. The reference file itself is not used or stored.
 - **Louder beep**: volume raised from 0.05 to 0.2 (four times louder;
   the reference plays at about 0.7). It is now the **Beep Volume**
-  property, so it can be tuned in Framer.
+  property, so it can be tuned in Framer. Then raised to **0.7**, the
+  reference's own level: kiosk users hear it through the speakers, not
+  headphones, so it must not be quieter than the reference.
 
 ## Branch
 
