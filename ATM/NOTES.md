@@ -334,6 +334,12 @@ In the order they were made with the designer:
   moves behind it.
   A + B now starts its ripple at the same page centre too, wherever the
   tap lands (it first followed the tapped spot on the ATM).
+- **Card held upright from the start**: the card used to come in at an
+  angle (turned 10°, from lower left) and straighten on the way. It now
+  rises straight up from directly below the slot, upright the whole
+  way, the same way it goes in.
+- **Shortlist**: the designer is leaning toward **A + B + E** or
+  **A + B** for the tap transition.
 
 ## Branch
 
