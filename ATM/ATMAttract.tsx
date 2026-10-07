@@ -139,6 +139,9 @@ export default function ATMAttract(props: Props) {
     const readingRef = React.useRef<HTMLDivElement | null>(null)
     const cardStripRef = React.useRef<HTMLDivElement | null>(null)
     const busy = React.useRef(false)
+    // The next page's look is only rendered while a transition runs; hiding it with CSS isn't
+    // enough, since a frame connected from the canvas can set its own visibility.
+    const [revealing, setRevealing] = React.useState(false)
     const alive = React.useRef(true)
 
     // Fit the 1080×1920 artwork to the frame.
@@ -190,7 +193,8 @@ export default function ATMAttract(props: Props) {
         if (atmRef.current) atmRef.current.style.transform = `translate(${zm.tx}px, ${zm.ty}px) scale(${zm.z})`
     }
     const showNext = () => {
-        if (nextRef.current) nextRef.current.style.visibility = "visible"
+        setRevealing(true)
+        if (nextRef.current) nextRef.current.style.display = "block"
     }
     const nextStyle = () => nextRef.current!.style
 
@@ -303,7 +307,8 @@ export default function ATMAttract(props: Props) {
     }
 
     const reset = () => {
-        nextStyle().visibility = "hidden"
+        nextStyle().display = "none"
+        setRevealing(false)
         nextStyle().clipPath = ""
         nextStyle().opacity = ""
         if (atmRef.current) atmRef.current.style.transform = ""
@@ -441,9 +446,9 @@ export default function ATMAttract(props: Props) {
                     ref={(el) => {
                         nextRef.current = el
                     }}
-                    style={{ position: "absolute", inset: 0, background: nextColor, visibility: "hidden", overflow: "hidden" }}
+                    style={{ position: "absolute", inset: 0, background: nextColor, display: "none", overflow: "hidden" }}
                 >
-                    {fill(props.nextLook)}
+                    {revealing && fill(props.nextLook)}
                 </div>
                 <svg
                     ref={(el) => {

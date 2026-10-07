@@ -411,6 +411,10 @@ In the order they were made with the designer:
   site, which flashes blank. The ripple now reveals **Next Page Look**
   (a frame that looks like the next page), and the page change goes
   through Framer's router, so there is no reload.
+- **Next Page Look covered the ATM on the canvas**: the look was
+  hidden with CSS, which a connected frame can override. It is now only
+  rendered while a transition runs. A screenshot of the next page in a
+  1080×1920 frame (image set to Fill) works as the look.
 
 ## Branch
 
