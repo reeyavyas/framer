@@ -1,12 +1,14 @@
 import * as React from "react"
+import * as Framer from "framer"
 import { addPropertyControls, ControlType } from "framer"
 import { useReducedMotion } from "framer-motion"
 
 // The whole ATM page (1080×1920): the designer's ATM artwork, the screen (a frame connected
 // from the canvas, holding the wing background, tap icon and "Tap anywhere to begin"), the
 // lights on the machine while it waits, and the transition that plays when the page is
-// tapped anywhere. When the transition ends the page is covered in the Next Page colour and
-// the browser goes to Next Page.
+// tapped anywhere. The ripple and zoom reveal Next Page Look (a frame connected from the
+// canvas that looks like the next page; the Next Page Color when none is connected), and when
+// the transition ends Framer switches to Next Page without reloading, so nothing flashes.
 //
 // Transitions (Transition property; A + B + E is the chosen one, the rest are kept to swap):
 //   A      egg-yolk ripple floods the page from the tap point
@@ -17,15 +19,18 @@ import { useReducedMotion } from "framer-motion"
 //   A + B + E  E, then A + B
 // Everything is drawn in the 1080×1920 artwork's own pixels and scaled to the frame.
 
+// Framer's router, read from the module so a Framer version without it can't break the file.
+const useRouter: () => unknown = (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
+
 const W = 1080
 const H = 1920
 const SCREEN = { x: 186, y: 328, w: 441, h: 365 } // the screen in the ATM artwork
 const SLOT_Y = 521 // the card disappears above this line (middle of the card slot's opening)
 const SLOT_X = 888 // centre of the card slot
-const CARD_W = 150 // the card, upright: short edge first
-const CARD_H = 238
+const CARD_W = 120 // the card, upright: short edge first
+const CARD_H = 190
 const CARD_TILT = 60 // degrees tipped back
-const PERSPECTIVE = 520 // short, so the card's far edge narrows like the white card on the machine
+const PERSPECTIVE = 415 // short, so the card's far edge narrows like the white card on the machine
 const Z = W / SCREEN.w // zoom at which the screen fills the page width
 const STRIPS = [
     { x: 803, y: 300, w: 169, h: 6, delay: 3 }, // RECEIPT
@@ -43,6 +48,7 @@ interface Props {
     atmImage?: Image
     cardImage?: Image
     screen?: React.ReactNode
+    nextLook?: React.ReactNode
     transition: Transition
     nextPage: string
     nextColor: string
@@ -236,12 +242,12 @@ export default function ATMAttract(props: Props) {
         const strip = cardStripRef.current
         const reading = readingRef.current
         if (!card) return
-        const from = { y: 2000, s: 2.4 }
+        const from = { y: 2000, s: 1.6 }
         const rest = 552 // the card's top edge, resting on the slot's ramp
         card.style.opacity = "1"
         await play(2.2, (t) => {
             const a = seg(t, 0, 0.9, OUT)
-            const push = seg(t, 1.1, 1.75, IN) * 330
+            const push = seg(t, 1.1, 1.75, IN) * 265
             const y = lerp(from.y, rest, a)
             const s = lerp(from.s, 1, a)
             card.style.transform = `translate(${SLOT_X - CARD_W / 2}px, ${y}px) scale(${s}) perspective(${PERSPECTIVE}px) rotateX(${CARD_TILT}deg) translateY(${-push}px)`
@@ -284,11 +290,11 @@ export default function ATMAttract(props: Props) {
             await rippleZoom()
         }
         if (!alive.current) return
-        // The page stays covered in the Next Page colour while the browser goes there.
+        // The page stays covered in the next page's look until Framer has switched to it.
         nextStyle().clipPath = ""
         nextStyle().opacity = "1"
         fxRef.current?.replaceChildren()
-        if (nextPage) window.location.href = nextPage
+        if (nextPage) go(nextPage)
         else {
             // no Next Page set (e.g. while trying it out in Preview): show the ATM again
             await play(1, () => {})
@@ -313,7 +319,27 @@ export default function ATMAttract(props: Props) {
         run((e.clientX - left) / k, (e.clientY - top) / k)
     }
 
-    const screenEl = Array.isArray(props.screen) ? props.screen[0] : props.screen
+    // Framer's own page switch (no reload, so no blank flash); a plain page load if this
+    // Framer version has no router to ask.
+    const router = useRouter() as { navigate?: (id: string, hash?: string) => void; routes?: Record<string, { path?: string }> } | undefined
+    const go = (path: string) => {
+        const routes = router?.routes ?? {}
+        const id = Object.keys(routes).find((key) => routes[key]?.path === path)
+        if (id && router?.navigate) router.navigate(id, "")
+        else window.location.href = path
+    }
+
+    const first = (node: React.ReactNode) => (Array.isArray(node) ? node[0] : node)
+    // A frame connected from the canvas, stretched to fill its slot.
+    const fill = (node: React.ReactNode) => {
+        const el = first(node)
+        return React.isValidElement(el)
+            ? React.cloneElement(el as React.ReactElement<{ style?: React.CSSProperties }>, {
+                  style: { ...(el.props as { style?: React.CSSProperties }).style, position: "absolute", inset: 0, width: "100%", height: "100%" },
+              })
+            : null
+    }
+    const screenEl = fill(props.screen)
     const c = (name: string) => `${uid}-${name}`
     const on = (flag: boolean, name: string) => (flag ? ` ${c(name)}` : "")
 
@@ -352,11 +378,7 @@ export default function ATMAttract(props: Props) {
                     )}
                     <div className={`${c("abs")} ${c("screen")} ${c("spillEl")}`} />
                     <div className={`${c("abs")} ${c("screen")}`} style={{ overflow: "hidden" }}>
-                        {React.isValidElement(screenEl) ? (
-                            React.cloneElement(screenEl as React.ReactElement<{ style?: React.CSSProperties }>, {
-                                style: { ...(screenEl.props as { style?: React.CSSProperties }).style, position: "absolute", inset: 0, width: "100%", height: "100%" },
-                            })
-                        ) : (
+                        {screenEl ?? (
                             <div style={{ position: "absolute", inset: 0, background: "#002c44", color: "#fff", display: "grid", placeContent: "center", textAlign: "center", font: "500 22px system-ui", padding: 24 }}>
                                 Connect the screen frame (Screen property)
                             </div>
@@ -419,8 +441,10 @@ export default function ATMAttract(props: Props) {
                     ref={(el) => {
                         nextRef.current = el
                     }}
-                    style={{ position: "absolute", inset: 0, background: nextColor, visibility: "hidden" }}
-                />
+                    style={{ position: "absolute", inset: 0, background: nextColor, visibility: "hidden", overflow: "hidden" }}
+                >
+                    {fill(props.nextLook)}
+                </div>
                 <svg
                     ref={(el) => {
                         fxRef.current = el
@@ -506,6 +530,7 @@ addPropertyControls(ATMAttract, {
         defaultValue: "ABE",
     },
     nextPage: { type: ControlType.String, title: "Next Page", placeholder: "/atm/start", defaultValue: "" },
+    nextLook: { type: ControlType.ComponentInstance, title: "Next Page Look" },
     nextColor: { type: ControlType.Color, title: "Next Page Color", defaultValue: "#ffffff" },
     rippleColor: { type: ControlType.Color, title: "Ripple", defaultValue: "#ffcc40" },
     ringColor: { type: ControlType.Color, title: "Inner Ring", defaultValue: "#3bbfc0" },

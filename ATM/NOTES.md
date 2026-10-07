@@ -89,8 +89,10 @@ from the mobile-app kiosk that every other group in this repo serves.
   the screen shows "Reading your card", then the egg-yolk ripple
   spreads from the middle of the page while the ATM centres and zooms
   in. Every other option is kept in the same property to swap to: A,
-  B, A + B, E, E + B. The ripple and zoom reveal a flat **Next Page
-  Color**, and the browser then goes to **Next Page**. Under "reduce
+  B, A + B, E, E + B. The ripple and zoom reveal **Next Page Look** (a
+  frame that looks like the next page; a flat **Next Page Color** when
+  none is connected), then Framer switches to **Next Page** without
+  reloading. Under "reduce
   motion" every transition is a short fade. The exploration page for
   these options is the "ATM Attract Lab"
   (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9).
@@ -134,9 +136,14 @@ from the mobile-app kiosk that every other group in this repo serves.
      screen and zooms with the machine.
   4. **Next Page**: the path of the page after the ATM, e.g.
      `/atm/start` (as in the browser's address bar). **Next Page
-     Color**: that page's background colour, so the hand-off is
-     seamless. With Next Page empty, the transition plays and then
-     returns to the ATM, which is handy for trying it in Preview.
+     Look**: connect a 1080×1920 frame that looks exactly like that
+     page; the ripple reveals it, so the switch to the real page is
+     seamless. Easiest: select the next page's content, make it a
+     component, use that component on the next page, and connect an
+     instance of it here (one design, used twice). **Next Page Color**
+     is only used when no look is connected. With Next Page empty, the
+     transition plays and then returns to the ATM, which is handy for
+     trying it in Preview.
   5. Don't add a Link or tap interaction to the component; it handles
      the tap and the navigation itself (same reason as in
      `card-controls/card-alerts/CardAlertsSave.tsx`).
@@ -213,7 +220,8 @@ near the top of the file.
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
 | Card timing / how far it slides in | `cardIn` (`seg` times; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
-| What is revealed | **Next Page Color** (flat colour), then **Next Page** |
+| What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
+| How the page switches | `go()`: Framer's router (no reload); a plain page load if the router can't be found |
 | Positions on the artwork | `SCREEN`, `STRIPS`, `SLOT_X`, `SLOT_Y`, the chevron `<svg>` (all in the 1080×1920 artwork's pixels) |
 
 ## How it was made
@@ -395,9 +403,14 @@ In the order they were made with the designer:
 - **A + B + E chosen, built in Framer** as `ATMAttract.tsx`. The
   other transitions stay in the component's **Transition** property
   (the designer may swap to A + B or another). The keypad glint is not
-  in it (removed in review). Because a code component can't show
-  another page, the ripple and zoom reveal a flat colour that matches
-  the next page's background, then the browser goes to that page.
+  in it (removed in review).
+- **First Framer review**: the card was too big; it is now 120×190
+  (was 150×238) and starts smaller as it rises (1.6× instead of 2.4×).
+  The ripple showed white before the next page appeared: it revealed a
+  flat colour (white by default), and the page change reloaded the
+  site, which flashes blank. The ripple now reveals **Next Page Look**
+  (a frame that looks like the next page), and the page change goes
+  through Framer's router, so there is no reload.
 
 ## Branch
 
