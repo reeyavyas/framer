@@ -31,7 +31,8 @@ const CARD_W = 120 // the card, upright: short edge first
 const CARD_H = 190
 const CARD_TILT = 60 // degrees tipped back
 const PERSPECTIVE = 415 // short, so the card's far edge narrows like the white card on the machine
-const CARD_SECONDS = 2.5 // the card step, from the tap to the end of "Reading your card"
+const CARD_SECONDS = 2.5 // pace of the card's rise, slide-in and light blinks (scales them all)
+const READING_SECONDS = 0.5 // how long "Reading your card" shows; the card step ends after it
 const ABE_RIPPLE_SECONDS = 1.2 // A + B + E's ripple and zoom (A + B alone takes 1.6 s)
 const Z = W / SCREEN.w // zoom at which the screen fills the page width
 const STRIPS = [
@@ -251,10 +252,11 @@ export default function ATMAttract(props: Props) {
         if (!card) return
         const from = { y: 2000, s: 1.6 }
         const rest = 552 // the card's top edge, resting on the slot's ramp
-        // Times below are written for a 3.1 s step and scaled to CARD_SECONDS.
+        // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
+        const readStart = at(1.7)
         card.style.opacity = "1"
-        await play(at(2.2), (t) => {
+        await play(Math.max(at(2.2), readStart + READING_SECONDS), (t) => {
             const a = seg(t, 0, at(0.9), OUT)
             const push = seg(t, at(1.1), at(1.75), IN) * 265
             const y = lerp(from.y, rest, a)
@@ -267,10 +269,9 @@ export default function ATMAttract(props: Props) {
                 strip.style.animation = blinking ? "none" : ""
                 strip.style.opacity = blinking ? (Math.floor(b * 6) % 2 === 0 ? "1" : "0.1") : ""
             }
-            if (reading) reading.style.opacity = String(seg(t, at(1.7), at(2.0)))
+            if (reading) reading.style.opacity = String(seg(t, readStart, readStart + Math.min(0.2, READING_SECONDS / 2)))
         })
         card.style.opacity = "0"
-        await play(at(0.9), () => {}) // hold on "Reading your card"
     }
 
     const fadeIn = async () => {

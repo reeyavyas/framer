@@ -218,7 +218,8 @@ near the top of the file.
 | Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
 | Ripple / zoom speed | A + B + E: `ABE_RIPPLE_SECONDS` (1.2 s). A + B: `rippleZoom`'s default (1.6 s). Others: the `play(…)` lengths and `seg` times in `zoomIn`, `rippleFlood` |
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
-| Card step length | `CARD_SECONDS` (2.5 s, from the tap to the end of "Reading your card"; every part scales with it) |
+| Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
+| How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
@@ -424,6 +425,10 @@ In the order they were made with the designer:
   0.9 s hold on "Reading your card"); every part of it scales evenly.
   It is shared, so E and E + B are shorter too. A + B + E now hands
   over to the next page about 3.7 s after the tap.
+- **"Reading your card" shortened to 0.5 s** (it showed for about
+  1.1 s). The card's movement is unchanged; the card step now ends
+  about 1.9 s after the tap, and A + B + E hands over to the next page
+  about 3.1 s after the tap.
 
 ## Branch
 
