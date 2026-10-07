@@ -72,26 +72,29 @@ interface Props {
 }
 
 // ---- sounds ----
-// Soft tones made by the browser (Web Audio): no sound files, no delay. Browsers only allow
+// Beeps made by the browser (Web Audio): no sound files, no delay. Browsers only allow
 // sound after the first tap on a page, so the first tap also switches sound on. Nothing plays
 // on Framer's canvas.
-const VOLUME = 0.05 // 0..1; keep it low so the sounds stay in the background
-const GAP_MS = 45 // pause between the two beeps of a pair
+const VOLUME = 0.03 // 0..1; kept low: a square-wave beep sounds louder than its number suggests
+const BEEP_HZ = 1200 // one pitch for every beep, like an ATM's keypad buzzer
+const GAP_MS = 70 // pause between the beeps of a pair
 type Tone = { hz: number; ms: number }
+// Traditional beeps: one flat pitch, a square wave (the buzzy electronic tone of a keypad
+// buzzer), on and off almost instantly.
 const SOUNDS: Record<"key" | "cardIn" | "blink" | "enter", Tone[]> = {
-    key: [{ hz: 1750, ms: 70 }], // the tap: a soft, high piezo-like beep
-    cardIn: [{ hz: 520, ms: 140 }], // low, soft: the card being drawn into the slot
-    blink: [{ hz: 2200, ms: 35 }], // tiny tick with each flash of the card light
+    key: [{ hz: BEEP_HZ, ms: 110 }], // the tap: beep
+    cardIn: [{ hz: BEEP_HZ, ms: 110 }], // the card starts into the slot: beep
+    blink: [{ hz: BEEP_HZ, ms: 40 }], // a short blip with each flash of the card light
     enter: [
-        // card read, moving on: two rising beeps
-        { hz: 1500, ms: 60 },
-        { hz: 2000, ms: 70 },
+        // card read, moving on: beep-beep
+        { hz: BEEP_HZ, ms: 90 },
+        { hz: BEEP_HZ, ms: 90 },
     ],
 }
 
 let audioCtx: AudioContext | null = null
-// Plays tones one after another; each fades in and out over a few milliseconds so it never
-// clicks, and is a sine wave so it is gentle rather than harsh.
+// Plays tones one after another. Each switches on and off over a few milliseconds: fast
+// enough to sound like a hard electronic beep, but without a click at the edges.
 function playTones(tones: Tone[]) {
     if (typeof window === "undefined" || RenderTarget.current() === RenderTarget.canvas) return
     const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
@@ -103,12 +106,12 @@ function playTones(tones: Tone[]) {
     for (const { hz, ms } of tones) {
         const osc = ac.createOscillator()
         const gain = ac.createGain()
-        osc.type = "sine"
+        osc.type = "square"
         osc.frequency.value = hz
         const end = t + ms / 1000
         gain.gain.setValueAtTime(0, t)
-        gain.gain.linearRampToValueAtTime(VOLUME, t + 0.006)
-        gain.gain.setValueAtTime(VOLUME, end - 0.025)
+        gain.gain.linearRampToValueAtTime(VOLUME, t + 0.003)
+        gain.gain.setValueAtTime(VOLUME, end - 0.008)
         gain.gain.exponentialRampToValueAtTime(0.0001, end)
         osc.connect(gain).connect(ac.destination)
         osc.start(t)

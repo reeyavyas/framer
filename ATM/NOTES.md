@@ -223,7 +223,7 @@ near the top of the file.
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Sounds on / off | **Sounds** property |
 | Which sound plays when | `sound(…)` calls in `run` and `cardIn`: tap = key beep; card starts into the slot = low soft tone; each flash of the CARD light = tiny tick; card read, ripple/zoom starts = two rising beeps |
-| What each sound is (pitch, length, volume) | `SOUNDS` and `VOLUME` (soft tones made by the browser; no sound files) |
+| What each sound is (pitch, length, volume) | `BEEP_HZ` (1200), `SOUNDS` (lengths) and `VOLUME` (0.03); square-wave beeps made by the browser, no sound files |
 | Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
@@ -443,6 +443,13 @@ In the order they were made with the designer:
   layers and there will be no ATM on another page, so they were
   deleted along with the unused cancel sound. The sounds then moved
   into `ATMAttract.tsx` itself, so there is one file to paste.
+- **Traditional beeps**: the sounds were smooth sine tones at different
+  pitches (rising for "accepted", low for the card). They are now
+  traditional ATM beeps: one flat pitch (1200 Hz), a square wave (the
+  buzzy tone of a keypad buzzer), switched on and off almost instantly.
+  Tap = beep, card in = beep, card light = three short blips, card read
+  = beep-beep. Volume lowered to 0.03, since a square wave sounds
+  louder.
 
 ## Branch
 
