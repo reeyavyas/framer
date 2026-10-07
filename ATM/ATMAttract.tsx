@@ -31,6 +31,7 @@ const CARD_W = 120 // the card, upright: short edge first
 const CARD_H = 190
 const CARD_TILT = 60 // degrees tipped back
 const PERSPECTIVE = 415 // short, so the card's far edge narrows like the white card on the machine
+const ABE_RIPPLE_SECONDS = 1.2 // A + B + E's ripple and zoom (A + B alone takes 1.6 s)
 const Z = W / SCREEN.w // zoom at which the screen fills the page width
 const STRIPS = [
     { x: 803, y: 300, w: 169, h: 6, delay: 3 }, // RECEIPT
@@ -224,18 +225,19 @@ export default function ATMAttract(props: Props) {
 
     // A's ripple from the middle of the page, slowed so the ATM can be seen centring and
     // zooming in behind it before the ripple covers the page.
-    const rippleZoom = async () => {
+    const rippleZoom = async (seconds = 1.6) => {
         const [x, y] = [W / 2, H / 2]
         const R = farthest(x, y, PAGE) + 40
         const r1 = ring(rippleColor, 26)
         const r2 = ring(ringColor, 10)
+        const at = (share: number) => share * seconds // times below are shares of the whole ripple
         showNext()
-        await play(1.6, (t) => {
-            setZoom(zoomAt(seg(t, 0, 0.6, INOUT), seg(t, 0.4, 1.6, INOUT)))
-            const r = seg(t, 0, 1.6, INOUT) * R
+        await play(seconds, (t) => {
+            setZoom(zoomAt(seg(t, 0, at(0.375), INOUT), seg(t, at(0.25), at(1), INOUT)))
+            const r = seg(t, 0, at(1), INOUT) * R
             nextStyle().clipPath = `circle(${r}px at ${x}px ${y}px)`
-            place(r1, x, y, r + 10, 1 - seg(t, 1.25, 1.6))
-            place(r2, x, y, r * 0.86, 0.8 * (1 - seg(t, 1.0, 1.5)))
+            place(r1, x, y, r + 10, 1 - seg(t, at(0.78), at(1)))
+            place(r2, x, y, r * 0.86, 0.8 * (1 - seg(t, at(0.625), at(0.94))))
         })
     }
 
@@ -291,7 +293,7 @@ export default function ATMAttract(props: Props) {
             await zoomIn()
         } else {
             await cardIn()
-            await rippleZoom()
+            await rippleZoom(ABE_RIPPLE_SECONDS)
         }
         if (!alive.current) return
         // The page stays covered in the next page's look until Framer has switched to it.

@@ -216,7 +216,7 @@ near the top of the file.
 | Glow strength / speed | the `spill` box-shadow and keyframes in `css()` (6 s loop, 8% to 100%) |
 | Ripple colours | **Ripple**, **Inner Ring** properties |
 | Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
-| Ripple / zoom speed | the `play(…)` lengths and `seg(t, start, end)` times in `rippleZoom`, `zoomIn`, `rippleFlood` |
+| Ripple / zoom speed | A + B + E: `ABE_RIPPLE_SECONDS` (1.2 s). A + B: `rippleZoom`'s default (1.6 s). Others: the `play(…)` lengths and `seg` times in `zoomIn`, `rippleFlood` |
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
 | Card timing / how far it slides in | `cardIn` (`seg` times; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
@@ -414,7 +414,11 @@ In the order they were made with the designer:
 - **Next Page Look covered the ATM on the canvas**: the look was
   hidden with CSS, which a connected frame can override. It is now only
   rendered while a transition runs. A screenshot of the next page in a
-  1080×1920 frame (image set to Fill) works as the look.
+  1080×1920 frame (image set to Fill) works as the look. If the next
+  page animates in, the screenshot must show its first frame (before
+  the animations), or the switch shows a jump.
+- **A + B + E's ripple is faster**: 1.2 s instead of 1.6 s (zoom and
+  rings scale with it). A + B keeps 1.6 s.
 
 ## Branch
 
