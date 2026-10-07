@@ -195,6 +195,10 @@ In the order they were made with the designer:
   **light teal at full strength** (current). All three glows now have
   the same strength: light teal top right, light blue upper left and
   lower middle. It is no longer toned down.
+- **Glows stay behind the wings** (layer order: background, glows,
+  still shapes, wings, accent lines). The wings are about 50% opacity,
+  so the glows show through them softened; this layered look was
+  chosen over putting the glows in front.
 - **Shimmer colour is its own property** (**Shimmer Color**), separate
   from Light Teal, so the shimmer can change without changing the lines
   and the top-right glow. Default is light teal.
