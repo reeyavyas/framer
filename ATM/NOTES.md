@@ -218,7 +218,8 @@ near the top of the file.
 | Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
 | Ripple / zoom speed | A + B + E: `ABE_RIPPLE_SECONDS` (1.2 s). A + B: `rippleZoom`'s default (1.6 s). Others: the `play(…)` lengths and `seg` times in `zoomIn`, `rippleFlood` |
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
-| Card timing / how far it slides in | `cardIn` (`seg` times; `push` distance) |
+| Card step length | `CARD_SECONDS` (2.5 s, from the tap to the end of "Reading your card"; every part scales with it) |
+| Card timing within the step / how far it slides in | `cardIn` (`seg` times, written for 3.1 s; `push` distance) |
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
 | How the page switches | `go()`: Framer's router (no reload); a plain page load if the router can't be found |
@@ -419,6 +420,10 @@ In the order they were made with the designer:
   the animations), or the switch shows a jump.
 - **A + B + E's ripple is faster**: 1.2 s instead of 1.6 s (zoom and
   rings scale with it). A + B keeps 1.6 s.
+- **Card step shortened to 2.5 s** (was 3.1 s: 2.2 s of motion plus a
+  0.9 s hold on "Reading your card"); every part of it scales evenly.
+  It is shared, so E and E + B are shorter too. A + B + E now hands
+  over to the next page about 3.7 s after the tap.
 
 ## Branch
 
