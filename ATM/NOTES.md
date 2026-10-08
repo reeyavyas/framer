@@ -523,6 +523,12 @@ In the order they were made with the designer:
   button counts now; touch and pen presses are unaffected.
 - **Glass glare every 6 s** (was every 9 s). The sweep itself still
   takes about 2 s; only the pause between sweeps is shorter.
+- **Type warnings on `addPropertyControls` (fixed)**: Framer's types
+  reject `fontFamily`/`fontWeight` in a sans-serif Font control's
+  default (it takes `fontSize` and a `variant` such as `"Semibold"`;
+  the family comes from `defaultFontType`, Inter), want a `hidden`
+  callback to take `Partial<Props>`, and read a bare `"ABE"` in
+  `defaultProps` as a string, not a `Transition`. Behaviour unchanged.
 
 ## Branch
 

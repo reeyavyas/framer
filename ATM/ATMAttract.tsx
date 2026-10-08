@@ -564,7 +564,7 @@ ${c("dots")} i:nth-child(3) { animation-delay: .3s }
 }
 
 ATMAttract.defaultProps = {
-    transition: "ABE",
+    transition: "ABE" as Transition,
     nextPage: "",
     nextColor: "#ffffff",
     rippleColor: "#ffcc40",
@@ -611,7 +611,7 @@ addPropertyControls(ATMAttract, {
         max: 1,
         step: 0.05,
         defaultValue: 0.5, // as loud as the reference's loudest beep; 1 is the browser's maximum
-        hidden: (props: Props) => !props.sounds,
+        hidden: (props: Partial<Props>) => !props.sounds,
     },
     slotColor: { type: ControlType.Color, title: "Slot Light", defaultValue: "#7cf25e" },
     glowColor: { type: ControlType.Color, title: "Glow", defaultValue: "#0079a9" },
@@ -620,8 +620,8 @@ addPropertyControls(ATMAttract, {
         type: ControlType.Font,
         title: "Reading Font",
         controls: "extended",
-        defaultFontType: "sans-serif",
-        defaultValue: { fontFamily: "Inter", fontSize: 32, fontWeight: 600 },
+        defaultFontType: "sans-serif", // Inter; the control's default only takes size and variant
+        defaultValue: { fontSize: 32, variant: "Semibold" },
     },
     readingColor: { type: ControlType.Color, title: "Reading Color", defaultValue: "#ffffff" },
     readingBackground: { type: ControlType.Color, title: "Reading Fill", defaultValue: "#002c44" },
