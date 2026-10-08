@@ -40,6 +40,20 @@ with the detail on what's in it; this file is just the map.
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
 
+## Brand colours
+
+Given with the ATM brief; the same table is in `ATM/NOTES.md`, so
+change both together.
+
+| Name | Hex | Use |
+|---|---|---|
+| Navy | `#002c44` | Primary, dominant |
+| Teal | `#059390` | Primary |
+| Light teal | `#3bbfc0` | Glows, shimmer |
+| Light blue | `#0079a9` | Glows |
+| Midnight | `#11232d` | Dark contrast |
+| Egg yolk | `#ffcc40` | Accent only (the ATM tap icon's ripple) |
+
 ## Open items across groups
 
 - **Account Controls: test that the Accounts page starts fresh for
