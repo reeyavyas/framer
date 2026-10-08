@@ -516,6 +516,10 @@ In the order they were made with the designer:
   message, about 1 s after the card-in beep. Then moved again, at the
   designer's choice, to when the ripple ends (A + B + E: about 3.1 s,
   as the next page takes over; E and E + B: as the fade / zoom ends).
+- **Right-click is not a tap**: a right-click (or middle-click) in
+  Framer or Preview started the transition, because the tap is read on
+  `pointerdown`, which fires for every mouse button. Only the main
+  button counts now; touch and pen presses are unaffected.
 
 ## Branch
 

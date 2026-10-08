@@ -374,7 +374,8 @@ export default function ATMAttract(props: Props) {
     }
 
     const onPointerDown = (e: React.PointerEvent) => {
-        const r = rootRef.current!.getBoundingClientRect()
+        if (e.button !== 0) return // right/middle clicks aren't taps
+        const r =rootRef.current!.getBoundingClientRect()
         // the artwork is centred in the frame at scale k
         const left = r.left + (r.width - W * k) / 2
         const top = r.top + (r.height - H * k) / 2
