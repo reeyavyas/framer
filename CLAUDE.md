@@ -14,8 +14,11 @@
 
 ## Framer code
 
-Write code that Framer's editor shows with no warnings (it type-checks
-against the `framer` package's types and React 19's).
+**Mandatory for every `.tsx` file in this repo.** Every code file must
+show no warnings in Framer's editor (it type-checks against the
+`framer` package's types and React 19's). Follow every rule below
+whenever you write or edit a file, and fix any break of them you find
+in a file you touch.
 
 - **Font control defaults** (`ControlType.Font` with
   `defaultFontType: "sans-serif"`): `defaultValue` takes only
@@ -39,8 +42,9 @@ against the `framer` package's types and React 19's).
 - **`defaultProps` with a union type**: mark the literal,
   `transition: "ABE" as Transition`, or it reads as a plain string.
 
-To check a file before pushing, type-check it in a scratch folder with
+Before every push that changes a `.tsx` file, type-check each changed
+file in a scratch folder with
 `framer`, `framer-motion`, `react@19` and `@types/react@19` installed
 (`npx tsc --noEmit --strict --jsx react-jsx --skipLibCheck
 --moduleResolution bundler --module esnext --target es2020 File.tsx`);
-it should print nothing for the file.
+it must print nothing for the file. Don't push until it does.
