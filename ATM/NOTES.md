@@ -6,6 +6,10 @@ from the mobile-app kiosk that every other group in this repo serves.
 
 ## Brand colours
 
+The ATM's own colours. They match the overall brand colours in the
+root `NOTES.md`, but a colour change for another element or page
+doesn't change them; change them only when it's asked for the ATM.
+
 | Name | Hex | Use |
 |---|---|---|
 | Navy | `#002c44` | Primary, dominant |

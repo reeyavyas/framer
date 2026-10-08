@@ -42,8 +42,11 @@ with the detail on what's in it; this file is just the map.
 
 ## Brand colours
 
-Given with the ATM brief; the same table is in `ATM/NOTES.md`, so
-change both together.
+The overall branding, given with the ATM brief. The ATM uses these
+colours too and keeps its own table in `ATM/NOTES.md`. Colour changes
+are asked for specific elements or pages: change only those, and leave
+the ATM's colours (and its table) alone unless the change is for the
+ATM.
 
 | Name | Hex | Use |
 |---|---|---|
