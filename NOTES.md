@@ -31,9 +31,28 @@ with the detail on what's in it; this file is just the map.
     underneath is untouched, and these components spotlight one target
     at a time instead of letting the user tap anywhere.
   See `tutorials/NOTES.md`.
+- **`ATM/`** — The second kiosk portion: an ATM that teaches Gen Alpha
+  users to use an ATM, plus money tips and lessons. Currently holds the
+  animated wing background for the ATM screen, its "Tap anywhere
+  to begin" icon, and the ATM page itself (lights on the machine, the
+  tap transition and its beeps). See `ATM/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
+
+## Brand colours
+
+Given with the ATM brief; the same table is in `ATM/NOTES.md`, so
+change both together.
+
+| Name | Hex | Use |
+|---|---|---|
+| Navy | `#002c44` | Primary, dominant |
+| Teal | `#059390` | Primary |
+| Light teal | `#3bbfc0` | Glows, shimmer |
+| Light blue | `#0079a9` | Glows |
+| Midnight | `#11232d` | Dark contrast |
+| Egg yolk | `#ffcc40` | Accent only (the ATM tap icon's ripple) |
 
 ## Open items across groups
 
@@ -55,8 +74,8 @@ with the detail on what's in it; this file is just the map.
 
 ## Branch naming
 
-New feature branches are prefixed by group, matching the folder they'll
-land in:
+Every branch must be `<group>/<feature>` or `<group>`, using one of
+these, named after the folder the work lands in:
 
 ```
 card-controls/<feature>
@@ -65,11 +84,11 @@ money-management/<feature>
 main/<feature>
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
+atm
 ```
 
-One exception: `reset-pin/` work uses `card-controls/<feature>`
+`reset-pin/` work uses `card-controls/<feature>`
 (e.g. `card-controls/reset-pin`), because Reset PIN is a card-controls
 sub-feature, even though its files live in `reset-pin/`.
 
-Never use any other branch name. Every branch follows the
-`<group>/<feature>` pattern above.
+Never use any other branch name.

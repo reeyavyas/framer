@@ -807,7 +807,7 @@ export default function TutorialOverlay(props: Props) {
     // A set skipLink still wins over all of this — handled by the <a>
     // itself below, as before.
     const skipUsedRef = React.useRef(false)
-    const skipBackstopRef = React.useRef<ReturnType<typeof setTimeout>>()
+    const skipBackstopRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
     React.useEffect(() => {
         skipUsedRef.current = false
         return () => clearTimeout(skipBackstopRef.current)
@@ -2056,7 +2056,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Line 1 font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 42, fontWeight: 700 },
+        defaultValue: { fontSize: 42, variant: "Bold" },
     },
     cardTitleLine2: {
         type: ControlType.String,
@@ -2074,7 +2074,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Line 2 font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 42, fontWeight: 700 },
+        defaultValue: { fontSize: 42, variant: "Bold" },
     },
     cardBody: {
         type: ControlType.String,
@@ -2176,20 +2176,10 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.Font,
         title: "Next button font",
         controls: "extended",
-        // Inter is a Google Font (the project's own default font),
-        // unlike Area Normal/Proxima Nova before it — those are
-        // custom/uploaded project fonts, which didn't reliably
-        // pre-select from a fontFamily string in code the way a Google
-        // Font does; Framer can resolve Inter directly. defaultFontType
-        // is kept anyway so this control still shows a real default even
-        // if that ever stops resolving for any reason.
+        // Framer's sans-serif default is Inter; the control's default only
+        // takes size, variant and spacing, not a font family.
         defaultFontType: "sans-serif",
-        defaultValue: {
-            fontFamily: "Inter",
-            fontWeight: 700,
-            fontSize: 34,
-            lineHeight: 1.2,
-        },
+        defaultValue: { variant: "Bold", fontSize: 34, lineHeight: 1.2 },
         hidden: (props) => !props.showNextButton,
     },
     nextButtonLink: {
