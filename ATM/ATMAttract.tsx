@@ -539,8 +539,8 @@ ${c("glareEl")}::before { content: ""; position: absolute; top: -40%; bottom: -4
   background: linear-gradient(100deg, transparent, rgb(255 255 255 / .05) 30%, rgb(255 255 255 / .17) 50%, rgb(255 255 255 / .05) 70%, transparent);
   transform: translateX(-130%) rotate(14deg) }
 ${c("glare")} ${c("glareEl")} { opacity: 1 }
-${c("glare")} ${c("glareEl")}::before { animation: ${k("glare")} 9s cubic-bezier(.45,0,.25,1) infinite 1s }
-@keyframes ${k("glare")} { 0% { transform: translateX(-130%) rotate(14deg) } 22%, 100% { transform: translateX(260%) rotate(14deg) } }
+${c("glare")} ${c("glareEl")}::before { animation: ${k("glare")} 6s cubic-bezier(.45,0,.25,1) infinite 1s }
+@keyframes ${k("glare")} { 0% { transform: translateX(-130%) rotate(14deg) } 33%, 100% { transform: translateX(260%) rotate(14deg) } }
 
 ${c("strip")} { opacity: 0; background: ${slot}; border-radius: 3px; box-shadow: 0 0 8px 2px ${mix(slot, 80)}, 0 0 22px 6px ${mix(slot, 35)} }
 ${c("strips")} ${c("strip")} { animation: ${k("strip")} 4.5s ease-in-out infinite }

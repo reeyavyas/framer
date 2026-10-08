@@ -231,6 +231,7 @@ near the top of the file.
 | Swap the transition | **Transition** property |
 | Turn a light off | **Slot Lights**, **Card Slot Flash**, **Screen Glow**, **Glass Glare** properties |
 | Light colours | **Slot Light** (green), **Glow** (light blue) properties |
+| Glare timing | the `glare` animation in `css()`: every 6 s, the sweep is the first 33% (about 2 s) |
 | Glow strength / speed | the `spill` box-shadow and keyframes in `css()` (6 s loop, 8% to 100%) |
 | Ripple colours | **Ripple**, **Inner Ring** properties |
 | Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
@@ -520,6 +521,8 @@ In the order they were made with the designer:
   Framer or Preview started the transition, because the tap is read on
   `pointerdown`, which fires for every mouse button. Only the main
   button counts now; touch and pen presses are unaffected.
+- **Glass glare every 6 s** (was every 9 s). The sweep itself still
+  takes about 2 s; only the pause between sweeps is shorter.
 
 ## Branch
 
