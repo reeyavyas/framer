@@ -90,9 +90,10 @@ doesn't change them; change them only when it's asked for the ATM.
   the machine. Lights: slot lights breathing in turn, card slot flash,
   light-blue screen glow on the metal, glare on the glass, and the
   **Hood Light** (each one a switch). The hood light is the panel under
-  the banner: it brightens and dims on a 6 s loop, its lower edge
-  glows and casts a little light onto the machine, and a soft sweep
-  crosses it once a loop (**Hood Light Color**, white by default).
+  the banner: it dims low and brightens strongly on a 6 s loop, and its
+  lower edge glows and casts a little light onto the machine (**Hood
+  Light Color**, white by default). No glare runs across it (a sweep
+  was tried and dropped by request).
   **Transition** is **A + B + E** (chosen), about 3.1 s from
   tap to next page:
   - 0 to 1.9 s, the card step: the card (120×190) rises from below the

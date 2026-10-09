@@ -548,18 +548,14 @@ ${c("glare")} ${c("glareEl")} { opacity: 1 }
 ${c("glare")} ${c("glareEl")}::before { animation: ${k("glare")} 6s cubic-bezier(.45,0,.25,1) infinite 1s }
 @keyframes ${k("glare")} { 0% { transform: translateX(-130%) rotate(14deg) } 33%, 100% { transform: translateX(260%) rotate(14deg) } }
 
-${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${HOOD.bottom - HOOD.top}px; overflow: hidden; opacity: 0;
+${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${HOOD.bottom - HOOD.top}px; opacity: 0;
   clip-path: polygon(${HOOD.topL}px 0, ${HOOD.topR}px 0, ${HOOD.botR}px 100%, ${HOOD.botL}px 100%); mix-blend-mode: screen;
-  background: radial-gradient(ellipse 60% 150% at 50% 100%, ${mix(hood, 75)}, transparent 75%), linear-gradient(${mix(hood, 18)}, ${mix(hood, 50)}) }
-${c("hoodEl")}::before { content: ""; position: absolute; top: 0; bottom: 0; width: 30%; left: 0;
-  background: linear-gradient(90deg, transparent, ${mix(hood, 65)}, transparent); transform: translateX(-110%) skewX(-18deg) }
+  background: radial-gradient(ellipse 65% 160% at 50% 100%, ${hood}, transparent 80%), linear-gradient(${mix(hood, 40)}, ${mix(hood, 80)}) }
 ${c("hoodSpillEl")} { left: ${HOOD.botL}px; top: ${HOOD.bottom - 3}px; width: ${HOOD.botR - HOOD.botL}px; height: 110px; opacity: 0; mix-blend-mode: screen;
-  background: linear-gradient(${hood} 0 3px, ${mix(hood, 35)} 3px, transparent);
+  background: linear-gradient(${hood} 0 3px, ${mix(hood, 55)} 3px, transparent);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent) }
-${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .75; animation: ${k("hood")} 6s ease-in-out infinite }
-${c("hood")} ${c("hoodEl")}::before { animation: ${k("hoodSweep")} 6s cubic-bezier(.45,0,.25,1) infinite 3s }
-@keyframes ${k("hood")} { 0%, 100% { opacity: .45 } 50% { opacity: 1 } }
-@keyframes ${k("hoodSweep")} { 0% { transform: translateX(-110%) skewX(-18deg) } 45%, 100% { transform: translateX(440%) skewX(-18deg) } }
+${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
+@keyframes ${k("hood")} { 0%, 100% { opacity: .2 } 50% { opacity: 1 } }
 
 ${c("strip")} { opacity: 0; background: ${slot}; border-radius: 3px; box-shadow: 0 0 8px 2px ${mix(slot, 80)}, 0 0 22px 6px ${mix(slot, 35)} }
 ${c("strips")} ${c("strip")} { animation: ${k("strip")} 4.5s ease-in-out infinite }
