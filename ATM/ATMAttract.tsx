@@ -579,11 +579,11 @@ ${c("hoodSpillEl")} > i { position: absolute; inset: 0; filter: blur(28px); clip
 ${c("hoodSpillEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(0, hh - 3, hh + 107)};
   background: linear-gradient(${mix(hood, 60)}, transparent) }
 ${c("hoodKeysEl")} { left: 0; top: ${KEYPAD.top - KEYS_PAD}px; width: ${W}px; height: ${KEYPAD.bottom - KEYPAD.top + 2 * KEYS_PAD}px; opacity: 0; mix-blend-mode: screen }
-${c("hoodKeysEl")} > i { position: absolute; inset: 0; filter: blur(26px); clip-path: inset(${KEYS_PAD - 9}px -200px -200px -200px) } /* stops at the shelf's back edge */
-${c("hoodKeysEl")} > i::before { content: ""; position: absolute; inset: 0; background: linear-gradient(${mix(hood, 28)}, ${mix(hood, 10)});
-  clip-path: polygon(${KEYPAD.topL - 30}px ${KEYS_PAD - 20}px, ${KEYPAD.topR + 30}px ${KEYS_PAD - 20}px, ${KEYPAD.botR + 30}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px, ${KEYPAD.botL - 30}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px) }
+${c("hoodKeysEl")} > i { position: absolute; inset: 0; filter: blur(40px); clip-path: inset(${KEYS_PAD - 9}px -200px -200px -200px) } /* stops at the shelf's back edge */
+${c("hoodKeysEl")} > i::before { content: ""; position: absolute; inset: 0; background: linear-gradient(${mix(hood, 55)}, ${mix(hood, 12)});
+  clip-path: polygon(${KEYPAD.topL - 120}px ${KEYS_PAD - 20}px, ${KEYPAD.topR + 120}px ${KEYS_PAD - 20}px, ${KEYPAD.botR + 140}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px, ${KEYPAD.botL - 140}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px) }
 ${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")}, ${c("hood")} ${c("hoodKeysEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
-@keyframes ${k("hood")} { 0%, 100% { opacity: .9 } 50% { opacity: 1 } }
+@keyframes ${k("hood")} { 0%, 100% { opacity: .1 } 50% { opacity: 1 } }
 
 ${c("strip")} { opacity: 0; background: ${slot}; border-radius: 3px; box-shadow: 0 0 8px 2px ${mix(slot, 80)}, 0 0 22px 6px ${mix(slot, 35)} }
 ${c("strips")} ${c("strip")} { animation: ${k("strip")} 4.5s ease-in-out infinite }
