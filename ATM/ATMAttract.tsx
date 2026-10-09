@@ -42,6 +42,7 @@ const STRIPS = [
 ]
 // The hood's lit panel under the banner (a trapezoid, narrower at the bottom) and its lower edge.
 const HOOD = { top: 410, bottom: 625, topL: 29, topR: 1053, botL: 62, botR: 1019 }
+const KEYPAD = { top: 1331, bottom: 1455, topL: 322, topR: 665, botL: 287, botR: 700 } // the keypad's plate
 
 type Transition = "A" | "B" | "AB" | "E" | "EB" | "ABE"
 
@@ -449,6 +450,9 @@ export default function ATMAttract(props: Props) {
                     <div className={`${c("abs")} ${c("hoodSpillEl")}`}>
                         <i />
                     </div>
+                    <div className={`${c("abs")} ${c("hoodKeysEl")}`}>
+                        <i />
+                    </div>
                     <div className={`${c("abs")} ${c("screen")} ${c("spillEl")}`} />
                     <div className={`${c("abs")} ${c("screen")}`} style={{ overflow: "hidden" }}>
                         {screenEl ?? (
@@ -539,6 +543,7 @@ function css(uid: string, slot: string, glow: string, hood: string) {
     // side, as a clip shape for an element whose top is at y0. Past the bottom edge the band
     // carries on along the panel's slanted sides, so the light below keeps its perspective.
     const hh = HOOD.bottom - HOOD.top
+    const KEYS_PAD = 60 // room around the keypad for its glow's blur
     const hoodShape = (d: number, y0: number, y1: number) => {
         const l = (y: number) => HOOD.topL + ((HOOD.botL - HOOD.topL) * y) / hh + d
         const r = (y: number) => HOOD.topR + ((HOOD.botR - HOOD.topR) * y) / hh - d
@@ -571,7 +576,11 @@ ${c("hoodSpillEl")}::before { content: ""; position: absolute; top: 0; height: 3
 ${c("hoodSpillEl")} > i { position: absolute; inset: 0; filter: blur(28px); clip-path: inset(3px -200px -200px -200px) }
 ${c("hoodSpillEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(0, hh - 3, hh + 107)};
   background: linear-gradient(${mix(hood, 60)}, transparent) }
-${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
+${c("hoodKeysEl")} { left: 0; top: ${KEYPAD.top - KEYS_PAD}px; width: ${W}px; height: ${KEYPAD.bottom - KEYPAD.top + 2 * KEYS_PAD}px; opacity: 0; mix-blend-mode: screen }
+${c("hoodKeysEl")} > i { position: absolute; inset: 0; filter: blur(26px); clip-path: inset(${KEYS_PAD - 9}px -200px -200px -200px) } /* stops at the shelf's back edge */
+${c("hoodKeysEl")} > i::before { content: ""; position: absolute; inset: 0; background: linear-gradient(${mix(hood, 28)}, ${mix(hood, 10)});
+  clip-path: polygon(${KEYPAD.topL - 30}px ${KEYS_PAD - 20}px, ${KEYPAD.topR + 30}px ${KEYS_PAD - 20}px, ${KEYPAD.botR + 30}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px, ${KEYPAD.botL - 30}px ${KEYPAD.bottom - KEYPAD.top + KEYS_PAD + 10}px) }
+${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")}, ${c("hood")} ${c("hoodKeysEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
 @keyframes ${k("hood")} { 0%, 100% { opacity: .9 } 50% { opacity: 1 } }
 
 ${c("strip")} { opacity: 0; background: ${slot}; border-radius: 3px; box-shadow: 0 0 8px 2px ${mix(slot, 80)}, 0 0 22px 6px ${mix(slot, 35)} }

@@ -95,7 +95,8 @@ doesn't change them; change them only when it's asked for the ATM.
   follows the panel's perspective: its bright core is the panel's own
   trapezoid pulled in and softened, and the light below carries on
   along the panel's slanted sides, blurred so it fades into the
-  machine with no hard edge (**Hood
+  machine with no hard edge. A soft pool of the same light falls on
+  the keypad, kept faint so the key colours stay readable (**Hood
   Light Color**, white by default). No glare runs across it (a sweep
   was tried and dropped by request).
   **Transition** is **A + B + E** (chosen), about 3.1 s from
@@ -156,8 +157,8 @@ doesn't change them; change them only when it's asked for the ATM.
      slot and hood light are placed by pixel position on that version,
      where everything under the banner sits 400px lower than in the
      first artwork. A new artwork that moves anything means those
-     positions (`SCREEN`, `SLOT_Y`, `STRIPS`, `HOOD`, the card slot
-     arrows and the card's `rest`) need updating. **Card
+     positions (`SCREEN`, `SLOT_Y`, `STRIPS`, `HOOD`, `KEYPAD`, the
+     card slot arrows and the card's `rest`) need updating. **Card
      Image**: the debit card PNG. Remove the old ATM image layer from
      the page; the component draws it.
   3. **Screen**: move the existing screen frame (wing background, tap
