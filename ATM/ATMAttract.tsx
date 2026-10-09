@@ -443,7 +443,9 @@ export default function ATMAttract(props: Props) {
                     {props.atmImage?.src && (
                         <img src={props.atmImage.src} alt="" draggable={false} style={{ position: "absolute", inset: 0, width: W, height: H, display: "block" }} />
                     )}
-                    <div className={`${c("abs")} ${c("hoodEl")}`} />
+                    <div className={`${c("abs")} ${c("hoodEl")}`}>
+                        <i />
+                    </div>
                     <div className={`${c("abs")} ${c("hoodSpillEl")}`} />
                     <div className={`${c("abs")} ${c("screen")} ${c("spillEl")}`} />
                     <div className={`${c("abs")} ${c("screen")}`} style={{ overflow: "hidden" }}>
@@ -531,6 +533,16 @@ function css(uid: string, slot: string, glow: string, hood: string) {
     const c = (name: string) => `.${uid}-${name}`
     const k = (name: string) => `${uid}-${name}`
     const mix = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
+    // The band of the hood panel from y0 to y1 (px below its top edge), pulled in by d px on every
+    // side, as a clip shape for an element whose top is at y0. Past the bottom edge the band
+    // carries on along the panel's slanted sides, so the light below keeps its perspective.
+    const hh = HOOD.bottom - HOOD.top
+    const hoodShape = (d: number, y0: number, y1: number) => {
+        const l = (y: number) => HOOD.topL + ((HOOD.botL - HOOD.topL) * y) / hh + d
+        const r = (y: number) => HOOD.topR + ((HOOD.botR - HOOD.topR) * y) / hh - d
+        const [a, b] = [y0 + d, y1 - d]
+        return `polygon(${l(a)}px ${a - y0}px, ${r(a)}px ${a - y0}px, ${r(b)}px ${b - y0}px, ${l(b)}px ${b - y0}px)`
+    }
     return `
 ${c("abs")} { position: absolute; pointer-events: none }
 ${c("screen")} { left: ${SCREEN.x}px; top: ${SCREEN.y}px; width: ${SCREEN.w}px; height: ${SCREEN.h}px }
@@ -548,12 +560,13 @@ ${c("glare")} ${c("glareEl")} { opacity: 1 }
 ${c("glare")} ${c("glareEl")}::before { animation: ${k("glare")} 6s cubic-bezier(.45,0,.25,1) infinite 1s }
 @keyframes ${k("glare")} { 0% { transform: translateX(-130%) rotate(14deg) } 33%, 100% { transform: translateX(260%) rotate(14deg) } }
 
-${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${HOOD.bottom - HOOD.top}px; opacity: 0;
-  clip-path: polygon(${HOOD.topL}px 0, ${HOOD.topR}px 0, ${HOOD.botR}px 100%, ${HOOD.botL}px 100%); mix-blend-mode: screen;
-  background: radial-gradient(ellipse 65% 160% at 50% 100%, ${hood}, transparent 80%), linear-gradient(${mix(hood, 40)}, ${mix(hood, 80)}) }
-${c("hoodSpillEl")} { left: ${HOOD.botL}px; top: ${HOOD.bottom - 3}px; width: ${HOOD.botR - HOOD.botL}px; height: 110px; opacity: 0; mix-blend-mode: screen;
-  background: linear-gradient(${hood} 0 3px, ${mix(hood, 55)} 3px, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent) }
+${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${hh}px; opacity: 0; mix-blend-mode: screen;
+  clip-path: ${hoodShape(0, 0, hh)}; background: linear-gradient(${mix(hood, 45)}, ${mix(hood, 85)}) }
+${c("hoodEl")} > i { position: absolute; inset: 0; filter: blur(22px) }
+${c("hoodEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(36, 0, hh)}; background: ${mix(hood, 70)} }
+${c("hoodSpillEl")} { left: 0; top: ${HOOD.bottom - 3}px; width: ${W}px; height: 110px; opacity: 0; mix-blend-mode: screen;
+  clip-path: ${hoodShape(0, hh - 3, hh + 107)};
+  background: linear-gradient(${hood} 0 3px, ${mix(hood, 55)} 3px, transparent) }
 ${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
 @keyframes ${k("hood")} { 0%, 100% { opacity: .9 } 50% { opacity: 1 } }
 
