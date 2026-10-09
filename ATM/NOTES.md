@@ -90,7 +90,7 @@ doesn't change them; change them only when it's asked for the ATM.
   the machine. Lights: slot lights breathing in turn, card slot flash,
   light-blue screen glow on the metal, glare on the glass, and the
   **Hood Light** (each one a switch). The hood light is the panel under
-  the banner: it glows from 0% to 100% and back on a 6 s loop (at the low point a shade takes the panel darker than the artwork's own grey, so the dip is clear), and its
+  the banner: it glows from 0% to 100% and back on a 6 s loop (at 0% it is exactly the artwork; it never goes darker than the art), and its
   lower edge glows and casts a little light onto the machine. The glow
   follows the panel's perspective: its bright core is the panel's own
   trapezoid pulled in and softened, and the light below carries on

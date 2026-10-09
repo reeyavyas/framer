@@ -444,7 +444,6 @@ export default function ATMAttract(props: Props) {
                     {props.atmImage?.src && (
                         <img src={props.atmImage.src} alt="" draggable={false} style={{ position: "absolute", inset: 0, width: W, height: H, display: "block" }} />
                     )}
-                    <div className={`${c("abs")} ${c("hoodShadeEl")}`} />
                     <div className={`${c("abs")} ${c("hoodEl")}`}>
                         <i />
                     </div>
@@ -571,10 +570,6 @@ ${c("glare")} ${c("glareEl")}::before { animation: ${k("glare")} 6s cubic-bezier
 
 ${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${hh}px; opacity: 0; mix-blend-mode: screen;
   clip-path: ${hoodShape(0, 0, hh)}; background: linear-gradient(${mix(hood, 45)}, ${mix(hood, 85)}) }
-/* darkens the panel below the artwork's own grey as the light dims, so the dip reads clearly */
-${c("hoodShadeEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${hh}px; opacity: 0; clip-path: ${hoodShape(0, 0, hh)}; background: rgb(0 0 0 / .38) }
-${c("hood")} ${c("hoodShadeEl")} { animation: ${k("hoodShade")} 6s ease-in-out infinite }
-@keyframes ${k("hoodShade")} { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
 ${c("hoodEl")} > i { position: absolute; inset: 0; filter: blur(22px) }
 ${c("hoodEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(36, 0, hh)}; background: ${mix(hood, 70)} }
 ${c("hoodSpillEl")} { left: 0; top: ${HOOD.bottom - 3}px; width: ${W}px; height: 110px; opacity: 0; mix-blend-mode: screen }
