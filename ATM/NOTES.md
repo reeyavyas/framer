@@ -88,8 +88,24 @@ doesn't change them; change them only when it's asked for the ATM.
   designer's own frame (wing background, tap icon and "Tap anywhere to
   begin"), connected through the **Screen** property, so it zooms with
   the machine. Lights: slot lights breathing in turn, card slot flash,
-  light-blue screen glow on the metal, glare on the glass (each one a
-  switch). **Transition** is **A + B + E** (chosen), about 3.1 s from
+  light-blue screen glow on the metal, glare on the glass, and the
+  **Hood Light** (each one a switch). The hood light is the slanted
+  panel under the banner:
+  - It fades in and out, 0% to 100% and back, on a 6 s loop, in step
+    with the screen glow. At 0% the panel is exactly the artwork; the
+    light only ever brightens, never darkens the art.
+  - The glow follows the panel's perspective: its bright core is the
+    panel's own trapezoid, pulled in and blurred.
+  - The panel's lower edge glows, and a little light falls onto the
+    machine below it, along the panel's slanted sides, blurred so it
+    has no hard edge, and faded out before the hood's corners so none
+    of it lands on the side walls.
+  - A soft pool of the same light falls on the keypad and the shelf
+    around it, brightest at the back, fading in and out with the hood.
+  - **Hood Light Color** sets its colour (white by default). No glare
+    runs across it. Under "reduce motion" it shows lit and still.
+
+  **Transition** is **A + B + E** (chosen), about 3.1 s from
   tap to next page:
   - 0 to 1.9 s, the card step: the card (120×190) rises from below the
     slot, upright and tipped back in perspective, slides into the slot,
@@ -142,7 +158,13 @@ doesn't change them; change them only when it's asked for the ATM.
 - `ATMAttract.tsx` (the ATM page):
   1. Paste it into a new code file named `ATMAttract` and place the
      component on the ATM page at 1080×1920 (fill the page).
-  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG). **Card
+  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG with the
+     Vertical Checking banner on top). The screen, slot lights, card
+     slot and hood light are placed by pixel position on that version,
+     where everything under the banner sits 400px lower than in the
+     first artwork. A new artwork that moves anything means those
+     positions (`SCREEN`, `SLOT_Y`, `STRIPS`, `HOOD`, `KEYPAD`, the
+     card slot arrows and the card's `rest`) need updating. **Card
      Image**: the debit card PNG. Remove the old ATM image layer from
      the page; the component draws it.
   3. **Screen**: move the existing screen frame (wing background, tap
@@ -233,8 +255,12 @@ near the top of the file.
 | Feedback | Where |
 |---|---|
 | Swap the transition | **Transition** property |
-| Turn a light off | **Slot Lights**, **Card Slot Flash**, **Screen Glow**, **Glass Glare** properties |
-| Light colours | **Slot Light** (green), **Glow** (light blue) properties |
+| Turn a light off | **Slot Lights**, **Card Slot Flash**, **Screen Glow**, **Glass Glare**, **Hood Light** properties |
+| Light colours | **Slot Light** (green), **Glow** (light blue), **Hood Light Color** (white) properties |
+| Hood light low / high / speed | the `hood` keyframes in `css()` (6 s loop, opacity 0 to 1) |
+| Hood light brightness | `hoodEl` (the panel's gradient) and its `> i::before` (the bright core) in `css()` |
+| Light below the hood | `hoodSpillEl` in `css()`: the 3 px edge line, the 110 px fall-off, its blur, and `spillFade` (keeps it off the side walls) |
+| Light on the keypad | `hoodKeysEl` in `css()`: its gradient (strength), the polygon around `KEYPAD` (size of the pool) and its blur |
 | Glare timing | the `glare` animation in `css()`: every 6 s, the sweep is the first 33% (about 2 s) |
 | Glow strength / speed | the `spill` box-shadow and keyframes in `css()` (6 s loop, 8% to 100%) |
 | Ripple colours | **Ripple**, **Inner Ring** properties |
@@ -251,7 +277,7 @@ near the top of the file.
 | "Reading your card" | **Reading Text**, **Reading Font**, **Reading Color**, **Reading Fill** properties |
 | What is revealed | **Next Page Look** (or the flat **Next Page Color**), then **Next Page** |
 | How the page switches | `go()`: Framer's router (no reload); a plain page load if the router can't be found |
-| Positions on the artwork | `SCREEN`, `STRIPS`, `SLOT_X`, `SLOT_Y`, the chevron `<svg>` (all in the 1080×1920 artwork's pixels) |
+| Positions on the artwork | `SCREEN`, `STRIPS`, `SLOT_X`, `SLOT_Y`, `HOOD`, `KEYPAD`, the chevron `<svg>`, the card's `rest` in `cardIn` (all in the 1080×1920 banner artwork's pixels) |
 
 ## How it was made
 
@@ -302,10 +328,24 @@ second file, and why the unused beep overrides were removed).
 ## Status
 
 The ATM page is built and working in Framer: wing background, tap
-icon, lights, the A + B + E transition and the beeps. There are no
-open tasks. Further changes depend on feedback the designer receives;
-the decisions log below records what was tried and chosen, so that
-feedback can be applied without undoing earlier decisions.
+icon, lights, the A + B + E transition and the beeps.
+
+**In progress (branch `atm-additions`, PR
+https://github.com/reeyavyas/framer/pull/15, not merged yet):** the
+banner artwork and the hood light. The designer has the latest file
+in Framer and confirmed the hard line at the hood's corners is gone.
+Picking back up on Tuesday. Open points to check then:
+
+- How the hood light looks in Framer now that it fades 0% to 100%
+  with nothing darker than the art (last change, not yet confirmed).
+- Whether the keypad light is strong enough; at full brightness it
+  softens the key colours a little (it could light the shelf only).
+- Merging PR 15 (recommend **Create a merge commit**).
+
+The lock and the door seams from the first brainstorm are part of the
+banner artwork, so they need no code. The decisions log below records
+what was tried and chosen, so feedback can be applied without undoing
+earlier decisions.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
@@ -533,7 +573,34 @@ In the order they were made with the designer:
   the family comes from `defaultFontType`, Inter), want a `hidden`
   callback to take `Partial<Props>`, and read a bare `"ABE"` in
   `defaultProps` as a string, not a `Transition`. Behaviour unchanged.
+- **Banner artwork**: the designer redrew the ATM image in Photoshop
+  with the Vertical Checking banner on top, a camera above the screen
+  and an access door with a lock at the bottom. Everything under the
+  banner sits exactly 400px lower than before; every position in the
+  code moved by 400px to match (measured from the PNG).
+- **Hood light**: the designer marked the slanted panel under the
+  banner as the light to animate. Built in code (not painted into the
+  PNG) so it can fade.
+- **No glare on the hood light**: a sweep across it was tried and
+  dropped. The designer wants the light only fading in and out.
+- **Hood light range**: tried 45%, 20% ("don't let it go completely
+  off"), 55%, 90% (a misreading of "10%": too little change to see)
+  and 10% as the low point; settled on **0% to 100%**.
+- **Never darker than the art**: a dark shade at the low point was
+  tried, to make the dimming stronger, and dropped. The light may only
+  add brightness to the artwork.
+- **Perspective**: the glow first was a round glow centred at the
+  bottom and the light below the hood a straight-sided rectangle; both
+  now follow the panel's slanted sides.
+- **No harsh lines from the light**: the light below the hood was first
+  cut off along a hard slanted line (fixed with a blur), then its blur
+  reached the side walls past the hood's corners, leaving a hard edge
+  there (fixed by fading it out before the corners). When the designer
+  reports a line after a fix, check they have pasted the latest file.
+- **Light on the keypad**: first too strong (washed out the keys), then
+  too faint to see; now a wider pool on the keypad and shelf.
 
 ## Branch
 
-ATM work goes on the `atm` branch.
+ATM work goes on the `atm` branch. The banner and hood light work is
+on `atm-additions`, the name the designer asked for.
