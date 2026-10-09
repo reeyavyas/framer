@@ -94,7 +94,8 @@ doesn't change them; change them only when it's asked for the ATM.
   lower edge glows and casts a little light onto the machine. The glow
   follows the panel's perspective: its bright core is the panel's own
   trapezoid pulled in and softened, and the light below carries on
-  along the panel's slanted sides (**Hood
+  along the panel's slanted sides, blurred so it fades into the
+  machine with no hard edge (**Hood
   Light Color**, white by default). No glare runs across it (a sweep
   was tried and dropped by request).
   **Transition** is **A + B + E** (chosen), about 3.1 s from

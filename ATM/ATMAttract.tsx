@@ -446,7 +446,9 @@ export default function ATMAttract(props: Props) {
                     <div className={`${c("abs")} ${c("hoodEl")}`}>
                         <i />
                     </div>
-                    <div className={`${c("abs")} ${c("hoodSpillEl")}`} />
+                    <div className={`${c("abs")} ${c("hoodSpillEl")}`}>
+                        <i />
+                    </div>
                     <div className={`${c("abs")} ${c("screen")} ${c("spillEl")}`} />
                     <div className={`${c("abs")} ${c("screen")}`} style={{ overflow: "hidden" }}>
                         {screenEl ?? (
@@ -564,9 +566,11 @@ ${c("hoodEl")} { left: 0; top: ${HOOD.top}px; width: ${W}px; height: ${hh}px; op
   clip-path: ${hoodShape(0, 0, hh)}; background: linear-gradient(${mix(hood, 45)}, ${mix(hood, 85)}) }
 ${c("hoodEl")} > i { position: absolute; inset: 0; filter: blur(22px) }
 ${c("hoodEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(36, 0, hh)}; background: ${mix(hood, 70)} }
-${c("hoodSpillEl")} { left: 0; top: ${HOOD.bottom - 3}px; width: ${W}px; height: 110px; opacity: 0; mix-blend-mode: screen;
-  clip-path: ${hoodShape(0, hh - 3, hh + 107)};
-  background: linear-gradient(${hood} 0 3px, ${mix(hood, 55)} 3px, transparent) }
+${c("hoodSpillEl")} { left: 0; top: ${HOOD.bottom - 3}px; width: ${W}px; height: 110px; opacity: 0; mix-blend-mode: screen }
+${c("hoodSpillEl")}::before { content: ""; position: absolute; top: 0; height: 3px; left: ${HOOD.botL}px; width: ${HOOD.botR - HOOD.botL}px; background: ${hood} }
+${c("hoodSpillEl")} > i { position: absolute; inset: 0; filter: blur(28px); clip-path: inset(3px -200px -200px -200px) }
+${c("hoodSpillEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(0, hh - 3, hh + 107)};
+  background: linear-gradient(${mix(hood, 60)}, transparent) }
 ${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
 @keyframes ${k("hood")} { 0%, 100% { opacity: .9 } 50% { opacity: 1 } }
 
