@@ -555,7 +555,7 @@ ${c("hoodSpillEl")} { left: ${HOOD.botL}px; top: ${HOOD.bottom - 3}px; width: ${
   background: linear-gradient(${hood} 0 3px, ${mix(hood, 55)} 3px, transparent);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent) }
 ${c("hood")} ${c("hoodEl")}, ${c("hood")} ${c("hoodSpillEl")} { opacity: .85; animation: ${k("hood")} 6s ease-in-out infinite }
-@keyframes ${k("hood")} { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
+@keyframes ${k("hood")} { 0%, 100% { opacity: .9 } 50% { opacity: 1 } }
 
 ${c("strip")} { opacity: 0; background: ${slot}; border-radius: 3px; box-shadow: 0 0 8px 2px ${mix(slot, 80)}, 0 0 22px 6px ${mix(slot, 35)} }
 ${c("strips")} ${c("strip")} { animation: ${k("strip")} 4.5s ease-in-out infinite }
