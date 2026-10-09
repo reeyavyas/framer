@@ -88,8 +88,12 @@ doesn't change them; change them only when it's asked for the ATM.
   designer's own frame (wing background, tap icon and "Tap anywhere to
   begin"), connected through the **Screen** property, so it zooms with
   the machine. Lights: slot lights breathing in turn, card slot flash,
-  light-blue screen glow on the metal, glare on the glass (each one a
-  switch). **Transition** is **A + B + E** (chosen), about 3.1 s from
+  light-blue screen glow on the metal, glare on the glass, and the
+  **Hood Light** (each one a switch). The hood light is the panel under
+  the banner: it brightens and dims on a 6 s loop, its lower edge
+  glows and casts a little light onto the machine, and a soft sweep
+  crosses it once a loop (**Hood Light Color**, white by default).
+  **Transition** is **A + B + E** (chosen), about 3.1 s from
   tap to next page:
   - 0 to 1.9 s, the card step: the card (120×190) rises from below the
     slot, upright and tipped back in perspective, slides into the slot,
@@ -142,7 +146,13 @@ doesn't change them; change them only when it's asked for the ATM.
 - `ATMAttract.tsx` (the ATM page):
   1. Paste it into a new code file named `ATMAttract` and place the
      component on the ATM page at 1080×1920 (fill the page).
-  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG). **Card
+  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG with the
+     Vertical Checking banner on top). The screen, slot lights, card
+     slot and hood light are placed by pixel position on that version,
+     where everything under the banner sits 400px lower than in the
+     first artwork. A new artwork that moves anything means those
+     positions (`SCREEN`, `SLOT_Y`, `STRIPS`, `HOOD`, the card slot
+     arrows and the card's `rest`) need updating. **Card
      Image**: the debit card PNG. Remove the old ATM image layer from
      the page; the component draws it.
   3. **Screen**: move the existing screen frame (wing background, tap
