@@ -543,6 +543,7 @@ function css(uid: string, slot: string, glow: string, hood: string) {
     // side, as a clip shape for an element whose top is at y0. Past the bottom edge the band
     // carries on along the panel's slanted sides, so the light below keeps its perspective.
     const hh = HOOD.bottom - HOOD.top
+    const spillFade = `linear-gradient(90deg, transparent ${HOOD.botL}px, #000 ${HOOD.botL + 90}px, #000 ${HOOD.botR - 90}px, transparent ${HOOD.botR}px)`
     const KEYS_PAD = 60 // room around the keypad for its glow's blur
     const hoodShape = (d: number, y0: number, y1: number) => {
         const l = (y: number) => HOOD.topL + ((HOOD.botL - HOOD.topL) * y) / hh + d
@@ -573,7 +574,8 @@ ${c("hoodEl")} > i { position: absolute; inset: 0; filter: blur(22px) }
 ${c("hoodEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(36, 0, hh)}; background: ${mix(hood, 70)} }
 ${c("hoodSpillEl")} { left: 0; top: ${HOOD.bottom - 3}px; width: ${W}px; height: 110px; opacity: 0; mix-blend-mode: screen }
 ${c("hoodSpillEl")}::before { content: ""; position: absolute; top: 0; height: 3px; left: ${HOOD.botL}px; width: ${HOOD.botR - HOOD.botL}px; background: ${hood} }
-${c("hoodSpillEl")} > i { position: absolute; inset: 0; filter: blur(28px); clip-path: inset(3px -200px -200px -200px) }
+${c("hoodSpillEl")} > i { position: absolute; inset: 0; filter: blur(28px); clip-path: inset(3px -200px -200px -200px);
+  -webkit-mask-image: ${spillFade}; mask-image: ${spillFade} } /* none of it reaches the side walls past the hood's corners */
 ${c("hoodSpillEl")} > i::before { content: ""; position: absolute; inset: 0; clip-path: ${hoodShape(0, hh - 3, hh + 107)};
   background: linear-gradient(${mix(hood, 60)}, transparent) }
 ${c("hoodKeysEl")} { left: 0; top: ${KEYPAD.top - KEYS_PAD}px; width: ${W}px; height: ${KEYPAD.bottom - KEYPAD.top + 2 * KEYS_PAD}px; opacity: 0; mix-blend-mode: screen }
