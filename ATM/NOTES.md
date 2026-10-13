@@ -355,7 +355,7 @@ label, so these were updated to match (measured on the image):
 | Feedback | Where |
 |---|---|
 | Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge; the door has no face of its own, it is the body), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
-| Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours, `KX, KY` (centred in the visible door, right of `IX1`) |
+| Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours (satin, close to the body), `KX, KY` (centred in the visible door, right of `IX1`) |
 | Camera | `edit_atm.py`: `CAMX, CAMY` and the lines after it |
 | Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale) |
 | Keypad depth | `edit_atm.py`: `VP`, `ROW_TOP`, `ROW_BOT`, `KEY_X`, `KEY_TB` (right column), the strengths after `KP` |
@@ -485,6 +485,12 @@ In the order they were made with the designer:
   body's own metal and grain. Only its thin seam, a faint highlight,
   the hinges and the keyhole mark it (its drop shadow went with the
   painted face).
+- **Seam and keyhole after the door change**: the seam was darkened
+  (`(70, 72, 76)`) so the door still stands out. The bright chrome
+  keyhole then looked like the odd one out on the matte body, so it is
+  now **satin metal close to the body's grey** (ring `(198, 200, 204)`
+  to `(112, 114, 118)`, face `(118, 120, 124)` to `(160, 162, 166)`).
+  It no longer matches the chrome headphone jack, by choice.
 
 ## How it was made
 

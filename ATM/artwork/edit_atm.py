@@ -201,7 +201,7 @@ DX0, DY0, DX1, DY1 = 92, 1548, 988, 1980  # runs past the bottom edge: no bottom
 # The door is the machine body itself (same metal and grain): only its seam, a faint highlight,
 # the hinges and the keyhole mark it. (A painted face in its own lighter grey didn't match the body.)
 L = layer(); d = ImageDraw.Draw(L)
-d.rounded_rectangle(s(DX0 - 2.5, DY0 - 2.5, DX1 + 2.5, DY1 + 2.5), radius=11 * S, outline=(96, 98, 102, 255), width=round(2.5 * S))  # the seam gap: thin and only a little darker than the body
+d.rounded_rectangle(s(DX0 - 2.5, DY0 - 2.5, DX1 + 2.5, DY1 + 2.5), radius=11 * S, outline=(70, 72, 76, 255), width=round(2.5 * S))  # the seam gap: thin and clearly darker than the body
 d.rounded_rectangle(s(DX0, DY0, DX1, DY1), radius=9 * S, outline=(200, 202, 206, 90), width=S)  # faint bevel highlight
 d.line(s(DX0 + 8, DY1 - 1, DX1 - 8, DY1 - 1), fill=(96, 98, 102, 255), width=2 * S)  # bottom bevel shade
 IX1 = DX1 - 270  # the keyhole is centred between here and the door's right edge
@@ -244,8 +244,8 @@ for hy in (DY0 + 40, DY0 + 280):
 L = layer(); d = ImageDraw.Draw(L)
 KX, KY = (IX1 + DX1) / 2, (DY0 + H) / 2  # centred in the visible part of the door
 K = 1.62  # keyhole scale (1 = same size as the headphone jack)
-paste_disc(L, KX, KY, 22 * K, (246, 247, 250), (138, 140, 146))
-paste_disc(L, KX, KY, 15 * K, (146, 148, 154), (196, 198, 204), cx=0.3, cy=0.25)  # recessed face, lit from below
+paste_disc(L, KX, KY, 22 * K, (198, 200, 204), (112, 114, 118))  # satin metal close to the body, not bright chrome
+paste_disc(L, KX, KY, 15 * K, (118, 120, 124), (160, 162, 166), cx=0.3, cy=0.25)  # recessed face, lit from below
 d.ellipse(s(KX - 4.5 * K, KY - 8 * K, KX + 4.5 * K, KY + 1 * K), fill=(16, 16, 18, 255))
 d.polygon(s(KX - 2.2 * K, KY - 3 * K, KX + 2.2 * K, KY - 3 * K, KX + 3.4 * K, KY + 9 * K, KX - 3.4 * K, KY + 9 * K), fill=(16, 16, 18, 255))
 comp(L)
