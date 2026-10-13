@@ -254,9 +254,10 @@ comp(L)
 CAMX, CAMY = 406, 676
 L = layer(); d = ImageDraw.Draw(L)
 # a pinhole camera: a tiny hole in a small recessed ring, flush with the bezel (lit like the jack: a socket, not a bump)
-paste_disc(L, CAMX, CAMY, 4.5, (196, 198, 202), (92, 94, 98), cx=0.68, cy=0.72)  # recessed ring
-paste_disc(L, CAMX, CAMY, 2.2, (40, 46, 58), (4, 5, 8), cx=0.5, cy=0.5)  # the pinhole
-d.ellipse(s(CAMX - 0.9, CAMY - 1.2, CAMX - 0.1, CAMY - 0.4), fill=(150, 175, 210, 200))  # the lens glints inside it
+CR = 7  # the ring's radius (14 px across); the hole and glint scale with it
+paste_disc(L, CAMX, CAMY, CR, (196, 198, 202), (92, 94, 98), cx=0.68, cy=0.72)  # recessed ring
+paste_disc(L, CAMX, CAMY, CR * 0.49, (40, 46, 58), (4, 5, 8), cx=0.5, cy=0.5)  # the pinhole
+d.ellipse(s(CAMX - CR * 0.2, CAMY - CR * 0.27, CAMX - CR * 0.02, CAMY - CR * 0.09), fill=(150, 175, 210, 200))  # the lens glints inside it
 comp(L)
 # ---------- audio jack + label on the flat front strip under the shelf ----------
 L = layer(); d = ImageDraw.Draw(L)
