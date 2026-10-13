@@ -281,8 +281,11 @@ IX = ROW_X0  # icon's left edge
 d.arc(s(IX + 2 * IS, JY2 - 12 * IS, IX + 26 * IS, JY2 + 12 * IS), 180, 360, fill=(90, 92, 98, 255), width=round(2 * S * IS))
 d.rounded_rectangle(s(IX, JY2, IX + 6 * IS, JY2 + 12 * IS), radius=2 * S * IS, fill=(90, 92, 98, 255))
 d.rounded_rectangle(s(IX + 22 * IS, JY2, IX + 28 * IS, JY2 + 12 * IS), radius=2 * S * IS, fill=(90, 92, 98, 255))
-paste_disc(L, JX, JY2, 13, (230, 232, 236), (108, 110, 116))
-d.ellipse(s(JX - 6, JY2 - 6, JX + 6, JY2 + 6), fill=(16, 16, 18, 255))
+# the jack is a socket sunk into the panel: light comes from the top left, so inside the opening the
+# top-left falls into shadow and the lower-right inner wall catches the light (a raised ring is lit the other way)
+paste_disc(L, JX, JY2, 13, (208, 210, 214), (78, 80, 84), cx=0.68, cy=0.72)  # chamfered metal rim, sloping inward
+paste_disc(L, JX, JY2, 9, (104, 106, 110), (34, 36, 39), cx=0.66, cy=0.7)  # the well, darker as it goes in
+d.ellipse(s(JX - 5.5, JY2 - 5.5, JX + 5.5, JY2 + 5.5), fill=(8, 8, 10, 255))  # the hole
 # speaker grille, left of the keypad: a straight grid, so every column lines up
 GR_COLS, GR_ROWS, GR_STEP, GR_R = 6, 3, 12, 2.5
 GR_CX, GR_CY = 192, 1395  # same centre as before
