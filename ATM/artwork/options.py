@@ -244,7 +244,8 @@ fl = ImageFont.truetype(INTER, 13 * Z)
 SPEECH_W = ImageDraw.Draw(Image.new("L", (1, 1))).textlength("Insert Headphones to use Speech Mode", font=fl) / Z + 52
 SPEECH_X0, SPEECH_CY = 988 - SPEECH_W, (1478 + 1528) / 2
 SPOTS = [("receipt", 887, 719), ("card", 888, 870), ("cash", 391, 1191.5)]
-SPOTS_FINAL = [("receipt", 887, 719), ("card", 888, 898), ("cash", 391, 1186)]  # after the label and slot moves
+SPOTS_FINAL = [("receipt", 887, 726), ("card", 888, 906), ("cash", 391, 1186)]  # after the label and slot moves;
+# each braille plate sits about 9 px under its label, the same gap for RECEIPT, CARD and CASH
 
 a = start()
 for word, cx, cy in SPOTS:

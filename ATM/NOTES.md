@@ -463,6 +463,9 @@ In the order they were made with the designer:
   row. The CASH label moved up 10 px. The cash slot itself stays: it is
   set into a ledge that runs the full width of the screen surround, and
   moving it broke the ledge.
+- **Braille plate gaps**: every braille plate sits **9 px under its
+  label**, matching CASH (RECEIPT and CARD were 1-2 px, so they read
+  as stuck to their labels). `SPOTS_FINAL` in `options.py`.
 
 ## How it was made
 
