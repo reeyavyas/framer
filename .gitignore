@@ -26,3 +26,6 @@ build/
 # Misc
 *.log
 .cache/
+
+# ATM artwork sources (the designer's original and reference photos): kept private, not in the repo
+ATM/artwork/source/

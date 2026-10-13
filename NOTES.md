@@ -35,7 +35,8 @@ with the detail on what's in it; this file is just the map.
   users to use an ATM, plus money tips and lessons. Currently holds the
   animated wing background for the ATM screen, its "Tap anywhere
   to begin" icon, and the ATM page itself (lights on the machine, the
-  tap transition and its beeps). See `ATM/NOTES.md`.
+  tap transition and its beeps). `ATM/artwork/` holds the ATM image,
+  the scripts that draw it and every option shown. See `ATM/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
