@@ -27,5 +27,5 @@ build/
 *.log
 .cache/
 
-# ATM artwork sources (the designer's original and reference photos): kept private, not in the repo
-ATM/artwork/source/
+# ATM reference photos: only for reference, not needed to rebuild the artwork (the original, atm-original.webp, is in the repo)
+ATM/artwork/source/reference-*

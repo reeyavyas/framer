@@ -130,9 +130,8 @@ doesn't change them; change them only when it's asked for the ATM.
 - `artwork/` — the ATM image itself (`ATM-artwork.png`, the **ATM
   Image** for `ATMAttract.tsx`) and everything needed to change it: the
   designer's original, the scripts that draw every addition, all the
-  options that were shown. The designer's original and the reference
-  photos are kept private, outside the repo. See "The ATM image" below;
-  it records every decision on the image.
+  options that were shown, and the designer's original artwork. See
+  "The ATM image" below; it records every decision on the image.
 
 ## Using it in Framer
 
@@ -301,20 +300,18 @@ step is a script, so any of it can be changed and redrawn exactly.
 | `options.py` | Draws every option (`options/opt-*.png`) and the chosen combination (`ATM-combo-L1-S2-B2.png`, which is `ATM-artwork.png`) |
 | `sheets.py` | The side-by-side comparison sheets in `options/` |
 | `options/` | Every option shown, full size, and the comparison sheets |
+| `source/atm-original.webp` | The designer's ATM artwork, the same image first loaded into Framer as **ATM Image**. `edit_atm.py` starts from it. It is the only original the rebuild needs. |
 
-**Not in the repo** (the repo is public; `source/`, where they go,
-is git-ignored):
-
-| File (in `source/`) | What it is |
-|---|---|
-| `atm-original.webp` | The designer's ATM artwork, the same image first loaded into Framer as **ATM Image**. `edit_atm.py` starts from it, so it's needed only to change what `edit_atm.py` draws (door, keyhole, hinges, camera, headphone row, keypad and button depth, speaker grille). Everything `options.py` draws (light, slots, braille, spacing, finishing) starts from `ATM-artwork-base.png`, which is in the repo. |
-| `reference-atm-braille.jpg`, `reference-card-reader.png` | The designer's photos of real ATMs, **only for reference** (how braille looks and sits on a real ATM; a round glowing card reader, tried and reverted). Nothing needs them. |
+**Not in the repo**: the designer's two photos of real ATMs
+(`reference-atm-braille.jpg`, how braille looks and sits on a real ATM;
+`reference-card-reader.png`, a round glowing card reader, tried and
+reverted). They were **only for reference** and nothing needs them; git
+ignores them in `source/`.
 
 ### Rebuilding it
 
 ```
 cd ATM/artwork
-# first copy the designer's private atm-original.webp into source/
 python3 edit_atm.py source/atm-original.webp ATM-artwork-base.png
 python3 options.py ATM-artwork-base.png /tmp/atm-options
 cp /tmp/atm-options/ATM-combo-L1-S2-B2.png ATM-artwork.png
@@ -590,10 +587,6 @@ Open points:
   CASH slot lights sit on their labels.
 - How the code's hood light looks on top of the image's lit hood.
 - Having the braille checked by a braille transcriber.
-- To change what `edit_atm.py` draws, copy the designer's ATM artwork
-  (the original **ATM Image** in Framer) into `artwork/source/` as
-  `atm-original.webp`; the reference photos were only for reference.
-
 The lock and the door seams from the first brainstorm are drawn into
 the ATM image (`artwork/`), so they need no code. The decisions logs record
 what was tried and chosen, so feedback can be applied without undoing
