@@ -25,7 +25,7 @@ const useRouter: () => unknown = (Framer as { useRouter?: () => unknown }).useRo
 const W = 1080
 const H = 1920
 const SCREEN = { x: 186, y: 728, w: 441, h: 365 } // the screen in the ATM artwork
-const SLOT_Y = 969 // the card disappears above this line (middle of the card slot's opening)
+const SLOT_Y = 945 // the card disappears above this line (middle of the card slot's opening)
 const SLOT_X = 888 // centre of the card slot
 const CARD_W = 120 // the card, upright: short edge first
 const CARD_H = 190
@@ -37,7 +37,7 @@ const ABE_RIPPLE_SECONDS = 1.2 // A + B + E's ripple and zoom (A + B alone takes
 const Z = W / SCREEN.w // zoom at which the screen fills the page width
 const STRIPS = [
     { x: 803, y: 700, w: 169, h: 6, delay: 3 }, // RECEIPT
-    { x: 804, y: 881, w: 169, h: 5, delay: 0 }, // CARD
+    { x: 804, y: 857, w: 169, h: 5, delay: 0 }, // CARD
     { x: 285, y: 1158, w: 213, h: 7, delay: 1.5 }, // CASH
 ]
 // The hood's lit panel under the banner (a trapezoid, narrower at the bottom) and its lower edge.
@@ -290,7 +290,7 @@ export default function ATMAttract(props: Props) {
         const reading = readingRef.current
         if (!card) return
         const from = { y: 2400, s: 1.6 }
-        const rest = 1000 // the card's top edge, resting on the slot's ramp
+        const rest = 976 // the card's top edge, resting on the slot's ramp
         // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
         const readStart = at(1.7)
@@ -490,10 +490,10 @@ export default function ATMAttract(props: Props) {
                             style={{ left: s.x, top: s.y, width: s.w, height: s.h, animationDelay: `${s.delay}s` }}
                         />
                     ))}
-                    <svg className={`${c("abs")} ${c("chevEl")}`} viewBox="790 953 196 120" style={{ left: 790, top: 953, width: 196, height: 120 }}>
-                        <rect x={796} y={961} width={184} height={15} rx={2} style={{ fill: slotColor, opacity: 0.35 }} />
-                        <polyline points="858,1014 884,999 911,1014" />
-                        <polyline points="858,1023 884,1008 911,1023" />
+                    <svg className={`${c("abs")} ${c("chevEl")}`} viewBox="790 929 196 120" style={{ left: 790, top: 929, width: 196, height: 120 }}>
+                        <rect x={796} y={937} width={184} height={15} rx={2} style={{ fill: slotColor, opacity: 0.35 }} />
+                        <polyline points="858,990 884,975 911,990" />
+                        <polyline points="858,999 884,984 911,999" />
                     </svg>
                     <div style={{ position: "absolute", inset: 0, clipPath: `inset(${SLOT_Y}px 0 0 0)`, pointerEvents: "none" }}>
                         <div

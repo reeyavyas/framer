@@ -244,7 +244,7 @@ fl = ImageFont.truetype(INTER, 13 * Z)
 SPEECH_W = ImageDraw.Draw(Image.new("L", (1, 1))).textlength("Insert Headphones to use Speech Mode", font=fl) / Z + 52
 SPEECH_X0, SPEECH_CY = 988 - SPEECH_W, (1478 + 1528) / 2
 SPOTS = [("receipt", 887, 719), ("card", 888, 870), ("cash", 391, 1191.5)]
-SPOTS_FINAL = [("receipt", 887, 726), ("card", 888, 906), ("cash", 391, 1186)]  # after the label and slot moves;
+SPOTS_FINAL = [("receipt", 887, 726), ("card", 888, 882), ("cash", 391, 1186)]  # after the label and slot moves;
 # each braille plate sits about 9 px under its label, the same gap for RECEIPT, CARD and CASH
 
 a = start()
@@ -276,7 +276,7 @@ CARD_LABEL_RISE = 12  # the CARD label (y 818-860) moves up; the card slot stays
 move_rows(a, 784, 992, 790, 879, -CARD_LABEL_RISE)
 # card picture (the white card guide, x 822-954, y 1043-1188 with its shadow) gets smaller, so the whole card
 # group (label, braille, slot) can move down and open the gap under the receipt group
-CARD_DROP, PIC_SCALE = 40, 0.78
+CARD_DROP, PIC_SCALE = 16, 0.78  # 16: the card group sits centred between the receipt group and the headphone row (56 px each side)
 pic = Image.fromarray(a[1043:1189, 822:955].astype(np.uint8), "RGBA")
 lft, rgt = a[1040:1195, 813, :3].copy(), a[1040:1195, 963, :3].copy()  # paint the panel back where it was
 wgt = np.linspace(0, 1, 963 - 813)[None, :, None]

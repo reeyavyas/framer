@@ -342,10 +342,10 @@ label, so these were updated to match (measured on the image):
 
 | Constant | Was | Now | Why |
 |---|---|---|---|
-| `SLOT_Y` | 921 | 969 | the card slot is 48 px lower (40 with its group, then 8 more) |
-| `rest` (in `cardIn`) | 952 | 1000 | the card rests 48 px lower, on the slot's ramp |
-| card slot arrows `<svg>` (`top`, `viewBox`, the rect and both chevrons) | y 905 | y 953 | they flash on the slot, 48 px lower |
-| `STRIPS` CARD `y` | 853 | 881 | the CARD label is 28 px lower (up 12, then the group down 40) |
+| `SLOT_Y` | 921 | 945 | the card slot is 24 px lower (16 with its group, then 8 more) |
+| `rest` (in `cardIn`) | 952 | 976 | the card rests 24 px lower, on the slot's ramp |
+| card slot arrows `<svg>` (`top`, `viewBox`, the rect and both chevrons) | y 905 | y 929 | they flash on the slot, 24 px lower |
+| `STRIPS` CARD `y` | 853 | 857 | the CARD label is 4 px lower (up 12, then the group down 16) |
 | `STRIPS` CASH `y` | 1168 | 1158 | the CASH label is 10 px higher |
 
 `SCREEN`, `HOOD`, `KEYPAD`, `SLOT_X` and the RECEIPT strip did not move.
@@ -354,7 +354,7 @@ label, so these were updated to match (measured on the image):
 
 | Feedback | Where |
 |---|---|
-| Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
+| Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge; the door has no face of its own, it is the body), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
 | Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours, `KX, KY` (centred in the visible door, right of `IX1`) |
 | Camera | `edit_atm.py`: `CAMX, CAMY` and the lines after it |
 | Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale) |
@@ -366,7 +366,7 @@ label, so these were updated to match (measured on the image):
 | Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
 | Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
 | Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
-| Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (40, the whole card group), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
+| Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (16, the whole card group, centred between its neighbours), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
 
 ### Decisions log (the image)
 
@@ -474,6 +474,17 @@ In the order they were made with the designer:
   The picture keeps its 16 px under the slot and sits about 30 px above
   the headphone row. `ATMAttract.tsx` follows (`SLOT_Y` 969, `rest`
   1000, the card slot arrows at y 953).
+- **Card group centred**: the whole card group (label, braille, slot,
+  picture) moved up 24 px (`CARD_DROP` 40 → 16) so it sits centred
+  between the receipt group (bottom of the receipt lip, y 766) and the
+  headphone row (top of the black square, y 1220): 56-57 px each side.
+  `ATMAttract.tsx` follows (`SLOT_Y` 945, `rest` 976, the card slot
+  arrows at y 929, the CARD strip at y 857).
+- **Door colour matches the body**: the door no longer has a painted
+  face in its own lighter, slightly blue grey; it shows the machine
+  body's own metal and grain. Only its thin seam, a faint highlight,
+  the hinges and the keyhole mark it (its drop shadow went with the
+  painted face).
 
 ## How it was made
 

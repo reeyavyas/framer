@@ -198,17 +198,10 @@ comp(L)
 
 # ---------- vault access door ----------
 DX0, DY0, DX1, DY1 = 92, 1548, 988, 1980  # runs past the bottom edge: no bottom seam shows; top lowered to give the label strip room
-# soft drop shadow inside the gap (door sits a hair proud)
-sh = layer(); ImageDraw.Draw(sh).rounded_rectangle(s(DX0 - 2, DY0 + 3, DX1 + 3, DY1 + 6), radius=10 * S, fill=(0, 0, 0, 60))
-comp(sh, blur=5)
+# The door is the machine body itself (same metal and grain): only its seam, a faint highlight,
+# the hinges and the keyhole mark it. (A painted face in its own lighter grey didn't match the body.)
 L = layer(); d = ImageDraw.Draw(L)
-d.rounded_rectangle(s(DX0 - 2.5, DY0 - 2.5, DX1 + 2.5, DY1 + 2.5), radius=11 * S, fill=(96, 98, 102, 255))  # the seam gap: thin and only a little darker than the body
-# door face: top-lit vertical gradient
-face = np.linspace(168, 136, DY1 - DY0)[:, None].repeat(DX1 - DX0, 1)
-face = Image.fromarray(face.astype(np.uint8)).resize(((DX1 - DX0) * S, (DY1 - DY0) * S))
-fm = Image.new("L", face.size, 0)
-ImageDraw.Draw(fm).rounded_rectangle([0, 0, face.size[0] - 1, face.size[1] - 1], radius=9 * S, fill=255)
-L.paste(Image.merge("RGBA", (face, face, face.point(lambda v: min(255, v + 4)), fm)), s(DX0, DY0), fm)
+d.rounded_rectangle(s(DX0 - 2.5, DY0 - 2.5, DX1 + 2.5, DY1 + 2.5), radius=11 * S, outline=(96, 98, 102, 255), width=round(2.5 * S))  # the seam gap: thin and only a little darker than the body
 d.rounded_rectangle(s(DX0, DY0, DX1, DY1), radius=9 * S, outline=(200, 202, 206, 90), width=S)  # faint bevel highlight
 d.line(s(DX0 + 8, DY1 - 1, DX1 - 8, DY1 - 1), fill=(96, 98, 102, 255), width=2 * S)  # bottom bevel shade
 IX1 = DX1 - 270  # the keyhole is centred between here and the door's right edge
