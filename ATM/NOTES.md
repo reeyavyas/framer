@@ -366,6 +366,7 @@ label, so these were updated to match (measured on the image):
 | Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
 | Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
 | Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
+| Brightness, contrast, highlights, shadows, colour, sharpness | `options.py`: `GRADE` (the last step, over the whole image) |
 | Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (16, the whole card group, centred between its neighbours), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
 
 ### Decisions log (the image)
@@ -491,6 +492,12 @@ In the order they were made with the designer:
   now **satin metal close to the body's grey** (ring `(198, 200, 204)`
   to `(112, 114, 118)`, face `(118, 120, 124)` to `(160, 162, 166)`).
   It no longer matches the chrome headphone jack, by choice.
+- **Finishing (more vibrant, sharper)**: a last step over the whole
+  image: +3% brightness, a gentle S-curve for contrast, brighter
+  highlights and deeper shadows, a vibrance boost that lifts muted
+  colours most, then an unsharp mask (radius 1.2, 70%, threshold 2).
+  `GRADE` in `options.py`; set every value to 0 (and `sharpen` to
+  `(1, 0, 0)`) to see the image without it.
 
 ## How it was made
 
