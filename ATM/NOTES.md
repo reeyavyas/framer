@@ -271,7 +271,7 @@ near the top of the file.
 | Ripple colours | **Ripple**, **Inner Ring** properties |
 | Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
 | Ripple / zoom speed | A + B + E: `ABE_RIPPLE_SECONDS` (1.2 s). A + B: `rippleZoom`'s default (1.6 s). Others: the `play(…)` lengths and `seg` times in `zoomIn`, `rippleFlood` |
-| Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE` |
+| Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE`; how big it is when it first shows up: `from.s` in `cardIn` (1.3) |
 | Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
 | How long "Reading your card" shows | `READING_SECONDS` (0.5 s); the card step ends after it |
 | Sounds on / off | **Sounds** property |
@@ -821,6 +821,9 @@ In the order they were made with the designer:
   reports a line after a fix, check they have pasted the latest file.
 - **Light on the keypad**: first too strong (washed out the keys), then
   too faint to see; now a wider pool on the keypad and shelf.
+- **Card starts smaller**: the card looked too big when it first
+  showed up, so it now enters at 1.3× its size at the slot (was 1.6×,
+  and 2.4× before that) and still shrinks to 1× as it reaches the slot.
 
 ## Branch
 

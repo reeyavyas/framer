@@ -289,7 +289,7 @@ export default function ATMAttract(props: Props) {
         const strip = cardStripRef.current
         const reading = readingRef.current
         if (!card) return
-        const from = { y: 2400, s: 1.6 }
+        const from = { y: 2400, s: 1.3 } // s: how big the card is when it first shows up (1 = its size at the slot)
         const rest = 976 // the card's top edge, resting on the slot's ramp
         // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
