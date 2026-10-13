@@ -302,15 +302,13 @@ step is a script, so any of it can be changed and redrawn exactly.
 | `sheets.py` | The side-by-side comparison sheets in `options/` |
 | `options/` | Every option shown, full size, and the comparison sheets |
 
-**Kept private, not in the repo** (the repo is public): the designer's
-original artwork and two reference photos. The designer keeps them.
-Before rebuilding, put them in `source/`, which git ignores:
+**Not in the repo** (the repo is public; `source/`, where they go,
+is git-ignored):
 
 | File (in `source/`) | What it is |
 |---|---|
-| `atm-original.webp` | The designer's artwork these scripts start from (needed to rebuild) |
-| `reference-atm-braille.jpg` | The designer's photo of a real ATM, used **only** for how its braille looks and sits (flat light dots on the label's plate, under the text) |
-| `reference-card-reader.png` | The designer's photo of a round glowing card reader (tried, then reverted; see the log) |
+| `atm-original.webp` | The designer's ATM artwork, the same image first loaded into Framer as **ATM Image**. `edit_atm.py` starts from it, so it's needed only to change what `edit_atm.py` draws (door, keyhole, hinges, camera, headphone row, keypad and button depth, speaker grille). Everything `options.py` draws (light, slots, braille, spacing, finishing) starts from `ATM-artwork-base.png`, which is in the repo. |
+| `reference-atm-braille.jpg`, `reference-card-reader.png` | The designer's photos of real ATMs, **only for reference** (how braille looks and sits on a real ATM; a round glowing card reader, tried and reverted). Nothing needs them. |
 
 ### Rebuilding it
 
@@ -592,8 +590,9 @@ Open points:
   CASH slot lights sit on their labels.
 - How the code's hood light looks on top of the image's lit hood.
 - Having the braille checked by a braille transcriber.
-- The designer keeps the private originals (`artwork/source/`, not in
-  the repo); any change to the image needs `atm-original.webp`.
+- To change what `edit_atm.py` draws, copy the designer's ATM artwork
+  (the original **ATM Image** in Framer) into `artwork/source/` as
+  `atm-original.webp`; the reference photos were only for reference.
 
 The lock and the door seams from the first brainstorm are drawn into
 the ATM image (`artwork/`), so they need no code. The decisions logs record
