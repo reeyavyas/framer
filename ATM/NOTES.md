@@ -337,14 +337,14 @@ says.
 
 ### Positions in `ATMAttract.tsx` that follow this image
 
-The current image moved the card group and the CASH label, so these
-were updated to match (measured on the image):
+The current image moved the card group, the card slot and the CASH
+label, so these were updated to match (measured on the image):
 
 | Constant | Was | Now | Why |
 |---|---|---|---|
-| `SLOT_Y` | 921 | 961 | the card slot is 40 px lower |
-| `rest` (in `cardIn`) | 952 | 992 | the card rests 40 px lower, on the slot's ramp |
-| card slot arrows `<svg>` (`top`, `viewBox`, the rect and both chevrons) | y 905 | y 945 | they flash on the slot, 40 px lower |
+| `SLOT_Y` | 921 | 969 | the card slot is 48 px lower (40 with its group, then 8 more) |
+| `rest` (in `cardIn`) | 952 | 1000 | the card rests 48 px lower, on the slot's ramp |
+| card slot arrows `<svg>` (`top`, `viewBox`, the rect and both chevrons) | y 905 | y 953 | they flash on the slot, 48 px lower |
 | `STRIPS` CARD `y` | 853 | 881 | the CARD label is 28 px lower (up 12, then the group down 40) |
 | `STRIPS` CASH `y` | 1168 | 1158 | the CASH label is 10 px higher |
 
@@ -366,7 +366,7 @@ were updated to match (measured on the image):
 | Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
 | Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
 | Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
-| Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (40), `PIC_SCALE` (0.78) and the picture's `py0`, `CASH_LABEL_RISE` (10) |
+| Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (40, the whole card group), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
 
 ### Decisions log (the image)
 
@@ -466,6 +466,12 @@ In the order they were made with the designer:
 - **Braille plate gaps**: every braille plate sits **9 px under its
   label**, matching CASH (RECEIPT and CARD were 1-2 px, so they read
   as stuck to their labels). `SPOTS_FINAL` in `options.py`.
+- **Card slot clear of its braille**: the card slot (and the card
+  picture under it) moved 8 px further down (`INSERT_DROP`), so the slot
+  no longer sits right under the CARD braille plate (about 13 px now).
+  The picture keeps its 16 px under the slot and sits about 30 px above
+  the headphone row. `ATMAttract.tsx` follows (`SLOT_Y` 969, `rest`
+  1000, the card slot arrows at y 953).
 
 ## How it was made
 

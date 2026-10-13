@@ -283,6 +283,9 @@ wgt = np.linspace(0, 1, 963 - 813)[None, :, None]
 a[1040:1195, 813:963, :3] = lft[:, None] * (1 - wgt) + rgt[:, None] * wgt
 move_rows(a, 784, 992, 790, 1110, CARD_DROP)
 CB_Y0, CB_Y1, CO_Y0, CO_Y1 = CB_Y0 + CARD_DROP, CB_Y1 + CARD_DROP, CO_Y0 + CARD_DROP, CO_Y1 + CARD_DROP
+INSERT_DROP = 8  # the card slot alone moves a little further down, clear of the CARD braille plate
+move_rows(a, 784, 992, 892, 1130, INSERT_DROP)  # rows 892 and 1130 are plain panel (label above, nothing below yet)
+CB_Y0, CB_Y1, CO_Y0, CO_Y1 = CB_Y0 + INSERT_DROP, CB_Y1 + INSERT_DROP, CO_Y0 + INSERT_DROP, CO_Y1 + INSERT_DROP
 pic = pic.resize((round(pic.width * PIC_SCALE), round(pic.height * PIC_SCALE)), Image.LANCZOS)
 px0, py0 = round(888 - pic.width / 2), CB_Y1 + 16  # 16 px under the card slot's visible bottom edge (clear of its shadow): part of the card group
 a[py0:py0 + pic.height, px0:px0 + pic.width] = np.array(pic).astype(float)

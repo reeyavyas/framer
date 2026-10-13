@@ -25,7 +25,7 @@ const useRouter: () => unknown = (Framer as { useRouter?: () => unknown }).useRo
 const W = 1080
 const H = 1920
 const SCREEN = { x: 186, y: 728, w: 441, h: 365 } // the screen in the ATM artwork
-const SLOT_Y = 961 // the card disappears above this line (middle of the card slot's opening)
+const SLOT_Y = 969 // the card disappears above this line (middle of the card slot's opening)
 const SLOT_X = 888 // centre of the card slot
 const CARD_W = 120 // the card, upright: short edge first
 const CARD_H = 190
@@ -290,7 +290,7 @@ export default function ATMAttract(props: Props) {
         const reading = readingRef.current
         if (!card) return
         const from = { y: 2400, s: 1.6 }
-        const rest = 992 // the card's top edge, resting on the slot's ramp
+        const rest = 1000 // the card's top edge, resting on the slot's ramp
         // Times below are written for CARD_SECONDS = 3.1 and scaled to it.
         const at = (sec: number) => (sec * CARD_SECONDS) / 3.1
         const readStart = at(1.7)
@@ -490,10 +490,10 @@ export default function ATMAttract(props: Props) {
                             style={{ left: s.x, top: s.y, width: s.w, height: s.h, animationDelay: `${s.delay}s` }}
                         />
                     ))}
-                    <svg className={`${c("abs")} ${c("chevEl")}`} viewBox="790 945 196 120" style={{ left: 790, top: 945, width: 196, height: 120 }}>
-                        <rect x={796} y={953} width={184} height={15} rx={2} style={{ fill: slotColor, opacity: 0.35 }} />
-                        <polyline points="858,1006 884,991 911,1006" />
-                        <polyline points="858,1015 884,1000 911,1015" />
+                    <svg className={`${c("abs")} ${c("chevEl")}`} viewBox="790 953 196 120" style={{ left: 790, top: 953, width: 196, height: 120 }}>
+                        <rect x={796} y={961} width={184} height={15} rx={2} style={{ fill: slotColor, opacity: 0.35 }} />
+                        <polyline points="858,1014 884,999 911,1014" />
+                        <polyline points="858,1023 884,1008 911,1023" />
                     </svg>
                     <div style={{ position: "absolute", inset: 0, clipPath: `inset(${SLOT_Y}px 0 0 0)`, pointerEvents: "none" }}>
                         <div
