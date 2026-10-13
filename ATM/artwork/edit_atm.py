@@ -122,7 +122,7 @@ for cx0, cx1 in CH_COLS:
 base.paste(raise_faces(ch_masks, CH, shade=0.06, shadow_k=0.38), CH[:2])
 
 # right panel row: headphone icon, jack, black reader square, evenly spaced and centred on the panel
-PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W = 887, 24, 10, 26, 77  # SQ_W: the square's visible width (x 849..926)
+PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W = 887, 24, 10, 20, 77  # SQ_W: the square's visible width (x 849..926)
 IS = 0.75  # icon scale (1 = 28 px wide)
 ICON_W = 28 * IS
 ROW_X0 = PANEL_C - (ICON_W + ICON_GAP + JACK_D + GAP + SQ_W) / 2
@@ -283,9 +283,10 @@ d.rounded_rectangle(s(IX, JY2, IX + 6 * IS, JY2 + 12 * IS), radius=2 * S * IS, f
 d.rounded_rectangle(s(IX + 22 * IS, JY2, IX + 28 * IS, JY2 + 12 * IS), radius=2 * S * IS, fill=(90, 92, 98, 255))
 # the jack is a socket sunk into the panel: light comes from the top left, so inside the opening the
 # top-left falls into shadow and the lower-right inner wall catches the light (a raised ring is lit the other way)
-paste_disc(L, JX, JY2, 13, (208, 210, 214), (78, 80, 84), cx=0.68, cy=0.72)  # chamfered metal rim, sloping inward
-paste_disc(L, JX, JY2, 9, (104, 106, 110), (34, 36, 39), cx=0.66, cy=0.7)  # the well, darker as it goes in
-d.ellipse(s(JX - 5.5, JY2 - 5.5, JX + 5.5, JY2 + 5.5), fill=(8, 8, 10, 255))  # the hole
+JR = JACK_D / 2  # sizes below scale with the jack (20 px across)
+paste_disc(L, JX, JY2, JR, (208, 210, 214), (78, 80, 84), cx=0.68, cy=0.72)  # chamfered metal rim, sloping inward
+paste_disc(L, JX, JY2, JR * 0.69, (104, 106, 110), (34, 36, 39), cx=0.66, cy=0.7)  # the well, darker as it goes in
+d.ellipse(s(JX - JR * 0.42, JY2 - JR * 0.42, JX + JR * 0.42, JY2 + JR * 0.42), fill=(8, 8, 10, 255))  # the hole
 # speaker grille, left of the keypad: a straight grid, so every column lines up
 GR_COLS, GR_ROWS, GR_STEP, GR_R = 6, 3, 12, 2.5
 GR_CX, GR_CY = 192, 1395  # same centre as before

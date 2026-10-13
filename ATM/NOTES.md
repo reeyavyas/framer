@@ -497,6 +497,9 @@ In the order they were made with the designer:
   from the top left). It is now a socket sunk into the panel: a rim that
   slopes inward, a dark well and the hole, lit so the top-left inside
   edge is in shadow and the lower-right inner wall catches the light.
+  Then made smaller: 20 px across (was 26), its rim, well and hole
+  scaling with `JACK_D`. The row (icon, jack, black square) stays
+  centred on the panel; the icon and square each moved 3 px inward.
 - **Bolts**: the two screw heads either side of the cabinet, just under
   the keypad shelf, were made a little bigger (18 px across, was 14).
 - **Finishing (more vibrant, sharper)**: a last step over the whole
