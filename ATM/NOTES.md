@@ -356,7 +356,7 @@ label, so these were updated to match (measured on the image):
 |---|---|
 | Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge; the door has no face of its own, it is the body), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
 | Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours (satin, close to the body), `KX, KY` (centred in the visible door, right of `IX1`) |
-| Camera | `edit_atm.py`: `CAMX, CAMY` and the lines after it |
+| Camera (a pinhole) | `edit_atm.py`: `CAMX, CAMY` and the three lines after it (ring 9 px across, hole about 4 px) |
 | Bolts beside the cabinet (under the keypad shelf) | `edit_atm.py`: the loop after "bolts at the cabinet corners" (radius 9, 18 px across) |
 | Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale); the jack's recessed look: the three lines after "the jack is a socket sunk into the panel" |
 | Keypad depth | `edit_atm.py`: `VP`, `ROW_TOP`, `ROW_BOT`, `KEY_X`, `KEY_TB` (right column), the strengths after `KP` |
@@ -366,8 +366,8 @@ label, so these were updated to match (measured on the image):
 | Receipt / card slot styling | `options.py`: `sculpt` (`chrome`, `card_chrome`) and `lit_throats` (`card=False` keeps the green glow off the card slot) |
 | Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
 | Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
-| Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
-| Brightness, contrast, highlights, shadows, colour, sharpness | `options.py`: `GRADE` (the last step). The banner gets only the first four; never sharpen or recolour it (`BANNER_BOTTOM`) |
+| Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` (`PT` centres it between the shelf's bottom edge, y 1474.5, and the door seam, y 1544.5) |
+| Brightness, contrast, highlights, shadows, colour | `options.py`: `GRADE` (the last step; no sharpening). The banner gets only the first four; never sharpen, outline or recolour it (`BANNER_BOTTOM`) |
 | Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (16, the whole card group, centred between its neighbours), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
 
 ### Decisions log (the image)
@@ -502,12 +502,22 @@ In the order they were made with the designer:
   centred on the panel; the icon and square each moved 3 px inward.
 - **Bolts**: the two screw heads either side of the cabinet, just under
   the keypad shelf, were made a little bigger (18 px across, was 14).
-- **Finishing (more vibrant, sharper)**: a last step over the whole
-  image: +3% brightness, a gentle S-curve for contrast, brighter
-  highlights and deeper shadows, a vibrance boost that lifts muted
-  colours most, then an unsharp mask (radius 1.2, 70%, threshold 2).
-  `GRADE` in `options.py`; set every value to 0 (and `sharpen` to
-  `(1, 0, 0)`) to see the image without it.
+- **Finishing (more vibrant)**: a last step over the whole image: +3%
+  brightness, a gentle S-curve for contrast, brighter highlights and
+  deeper shadows, and a vibrance boost that lifts muted colours most.
+  `GRADE` in `options.py`; set every value to 0 to see the image
+  without it. A sharpening step (unsharp mask) was added too, then
+  **removed**: the designer doesn't like the sharpening.
+- **Camera is a pinhole**: the black pill with a visible lens, catchlight
+  and mic hole was replaced by a real pinhole camera: a tiny dark hole
+  (about 4 px) in a small recessed ring (9 px), flush with the bezel
+  above the screen, lit like a socket so it reads as set in.
+- **Speech Mode label centred**: it was centred on the wrong edges (18
+  px above, 11 below). It now sits centred between the keypad shelf's
+  bottom edge (y 1474.5) and the door seam (y 1544.5): 14.5 px each side.
+- **Braille plate colours checked**: RECEIPT, CARD and CASH plates are
+  the same colour (`(112, 112, 112)` in the finished image). The only
+  differences were the sharpening's halos at their edges, gone with it.
 - **The banner is not edited (designer's rule)**: the banner (rows
   0-384, the Vertical Checking ad) gets **only brightness, contrast,
   highlights and shadows**. No outlines, sharpening, colour or anything

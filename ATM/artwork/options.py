@@ -303,7 +303,7 @@ SENT = "insert headphones to use speech mode"
 sm = dict(r=1.35, pitch=4.0, cell=11.0, flat=True)
 bw, bh = braille_size(SENT, sm["pitch"], sm["cell"])
 PW2, PH2 = bw + 28, 40
-P0, PT = 988 - PW2, (1478 + 1548) / 2 - PH2 / 2  # centred in the strip between the keypad shelf and the door
+P0, PT = 988 - PW2, (1474.5 + 1544.5) / 2 - PH2 / 2  # centred between the keypad shelf's bottom edge and the door seam (measured)
 plate(a, P0 + PW2 / 2, PT + PH2 / 2, PW2, PH2)
 txt = Image.new("L", (W * Z, H * Z), 0); td = ImageDraw.Draw(txt)
 TY = PT + 13  # text line
@@ -315,12 +315,12 @@ td.text(((P0 + 40) * Z, TY * Z), "Insert Headphones to use Speech Mode", font=fl
 tm = np.array(txt.resize((W, H), Image.BOX)) / 255
 a[..., :3] = a[..., :3] * (1 - tm[..., None]) + np.array((225, 228, 232), float) * tm[..., None]
 draw_braille(a, SENT, P0 + 14 + bw / 2, PT + 29, **sm)
-# ---------- finishing: a touch more brightness, contrast, highlights, shadows and colour, then sharpen ----------
-BANNER_BOTTOM = 385  # the banner is rows 0-384: only tone changes there, never sharpening or colour
-GRADE = dict(brightness=0.03, contrast=0.10, highlights=0.06, shadows=0.05, vibrance=0.15, sharpen=(1.2, 70, 2))
+# ---------- finishing: a touch more brightness, contrast, highlights, shadows and colour (no sharpening: disliked) ----------
+BANNER_BOTTOM = 385  # the banner is rows 0-384: only tone changes there, never sharpening, outlines or colour
+GRADE = dict(brightness=0.03, contrast=0.10, highlights=0.06, shadows=0.05, vibrance=0.15)
 
 
-def finish(a, brightness, contrast, highlights, shadows, vibrance, sharpen):
+def finish(a, brightness, contrast, highlights, shadows, vibrance):
     x = a[..., :3] / 255
     x = x + brightness
     x = x + contrast * (x - 0.5) * (1 - np.abs(2 * x - 1))  # S-curve: more contrast in the mid-tones
@@ -331,10 +331,7 @@ def finish(a, brightness, contrast, highlights, shadows, vibrance, sharpen):
     m = x.mean(-1, keepdims=True); sat = x.max(-1, keepdims=True) - x.min(-1, keepdims=True)
     x = m + (x - m) * (1 + vibrance * (1 - np.clip(sat * 2, 0, 1)))  # vibrance: muted colours gain the most
     a[..., :3] = np.clip(x, 0, 1) * 255
-    radius, percent, threshold = sharpen
-    rgb = Image.fromarray(a[..., :3].astype(np.uint8)).filter(ImageFilter.UnsharpMask(radius, percent, threshold))
-    a[..., :3] = np.array(rgb).astype(float)
-    a[:BANNER_BOTTOM, :, :3] = banner[:BANNER_BOTTOM]  # no vibrance or sharpening (it outlined the text) on the banner
+    a[:BANNER_BOTTOM, :, :3] = banner[:BANNER_BOTTOM]  # no vibrance on the banner
 
 
 finish(a, **GRADE)

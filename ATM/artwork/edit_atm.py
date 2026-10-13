@@ -253,11 +253,10 @@ comp(L)
 # ---------- pinhole camera above the screen ----------
 CAMX, CAMY = 406, 676
 L = layer(); d = ImageDraw.Draw(L)
-d.rounded_rectangle(s(CAMX - 24, CAMY - 11, CAMX + 24, CAMY + 11), radius=11 * S, fill=(14, 15, 18, 255))
-d.rounded_rectangle(s(CAMX - 24, CAMY - 11, CAMX + 24, CAMY + 11), radius=11 * S, outline=(205, 207, 212, 200), width=S)
-paste_disc(L, CAMX, CAMY, 6.5, (60, 80, 110), (6, 8, 14), cx=0.5, cy=0.5)  # lens
-d.ellipse(s(CAMX - 1.2, CAMY - 1.2, CAMX + 1.2, CAMY + 1.2), fill=(190, 225, 255, 230))  # catchlight
-d.ellipse(s(CAMX - 15.5, CAMY - 1.5, CAMX - 12.5, CAMY + 1.5), fill=(40, 44, 52, 255))  # mic hole
+# a pinhole camera: a tiny hole in a small recessed ring, flush with the bezel (lit like the jack: a socket, not a bump)
+paste_disc(L, CAMX, CAMY, 4.5, (196, 198, 202), (92, 94, 98), cx=0.68, cy=0.72)  # recessed ring
+paste_disc(L, CAMX, CAMY, 2.2, (40, 46, 58), (4, 5, 8), cx=0.5, cy=0.5)  # the pinhole
+d.ellipse(s(CAMX - 0.9, CAMY - 1.2, CAMX - 0.1, CAMY - 0.4), fill=(150, 175, 210, 200))  # the lens glints inside it
 comp(L)
 # ---------- audio jack + label on the flat front strip under the shelf ----------
 L = layer(); d = ImageDraw.Draw(L)
