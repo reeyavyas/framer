@@ -316,6 +316,7 @@ tm = np.array(txt.resize((W, H), Image.BOX)) / 255
 a[..., :3] = a[..., :3] * (1 - tm[..., None]) + np.array((225, 228, 232), float) * tm[..., None]
 draw_braille(a, SENT, P0 + 14 + bw / 2, PT + 29, **sm)
 # ---------- finishing: a touch more brightness, contrast, highlights, shadows and colour, then sharpen ----------
+BANNER_BOTTOM = 385  # the banner is rows 0-384: only tone changes there, never sharpening or colour
 GRADE = dict(brightness=0.03, contrast=0.10, highlights=0.06, shadows=0.05, vibrance=0.15, sharpen=(1.2, 70, 2))
 
 
@@ -326,12 +327,14 @@ def finish(a, brightness, contrast, highlights, shadows, vibrance, sharpen):
     lum = x.mean(-1, keepdims=True)
     x = x + highlights * np.clip((lum - 0.6) / 0.4, 0, 1) * (1 - x)  # brighter highlights
     x = x - shadows * np.clip((0.35 - lum) / 0.35, 0, 1) * x  # deeper shadows
+    banner = np.clip(x, 0, 1) * 255  # the banner gets only brightness, contrast, highlights and shadows
     m = x.mean(-1, keepdims=True); sat = x.max(-1, keepdims=True) - x.min(-1, keepdims=True)
     x = m + (x - m) * (1 + vibrance * (1 - np.clip(sat * 2, 0, 1)))  # vibrance: muted colours gain the most
     a[..., :3] = np.clip(x, 0, 1) * 255
     radius, percent, threshold = sharpen
     rgb = Image.fromarray(a[..., :3].astype(np.uint8)).filter(ImageFilter.UnsharpMask(radius, percent, threshold))
     a[..., :3] = np.array(rgb).astype(float)
+    a[:BANNER_BOTTOM, :, :3] = banner[:BANNER_BOTTOM]  # no vibrance or sharpening (it outlined the text) on the banner
 
 
 finish(a, **GRADE)

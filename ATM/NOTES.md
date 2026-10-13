@@ -367,7 +367,7 @@ label, so these were updated to match (measured on the image):
 | Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
 | Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
 | Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
-| Brightness, contrast, highlights, shadows, colour, sharpness | `options.py`: `GRADE` (the last step, over the whole image) |
+| Brightness, contrast, highlights, shadows, colour, sharpness | `options.py`: `GRADE` (the last step). The banner gets only the first four; never sharpen or recolour it (`BANNER_BOTTOM`) |
 | Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (16, the whole card group, centred between its neighbours), `INSERT_DROP` (8, the card slot alone), `PIC_SCALE` (0.78) and the picture's `py0` (follows the slot), `CASH_LABEL_RISE` (10) |
 
 ### Decisions log (the image)
@@ -508,6 +508,13 @@ In the order they were made with the designer:
   colours most, then an unsharp mask (radius 1.2, 70%, threshold 2).
   `GRADE` in `options.py`; set every value to 0 (and `sharpen` to
   `(1, 0, 0)`) to see the image without it.
+- **The banner is not edited (designer's rule)**: the banner (rows
+  0-384, the Vertical Checking ad) gets **only brightness, contrast,
+  highlights and shadows**. No outlines, sharpening, colour or anything
+  else. The sharpening first drew thin dark outlines around its text,
+  and the vibrance shifted its colours; both now stop at the banner
+  (`BANNER_BOTTOM` in `options.py`). Checked: every banner pixel equals
+  the original plus those four tone steps (within 1 level of rounding).
 
 ## How it was made
 
