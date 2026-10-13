@@ -296,7 +296,7 @@ lit_throats(a, SLOT_GREEN, (215, 255, 200), card=False)  # green glow under the 
 flat = dict(r=1.7, pitch=5.0, cell=13.0, flat=True)
 for word, cx, cy in SPOTS_FINAL:  # a braille plate tucked under each label
     w, h = braille_size(word, flat["pitch"], flat["cell"])
-    plate(a, cx, cy, w + 20, 18 if word == "card" else 19, fill=(96, 96, 96), edge=(110, 110, 110), radius=1)  # a lighter grey than the labels (63), so the braille sits back
+    plate(a, cx, cy, w + 20, 18 if word == "card" else 19, fill=(106, 106, 106), edge=(121, 121, 121), radius=1)  # a lighter grey than the labels (63), so the braille sits back
     draw_braille(a, word, cx, cy, **flat)
 # Speech Mode: text on top, the sentence in braille underneath, on one plate (covers the old plate)
 SENT = "insert headphones to use speech mode"

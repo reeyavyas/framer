@@ -449,8 +449,9 @@ In the order they were made with the designer:
   plates) were shown; **B2 chosen**, styled after the reference photo:
   flat light dots. The plates under RECEIPT, CARD and CASH first used
   the labels' own grey (`(63, 63, 63)`) so they did not stand out, then
-  a **lighter grey** (`(96, 96, 96)`, edge `(110, 110, 110)`, nearly
-  square corners). The Speech Mode label keeps its dark plate. Words: "receipt", "card", "cash",
+  a **lighter grey**, then 10% lighter again (`(106, 106, 106)`, edge
+  `(121, 121, 121)`, nearly square corners). The Speech Mode label
+  keeps its dark plate. Words: "receipt", "card", "cash",
   and the full Speech Mode sentence. **Uncontracted (letter by letter)
   braille**: the reference ATM likely uses contracted braille, which the
   photo is too blurry to read. Have a braille transcriber check it
