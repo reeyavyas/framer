@@ -127,6 +127,12 @@ doesn't change them; change them only when it's asked for the ATM.
   (https://claude.ai/artifact/3oXYZBoLif9CCkRbDGnKG9); it predates the
   Framer build, so its timings, card size and sounds are older than the
   component's.
+- `artwork/` — the ATM image itself (`ATM-artwork.png`, the **ATM
+  Image** for `ATMAttract.tsx`) and everything needed to change it: the
+  designer's original, the scripts that draw every addition, all the
+  options that were shown. The designer's original and the reference
+  photos are kept private, outside the repo. See "The ATM image" below;
+  it records every decision on the image.
 
 ## Using it in Framer
 
@@ -158,15 +164,14 @@ doesn't change them; change them only when it's asked for the ATM.
 - `ATMAttract.tsx` (the ATM page):
   1. Paste it into a new code file named `ATMAttract` and place the
      component on the ATM page at 1080×1920 (fill the page).
-  2. **ATM Image**: the ATM artwork (the 1080×1920 PNG with the
+  2. **ATM Image**: `artwork/ATM-artwork.png` (1080×1920, the
      Vertical Checking banner on top). The screen, slot lights, card
-     slot and hood light are placed by pixel position on that version,
-     where everything under the banner sits 400px lower than in the
-     first artwork. A new artwork that moves anything means those
-     positions (`SCREEN`, `SLOT_Y`, `STRIPS`, `HOOD`, `KEYPAD`, the
-     card slot arrows and the card's `rest`) need updating. **Card
-     Image**: the debit card PNG. Remove the old ATM image layer from
-     the page; the component draws it.
+     slot and hood light are placed by pixel position on that image. A
+     new artwork that moves anything means those positions (`SCREEN`,
+     `SLOT_Y`, `STRIPS`, `HOOD`, `KEYPAD`, the card slot arrows and the
+     card's `rest`) need updating; "The ATM image" below lists the ones
+     the current image moved. **Card Image**: the debit card PNG. Remove
+     the old ATM image layer from the page; the component draws it.
   3. **Screen**: move the existing screen frame (wing background, tap
      icon, "Tap anywhere to begin") off the page onto the canvas, keep
      it 441×365, and connect it here. It is drawn inside the ATM's
@@ -279,6 +284,186 @@ near the top of the file.
 | How the page switches | `go()`: Framer's router (no reload); a plain page load if the router can't be found |
 | Positions on the artwork | `SCREEN`, `STRIPS`, `SLOT_X`, `SLOT_Y`, `HOOD`, `KEYPAD`, the chevron `<svg>`, the card's `rest` in `cardIn` (all in the 1080×1920 banner artwork's pixels) |
 
+## The ATM image (`artwork/`)
+
+The designer's ATM artwork with additions drawn in code (no image
+generator): a vault door, a pinhole camera, a headphone jack, braille,
+keypad and button depth, a light on the hood and sculpted slots. Every
+step is a script, so any of it can be changed and redrawn exactly.
+
+### Files
+
+| File | What it is |
+|---|---|
+| `ATM-artwork.png` | The finished image, the one to use as **ATM Image** in Framer |
+| `ATM-artwork-base.png` | The image before the chosen options (light, slots, braille, spacing): `edit_atm.py`'s output |
+| `edit_atm.py` | Draws the base: door, keyhole, hinges, camera, headphone row, keypad and chevron button depth, speaker grille, Speech Mode label |
+| `options.py` | Draws every option (`options/opt-*.png`) and the chosen combination (`ATM-combo-L1-S2-B2.png`, which is `ATM-artwork.png`) |
+| `sheets.py` | The side-by-side comparison sheets in `options/` |
+| `options/` | Every option shown, full size, and the comparison sheets |
+
+**Kept private, not in the repo** (the repo is public): the designer's
+original artwork and two reference photos. The designer keeps them.
+Before rebuilding, put them in `source/`, which git ignores:
+
+| File (in `source/`) | What it is |
+|---|---|
+| `atm-original.webp` | The designer's artwork these scripts start from (needed to rebuild) |
+| `reference-atm-braille.jpg` | The designer's photo of a real ATM, used **only** for how its braille looks and sits (flat light dots on the label's plate, under the text) |
+| `reference-card-reader.png` | The designer's photo of a round glowing card reader (tried, then reverted; see the log) |
+
+### Rebuilding it
+
+```
+cd ATM/artwork
+# first copy the designer's private atm-original.webp into source/
+python3 edit_atm.py source/atm-original.webp ATM-artwork-base.png
+python3 options.py ATM-artwork-base.png /tmp/atm-options
+cp /tmp/atm-options/ATM-combo-L1-S2-B2.png ATM-artwork.png
+cp /tmp/atm-options/opt-*.png options/   # only if an option changed
+python3 sheets.py options ATM-artwork-base.png   # only if an option changed
+```
+
+Needs Python 3 with Pillow and NumPy, and the Inter font (`INTER` near
+the top of both scripts points to it). The scripts write the same image
+every time: the copies in this folder rebuilt `ATM-artwork.png`
+pixel for pixel. Send the designer a close-up of what changed (crop and
+enlarge) next to the full image.
+
+Then, if anything the code places by pixel moved, update
+`ATMAttract.tsx` (`SLOT_Y`, `rest`, the card slot arrows `<svg>`,
+`STRIPS`, `HOOD`, `KEYPAD`, `SCREEN`) and type-check it as `CLAUDE.md`
+says.
+
+### Positions in `ATMAttract.tsx` that follow this image
+
+The current image moved the card group and the CASH label, so these
+were updated to match (measured on the image):
+
+| Constant | Was | Now | Why |
+|---|---|---|---|
+| `SLOT_Y` | 921 | 961 | the card slot is 40 px lower |
+| `rest` (in `cardIn`) | 952 | 992 | the card rests 40 px lower, on the slot's ramp |
+| card slot arrows `<svg>` (`top`, `viewBox`, the rect and both chevrons) | y 905 | y 945 | they flash on the slot, 40 px lower |
+| `STRIPS` CARD `y` | 853 | 881 | the CARD label is 28 px lower (up 12, then the group down 40) |
+| `STRIPS` CASH `y` | 1168 | 1158 | the CASH label is 10 px higher |
+
+`SCREEN`, `HOOD`, `KEYPAD`, `SLOT_X` and the RECEIPT strip did not move.
+
+### Where to change things (the image)
+
+| Feedback | Where |
+|---|---|
+| Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
+| Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours, `KX, KY` (centred in the visible door, right of `IX1`) |
+| Camera | `edit_atm.py`: `CAMX, CAMY` and the lines after it |
+| Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale) |
+| Keypad depth | `edit_atm.py`: `VP`, `ROW_TOP`, `ROW_BOT`, `KEY_X`, `KEY_TB` (right column), the strengths after `KP` |
+| Chevron buttons by the screen | `edit_atm.py`: `CH_ROWS`, `CH_COLS`, `raise_faces(..., shade, shadow_k)` |
+| Speaker grille | `edit_atm.py`: `GR_COLS, GR_ROWS, GR_STEP, GR_R` |
+| Light on the hood | `options.py`: `light_bar` (`bar_visible=False` hides the white bar; the wash strength is the `0.75`) |
+| Receipt / card slot styling | `options.py`: `sculpt` (`chrome`, `card_chrome`) and `lit_throats` (`card=False` keeps the green glow off the card slot) |
+| Green on the slots | `options.py`: `SLOT_GREEN` (the **Slot Light** colour, `#7cf25e`) |
+| Braille words, size, plates | `options.py`: `DOTS` (letters), `SPOTS_FINAL` (where), `flat`/`sm` (dot size and spacing), `plate(...)` colours |
+| Speech Mode label | `options.py`: `SENT`, `PW2, PH2, P0, PT` |
+| Spacing of the right panel and cash | `options.py`: `RECEIPT_DROP` (16), `CARD_LABEL_RISE` (12), `CARD_DROP` (40), `PIC_SCALE` (0.78) and the picture's `py0`, `CASH_LABEL_RISE` (10) |
+
+### Decisions log (the image)
+
+In the order they were made with the designer:
+
+- **First take**: vault door with seams and a lock, a pinhole camera,
+  and extras (contactless symbol, headphone jack, speaker grille, kick
+  plate with vents). Nothing may move what `ATMAttract.tsx` places by
+  pixel unless the code is updated with it.
+- **Lock**: a combination dial with a key lock and a pull handle was
+  replaced by a **single keyhole** matching the body (the same chrome
+  ring as the headphone jack). Handle removed. Keyhole made 2× bigger
+  ("comically small"), then 10% smaller, brighter, and 10% smaller
+  again (`K` 1.62). It is **centred in the visible part of the door**;
+  a request to centre it again was a mistake and it stays.
+- **Vents**: the kick plate slots and the door's vent louvres were both
+  removed (modern look). The kick plate itself went when the door was
+  extended.
+- **Camera**: the red recording light was removed; the lens and its
+  highlight are **centred** in the pill (both ways); a tiny mic hole
+  sits left of the lens.
+- **Contactless symbol** on the black square: removed (disliked). The
+  square stays plain black.
+- **Door**: extended past the bottom edge, so only its top seam, sides
+  and keyhole show (it looked too small). The "AUTHORIZED SERVICE ONLY"
+  plate and the outlined panel around it were removed. Moved down 20 px
+  (top at y 1548) to give the Speech Mode label room. Edges softened:
+  a thin seam only a little darker than the body, a faint highlight and
+  a soft shadow ("less drawn on").
+- **Hinges**: steel barrel hinges (three knuckles, pin caps, a shadow),
+  then darker, then **dark grey** for contrast with the body.
+- **Banner corners**: the top-left and top-right corners stay
+  **rounded, as in the designer's artwork**. Squaring them was tried and
+  reverted. The artwork's soft (semi-transparent) right edge is kept.
+- **Headphone jack**: on the slanted keypad shelf it fought the
+  perspective; the flat strip under the keypad and the panel left of
+  the screen were tried. **Chosen**: on the right panel, in one row with
+  a small engraved headphone icon (75% size, 10 px from the jack) and
+  the black square (moved right to make room), 24 px between jack and
+  square, the whole row centred on the panel (x 887).
+- **"Insert Headphones to use Speech Mode" label**: a dark plate in the
+  strip between the keypad shelf and the door (kept there when the jack
+  moved). It now carries the whole sentence in braille under the text,
+  like the reference ATM.
+- **Keypad**: made less flat while every label reads the same (the
+  label pixels are untouched). The keys are traced in the keypad's own
+  perspective (all key sides run to one vanishing point,
+  `VP` = (494, 707.7)); edges are anti-aliased. Each key: a top
+  highlight, a top-lit face shade, a dark front band at its base, a
+  sliver of shaded side on keys left of centre, a soft shadow. A first
+  version with jagged, wrongly traced edges was rejected. The right
+  column (CANCEL, CLEAR, ENTER, blank) is measured on colour edges (the
+  coloured keys are darker than the panel) and keeps the artwork's own
+  top highlights and right sides (no added highlight, no lit left side).
+- **Chevron buttons** beside the screen: the same raised treatment.
+- **Speaker grille**: smaller, a straight 6 × 3 grid so every column
+  lines up (it was staggered).
+- **Lighting (no hood light in the image)**: three options were shown:
+  L1 a light bar under the banner washing the hood, L2 light-teal strips
+  on the side walls, L3 a keypad task light. **L1 chosen.** The bar was
+  re-centred in the frame under the banner (y 385-410) after it looked
+  too close to the lower edge, then **the white bar was hidden** and only
+  the light on the hood panel kept. The light that spilled onto the band
+  under the hood was removed: its cut-off sides made a hard edge against
+  the hood's slanted walls. The thin bright band right under the banner
+  (y 385-390) is the designer's original artwork (the top edge of the
+  hood's frame), not an addition.
+  The code's animated **Hood Light** in `ATMAttract.tsx` was kept and
+  plays on top of this lit hood.
+- **Receipt and card slots**: S1 (sculpted: shadows, rounded ends,
+  shaded inner walls) and S2 (S1 plus a chrome rim and a lit throat)
+  were shown. S2 chosen, with the glow in the **slot lights' green**
+  (`#7cf25e`) instead of teal. Later the **card slot went back to S1**;
+  the receipt outlet keeps S2's rim and green glow under its lip.
+- **Round card reader** (a glowing ring like `reference-card-reader.png`,
+  glow only around the card slot, not tap to pay): tried and
+  **reverted**. If revisited, the slot must stay at `SLOT_X`/`SLOT_Y`
+  for the card animation.
+- **Braille**: B1 (raised metal dots on the panel) and B2 (small dark
+  plates) were shown; **B2 chosen**, styled after the reference photo:
+  flat light dots. The plates under RECEIPT, CARD and CASH use the
+  labels' own grey (`(63, 63, 63)`, edge `(78, 78, 78)`, nearly square
+  corners) so they do not stand out. Words: "receipt", "card", "cash",
+  and the full Speech Mode sentence. **Uncontracted (letter by letter)
+  braille**: the reference ATM likely uses contracted braille, which the
+  photo is too blurry to read. Have a braille transcriber check it
+  before treating it as accurate; ADA calls for contracted braille at a
+  set size, and these dots are a little smaller than real scale.
+- **Spacing** (labels, braille and slots were "bunched up"): the receipt
+  outlet moved down 16 px; the CARD label up 12 px; then the whole card
+  group (label, braille, slot) down 40 px from the original, with the
+  white card picture at 78% size, 16 px under the card slot's visible
+  edge (part of the card group) and about 40 px above the headphone
+  row. The CASH label moved up 10 px. The cash slot itself stays: it is
+  set into a ledge that runs the full width of the screen surround, and
+  moving it broke the ledge.
+
 ## How it was made
 
 Claude Code skills used along the way (they shaped the previews and the
@@ -332,18 +517,20 @@ icon, lights, the A + B + E transition and the beeps.
 
 **In progress (branch `atm-additions`, PR
 https://github.com/reeyavyas/framer/pull/15, not merged yet):** the
-banner artwork and the hood light. The designer has the latest file
-in Framer and confirmed the hard line at the hood's corners is gone.
-Picking back up on Tuesday. Open points to check then:
+banner artwork, the hood light, and the edited ATM image
+(`artwork/ATM-artwork.png`) with `ATMAttract.tsx`'s positions updated
+to match it. Open points:
 
-- How the hood light looks in Framer now that it fades 0% to 100%
-  with nothing darker than the art (last change, not yet confirmed).
-- Whether the keypad light is strong enough; at full brightness it
-  softens the key colours a little (it could light the shelf only).
+- The designer to put `artwork/ATM-artwork.png` in Framer as **ATM
+  Image** and paste the updated `ATMAttract.tsx`, then check the card
+  goes into the slot and the CARD and CASH slot lights sit on their
+  labels.
+- How the code's hood light looks on top of the image's lit hood.
+- Having the braille checked by a braille transcriber.
 - Merging PR 15 (recommend **Create a merge commit**).
 
-The lock and the door seams from the first brainstorm are part of the
-banner artwork, so they need no code. The decisions log below records
+The lock and the door seams from the first brainstorm are drawn into
+the ATM image (`artwork/`), so they need no code. The decisions logs record
 what was tried and chosen, so feedback can be applied without undoing
 earlier decisions.
 
