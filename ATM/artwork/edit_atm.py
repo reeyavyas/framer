@@ -192,8 +192,8 @@ for x in (44, W - 44):
     d.rectangle(s(x + 2, TOP + 2, x + 3, KICK), fill=(185, 185, 188, 170))
 # bolts at the cabinet corners
 for bx, by in ((22, TOP + 30), (W - 22, TOP + 30)):
-    paste_disc(L, bx, by, 7, (220, 222, 226), (110, 112, 118))
-    d.line(s(bx - 4, by, bx + 4, by), fill=(70, 72, 76, 255), width=S * 2)
+    paste_disc(L, bx, by, 9, (220, 222, 226), (110, 112, 118))  # 18 px across
+    d.line(s(bx - 5, by, bx + 5, by), fill=(70, 72, 76, 255), width=round(S * 2.4))
 comp(L)
 
 # ---------- vault access door ----------

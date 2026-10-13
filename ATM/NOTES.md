@@ -357,6 +357,7 @@ label, so these were updated to match (measured on the image):
 | Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge; the door has no face of its own, it is the body), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
 | Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours (satin, close to the body), `KX, KY` (centred in the visible door, right of `IX1`) |
 | Camera | `edit_atm.py`: `CAMX, CAMY` and the lines after it |
+| Bolts beside the cabinet (under the keypad shelf) | `edit_atm.py`: the loop after "bolts at the cabinet corners" (radius 9, 18 px across) |
 | Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale) |
 | Keypad depth | `edit_atm.py`: `VP`, `ROW_TOP`, `ROW_BOT`, `KEY_X`, `KEY_TB` (right column), the strengths after `KP` |
 | Chevron buttons by the screen | `edit_atm.py`: `CH_ROWS`, `CH_COLS`, `raise_faces(..., shade, shadow_k)` |
@@ -492,6 +493,8 @@ In the order they were made with the designer:
   now **satin metal close to the body's grey** (ring `(198, 200, 204)`
   to `(112, 114, 118)`, face `(118, 120, 124)` to `(160, 162, 166)`).
   It no longer matches the chrome headphone jack, by choice.
+- **Bolts**: the two screw heads either side of the cabinet, just under
+  the keypad shelf, were made a little bigger (18 px across, was 14).
 - **Finishing (more vibrant, sharper)**: a last step over the whole
   image: +3% brightness, a gentle S-curve for contrast, brighter
   highlights and deeper shadows, a vibrance boost that lifts muted
