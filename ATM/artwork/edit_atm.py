@@ -254,7 +254,7 @@ comp(L)
 CAMX, CAMY = 406, 676
 L = layer(); d = ImageDraw.Draw(L)
 # a pinhole camera: a tiny hole in a small recessed ring, flush with the bezel (lit like the jack: a socket, not a bump)
-CR = 7  # the ring's radius (14 px across); the hole and glint scale with it
+CR = 10  # the ring's radius (20 px across); the hole and glint scale with it
 paste_disc(L, CAMX, CAMY, CR, (196, 198, 202), (92, 94, 98), cx=0.68, cy=0.72)  # recessed ring
 paste_disc(L, CAMX, CAMY, CR * 0.49, (40, 46, 58), (4, 5, 8), cx=0.5, cy=0.5)  # the pinhole
 d.ellipse(s(CAMX - CR * 0.2, CAMY - CR * 0.27, CAMX - CR * 0.02, CAMY - CR * 0.09), fill=(150, 175, 210, 200))  # the lens glints inside it

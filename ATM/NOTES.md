@@ -356,7 +356,7 @@ label, so these were updated to match (measured on the image):
 |---|---|
 | Door position, seam, hinges | `edit_atm.py`: `DX0, DY0, DX1, DY1` (door top at y 1548; runs past the bottom edge; the door has no face of its own, it is the body), the seam gap and bevel lines after it, the hinge loop (`HW`, `HH`, `CAP`, colours `lo`/`hi`) |
 | Keyhole size / brightness / position | `edit_atm.py`: `K` (1.62), the two `paste_disc` colours (satin, close to the body), `KX, KY` (centred in the visible door, right of `IX1`) |
-| Camera (a pinhole) | `edit_atm.py`: `CAMX, CAMY`, and `CR` for its size (ring 14 px across; the hole and glint scale with it) |
+| Camera (a pinhole) | `edit_atm.py`: `CAMX, CAMY`, and `CR` for its size (ring 20 px across; the hole and glint scale with it) |
 | Bolts beside the cabinet (under the keypad shelf) | `edit_atm.py`: the loop after "bolts at the cabinet corners" (radius 9, 18 px across) |
 | Headphone icon, jack, black square row | `edit_atm.py`: `PANEL_C, GAP, ICON_GAP, JACK_D, SQ_W`, `IS` (icon scale); the jack's recessed look: the three lines after "the jack is a socket sunk into the panel" |
 | Keypad depth | `edit_atm.py`: `VP`, `ROW_TOP`, `ROW_BOT`, `KEY_X`, `KEY_TB` (right column), the strengths after `KP` |
@@ -512,7 +512,8 @@ In the order they were made with the designer:
   and mic hole was replaced by a real pinhole camera: a tiny dark hole
   (about 4 px) in a small recessed ring (9 px), flush with the bezel
   above the screen, lit like a socket so it reads as set in. Then made
-  bigger: the ring 14 px across, the hole about 7 px (`CR`).
+  bigger, twice, so it isn't too discreet: the ring **20 px across** (was 9,
+  then 14), the hole about 10 px (`CR`).
 - **Speech Mode label centred**: it was centred on the wrong edges (18
   px above, 11 below). It now sits centred between the keypad shelf's
   bottom edge (y 1474.5) and the door seam (y 1544.5): 14.5 px each side.
