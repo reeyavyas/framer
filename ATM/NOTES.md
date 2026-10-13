@@ -579,19 +579,21 @@ second file, and why the unused beep overrides were removed).
 The ATM page is built and working in Framer: wing background, tap
 icon, lights, the A + B + E transition and the beeps.
 
-**In progress (branch `atm-additions`, PR
-https://github.com/reeyavyas/framer/pull/15, not merged yet):** the
-banner artwork, the hood light, and the edited ATM image
-(`artwork/ATM-artwork.png`) with `ATMAttract.tsx`'s positions updated
-to match it. Open points:
+**Banner artwork, hood light and the edited ATM image** (branch
+`atm-additions`, PR https://github.com/reeyavyas/framer/pull/15, merged
+into `main` with a merge commit so every step stays in its history):
+`artwork/ATM-artwork.png` is the ATM image, `ATMAttract.tsx`'s positions
+follow it, and "The ATM image" above records every decision on it.
+Open points:
 
 - The designer to put `artwork/ATM-artwork.png` in Framer as **ATM
   Image** and paste the updated `ATMAttract.tsx`, then check the card
-  goes into the slot and the CARD and CASH slot lights sit on their
-  labels.
+  goes into the slot (it now starts at 1.3× its size) and the CARD and
+  CASH slot lights sit on their labels.
 - How the code's hood light looks on top of the image's lit hood.
 - Having the braille checked by a braille transcriber.
-- Merging PR 15 (recommend **Create a merge commit**).
+- The designer keeps the private originals (`artwork/source/`, not in
+  the repo); any change to the image needs `atm-original.webp`.
 
 The lock and the door seams from the first brainstorm are drawn into
 the ATM image (`artwork/`), so they need no code. The decisions logs record
