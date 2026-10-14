@@ -617,6 +617,24 @@ the ATM image (`artwork/`), so they need no code. The decisions logs record
 what was tried and chosen, so feedback can be applied without undoing
 earlier decisions.
 
+**Inactivity overlay** (PR https://github.com/reeyavyas/framer/pull/16,
+merged): `ATMInactivityOverlay.tsx`, font sizes as the designer set them
+in Framer (heading 65, text and pills 34).
+
+**Next up** (the designer's plan for the next session):
+
+1. The designer shares UI inspiration for the ATM's financial lessons.
+2. The lesson card on `/atm-start`'s curved carousel: the designer
+   duplicates the flip card component and makes it **not flip**. The
+   teal glass card keeps the lesson name, maybe a sub header, and the
+   **Get Started** button, with an **animation in place of the image**.
+   No image, no Learn More button, no back side with text. Keep the
+   carousel's no-blur / no-CSS-transition rule (black rectangle on
+   Windows, see `main/NOTES.md`) in anything layered over it.
+3. Brainstorm and build the first financial lesson, following
+   `design.md` §3 (fonts, right/wrong states, the egg-yolk ripple,
+   end-of-lesson confetti, Exit to `/atm-start`).
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
