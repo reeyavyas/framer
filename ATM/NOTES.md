@@ -741,6 +741,34 @@ yolk and white for accents, navy for dark objects and the dark
 labels. The person pushing the cart from the reference is left out of
 D (the cart alone carries it); ask if the designer wants the person.
 
+**Round 2: Bags in 3D** (the designer's pick to edit). Feedback: the
+movement was fine; the vector art was not 3D, vibrant or polished
+enough. References: the glossy 3D shopping bags (clay look, star,
+curly ribbons), plus the cart, Tradex, Financial UI and bouncing-bills
+videos for vibrancy. Changes, art only (the hop and pop timing is
+unchanged):
+
+- **Bags**: real 3D boxes (front, darker side face, dark open top, tube
+  handles front and back with rivets), a lit rim on the edges, a soft
+  gloss highlight, shade at the foot, a soft contact shadow, and bigger
+  NEED/WANT lettering with an embossed shadow. Colours are the **Need
+  Bag** and **Want Bag** properties (egg yolk and sky `#00acdd` by
+  default); light and shade are mixed from them, warm colours shading
+  toward amber (navy made the yellow look olive) and cool ones toward
+  navy. The lettering picks navy or white, whichever reads better.
+- **Items**: groceries (milk carton and an orange) and a T-shirt go in
+  NEED, a smartphone and sneakers in WANT. No house or water drop, and
+  no glacier or mint on the small items: whites, teals, blues, egg yolk,
+  plus orange and leaf green on the groceries. The other styles keep
+  their round-1 items.
+- **Headroom**: the bags are a little shorter and each item rises
+  clear of them. Once clear, a copy of the item drawn above everything
+  takes over, so it passes in front of the handle instead of behind it.
+- Bigger curly ribbons and a puffy 3D star, as in the reference.
+
+Preview with three colourways: "Need or Want 3D Bags"
+(https://claude.ai/artifact/FChwCiB7YGmrihTbw7zUpY).
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
