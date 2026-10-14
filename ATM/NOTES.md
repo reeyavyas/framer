@@ -4,6 +4,9 @@ The second portion of the kiosk: an ATM where Gen Alpha users learn to
 use an ATM, plus general money tips and slide-style lessons. Separate
 from the mobile-app kiosk that every other group in this repo serves.
 
+Fonts, components, right/wrong states and motion for the ATM's screens
+and lessons are in the root `design.md` (§3).
+
 ## Brand colours
 
 The ATM's own colours. They match the overall brand colours in the

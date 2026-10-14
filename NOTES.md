@@ -43,6 +43,9 @@ with the detail on what's in it; this file is just the map.
 
 ## Brand colours
 
+The full design system for both kiosks (colours, type, shapes, motion,
+and what keeps the app's UI out of the ATM) is in `design.md`.
+
 The overall branding, given with the ATM brief. The ATM uses these
 colours too and keeps its own table in `ATM/NOTES.md`. Colour changes
 are asked for specific elements or pages: change only those, and leave
