@@ -729,6 +729,24 @@ from outside the brand.
 For now the work covers only the curved carousel card animations, not
 the lesson itself.
 
+**Round 3** (the designer: "redo all animations, I don't like any of
+them"). A–F were dropped and six new loops replaced them on the same
+page, lettered **G–L** so they don't get mixed up with the old ones. The
+big change is the medium: real lit 3D (three.js) in place of flat SVG,
+glossy clear-coated objects with studio reflections, soft contact
+shadows and the same spring / squash / crouch motion, on a see-through
+canvas over the card's bottom. **G** sorting jars (items leap into NEED
+/ WANT jars, egg-yolk ripple at the rim), **H** checkout belt (items ride
+through a scanner arch; a NEED / WANT tag springs up), **I** coin toss
+(a gold coin with NEED and WANT faces flips and lands; the matching item
+hops), **J** bag drop (items tumble into a big bag, which hops, spins and
+bursts them back out), **K** bouncing bags with a full spin in the air,
+**L** floating shop (calm slow bounce over a mint stand). Light objects
+use the new brand colours Glacier blue and Mint for contrast on the
+glass. Waiting on the pick. Porting one to Framer means a three.js code
+component; check it on the Windows kiosk early (WebGL canvas over the
+carousel), as blur and transitions caused a black rectangle there.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
