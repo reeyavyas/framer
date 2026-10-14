@@ -200,7 +200,7 @@ export default function ATMInactivityOverlay() {
                     boxSizing: "border-box",
                     width: 960,
                     padding: 60,
-                    borderRadius: 50,
+                    borderRadius: 25,
                     boxShadow: "0 2px 3px rgba(0,0,0,0.25)",
                     display: "flex",
                     flexDirection: "column",

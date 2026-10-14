@@ -141,7 +141,7 @@ doesn't change them; change them only when it's asked for the ATM.
   (the "Tap anywhere to begin" screen), so the next person starts
   fresh. **Return Home** goes there at once; **Yes, I'm Here** closes
   it and restarts the clock. White card (the ATM pages are all blues),
-  50px radius, P22 Mackinac Bold heading, Area Normal text and pills
+  25px corners, P22 Mackinac Bold heading, Area Normal text and pills
   (outlined navy, teal); no Inter. To keep the stray black rectangle
   from coming back over the `CurvedCarouselV2` cards on `/atm-start`
   (see `main/NOTES.md`), it never uses a backdrop blur or a CSS
