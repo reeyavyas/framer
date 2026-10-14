@@ -684,6 +684,25 @@ Decided so far:
   are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
   Sneakers.
 
+### Lesson card animation (options shown)
+
+The designer asked for the lesson card animation first: it fills the
+bottom of the lesson card (the copy of the flip card that no longer
+flips, 734×1050 by default), where the image used to be. Colours must
+pop on the see-through teal glass card over the navy page: a little
+white, a little egg yolk, not overdone. They sent two more references:
+a flat illustration of a person pushing a cart of groceries (items
+hop up and settle) and three glossy 3D shopping bags bouncing with
+ribbons and a star.
+
+Six loops shown on the "Need or Want? Card Loops" page
+(https://claude.ai/artifact/TNe34L5y6fYFREEzFvsbom), on a stand-in
+card: **A** sorting loop (items hop into NEED / WANT buckets), **B**
+balance scale, **C** shopper pushing a cart, **D** cart of bags and
+boxes rolling in and out, **E** the same cart with groceries, sneakers,
+a shirt and a bag, **F** bouncing shopping bags. Waiting on the
+designer's pick.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
