@@ -657,6 +657,11 @@ Common threads: seamless loops, soft springs with a little overshoot,
 glows behind content rather than on it, numbers that count, glossy 3D
 objects, confetti as the payoff.
 
+These are a starting point, not a limit: the designer is open to other
+ideas. **Shimmer**: use the wing background's (`ATMWingBackground.tsx`:
+a light-teal band sweeping left to right along a line, repeating
+seamlessly), not a new kind.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
