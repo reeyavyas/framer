@@ -170,12 +170,15 @@ upcoming = white 30%.
 **Next / Continue**: primary pill (teal) or highlight pill (egg yolk) for
 the last step.
 
-**Exit and Skip** (lessons may need both): the same placement as the
-tutorial kiosk's, restyled for the ATM.
-- **Exit**: Teal circle, 110px, white ×, top left, 30px from the edges.
-  Leaves the lesson.
-- **Skip**: Teal pill, Area Normal Bold 36–44, white text, top right,
-  30px from the edges. Moves past the current step or lesson.
+**Exit and Skip** (lessons may need both): the same size and placement
+as the tutorial overlays' buttons (measured), with the ATM's fonts
+(§3.1).
+- **Exit**: Teal circle, 110×110, white × at 44px, top left: 40px from
+  the left, 60px from the top. Leaves the lesson.
+- **Skip**: Teal pill, 110px tall (about 166px wide), padding 30px ×
+  40px, white "Skip" in **Area Normal Bold 44px** (the tutorial's Skip
+  uses a plain sans-serif; the ATM never does). Top right: 40px from the
+  right, 60px from the top. Moves past the current step or lesson.
 - Both always sit above the lesson content, press like any button (scale
   0.97), and stay quieter than the lesson's main action: no glow, no
   ripple.
