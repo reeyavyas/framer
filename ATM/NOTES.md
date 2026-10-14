@@ -757,9 +757,12 @@ swing. The page still shows round 3.
 **For the next attempt** (three rounds rejected: flat SVG, polished
 SVG, code-built 3D):
 
-- Ask first what looks poor, against which reference, before
-  building: the models, the motion, the colours, the composition or the
-  ideas. Get one reference frame to match if possible.
+- Don't ask for references again: the designer already gave them
+  (see "Lesson inspiration" above, plus the grocery-cart and 3D-bags
+  references under "Lesson card animation"). Build straight from them
+  and match them closely, rather than inventing new concepts around
+  them. Most of all, match Cool Cards (loved most): one illustration
+  looping in place, eye-catching, with the card copy still.
 - Objects built in code from primitives (boxes, extrusions, lathes)
   haven't reached the references' finish. Ask whether real art can be
   used: a 3D model (GLB) made in Spline or Blender, a Lottie from the
