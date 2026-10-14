@@ -21,6 +21,8 @@ doesn't change them; change them only when it's asked for the ATM.
 | Light blue | `#0079a9` | Glows |
 | Midnight | `#11232d` | Dark contrast |
 | Egg yolk | `#ffcc40` | Accent only (the tap icon's ripple) |
+| Glacier blue | `#d9eeff` | Light objects and surfaces that need contrast on the teal glass and navy |
+| Mint | `#bce2d7` | Light objects and surfaces, a softer partner to glacier blue |
 
 ## Current
 
