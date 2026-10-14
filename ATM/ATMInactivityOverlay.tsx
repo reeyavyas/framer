@@ -33,7 +33,7 @@ const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
 const pillStyle: React.CSSProperties = {
     fontFamily: '"Area Normal Bold", sans-serif',
     fontWeight: 700,
-    fontSize: 36,
+    fontSize: 34,
     lineHeight: 1.2,
     borderRadius: 50,
     padding: "24px 48px",
@@ -79,11 +79,14 @@ export default function ATMInactivityOverlay() {
 
     const startInactivityTimer = React.useCallback(() => {
         clearInactivityTimeout()
-        inactivityTimeoutRef.current = window.setTimeout(() => {
-            setFadeMs(0)
-            setCountdown(COUNTDOWN_SECONDS)
-            setIsVisible(true)
-        }, INACTIVITY_MINUTES * 60 * 1000)
+        inactivityTimeoutRef.current = window.setTimeout(
+            () => {
+                setFadeMs(0)
+                setCountdown(COUNTDOWN_SECONDS)
+                setIsVisible(true)
+            },
+            INACTIVITY_MINUTES * 60 * 1000
+        )
     }, [clearInactivityTimeout])
 
     // Only "Yes, I'm Here" closes it; ambient movement while it's open is
@@ -220,7 +223,7 @@ export default function ATMInactivityOverlay() {
                         style={{
                             fontFamily: '"P22 Mackinac Bold", serif',
                             fontWeight: 700,
-                            fontSize: 72,
+                            fontSize: 65,
                             lineHeight: 1.2,
                             color: NAVY,
                         }}
@@ -230,7 +233,7 @@ export default function ATMInactivityOverlay() {
                     <div
                         style={{
                             fontFamily: '"Area Normal Regular", sans-serif',
-                            fontSize: 38,
+                            fontSize: 34,
                             lineHeight: 1.4,
                             letterSpacing: 1,
                             color: MIDNIGHT,
