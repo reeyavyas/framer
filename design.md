@@ -174,7 +174,7 @@ the last step.
 as the tutorial overlays' buttons (measured), with the ATM's fonts
 (§3.1).
 - **Exit**: Teal circle, 110×110, white × at 44px, top left: 40px from
-  the left, 60px from the top. Leaves the lesson.
+  the left, 60px from the top. Leaves the lesson for `/atm-start`.
 - **Skip**: Teal pill, 110px tall (about 166px wide), padding 30px ×
   40px, white "Skip" in **Area Normal Bold 44px** (the tutorial's Skip
   uses a plain sans-serif; the ATM never does). Top right: 40px from the
@@ -234,6 +234,10 @@ page; keep any new sounds short and quiet.
   (card in, "Reading your card", ripple and zoom, about 3.1s) and beeps.
 - `ATM/ATMWingBackground.tsx`: the screen's animated wing background.
 - `ATM/ATMTapIcon.tsx`: the "Tap anywhere to begin" hand and ripple.
+- `ATM/ATMInactivityOverlay.tsx`: "Are you still there?" after 3 minutes
+  idle, then back to `/atm`. White card, P22 Mackinac and Area Normal,
+  no blur and no CSS transitions (they cause a black rectangle over the
+  carousel cards on Windows).
 
 Details and how to set them up in Framer are in `ATM/NOTES.md`.
 
