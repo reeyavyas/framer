@@ -686,7 +686,7 @@ Decided so far:
   are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
   Sneakers.
 
-### Lesson card animation (options shown)
+### Lesson card animation
 
 The designer asked for the lesson card animation first: it fills the
 bottom of the lesson card (the copy of the flip card that no longer
@@ -697,98 +697,17 @@ a flat illustration of a person pushing a cart of groceries (items
 hop up and settle) and three glossy 3D shopping bags bouncing with
 ribbons and a star.
 
-Six loops shown on the "Need or Want? Card Loops" page
-(https://claude.ai/artifact/TNe34L5y6fYFREEzFvsbom), on a stand-in
-card: **A** sorting loop (items hop into NEED / WANT buckets), **B**
-balance scale, **C** shopper pushing a cart, **D** cart of bags and
-boxes rolling in and out, **E** the same cart with groceries, sneakers,
-a shirt and a bag, **F** bouncing shopping bags. Waiting on the
-designer's pick. The designer then invoked **design-taste-frontend** on
-the page: the stand-in headline serif became Young Serif (closer to
-P22 Mackinac; the skill bans Fraunces as a default), section labels
-became plain headings with one small label kept, and soft contact
-shadows went under the objects for depth.
-
-**Round 2** (the designer: the loops didn't look polished like the
-references). All six were rebuilt on the same page with the
-apple-design, high-end-visual-design and redesign-existing-projects
-skills: glossy objects (highlight, rim light, reflected light at the
-base), contact shadows that shrink as objects lift, damped-spring
-motion with a crouch before each jump, stretch in the air and a
-squash-and-wobble on landing, a walk cycle with bending knees and
-hands kept on the cart (C), and a cart that leans when it brakes and
-when it pulls away (D, E). The wing background's shimmer runs round the
-card edge. The page also has controls for card glass (teal, light blue,
-midnight) and speed (1×, ½×, ¼×). Still waiting on the pick.
-
 **Colour scope** (answered): "It doesn't always have to be teal" means
 the whole lesson palette can change, but only within the ATM brand
-colours (option B), not just the shimmer and glows, and no colours
-from outside the brand.
+colours (now including Glacier blue and Mint), and no colours from
+outside the brand.
 
-For now the work covers only the curved carousel card animations, not
-the lesson itself.
-
-**Round 3** (the designer: "redo all animations, I don't like any of
-them"). A–F were dropped and six new loops replaced them on the same
-page, lettered **G–L** so they don't get mixed up with the old ones. The
-big change is the medium: real lit 3D (three.js) in place of flat SVG,
-glossy clear-coated objects with studio reflections, soft contact
-shadows and the same spring / squash / crouch motion, on a see-through
-canvas over the card's bottom. **G** sorting jars (items leap into NEED
-/ WANT jars, egg-yolk ripple at the rim), **H** checkout belt (items ride
-through a scanner arch; a NEED / WANT tag springs up), **I** coin toss
-(a gold coin with NEED and WANT faces flips and lands; the matching item
-hops), **J** bag drop (items tumble into a big bag, which hops, spins and
-bursts them back out), **K** bouncing bags with a full spin in the air,
-**L** floating shop (calm slow bounce over a mint stand). Light objects
-use the new brand colours Glacier blue and Mint for contrast on the
-glass. Waiting on the pick. Porting one to Framer means a three.js code
-component; check it on the Windows kiosk early (WebGL canvas over the
-carousel), as blur and transitions caused a black rectangle there.
-
-**Round 3 verdict**: "Still quite poor." Card loops are paused, to come
-back to later. A round-4 polish of G–L was started and dropped
-unpublished: GSAP eases through the one clock, soft real shadows,
-light-teal and glacier rim lights, a slow camera drift, out-of-focus
-dots behind, glowing sparkles, 3D confetti and rope bag handles that
-swing. The page still shows round 3.
-
-**For the next attempt** (three rounds rejected: flat SVG, polished
-SVG, code-built 3D):
-
-- Don't ask for references again: the designer already gave them
-  (see "Lesson inspiration" above, plus the grocery-cart and 3D-bags
-  references under "Lesson card animation"). Build straight from them
-  and match them closely, rather than inventing new concepts around
-  them. Most of all, match Cool Cards (loved most): one illustration
-  looping in place, eye-catching, with the card copy still.
-- Objects built in code from primitives (boxes, extrusions, lathes)
-  haven't reached the references' finish. Ask whether real art can be
-  used: a 3D model (GLB) made in Spline or Blender, a Lottie from the
-  designer, or illustrations from an illustrator. Then the code only
-  animates them.
-- Show one or two loops brought to a high finish, not six rough ones.
-- Keep the rules: one seamless loop clock, a still frame under
-  reduce-motion, brand colours only (now including Glacier blue and
-  Mint), never Inter, no backdrop blur or CSS transitions over the
-  carousel, and type-check against framer and React 19.
-- The page's code isn't in the repo. Read it from the link with the
-  Artifact tool.
-- **Use the design-taste-frontend skill** (the designer asked for it),
-  and gpt-taste where it fits. Most of design-taste-frontend is about
-  landing pages (hero, nav, bento grid, logo walls) and doesn't apply to
-  a card loop. The parts that do: start with a one-line design read and
-  the three dials (variance, motion, density) set from the brief. Every
-  motion must be motivated (hierarchy, story, feedback or a state
-  change). Use real art, not hand-rolled illustrations: an image or 3D
-  generator if one is available, otherwise ask the designer. Glows go
-  behind content, never as neon outer glows. Honour reduce-motion,
-  animate only transform and opacity, and run its pre-flight items that
-  apply (no em dashes in visible text, button contrast, one accent).
-  Where the skill clashes with the ATM rules, the ATM rules win: brand
-  fonts (P22 Mackinac, Area Normal, never Inter, so not its Geist or
-  Satoshi picks) and brand colours only.
+The card loops built so far were deleted at the designer's request.
+Start fresh from the references above (above all Cool Cards: one
+illustration looping in place, eye-catching, with the card copy still),
+and don't ask for references again. Use the **design-taste-frontend**
+skill (the designer asked for it), with the ATM rules winning where it
+clashes (brand fonts and colours).
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
