@@ -48,7 +48,7 @@ in a file you touch.
 
 Before every push that changes a `.tsx` file, type-check each changed
 file in a scratch folder with
-`framer`, `framer-motion`, `react@19` and `@types/react@19` installed
+`framer`, `framer-motion`, `gsap`, `react@19` and `@types/react@19` installed
 (`npx tsc --noEmit --strict --jsx react-jsx --skipLibCheck
 --moduleResolution bundler --module esnext --target es2020 File.tsx`);
 it must print nothing for the file. Don't push until it does.
