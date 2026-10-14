@@ -747,6 +747,32 @@ glass. Waiting on the pick. Porting one to Framer means a three.js code
 component; check it on the Windows kiosk early (WebGL canvas over the
 carousel), as blur and transitions caused a black rectangle there.
 
+**Round 3 verdict**: "Still quite poor." Card loops are paused, to come
+back to later. A round-4 polish of G–L was started and dropped
+unpublished: GSAP eases through the one clock, soft real shadows,
+light-teal and glacier rim lights, a slow camera drift, out-of-focus
+dots behind, glowing sparkles, 3D confetti and rope bag handles that
+swing. The page still shows round 3.
+
+**For the next attempt** (three rounds rejected: flat SVG, polished
+SVG, code-built 3D):
+
+- Ask first what looks poor, against which reference, before
+  building: the models, the motion, the colours, the composition or the
+  ideas. Get one reference frame to match if possible.
+- Objects built in code from primitives (boxes, extrusions, lathes)
+  haven't reached the references' finish. Ask whether real art can be
+  used: a 3D model (GLB) made in Spline or Blender, a Lottie from the
+  designer, or illustrations from an illustrator. Then the code only
+  animates them.
+- Show one or two loops brought to a high finish, not six rough ones.
+- Keep the rules: one seamless loop clock, a still frame under
+  reduce-motion, brand colours only (now including Glacier blue and
+  Mint), never Inter, no backdrop blur or CSS transitions over the
+  carousel, and type-check against framer and React 19.
+- The page's code isn't in the repo. Read it from the link with the
+  Artifact tool.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
