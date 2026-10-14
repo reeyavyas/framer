@@ -623,7 +623,8 @@ in Framer (heading 65, text and pills 34).
 
 **Next up** (the designer's plan for the next session):
 
-1. The designer shares UI inspiration for the ATM's financial lessons.
+1. ~~The designer shares UI inspiration for the ATM's financial
+   lessons.~~ Done; see "Lesson inspiration" below.
 2. The lesson card on `/atm-start`'s curved carousel: the designer
    duplicates the flip card component and makes it **not flip**. The
    teal glass card keeps the lesson name, maybe a sub header, and the
@@ -634,6 +635,27 @@ in Framer (heading 65, text and pills 34).
 3. Brainstorm and build the first financial lesson, following
    `design.md` §3 (fonts, right/wrong states, the egg-yolk ripple,
    end-of-lesson confetti, Exit to `/atm-start`).
+
+## Lesson inspiration
+
+What the designer shared for the lessons and the lesson card (videos
+were sent in chat and are not stored here). **The brief: fun, never a
+classroom.** No flashcards, folders or school-lesson UI; it has to hold
+a Gen Alpha user's attention.
+
+| Reference | What the designer likes |
+|---|---|
+| "Cool Cards Animation" (video) | **Loved most.** A row of pastel cards, each with an illustration that loops seamlessly in place (a figure flying, a boxer punching a bag, a bill unrolling with coins popping out). Eye-catching, never stops, the card copy stays still. Fits the lesson card's "animation in place of the image" |
+| Bioluminescence card glow (video; https://freefrontend.com/css-glow-effects/, "CodePenChallenge: Card Glow – Bioluminescence") | Soft glowing shapes (light-teal jellyfish) drift and glow **behind** a dark glass card. The glow never competes with the text |
+| "Subtle Bounce Finance Bills" (video) | A calculator, bill, coin, pencil and leaves on a soft blob, each with a slow, soft bounce and twinkling sparkles. The model for anything that needs a soft, slow animation |
+| React Bits Bounce Cards (https://reactbits.dev/components/bounce-cards) | Cards fanned out with small tilts that pop in one by one with a springy overshoot; touching one lifts and straightens it and pushes its neighbours aside |
+| React Bits Comet Dial (https://reactbits.dev/micro/comet-dial) | A round dial you drag or tap: the value springs to place with a bounce, and the lit arc's head leaves a comet tail when it moves fast |
+| "Financial UI" (video) | **Not** its geometric shapes, but how **3D and glossy** they are, how the UI flows, how numbers count up and charts draw in, and how vibrant and smooth it all is |
+| "Tradex Card" (video) | A dark card with a glowing green / yellow edge light that travels round it; the amount counts up, the button lights up, and a confetti burst ends it. Vibrant, smooth, cool |
+
+Common threads: seamless loops, soft springs with a little overshoot,
+glows behind content rather than on it, numbers that count, glossy 3D
+objects, confetti as the payoff.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
@@ -894,4 +916,5 @@ In the order they were made with the designer:
 ## Branch
 
 ATM work goes on the `atm` branch. The banner and hood light work is
-on `atm-additions`, the name the designer asked for.
+on `atm-additions`, the name the designer asked for. Lesson work (the
+lesson card and the lessons) goes on `atm-lessons`.
