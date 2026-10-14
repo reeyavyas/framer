@@ -2,19 +2,16 @@
 
 ## Branches and pull requests
 
-- After pushing work to a branch, always open a pull request into `main`
-  for it, without waiting to be asked. If the branch already has an
-  open PR, push to it instead of opening another.
-- **Notes-only changes** (`.md` files only, no code) go straight to
-  `main`: commit on `main` and push it, with no branch or PR. If the
-  session was given a feature branch, still commit notes-only work on
-  `main`.
-- Never push anything else directly to `main`. Code changes reach
-  `main` only by merging a PR, so every branch's commits stay on record
-  after the branch is deleted (see "Notes on this snapshot" in
-  `README.md` for the history that was lost before this rule).
-- Leave the merge to the repo owner, and recommend **Create a merge
-  commit** so each individual commit lands in `main`'s history.
+- Commit and push straight to `main` by default, for code and notes
+  alike. Create a branch only when the repo owner asks for one, even if
+  the session started on a feature branch.
+- When the owner does ask for a branch: after pushing, open a pull
+  request into `main` without waiting to be asked (if the branch already
+  has an open PR, push to it instead). Leave the merge to the owner, and
+  recommend **Create a merge commit** so each individual commit lands in
+  `main`'s history.
+- Never force-push `main` or rewrite its history (the "Protect Main"
+  ruleset also blocks this).
 
 ## Framer code
 
