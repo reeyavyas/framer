@@ -135,6 +135,20 @@ doesn't change them; change them only when it's asked for the ATM.
   designer's original, the scripts that draw every addition, all the
   options that were shown, and the designer's original artwork. See
   "The ATM image" below; it records every decision on the image.
+- `ATMInactivityOverlay.tsx` — the ATM's copy of
+  `main/AppInactivityOverlay.tsx`. After 3 minutes untouched it shows
+  "Are you still there?" with a 30 s countdown, then returns to `/atm`
+  (the "Tap anywhere to begin" screen), so the next person starts
+  fresh. **Return Home** goes there at once; **Yes, I'm Here** closes
+  it and restarts the clock. White card (the ATM pages are all blues),
+  50px radius, P22 Mackinac Bold heading, Area Normal text and pills
+  (outlined navy, teal); no Inter. To keep the stray black rectangle
+  from coming back over the `CurvedCarouselV2` cards on `/atm-start`
+  (see `main/NOTES.md`), it never uses a backdrop blur or a CSS
+  transition: the fade-in is stepped from JS on every page. It sends
+  the same `system-overlay-change` signal as the app's, so the
+  carousel holds its autoplay while it's up. Timings and the path are
+  constants at the top of the file.
 
 ## Using it in Framer
 
@@ -193,6 +207,14 @@ doesn't change them; change them only when it's asked for the ATM.
      `card-controls/card-alerts/CardAlertsSave.tsx`).
   6. **Transition** swaps between A + B + E (default), A + B, A, B, E
      and E + B.
+
+- `ATMInactivityOverlay.tsx`: paste it into a new code file named
+  `ATMInactivityOverlay` and place one instance on `/atm-start` and on
+  every ATM lesson page (not on `/atm` itself, which it returns to),
+  placed the same way `AppInactivityOverlay` is on the app pages: it
+  covers the whole screen when it opens, wherever the layer sits. On
+  the canvas it shows the box, so you can see the design. Don't use
+  `AppInactivityOverlay` on ATM pages; it returns to the app.
 
 
 ## Checking a change before handing it over
