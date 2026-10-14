@@ -662,6 +662,28 @@ ideas. **Shimmer**: use the wing background's (`ATMWingBackground.tsx`:
 a light-teal band sweeping left to right along a line, repeating
 seamlessly), not a new kind.
 
+## Lesson 1: Need or Want? (brainstorming)
+
+The designer's brief: drag each item into one of two buckets, **Need**
+or **Want**. Items: Rent, Groceries, iPhone 18, Netflix, Sneakers,
+Water bill. After each drop: "Correct!" or "Most people would consider
+this a WANT." (or NEED). Keep score: "4 out of 5 financial experts
+agree!"
+
+Decided so far:
+
+- **Expert poll per item** (option A of three): after each drop, a row
+  of five expert faces lights up, counting up with a bounce, to show
+  how many agree with the kid's choice ("4 out of 5 financial experts
+  agree!", "0 out of 5 …"). Suits the grey areas (sneakers, a phone).
+  The end screen shows the score separately ("5 of 6 sorted!"). Not
+  chosen: the line as a fixed joke on the end screen only, or as the
+  running score.
+- Assumed, not yet confirmed: a wrong drop moves the item to the
+  bucket most people would pick and play moves on (no retry); Needs
+  are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
+  Sneakers.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
