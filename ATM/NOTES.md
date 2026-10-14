@@ -769,6 +769,31 @@ unchanged):
 Preview with three colourways: "Need or Want 3D Bags"
 (https://claude.ai/artifact/FChwCiB7YGmrihTbw7zUpY).
 
+**Round 3: option 1 (egg yolk and sky) refined.** The designer picked
+colourway 1. Changes:
+
+- **No squiggles** (the curly ribbons are gone). Sparkles stay, all
+  flat; the big star is flat egg yolk too (no 3D back or gloss).
+- **Sharp top corners.** A rounded corner running into the side face's
+  straight diagonal looked unnatural, so the front's top corners are
+  sharp where they meet the opening and the side; only the foot is
+  rounded.
+- **No sheen or sweep on the bags** (the light band and the gloss
+  highlight are gone; Shine does nothing on this style). Instead a
+  radial glow behind each bag breathes and swells while that bag hops,
+  and a soft white glow follows each item at the top of its hop.
+- **Smartphone redrawn**: metal edge seen a little from the side, side
+  buttons, thin bezel, a teal-to-blue wallpaper with a widget, app
+  icons and a dock. **Sneaker redrawn**: a chunky modern trainer with a
+  wavy-lined midsole, stitched navy outsole, sky heel counter and toe,
+  egg-yolk stripe and heel tab, laces and eyelets.
+- **No grey anywhere.** White objects shade toward sky blue, never
+  toward navy or grey; the phone's metal is light blue.
+- **White outline** to try: the **Outline** property draws a white
+  sticker outline round the bags, handles and items. Off by default;
+  the preview shows both.
+- **Centred**: the pair runs 66..574 on the 640 canvas.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:

@@ -76,6 +76,7 @@ type Look = {
     shine: boolean
     needBag: string
     wantBag: string
+    outline: boolean
 }
 type Frame = Record<string, Record<string, string | number>>
 type Scene = { seconds: number; still: number; draw: (c: Look) => React.ReactNode; frame: (t: number) => Frame }
@@ -404,25 +405,28 @@ type Kind3 = "groceries" | "phone" | "tee" | "sneaker"
 // Need, want, need, want: groceries and clothing go in NEED, the phone and sneakers in WANT.
 const BAG_ITEMS: Kind3[] = ["groceries", "phone", "tee", "sneaker"]
 const BAG3 = { top: 104, bot: 112, h: 228, dx: 46, dy: -20 }
+// The pair is centred: from the NEED bag's left edge to the WANT bag's side face is 66..574.
 const BAG_AT = [
-    { x: 178, y: 458 },
-    { x: 432, y: 462 },
+    { x: 170, y: 458 },
+    { x: 416, y: 462 },
 ]
 const OPEN_X = 22 // middle of the bag's opening, from the middle of its front face
 const ITEM_REST = -136 // an item waiting inside the bag (hidden behind the front face)
 
-const r3 = 16
+// Top corners are sharp, where the front meets the opening and the side face; only the foot is
+// rounded, so no rounded corner runs into a straight edge.
 const { top: BT, bot: BB, h: BH, dx: BDX, dy: BDY } = BAG3
-const BAG_FRONT = `M${-BT + r3},${-BH} H${BT - r3} Q${BT},${-BH} ${BT + 0.6},${-BH + r3} L${BB},${-r3} Q${BB},0 ${BB - r3},0 H${-BB + r3} Q${-BB},0 ${-BB},${-r3} L${-BT - 0.6},${-BH + r3} Q${-BT},${-BH} ${-BT + r3},${-BH} Z`
-const BAG_SIDE = `M${BT - 1},${-BH + 2} L${BT + BDX},${-BH + BDY} L${BB + BDX - 3},${BDY - 2} Q${BB + BDX - 4},${BDY + 2} ${BB + BDX - 9},${BDY + 4} L${BB - 6},-1 Z`
-const BAG_OPEN = `M${-BT + 4},${-BH} L${BT},${-BH} L${BT + BDX},${-BH + BDY} L${-BT + BDX + 4},${-BH + BDY} Z`
-const BAG_HEM = `M${-BT + 2},${-BH + 1} H${BT - 2} L${BT + 0.4},${-BH + 18} H${-BT - 0.4} Z`
+const BAG_FRONT = `M${-BT},${-BH} H${BT} L${BB},-6 Q${BB},0 ${BB - 6},0 H${-BB + 16} Q${-BB},0 ${-BB},-16 Z`
+const BAG_SIDE = `M${BT},${-BH} L${BT + BDX},${-BH + BDY} L${BB + BDX},${BDY - 12} Q${BB + BDX},${BDY - 2} ${BB + BDX - 9},${BDY + 2} L${BB - 2},0 L${BB},-6 Z`
+const BAG_OPEN = `M${-BT},${-BH} L${BT},${-BH} L${BT + BDX},${-BH + BDY} L${-BT + BDX},${-BH + BDY} Z`
+const BAG_HEM = `M${-BT},${-BH} H${BT} L${BT + 0.6},${-BH + 18} H${-BT - 0.6} Z`
 const HANDLE = `M-50,${-BH + 8} C-50,${-BH - 108} 50,${-BH - 108} 50,${-BH + 8}`
 
 function Tube({ d, c, color, w }: { d: string; c: Look; color: string; w: number }) {
-    // A rounded tube: dark underside, the colour, then a thin highlight along the top.
+    // A rounded tube: optional white outline, dark underside, the colour, then a thin highlight on top.
     return (
         <>
+            {c.outline && <path d={d} fill="none" style={{ stroke: c.white }} strokeWidth={w + 9} strokeLinecap="round" />}
             <path d={d} fill="none" style={{ stroke: shade(color, c.navy, 0.35) }} strokeWidth={w} strokeLinecap="round" />
             <path d={d} fill="none" style={{ stroke: color }} strokeWidth={w * 0.62} strokeLinecap="round" transform="translate(-1 -1.5)" />
             <path d={d} fill="none" style={{ stroke: mix(color, c.white, 0.7) }} strokeWidth={w * 0.18} strokeLinecap="round" transform="translate(-2 -3)" opacity={0.85} />
@@ -448,6 +452,15 @@ function Ball({ id, stops }: { id: string; stops: [number, string, number?][] })
         </radialGradient>
     )
 }
+function Halo({ id, color, a }: { id: string; color: string; a: number }) {
+    return (
+        <radialGradient id={id}>
+            <stop offset="0" style={{ stopColor: color }} stopOpacity={a} />
+            <stop offset="0.5" style={{ stopColor: color }} stopOpacity={a * 0.3} />
+            <stop offset="1" style={{ stopColor: color }} stopOpacity={0} />
+        </radialGradient>
+    )
+}
 
 function BagDefs({ c }: { c: Look }) {
     const g = (k: string) => `${c.id}-${k}`
@@ -456,17 +469,13 @@ function BagDefs({ c }: { c: Look }) {
         <defs>
             {bags.map((col, s) => (
                 <React.Fragment key={s}>
-                    <Grad id={g(`bf${s}`)} stops={[[0, mix(col, c.white, 0.5)], [0.32, col], [0.78, shade(col, c.navy, 0.12)], [1, shade(col, c.navy, 0.3)]]} />
+                    <Grad id={g(`bf${s}`)} stops={[[0, mix(col, c.white, 0.45)], [0.32, col], [0.78, shade(col, c.navy, 0.12)], [1, shade(col, c.navy, 0.3)]]} />
                     <Grad id={g(`bs${s}`)} x2={1} y2={0.3} stops={[[0, shade(col, c.navy, 0.26)], [1, shade(col, c.navy, 0.5)]]} />
                     <Grad id={g(`bi${s}`)} x2={0} y2={1} stops={[[0, shade(col, c.navy, 0.62)], [1, shade(col, c.navy, 0.4)]]} />
-                    <radialGradient id={g(`halo${s}`)}>
-                        <stop offset="0" style={{ stopColor: s ? c.glow : col }} stopOpacity={0.55} />
-                        <stop offset="0.5" style={{ stopColor: s ? c.glow : col }} stopOpacity={0.16} />
-                        <stop offset="1" style={{ stopColor: s ? c.glow : col }} stopOpacity={0} />
-                    </radialGradient>
+                    <Halo id={g(`halo${s}`)} color={col} a={0.6} />
                 </React.Fragment>
             ))}
-            <Grad id={g("rim")} stops={[[0, c.white, 0.85], [0.45, c.white, 0], [1, c.white, 0]]} />
+            <Halo id={g("iglow")} color={c.white} a={0.5} />
             <Grad id={g("ao")} x2={0} y2={1} stops={[[0, c.navy, 0], [0.8, c.navy, 0], [1, c.navy, 0.28]]} />
             <radialGradient id={g("spec")}>
                 <stop offset="0" style={{ stopColor: c.white }} stopOpacity={0.75} />
@@ -476,11 +485,14 @@ function BagDefs({ c }: { c: Look }) {
                 <stop offset="0" style={{ stopColor: c.navy }} stopOpacity={0.55} />
                 <stop offset="1" style={{ stopColor: c.navy }} stopOpacity={0} />
             </radialGradient>
-            <Grad id={g("phBody")} stops={[[0, mix(c.navy, c.white, 0.22)], [0.45, c.navy], [1, mix(c.navy, "#000000", 0.45)]]} />
-            <Grad id={g("phScreen")} x2={0.6} stops={[[0, c.glow], [0.5, SKY], [1, LIGHT_BLUE]]} />
+            <Grad id={g("phBody")} stops={[[0, mix(c.navy, LIGHT_BLUE, 0.7)], [0.4, c.navy], [1, mix(c.navy, "#000000", 0.5)]]} />
+            <Grad id={g("phEdge")} x2={1} y2={0} stops={[[0, mix(c.navy, "#000000", 0.5)], [0.5, mix(LIGHT_BLUE, SKY, 0.4)], [1, mix(c.navy, "#000000", 0.4)]]} />
+            <Grad id={g("phScreen")} x2={0.5} stops={[[0, c.glow], [0.45, SKY], [1, LIGHT_BLUE]]} />
             <Grad id={g("tee")} stops={[[0, mix(c.glow, c.white, 0.45)], [0.45, c.glow], [1, c.teal]]} />
-            <Grad id={g("white")} stops={[[0, c.white], [0.6, mix(c.white, SKY, 0.1)], [1, mix(c.white, c.navy, 0.28)]]} />
-            <Grad id={g("whiteSide")} x2={1} y2={0.2} stops={[[0, mix(c.white, c.navy, 0.2)], [1, mix(c.white, c.navy, 0.36)]]} />
+            <Grad id={g("white")} stops={[[0, c.white], [0.6, mix(c.white, SKY, 0.12)], [1, mix(c.white, SKY, 0.42)]]} />
+            <Grad id={g("whiteV")} x2={0} y2={1} stops={[[0, c.white], [0.7, mix(c.white, SKY, 0.1)], [1, mix(c.white, SKY, 0.38)]]} />
+            <Grad id={g("whiteSide")} x2={1} y2={0.2} stops={[[0, mix(c.white, SKY, 0.3)], [1, mix(c.white, SKY, 0.5)]]} />
+            <Grad id={g("sky")} x2={0} y2={1} stops={[[0, mix(SKY, c.white, 0.35)], [1, mix(SKY, c.navy, 0.25)]]} />
             <Grad id={g("yolk")} x2={0} y2={1} stops={[[0, mix(c.yolk, c.white, 0.45)], [0.5, c.yolk], [1, mix(c.yolk, "#c0600a", 0.5)]]} />
             <Grad id={g("leaf")} stops={[[0, LEAF[0]], [1, LEAF[1]]]} />
             <Ball id={g("orange")} stops={[[0, ORANGE[0]], [0.5, ORANGE[1]], [1, ORANGE[2]]]} />
@@ -488,76 +500,115 @@ function BagDefs({ c }: { c: Look }) {
     )
 }
 
-// A white highlight blob, for the clay-like gloss.
+// A white highlight blob, for the gloss on the items.
 const Spec = ({ c, x, y, rx, ry, r = 0, o = 0.7 }: { c: Look; x: number; y: number; rx: number; ry: number; r?: number; o?: number }) => (
     <ellipse cx={x} cy={y} rx={rx} ry={ry} transform={`rotate(${r} ${x} ${y})`} fill={`url(#${c.id}-spec)`} opacity={o} />
 )
 
+// Each item's outline shapes, painted white and thick behind it when Outline is on.
+const OUTLINE: Record<Kind3, string[]> = {
+    phone: [roundRect(-32, -62, 70, 124, 17)],
+    tee: ["M-24,-48 L-9,-42 Q0,-36 9,-42 L24,-48 L56,-28 Q58,-26 57,-23 L45,-2 Q43,1 40,0 L31,-6 L31,46 Q31,52 25,52 L-25,52 Q-31,52 -31,46 L-31,-6 L-40,0 Q-43,1 -45,-2 L-57,-23 Q-58,-26 -56,-28 Z"],
+    sneaker: [
+        "M-62,6 C-64,-16 -56,-36 -40,-38 L-24,-38 C-16,-38 -12,-32 -8,-24 C0,-10 16,-6 34,-3 C52,0 64,6 66,16 Q68,26 66,32 Q64,44 52,44 H-52 Q-66,44 -66,32 Z",
+        "M-24,-38 C-20,-50 -8,-50 -4,-40 L-8,-24 Z",
+    ],
+    groceries: [
+        "M-30,-28 L-8,-50 L8,-60 L30,-38 L30,40 L14,48 L-30,48 Z",
+        circle(-30, 30, 24),
+        "M4,-60 m-8,0 a8,22 -24 1 0 16,0 a8,22 -24 1 0 -16,0",
+    ],
+}
+
 function Item3D({ kind, c }: { kind: Kind3; c: Look }) {
     const u = (k: string) => `url(#${c.id}-${k})`
+    const outline = c.outline && (
+        <g style={{ fill: c.white, stroke: c.white }} strokeWidth={9} strokeLinejoin="round">
+            {OUTLINE[kind].map((d, i) => (
+                <path key={i} d={d} transform={kind === "phone" ? "rotate(-8)" : kind === "sneaker" ? "translate(0 -4)" : undefined} />
+            ))}
+        </g>
+    )
     switch (kind) {
         case "phone":
+            // A modern phone seen a little from the side: metal edge, thin bezel, wallpaper, widget,
+            // app icons and a dock.
             return (
-                <g transform="rotate(-8)">
-                    <rect x={-31} y={-60} width={62} height={120} rx={17} transform="translate(7 5)" style={{ fill: mix(c.navy, "#000000", 0.55) }} />
-                    <rect x={-31} y={-60} width={62} height={120} rx={17} fill={u("phBody")} />
-                    <rect x={-25} y={-52} width={50} height={104} rx={11} fill={u("phScreen")} />
-                    {[0, 1, 2].map((row) =>
-                        [0, 1].map((col) => (
-                            <rect
-                                key={`${row}${col}`}
-                                x={-18 + col * 22}
-                                y={-32 + row * 24}
-                                width={14}
-                                height={14}
-                                rx={4.5}
-                                style={{ fill: [c.white, c.yolk, c.yolk, c.white, c.white, c.navy][row * 2 + col] }}
-                                opacity={0.95}
-                            />
-                        ))
-                    )}
-                    <rect x={-10} y={-47} width={20} height={6} rx={3} style={{ fill: mix(c.navy, "#000000", 0.4) }} />
-                    <path d="M-25,-41 Q-25,-52 -14,-52 H6 L-25,6 Z" style={{ fill: c.white }} opacity={0.22} />
-                    <rect x={-31} y={-60} width={62} height={120} rx={17} fill="none" style={{ stroke: c.white }} strokeWidth={1.6} opacity={0.35} />
+                <g>
+                    {outline}
+                    <g transform="rotate(-8)">
+                        <rect x={-26} y={-62} width={64} height={124} rx={17} fill={u("phEdge")} />
+                        <rect x={-34} y={-30} width={4} height={16} rx={2} style={{ fill: LIGHT_BLUE }} />
+                        <rect x={-34} y={-8} width={4} height={16} rx={2} style={{ fill: LIGHT_BLUE }} />
+                        <rect x={-32} y={-62} width={64} height={124} rx={17} fill={u("phBody")} />
+                        <rect x={-28} y={-58} width={56} height={116} rx={14} fill={u("phScreen")} />
+                        <rect x={-21} y={-40} width={42} height={26} rx={8} style={{ fill: c.white }} opacity={0.28} />
+                        <circle cx={-10} cy={-27} r={7} style={{ fill: c.yolk }} />
+                        <rect x={0} y={-31} width={15} height={4} rx={2} style={{ fill: c.white }} opacity={0.9} />
+                        <rect x={0} y={-24} width={10} height={4} rx={2} style={{ fill: c.white }} opacity={0.6} />
+                        {[0, 1].map((row) =>
+                            [0, 1, 2].map((col) => (
+                                <g key={`${row}${col}`} transform={`translate(${-20 + col * 15} ${-6 + row * 16})`}>
+                                    <rect width={11} height={11} rx={3.5} style={{ fill: [c.white, c.yolk, c.navy, c.yolk, c.glow, c.white][row * 3 + col] }} />
+                                    <rect width={11} height={5} rx={2.5} style={{ fill: c.white }} opacity={0.3} />
+                                </g>
+                            ))
+                        )}
+                        <rect x={-22} y={38} width={44} height={15} rx={7.5} style={{ fill: c.white }} opacity={0.25} />
+                        {[0, 1, 2].map((i) => (
+                            <rect key={i} x={-17 + i * 13} y={40.5} width={10} height={10} rx={3} style={{ fill: [c.white, c.yolk, c.white][i] }} />
+                        ))}
+                        <rect x={-9} y={-53} width={18} height={6} rx={3} style={{ fill: mix(c.navy, "#000000", 0.5) }} />
+                        <path d="M-28,-30 Q-28,-58 -10,-58 H6 L-28,8 Z" style={{ fill: c.white }} opacity={0.14} />
+                    </g>
                 </g>
             )
         case "tee":
             return (
                 <g>
-                    <path
-                        d="M-24,-48 L-9,-42 Q0,-36 9,-42 L24,-48 L56,-28 Q58,-26 57,-23 L45,-2 Q43,1 40,0 L31,-6 L31,46 Q31,52 25,52 L-25,52 Q-31,52 -31,46 L-31,-6 L-40,0 Q-43,1 -45,-2 L-57,-23 Q-58,-26 -56,-28 Z"
-                        fill={u("tee")}
-                    />
+                    {outline}
+                    <path d={OUTLINE.tee[0]} fill={u("tee")} />
                     <path d="M31,-6 L31,46 Q31,52 25,52 L12,52 Q24,20 22,-30 L24,-48 L32,-43 Z" style={{ fill: c.navy }} opacity={0.14} />
                     <path d="M-12,-44 Q0,-30 12,-44" fill="none" style={{ stroke: mix(c.teal, c.navy, 0.3) }} strokeWidth={5} strokeLinecap="round" />
                     <path d="M-44,-4 L-54,-24 M44,-4 L54,-24" style={{ stroke: c.white }} strokeWidth={3} strokeLinecap="round" opacity={0.45} />
-                    <path d={STAR} transform="translate(0 4) scale(15)" fill={u("yolk")} />
+                    <path d={STAR} transform="translate(0 4) scale(15)" style={{ fill: c.yolk }} />
                     <Spec c={c} x={-16} y={-14} rx={10} ry={26} r={8} o={0.55} />
                 </g>
             )
         case "sneaker":
+            // A chunky modern sneaker in profile, toe to the right.
             return (
-                <g transform="translate(0 -4)">
-                    <path
-                        d="M-56,14 C-58,-12 -48,-30 -32,-32 L-12,-32 C-3,-32 1,-24 7,-16 C15,-6 29,-2 44,2 C56,5 62,12 60,20 L-56,20 Z"
-                        fill={u("white")}
-                    />
-                    <ellipse cx={-34} cy={-27} rx={13} ry={5} style={{ fill: mix(c.navy, c.white, 0.25) }} />
-                    <path d="M-36,8 C-12,10 20,0 42,-10 C26,6 -6,20 -36,8 Z" style={{ fill: SKY }} />
-                    <path d="M-12,-26 L2,-18 M-6,-30 L8,-22 M-2,-20 L-14,-12" style={{ stroke: c.navy }} strokeWidth={3.5} strokeLinecap="round" />
-                    <path d="M-60,16 H62 Q66,16 64,26 Q62,36 52,36 H-52 Q-62,36 -62,26 Q-62,16 -60,16 Z" fill={u("yolk")} />
-                    <path d="M-60,30 Q-58,38 -50,38 H52 Q62,38 64,30 Q62,42 50,42 H-50 Q-60,42 -60,30 Z" style={{ fill: c.navy }} />
-                    <Spec c={c} x={36} y={4} rx={14} ry={6} r={14} o={0.8} />
-                    <Spec c={c} x={-44} y={-6} rx={6} ry={16} o={0.6} />
+                <g>
+                    {outline}
+                    <g transform="translate(0 -4)">
+                        <path d="M-66,30 Q-66,44 -52,44 H52 Q66,44 66,30 Z" style={{ fill: c.navy }} />
+                        <path d="M-52,40 H52" style={{ stroke: SKY }} strokeWidth={2} strokeDasharray="6 5" />
+                        <path d="M-66,8 Q-68,32 -52,32 H52 Q68,32 66,18 Q64,8 54,6 Z" fill={u("whiteV")} />
+                        <path d="M-60,22 Q-40,16 -20,22 T20,22 T56,20" fill="none" style={{ stroke: SKY }} strokeWidth={3} strokeLinecap="round" />
+                        <path d="M-24,-38 C-20,-50 -8,-50 -4,-40 L-8,-24 Z" fill={u("whiteSide")} />
+                        <path d="M-62,10 C-64,-14 -56,-36 -40,-38 L-24,-38 C-16,-38 -12,-32 -8,-24 C0,-10 16,-6 34,-3 C52,0 64,6 64,14 Z" fill={u("white")} />
+                        <path d="M30,-3 C48,-1 62,6 64,14 L34,12 Q30,4 30,-3 Z" fill={u("sky")} opacity={0.9} />
+                        <path d="M-62,10 C-64,-12 -58,-30 -48,-35 L-40,10 Z" fill={u("sky")} />
+                        <path d="M-63,-26 L-56,-34 L-50,-30 L-56,-20 Z" style={{ fill: c.yolk }} />
+                        <ellipse cx={-32} cy={-35} rx={11} ry={4} style={{ fill: mix(c.navy, "#000000", 0.2) }} />
+                        <path d="M-36,4 C-12,8 14,-2 36,-12 C22,6 -8,16 -36,4 Z" fill={u("yolk")} />
+                        <path d="M-18,-30 L-2,-22 M-12,-34 L4,-26 M-6,-18 L-20,-26 M0,-22 L-14,-30" style={{ stroke: c.navy }} strokeWidth={3} strokeLinecap="round" />
+                        {[[-18, -30], [-11, -24], [-4, -18]].map(([x, y], i) => (
+                            <circle key={i} cx={x} cy={y} r={2} style={{ fill: c.white }} />
+                        ))}
+                        <Spec c={c} x={44} y={2} rx={12} ry={5} r={14} o={0.8} />
+                        <Spec c={c} x={-36} y={-16} rx={5} ry={12} o={0.55} />
+                    </g>
                 </g>
             )
         case "groceries":
             return (
                 <g>
+                    {outline}
                     <ellipse cx={4} cy={-60} rx={8} ry={22} transform="rotate(-24 4 -60)" fill={u("leaf")} />
                     <ellipse cx={20} cy={-58} rx={7} ry={20} transform="rotate(20 20 -58)" fill={u("leaf")} />
                     <path d="M14,-28 L30,-38 L30,40 L14,48 Z" fill={u("whiteSide")} />
-                    <path d="M14,-28 L-6,-50 L8,-60 L30,-38 Z" style={{ fill: mix(c.white, c.navy, 0.18) }} />
+                    <path d="M14,-28 L-6,-50 L8,-60 L30,-38 Z" style={{ fill: mix(c.white, SKY, 0.22) }} />
                     <rect x={-30} y={-28} width={44} height={76} rx={3} fill={u("white")} />
                     <path d="M-30,-28 L-8,-50 L14,-28 Z" style={{ fill: c.white }} />
                     <circle cx={20} cy={-46} r={5} style={{ fill: c.yolk }} />
@@ -572,97 +623,80 @@ function Item3D({ kind, c }: { kind: Kind3; c: Look }) {
     }
 }
 
-// A puffy 3D star (lit face over a darker back) and curly ribbons, as in the shopping-bags reference.
-const RIBBON = "M-30,0 c5,-15 15,-15 20,0 s15,15 20,0 s15,-15 20,0"
-const RIBBONS = [
-    { x: 52, y: 150, col: "glow", ph: 0 },
-    { x: 318, y: 92, col: "white", ph: 0.3 },
-    { x: 606, y: 214, col: "yolk", ph: 0.55 },
-    { x: 40, y: 330, col: "sky", ph: 0.8 },
-] as const
-
 const bags: Scene = {
     seconds: 5.6,
     still: 0.4 / 4,
-    draw: (c) => {
-        const ribbonColor = { glow: c.glow, white: c.white, yolk: c.yolk, sky: SKY }
-        return (
-            <g>
-                <BagDefs c={c} />
-                {BAG_AT.map((b, s) => (
-                    <circle key={s} data-k={`halo${s}`} cx={b.x + OPEN_X} cy={b.y - 120} r={190} fill={`url(#${c.id}-halo${s})`} />
-                ))}
-                {RIBBONS.map((r, i) => (
-                    <g key={i} data-k={`rib${i}`}>
-                        <path d={RIBBON} fill="none" style={{ stroke: mix(ribbonColor[r.col], c.navy, 0.3) }} strokeWidth={12} strokeLinecap="round" transform="translate(2 3)" />
-                        <path d={RIBBON} fill="none" style={{ stroke: ribbonColor[r.col] }} strokeWidth={9} strokeLinecap="round" />
-                    </g>
-                ))}
-                {BAG_AT.map((b, s) => (
-                    <ellipse key={s} data-k={`shadow${s}`} cx={0} cy={0} rx={160} ry={24} fill={`url(#${c.id}-shadow)`} />
-                ))}
-                {BAG_AT.map((_, s) => {
-                    const col = s ? c.wantBag : c.needBag
-                    return (
-                        <React.Fragment key={s}>
-                            {/* back of the bag: back handle and the dark inside */}
-                            <g data-k={`bagB${s}`}>
-                                <g transform={`translate(${BDX} ${BDY})`}>
-                                    <Tube d={HANDLE} c={c} color={shade(col, c.navy, 0.2)} w={19} />
+    draw: (c) => (
+        <g>
+            <BagDefs c={c} />
+            {BAG_AT.map((b, s) => (
+                <circle key={s} data-k={`halo${s}`} cx={b.x + OPEN_X} cy={b.y - 130} r={210} fill={`url(#${c.id}-halo${s})`} />
+            ))}
+            {BAG_AT.map((b, s) => (
+                <ellipse key={s} data-k={`shadow${s}`} cx={0} cy={0} rx={160} ry={24} fill={`url(#${c.id}-shadow)`} />
+            ))}
+            {BAG_AT.map((_, s) => {
+                const col = s ? c.wantBag : c.needBag
+                return (
+                    <React.Fragment key={s}>
+                        {/* back of the bag: back handle and the dark inside */}
+                        <g data-k={`bagB${s}`}>
+                            <g transform={`translate(${BDX} ${BDY})`}>
+                                <Tube d={HANDLE} c={c} color={shade(col, c.navy, 0.2)} w={19} />
+                            </g>
+                            {c.outline && <path d={BAG_OPEN} style={{ stroke: c.white }} fill="none" strokeWidth={9} strokeLinejoin="round" />}
+                            <path d={BAG_OPEN} fill={`url(#${c.id}-bi${s})`} />
+                        </g>
+                        {/* the items for this bag sit between its back and its front */}
+                        {BAG_ITEMS.map((k, i) =>
+                            i % 2 === s ? (
+                                <g key={k} data-k={`it${i}`} opacity={0}>
+                                    <Item3D kind={k} c={c} />
                                 </g>
-                                <path d={BAG_OPEN} fill={`url(#${c.id}-bi${s})`} />
-                            </g>
-                            {/* the items for this bag sit between its back and its front */}
-                            {BAG_ITEMS.map((k, i) =>
-                                i % 2 === s ? (
-                                    <g key={k} data-k={`it${i}`} opacity={0}>
-                                        <Item3D kind={k} c={c} />
-                                    </g>
-                                ) : null
+                            ) : null
+                        )}
+                        <g data-k={`bagF${s}`}>
+                            {c.outline && (
+                                <g style={{ stroke: c.white }} fill="none" strokeWidth={9} strokeLinejoin="round">
+                                    <path d={BAG_SIDE} />
+                                    <path d={BAG_FRONT} />
+                                </g>
                             )}
-                            <g data-k={`bagF${s}`}>
-                                <path d={BAG_SIDE} fill={`url(#${c.id}-bs${s})`} />
-                                <path d={`M${BT - 1},${-BH + 2} L${BT + BDX},${-BH + BDY}`} style={{ stroke: mix(col, c.white, 0.4) }} strokeWidth={3} strokeLinecap="round" opacity={0.8} />
-                                <path d={BAG_FRONT} fill={`url(#${c.id}-bf${s})`} />
-                                <path d={BAG_FRONT} fill={`url(#${c.id}-ao)`} />
-                                <path d={BAG_FRONT} fill="none" stroke={`url(#${c.id}-rim)`} strokeWidth={5} />
-                                <path d={BAG_HEM} style={{ fill: c.white }} opacity={0.22} />
-                                <path d={`M${-BT - 0.4},${-BH + 18} H${BT + 0.4}`} style={{ stroke: shade(col, c.navy, 0.25) }} strokeWidth={2} opacity={0.5} />
-                                <Spec c={c} x={-66} y={-160} rx={26} ry={72} r={6} o={0.6} />
-                                <Shine c={c} name={`bag${s}`} d={BAG_FRONT} />
-                                <Text x={2} y={-96} size={58} fill={shade(col, c.navy, 0.4)}>
-                                    {s ? "WANT" : "NEED"}
-                                </Text>
-                                <Text x={0} y={-100} size={58} fill={labelOn(col, c.navy, c.white)}>
-                                    {s ? "WANT" : "NEED"}
-                                </Text>
-                                <Tube d={HANDLE} c={c} color={col} w={20} />
-                                {[-50, 50].map((x) => (
-                                    <g key={x}>
-                                        <circle cx={x} cy={-BH + 14} r={7} style={{ fill: shade(col, c.navy, 0.45) }} />
-                                        <circle cx={x - 1.5} cy={-BH + 12.5} r={3} style={{ fill: mix(col, c.white, 0.6) }} />
-                                    </g>
-                                ))}
-                            </g>
-                        </React.Fragment>
-                    )
-                })}
-                {BAG_ITEMS.map((k, i) => (
-                    <g key={k} data-k={`hi${i}`} opacity={0}>
-                        <Item3D kind={k} c={c} />
-                    </g>
-                ))}
-                <g data-k="star">
-                    <path d={STAR} transform="translate(4 5) scale(38)" style={{ fill: mix(c.yolk, "#c0600a", 0.45) }} />
-                    <path d={STAR} transform="scale(38)" fill={`url(#${c.id}-yolk)`} />
-                    <Spec c={c} x={-6} y={-10} rx={4} ry={9} r={-30} o={0.9} />
+                            <path d={BAG_SIDE} fill={`url(#${c.id}-bs${s})`} />
+                            <path d={BAG_FRONT} fill={`url(#${c.id}-bf${s})`} />
+                            <path d={BAG_FRONT} fill={`url(#${c.id}-ao)`} />
+                            <path d={BAG_HEM} style={{ fill: c.white }} opacity={0.2} />
+                            <path d={`M${-BT - 0.4},${-BH + 18} H${BT + 0.4}`} style={{ stroke: shade(col, c.navy, 0.25) }} strokeWidth={2} opacity={0.5} />
+                            <Text x={2} y={-96} size={58} fill={shade(col, c.navy, 0.4)}>
+                                {s ? "WANT" : "NEED"}
+                            </Text>
+                            <Text x={0} y={-100} size={58} fill={labelOn(col, c.navy, c.white)}>
+                                {s ? "WANT" : "NEED"}
+                            </Text>
+                            <Tube d={HANDLE} c={c} color={col} w={20} />
+                            {[-50, 50].map((x) => (
+                                <g key={x}>
+                                    <circle cx={x} cy={-BH + 14} r={7} style={{ fill: shade(col, c.navy, 0.45) }} />
+                                    <circle cx={x - 1.5} cy={-BH + 12.5} r={3} style={{ fill: mix(col, c.white, 0.6) }} />
+                                </g>
+                            ))}
+                        </g>
+                    </React.Fragment>
+                )
+            })}
+            <circle data-k="iglow" r={120} fill={`url(#${c.id}-iglow)`} opacity={0} />
+            {BAG_ITEMS.map((k, i) => (
+                <g key={k} data-k={`hi${i}`} opacity={0}>
+                    <Item3D kind={k} c={c} />
                 </g>
-                <Sparkle k="spk0" c={c} />
-                <Sparkle k="spk1" c={c} color={c.white} />
-                <Sparkle k="spk2" c={c} color={c.white} />
-            </g>
-        )
-    },
+            ))}
+            <path data-k="star" d={STAR} style={{ fill: c.yolk }} />
+            <Sparkle k="spk0" c={c} />
+            <Sparkle k="spk1" c={c} color={c.white} />
+            <Sparkle k="spk2" c={c} color={c.white} />
+            <Sparkle k="spk3" c={c} />
+        </g>
+    ),
     frame: (t) => {
         const f: Frame = {}
         const steps = t * 4
@@ -679,7 +713,8 @@ const bags: Scene = {
             f[`bagB${s}`] = { transform: tr }
             f[`bagF${s}`] = { transform: tr }
             f[`shadow${s}`] = { transform: tf(b.x + 14, b.y + 2, 0, 1 + hop / 140, 1 + hop / 200), opacity: 1 + hop / 90 }
-            f[`halo${s}`] = { opacity: 0.55 + 0.45 * Math.sin(Math.PI * win(v, 0.15, 0.7)) }
+            // the glow behind each bag breathes, and swells while that bag hops
+            f[`halo${s}`] = { opacity: 0.45 + 0.12 * Math.sin(TAU * (2 * t + s * 0.5)) + 0.4 * Math.sin(Math.PI * win(v, 0.15, 0.7)) }
         })
         let apex = { x: 0, y: 0, k: 0 }
         BAG_ITEMS.forEach((_, i) => {
@@ -703,15 +738,13 @@ const bags: Scene = {
             f[`hi${i}`] = { transform, opacity: active && out ? 1 : 0 }
             if (active) apex = { x, y, k: Math.sin(Math.PI * win(v, 0.34, 0.72)) }
         })
-        f.spk0 = sparkle(apex.x + 74, apex.y - 36, 24 * apex.k)
-        f.spk1 = sparkle(apex.x - 70, apex.y + 10, 15 * apex.k)
+        f.iglow = { transform: `translate(${n(apex.x)} ${n(apex.y)})`, opacity: apex.k }
+        f.spk0 = sparkle(apex.x + 78, apex.y - 36, 24 * apex.k)
+        f.spk1 = sparkle(apex.x - 74, apex.y + 10, 15 * apex.k)
         f.spk2 = sparkle(320, 92, 12 * twinkle(t, 3, 0.2))
-        RIBBONS.forEach((rb, i) => {
-            const p = TAU * (t + rb.ph)
-            f[`rib${i}`] = { transform: tf(rb.x + 6 * Math.sin(p), rb.y + 9 * Math.sin(2 * p), 18 * Math.sin(p) - 20 + i * 25, 0.9 + 0.12 * Math.sin(2 * p)) }
-        })
+        f.spk3 = sparkle(54, 210, 14 * twinkle(t, 2, 0.6))
         const want = beat % 2 === 1 ? Math.sin(Math.PI * win(u, 0.2, 0.6)) : 0
-        f.star = { transform: tf(592, 120 + 8 * Math.sin(TAU * 2 * t), 14 * Math.sin(TAU * t), 1 + 0.18 * want) }
+        f.star = { transform: tf(592, 120 + 8 * Math.sin(TAU * 2 * t), 14 * Math.sin(TAU * t), 34 * (1 + 0.18 * want)) }
         return f
     },
 }
@@ -1178,6 +1211,7 @@ type Props = {
     shine: boolean
     needBag: string
     wantBag: string
+    outline: boolean
     glacier: string
     mint: string
     eggYolk: string
@@ -1208,6 +1242,7 @@ export default function ATMNeedWantLoop(props: Props) {
         glow: props.lightTeal,
         shine: props.shine,
         needBag: props.needBag,
+        outline: props.outline,
         wantBag: props.wantBag,
     }
 
@@ -1300,6 +1335,7 @@ ATMNeedWantLoop.defaultProps = {
     speed: 1,
     glow: true,
     shine: true,
+    outline: false,
     needBag: "#ffcc40",
     wantBag: "#00acdd",
     glacier: "#d9eeff",
@@ -1322,6 +1358,7 @@ addPropertyControls(ATMNeedWantLoop, {
     speed: { type: ControlType.Number, title: "Speed", min: 0.25, max: 2, step: 0.05, defaultValue: 1 },
     glow: { type: ControlType.Boolean, title: "Glow", defaultValue: true },
     shine: { type: ControlType.Boolean, title: "Shine", defaultValue: true },
+    outline: { type: ControlType.Boolean, title: "Outline", defaultValue: false, hidden: (p: Partial<Props>) => p.motionStyle !== "bags" },
     needBag: { type: ControlType.Color, title: "Need Bag", defaultValue: "#ffcc40", hidden: (p: Partial<Props>) => p.motionStyle !== "bags" },
     wantBag: { type: ControlType.Color, title: "Want Bag", defaultValue: "#00acdd", hidden: (p: Partial<Props>) => p.motionStyle !== "bags" },
     glacier: { type: ControlType.Color, title: "Glacier", defaultValue: "#d9eeff" },
