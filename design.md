@@ -170,6 +170,16 @@ upcoming = white 30%.
 **Next / Continue**: primary pill (teal) or highlight pill (egg yolk) for
 the last step.
 
+**Exit and Skip** (lessons may need both): the same placement as the
+tutorial kiosk's, restyled for the ATM.
+- **Exit**: Teal circle, 110px, white ×, top left, 30px from the edges.
+  Leaves the lesson.
+- **Skip**: Teal pill, Area Normal Bold 36–44, white text, top right,
+  30px from the edges. Moves past the current step or lesson.
+- Both always sit above the lesson content, press like any button (scale
+  0.97), and stay quieter than the lesson's main action: no glow, no
+  ripple.
+
 ### 3.4 Right and wrong
 
 - **Right**: teal, light-teal glow, check badge, a scale-pop and the
@@ -262,4 +272,5 @@ curved arrow, teal circle × and "Skip".
 - [ ] App blue `#214f80`, link blue, app greys, app green or red
 - [ ] iOS status bar, tab bar, list rows with chevrons, iOS toggles
 - [ ] 10–16px radii and grey drop shadows
-- [ ] Tutorial overlays (bubbles, spotlights, Skip)
+- [ ] Tutorial overlays (bubbles, spotlights). Exit and Skip buttons are
+  allowed, styled as in §3.3.
