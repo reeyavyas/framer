@@ -707,6 +707,26 @@ P22 Mackinac; the skill bans Fraunces as a default), section labels
 became plain headings with one small label kept, and soft contact
 shadows went under the objects for depth.
 
+**Round 2** (the designer: the loops didn't look polished like the
+references). All six were rebuilt on the same page with the
+apple-design, high-end-visual-design and redesign-existing-projects
+skills: glossy objects (highlight, rim light, reflected light at the
+base), contact shadows that shrink as objects lift, damped-spring
+motion with a crouch before each jump, stretch in the air and a
+squash-and-wobble on landing, a walk cycle with bending knees and
+hands kept on the cart (C), and a cart that leans when it brakes and
+when it pulls away (D, E). The wing background's shimmer runs round the
+card edge. The page also has controls for card glass (teal, light blue,
+midnight) and speed (1×, ½×, ¼×). Still waiting on the pick.
+
+**Colour scope** (answered): "It doesn't always have to be teal" means
+the whole lesson palette can change, but only within the ATM brand
+colours (option B), not just the shimmer and glows, and no colours
+from outside the brand.
+
+For now the work covers only the curved carousel card animations, not
+the lesson itself.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
