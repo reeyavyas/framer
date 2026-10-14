@@ -81,8 +81,10 @@ ATM.
 
 ## Branch naming
 
-Every branch must be `<group>/<feature>` or `<group>`, using one of
-these, named after the folder the work lands in:
+Work goes straight to `main`; a branch is made only when the repo owner
+asks for one (see `CLAUDE.md`). When one is made, it must be
+`<group>/<feature>` or `<group>`, using one of these, named after the
+folder the work lands in:
 
 ```
 card-controls/<feature>

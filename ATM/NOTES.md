@@ -967,6 +967,7 @@ In the order they were made with the designer:
 
 ## Branch
 
-ATM work goes on the `atm` branch. The banner and hood light work is
-on `atm-additions`, the name the designer asked for. Lesson work (the
-lesson card and the lessons) goes on `atm-lessons`.
+ATM work goes straight on `main`. If the owner asks for a branch, use
+`atm`, or `atm-lessons` for lesson work (the lesson card and the
+lessons). The banner and hood light work was done on `atm-additions`,
+the name the designer asked for.

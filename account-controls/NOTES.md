@@ -19,9 +19,9 @@ commit, 2026-10-05).
   exploration button, a kiosk-wide feature, which will take a while.
   It's also listed in the root `NOTES.md`.
 
-New Account Controls work after the merge goes on a fresh
-`account-controls/<feature>` branch from `main`, not on
-`account-controls/account-preferences`.
+New Account Controls work goes straight on `main`, not on
+`account-controls/account-preferences`. If the owner asks for a branch,
+use a fresh `account-controls/<feature>` branch from `main`.
 
 ### The tutorial's flow
 - `accounts-1` → Settings → Account Preferences: Edit, rename, drag

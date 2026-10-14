@@ -125,3 +125,9 @@ generating the exports themselves from a factory.
 
 See `NOTES.md` for the group map, and each group's own `NOTES.md` for
 per-group detail and branch-naming convention.
+
+## Workflow
+
+Changes go straight to `main`. A branch (and a pull request into `main`)
+is used only when the repo owner asks for one, named per the convention
+in `NOTES.md`. `CLAUDE.md` has the full rules.
