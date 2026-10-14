@@ -701,7 +701,11 @@ card: **A** sorting loop (items hop into NEED / WANT buckets), **B**
 balance scale, **C** shopper pushing a cart, **D** cart of bags and
 boxes rolling in and out, **E** the same cart with groceries, sneakers,
 a shirt and a bag, **F** bouncing shopping bags. Waiting on the
-designer's pick.
+designer's pick. The designer then invoked **design-taste-frontend** on
+the page: the stand-in headline serif became Young Serif (closer to
+P22 Mackinac; the skill bans Fraunces as a default), section labels
+became plain headings with one small label kept, and soft contact
+shadows went under the objects for depth.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
