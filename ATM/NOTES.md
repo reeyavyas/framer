@@ -772,6 +772,20 @@ SVG, code-built 3D):
   carousel, and type-check against framer and React 19.
 - The page's code isn't in the repo. Read it from the link with the
   Artifact tool.
+- **Use the design-taste-frontend skill** (the designer asked for it),
+  and gpt-taste where it fits. Most of design-taste-frontend is about
+  landing pages (hero, nav, bento grid, logo walls) and doesn't apply to
+  a card loop. The parts that do: start with a one-line design read and
+  the three dials (variance, motion, density) set from the brief. Every
+  motion must be motivated (hierarchy, story, feedback or a state
+  change). Use real art, not hand-rolled illustrations: an image or 3D
+  generator if one is available, otherwise ask the designer. Glows go
+  behind content, never as neon outer glows. Honour reduce-motion,
+  animate only transform and opacity, and run its pre-flight items that
+  apply (no em dashes in visible text, button contrast, one accent).
+  Where the skill clashes with the ATM rules, the ATM rules win: brand
+  fonts (P22 Mackinac, Area Normal, never Inter, so not its Geist or
+  Satoshi picks) and brand colours only.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
