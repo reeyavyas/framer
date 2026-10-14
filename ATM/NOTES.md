@@ -151,6 +151,23 @@ doesn't change them; change them only when it's asked for the ATM.
   the same `system-overlay-change` signal as the app's, so the
   carousel holds its autoplay while it's up. Timings and the path are
   constants at the top of the file.
+- `ATMNeedWantLoop.tsx` — the looping illustration for the Lesson 1
+  ("Need or Want?") card on `/atm-start`. It fills the bottom of the
+  teal glass card; the card's copy and Get Started button stay still
+  above it. Nine options in its **Style** property (A Swipe, B Balance,
+  C Bags, D Cart, E Coin, F Sorter, G Claw, H Dial, I Bubbles), all
+  using the same six glossy items (house, groceries, water drop; phone,
+  TV, sneaker). No background of its own, so the glass shows through.
+  Drawn on a 640×480 canvas, scaled to fit the frame and clipped to it,
+  so nothing ever moves over the card's copy. One loop clock per style
+  (5–9 s; **Speed** scales it), and a still frame under reduced motion.
+  **Glow** (two soft glows breathing in turn) and **Shine** (a light
+  band sliding across the glossy shapes) switch on and off. Colours
+  (**Glacier**, **Mint**, **Egg Yolk**, **White**, **Navy**, **Teal**,
+  **Light Teal**) accept colour styles. Labels use Area Normal Black.
+  Preview of all nine: "Need or Want Card Loops"
+  (https://claude.ai/artifact/KN8Fc3XPuo3WFNGtNdKJ2S), which runs the
+  real component in stand-in cards.
 
 ## Using it in Framer
 
@@ -210,6 +227,12 @@ doesn't change them; change them only when it's asked for the ATM.
   6. **Transition** swaps between A + B + E (default), A + B, A, B, E
      and E + B.
 
+- `ATMNeedWantLoop.tsx`: paste it into a new code file named
+  `ATMNeedWantLoop` and place it in the lesson card, filling the area
+  under the Get Started button (about 694×500 on the 734×1050 card;
+  any size works, the drawing keeps its 4:3 shape and centres). Pick
+  the option with **Style**. Like the overlay, it uses no blur and no
+  CSS transitions, so it is safe over the carousel.
 - `ATMInactivityOverlay.tsx`: paste it into a new code file named
   `ATMInactivityOverlay` and place one instance on `/atm-start` and on
   every ATM lesson page (not on `/atm` itself, which it returns to),
@@ -709,6 +732,15 @@ and don't ask for references again. Use the **design-taste-frontend**
 skill (the designer asked for it), with the ATM rules winning where it
 clashes (brand fonts and colours).
 
+**Round 1 (built, waiting on the designer's pick)**: nine options in
+`ATMNeedWantLoop.tsx`, shown on the preview page. The designer said the
+card animation does not need to match the wing background, so the
+shine is its own light band, not the wing's shimmer. Brand colours
+only: glacier blue and mint for the big light objects, a little egg
+yolk and white for accents, navy for dark objects and the dark
+labels. The person pushing the cart from the reference is left out of
+D (the cart alone carries it); ask if the designer wants the person.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
@@ -969,5 +1001,6 @@ In the order they were made with the designer:
 
 ATM work goes straight on `main`. If the owner asks for a branch, use
 `atm`, or `atm-lessons` for lesson work (the lesson card and the
-lessons). The banner and hood light work was done on `atm-additions`,
+lessons). The lesson card animation is on `atm-card-animations`, the
+name the owner asked for. The banner and hood light work was done on `atm-additions`,
 the name the designer asked for.

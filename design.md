@@ -239,6 +239,8 @@ page; keep any new sounds short and quiet.
   (card in, "Reading your card", ripple and zoom, about 3.1s) and beeps.
 - `ATM/ATMWingBackground.tsx`: the screen's animated wing background.
 - `ATM/ATMTapIcon.tsx`: the "Tap anywhere to begin" hand and ripple.
+- `ATM/ATMNeedWantLoop.tsx`: the Lesson 1 card's looping illustration
+  (nine styles), glossy items in glacier blue, mint, egg yolk and white.
 - `ATM/ATMInactivityOverlay.tsx`: "Are you still there?" after 3 minutes
   idle, then back to `/atm`. White card, P22 Mackinac and Area Normal,
   no blur and no CSS transitions (they cause a black rectangle over the
