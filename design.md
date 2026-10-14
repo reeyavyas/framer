@@ -36,13 +36,19 @@ style as `var(--token-…, <colour>)`.
 | Accent | Egg yolk | `#ffcc40` | `--token-4752b8ac-f3d7-4eaf-9473-e6c16c0a291a` | Kicker headings, the ripple, highlight pills, arrows. Accent only; never a background |
 | Supporting | Deep teal | `#00615e` | `--token-edfc4088-c8f5-4a03-903a-23c7a11b2d39` | The glass-card gradient, deep shadows of teal |
 | Supporting | White | `#ffffff` | — | Text on navy and teal |
+| Supporting | Glacier blue | `#d9eeff` | — (colour style in the project; id not recorded) | Light surfaces and objects that need to stand out on teal or navy (stronger contrast than light teal); navy or midnight text on it |
+| Supporting | Mint | `#bce2d7` | — (colour style in the project; id not recorded) | Light surfaces and objects, a softer partner to glacier blue; navy or midnight text on it |
 
-Other colour styles in the project, not part of the brand set: Mint
-`#bce2d7`, Sky `#00acdd`, Pale blue `#d9eeff`, Ink `#121111` (and 75%
+Glacier blue and Mint joined the brand set at the designer's request
+(they were already colour styles in the project; Glacier blue was
+listed as "Pale blue"). Other colour styles in the project, not part of
+the brand set: Sky `#00acdd`, Ink `#121111` (and 75%
 `#121111bf`), Greys `#313131` and `#545454`. App colours are in §4.1.
 
-**Contrast on navy:** white, egg yolk and light teal read well as text;
-teal is for fills, with white text on it.
+**Contrast on navy:** white, egg yolk, light teal, glacier blue and mint
+read well as text; teal is for fills, with white text on it. On teal or
+the teal glass card, glacier blue and mint are the light colours with
+the most contrast after white.
 
 ### 2.2 Typography
 
