@@ -937,6 +937,24 @@ handful of options in Claude Design.
   per option, the cart on a teal glass card, with the Liberty FCU
   Kiosks design system installed.
 
+**Round 11: D (glacier basket) chosen and refined** (same canvas, D
+artboard updated):
+
+- The egg-yolk box's stripes and label are white (they were glacier).
+- The bush at the bottom left is removed, and so is its outline in the
+  silhouette (masked out, with the left wheel kept).
+- The frame is light teal instead of teal.
+- The wheels are a lighter blue, with the egg-yolk hubs unchanged.
+  Mint wheels were tried at the designer's suggestion and then
+  reverted.
+- A light-teal radial glow sits behind the cart, with five flat
+  sparkles in egg yolk and white.
+- **Smooth wheel rims**: the masks that remove the bush and the receipt
+  card nicked the wheels' outlines (the designer saw jagged edges). A
+  smooth navy ellipse rim is now drawn over each wheel's outline band
+  (`WHEEL_CENTRES` in `cart.py`); the wheels are in front of
+  everything, so the rim on top is correct.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:

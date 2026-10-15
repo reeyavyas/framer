@@ -23,6 +23,8 @@ put("gbox", 67); put("gboxDark", 66); put("gboxHi", 23)
 put("tyre", 48, 51); put("tyreHi", 79, 84); put("hubRim", 49, 80, 85); put("hub", 82, 87); put("hubShade", 81, 86); put("hubHi", 83, 88)
 put("bush", 92); put("bushMid", 91); put("bushDark", 65)
 kept = [i for i in range(105) if i not in DROP]
+BUSH_SHAPES = (91, 92, 65)
+WHEEL_CENTRES = ((777, 1327), (1777.5, 1328))
 assert sorted(ROLE) == kept, set(kept) ^ set(ROLE)
 
 NAVY, MID, TEAL, DTEAL, LTEAL, LBLUE, YOLK = "#002c44", "#11232d", "#059390", "#00615e", "#3bbfc0", "#0079a9", "#ffcc40"
@@ -56,7 +58,11 @@ OPTIONS = [
    **dict(frame=[GLACIER, GLACIER_S, GLACIER_SS], frameHi=GLACIER, frameHi2=GLACIER), **YOLK_BOX,
    **flat(SKY_TT, [SKY_T, SKY], SKY_S), **gbox(GLACIER, [GLACIER, GLACIER_S], GLACIER_SS), **WHEELS, **BUSH)),
  ("D", "Glacier basket", dict(line=NAVY, ground=DTEAL, **basket("#eef7ff", GLACIER, GLACIER_S, GLACIER_SS, "#eef7ff"), **yolk_parts(), **grip(YOLK_T, YOLK, ORANGE),
-   **FRAME_TEAL, **YOLK_BOX, **flat(MINT_T, [MINT, MINT_S], MINT_SS), **gbox(SKY_TT, [SKY_T, SKY], SKY_S), **WHEELS, **BUSH)),
+   frame=["#8fe0e0", LTEAL], frameHi=MINT_T, frameHi2=MINT_T,
+   **dict(YOLK_BOX, label="#ffffff", stripe="#ffffff", stripeShade="#fff4d6"),
+   **flat(MINT_T, [MINT, MINT_S], MINT_SS), **gbox(SKY_TT, [SKY_T, SKY], SKY_S),
+   **dict(WHEELS, tyre=["#5cb8e6", "#2f8fc4"], tyreHi="#8fd3f2", hubRim="#1d6a96"), **BUSH,  # lighter blue wheels, egg-yolk hubs
+   _noBush=True, _glow=LTEAL, _sparks=True)),
  ("E", "Light-blue basket", dict(line=MID, ground=DTEAL, **basket("#1a9bd0", LBLUE, "#005f88", "#004a6b", SKY_T), **yolk_parts(), **grip(YOLK_T, YOLK, ORANGE),
    **FRAME_GLACIER, **MINT_BOX, **flat(YOLK_TT, [YOLK_T, YOLK], ORANGE), **gbox(GLACIER, [GLACIER, GLACIER_S], GLACIER_SS), **WHEELS, **BUSH)),
 ]
@@ -75,7 +81,7 @@ for key, name, pal in OPTIONS:
     out, last = [], 0
     for i, m in enumerate(els):
         out.append(body[last:m.start()]); last = m.end()  # keep the source's groups (some carry clip paths)
-        if i in DROP: continue
+        if i in DROP or (pal.get("_noBush") and i in BUSH_SHAPES): continue
         el = m.group(0)
         el = re.sub(r'\sfill="[^"]*"', f' fill="{fill(ROLE[i])}"', el, count=1)
         el = re.sub(r'\sfill-opacity="[^"]*"', "", el)
@@ -88,10 +94,21 @@ for key, name, pal in OPTIONS:
             '<rect width="2500" height="1667" fill="#fff"/>'
             '<rect x="1812" y="1012" width="380" height="430" fill="#000"/>'
             '<circle cx="1772" cy="1325" r="148" fill="#fff"/>'
-            + "".join(f'<path d="{d(i)}" fill="#000" stroke="#000" stroke-width="4"/>' for i in GAPS) + '</mask>')
+            + "".join(f'<path d="{d(i)}" fill="#000" stroke="#000" stroke-width="4"/>' for i in GAPS)
+            + ("".join(f'<path d="{d(i)}" fill="#000" stroke="#000" stroke-width="56" stroke-linejoin="round"/>' for i in BUSH_SHAPES)
+               + '<ellipse cx="777" cy="1327" rx="152" ry="141.5" fill="#fff"/>' if pal.get("_noBush") else "") + '</mask>')
+    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity=".6"/>'
+            f'<stop offset=".55" stop-color="{GLACIER}" stop-opacity=".14"/><stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>'
+            if pal.get("_glow") else "")
+    behind = f'<ellipse cx="1250" cy="880" rx="1060" ry="680" fill="url(#{key}-glow)"/>' if glow else ""
+    star = "M0,-1 C0.12,-0.12 0.12,-0.12 1,0 C0.12,0.12 0.12,0.12 0,1 C-0.12,0.12 -0.12,0.12 -1,0 C-0.12,-0.12 -0.12,-0.12 0,-1 Z"
+    sparks = "".join(f'<path d="{star}" transform="translate({x} {y}) scale({k})" fill="{c}"/>' for x, y, k, c in
+                     [(560, 330, 70, YOLK), (1080, 230, 45, "#ffffff"), (2020, 230, 85, YOLK), (2200, 640, 50, "#ffffff"), (330, 820, 45, YOLK)]) if pal.get("_sparks") else ""
+    # a smooth rim over each wheel's outline band, so the cuts for the bush and the receipt card never show on it
+    rims = "".join(f'<ellipse cx="{cx}" cy="{cy}" rx="143" ry="131" fill="none" stroke="{pal["line"]}" stroke-width="22"/>' for cx, cy in WHEEL_CENTRES)
     pre = head.split("<defs>", 1)[1].rsplit("</defs>", 1)[0]  # the source's clip paths and the rim's gradient
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="190 200 2120 1360" width="2120" height="1360">'
-           f'<defs>{mask}{pre}{"".join(defs)}</defs>{"".join(out)}</svg>')
+           f'<defs>{mask}{pre}{glow}{"".join(defs)}</defs>{behind}{"".join(out)}{rims}{sparks}</svg>')
     assert "<style" not in svg and "<image" not in svg
     open(f"{S}/cart-{key}.svg", "w").write(svg)
 print("ok", [k for k, _, _ in OPTIONS])
