@@ -101,9 +101,9 @@ for key, name, pal in OPTIONS:
             + ("".join(f'<ellipse cx="{cx}" cy="{cy}" rx="165" ry="150" fill="#000"/>' for cx, cy in WHEEL_CENTRES) if pal.get("_circleWheels") else "")
             + '</mask>')
     # strong core, then a long soft falloff so the edge diffuses instead of reading as an ellipse
-    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity="1"/>'
-            f'<stop offset=".42" stop-color="{pal["_glow"]}" stop-opacity=".75"/>'
-            f'<stop offset=".68" stop-color="{GLACIER}" stop-opacity=".32"/><stop offset=".86" stop-color="{GLACIER}" stop-opacity=".09"/>'
+    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity=".75"/>'
+            f'<stop offset=".42" stop-color="{pal["_glow"]}" stop-opacity=".48"/>'
+            f'<stop offset=".68" stop-color="{GLACIER}" stop-opacity=".2"/><stop offset=".86" stop-color="{GLACIER}" stop-opacity=".06"/>'
             f'<stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>'
             if pal.get("_glow") else "")
     # inside the viewBox with room to spare, so the pulse never clips it

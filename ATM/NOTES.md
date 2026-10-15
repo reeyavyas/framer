@@ -1035,6 +1035,8 @@ the session had not loaded them).
 - **Sizing** (designer): the designer sets the height and leaves the width
   on Fill, so the component takes any width and a fixed height, and drops
   in at 614×400. The drawing scales to the height and stays centred.
+- **Glow toned down** (designer: too much): core 0.75 (was 1), mid stops
+  0.48 / 0.2 / 0.06. Same soft falloff and same pulse.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
