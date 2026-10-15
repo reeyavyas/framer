@@ -1032,6 +1032,9 @@ the session had not loaded them).
   falloff so the edge diffuses), a little smaller so it never touches the
   viewBox edge, and it pulses twice a loop: scale 0.84 to 1 and opacity
   0.45 to 1 about its centre.
+- **Sizing** (designer): the designer sets the height and leaves the width
+  on Fill, so the component takes any width and a fixed height, and drops
+  in at 614×400. The drawing scales to the height and stays centred.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

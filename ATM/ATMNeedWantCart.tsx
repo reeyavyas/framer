@@ -368,10 +368,10 @@ function buildLoop(svg: SVGSVGElement) {
 type Props = { loopSeconds: number }
 
 /**
- * @framerSupportedLayoutWidth fixed
+ * @framerSupportedLayoutWidth any
  * @framerSupportedLayoutHeight fixed
- * @framerIntrinsicWidth 636
- * @framerIntrinsicHeight 444
+ * @framerIntrinsicWidth 614
+ * @framerIntrinsicHeight 400
  */
 export default function ATMNeedWantCart(props: Props) {
     const reduceMotion = useReducedMotion()
