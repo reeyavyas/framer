@@ -893,6 +893,21 @@ sparkle colours.
 - **L Toy box**: primary colours, a cream scale, red stand, kraft
   grocery bag, royal-blue shopping bag, sunflower controller.
 
+**Round 9: H to L tightened.** Rules from the designer, applied to H
+to L (G unchanged):
+
+- **Red only on the apple.** The red stands, H's coral-red and K's
+  berry-red controllers, L's red buttons and H's rose-gold key are
+  gone. `build.py` asserts that no red is used anywhere but the apple.
+- **Each scale in one colour family**: the board, stand, cylinder and
+  pivot are tints and shades of one colour (the egg-yolk pivot is
+  gone). Pink (H), peach (I), lemon (J), lavender (K), butter yellow
+  (L).
+- **The whole drawing stands out on the teal card**: warm, light
+  scales, a dark outline and a glow behind each drawing.
+- Controllers now: H sunny yellow with purple buttons, I violet, J hot
+  pink, K berry magenta, L purple with yellow buttons.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
