@@ -1,6 +1,7 @@
 # Gauge / speedometer, redrawn from scratch (the stock artboard was raster only).
 # Five annular-sector segments on a 180 degree arch, swept straight down for a side face, plus a needle and pivot.
-# Writes gauge-A.svg, gauge-A-clay.svg, gauge-B.svg, gauge-B-clay.svg next to this script.
+# Writes gauge-<A|B>[-clay|-glass|-gloss].svg next to this script: 3D outlined (navy ink) plus three solid 3D styles
+# with no outline and the segments spaced apart: claymorphism, 3D glass, glossy 3D.
 #   python3 build.py
 import math, os
 
@@ -15,8 +16,12 @@ PIV = 38                       # pivot dot radius
 
 STYLE = {  # D: side-face depth, GAP: perpendicular gap between segments, CR: corner rounding
     "3d": dict(D=58, GAP=T, CR=16),
-    "clay": dict(D=84, GAP=30, CR=56),
+    "clay": dict(D=84, GAP=72, CR=56),
+    "glass": dict(D=84, GAP=72, CR=18),
+    "gloss": dict(D=84, GAP=72, CR=30),
 }
+SOLID = ("clay", "glass", "gloss")
+NL2, NB2, NT2 = 425, 72, 17     # the solid styles' needle: its tip stops ~55 short of the segments
 
 NAVY = "#002c44"
 SEG = {  # front [tint, base], side [shade, deep shade], hi: lightest tint
@@ -28,7 +33,7 @@ SEG = {  # front [tint, base], side [shade, deep shade], hi: lightest tint
     "sky":    dict(front=["#5fd0f2", "#00acdd"], side=["#0094c6", "#0079a9"], hi="#9fe3f8"),
     "mint":   dict(front=["#d6f0e8", "#bce2d7"], side=["#8fd3c0", "#5fbfa6"], hi="#eefaf6"),
 }
-# clay only: core = the body's deep shade toward the lower right (2-3 steps darker, same hue)
+# solid styles: core = the body's deep shade toward the lower right (2-3 steps darker, same hue)
 CORE = {"teal": "#00726f", "lteal": "#159e9c", "yolk": "#f4ad22", "orange": "#e3860f", "amber": "#c9780c",
         "sky": "#0088bd", "mint": "#7fc9b4"}
 NEEDLE = {  # light half, base, dark half
@@ -112,37 +117,35 @@ def rad(id_, stops, cx=0, cy=0, rr=R, user=True, extra=""):
             + "".join(f'<stop offset="{f(o)}" stop-color="{c}"' + (f' stop-opacity="{f(a)}"' if a is not None else "") + "/>" for o, c, a in stops)
             + "</radialGradient>")
 
-# one viewBox for all four: arch top/sides + outline, down to the clay shadow; ~4% padding
+# viewBoxes, ~4% padding: the outlined art, and the solid styles with their wider contact shadow
 def viewbox(x0, x1, y0, y1):
     pad = 0.04 * (x1 - x0); return (x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad)
 VB = viewbox(-R - T, R + T, -R - T, 150)
-SHADOW_RX, SHADOW_RY = R + 150, 100   # clay contact shadow, wider than the arch
-VB_CLAY = viewbox(-SHADOW_RX, SHADOW_RX, -R, STYLE["clay"]["D"] + 10 + SHADOW_RY)
+SHADOW_RX, SHADOW_RY = R + 150, 100   # solid styles' contact shadow, wider than the arch
+VB_SOLID = viewbox(-SHADOW_RX, SHADOW_RX, -R, STYLE["clay"]["D"] + 10 + SHADOW_RY)
 BELL = ((0, 1), (.25, .8), (.45, .47), (.6, .25), (.72, .12), (.83, .045), (.92, .012), (1, 0))  # soft fade, no rim
 
-def hull(pts):
-    """Convex hull (monotone chain) of a few points."""
-    pts = sorted(set(pts)); cross = lambda o, a, b: (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
-    lo, hi = [], []
-    for q in pts:
-        while len(lo) > 1 and cross(lo[-2], lo[-1], q) <= 0: lo.pop()
-        lo.append(q)
-    for q in reversed(pts):
-        while len(hi) > 1 and cross(hi[-2], hi[-1], q) <= 0: hi.pop()
-        hi.append(q)
-    return lo[:-1] + hi[:-1]
+def layered(paths, opacity, widths, extra=""):
+    """A soft shadow without blur: the shapes stacked at low opacity with growing round strokes."""
+    return "".join(f'<path d="{d}" opacity="{f(opacity)}" stroke-width="{w}"{extra}/>' for w in widths for d in paths)
 
-def build(key, clay):
-    sc, st = SCHEMES[key], STYLE["clay" if clay else "3d"]
+def build(key, style):
+    sc, st = SCHEMES[key], STYLE[style]
     D, GAP, CR = st["D"], st["GAP"], st["CR"]
-    pre = f"gauge-{key}{'-clay' if clay else ''}"
-    defs, hulls, sides, strokes, fronts, overs = [], [], [], [], [], []
+    pre = f"gauge-{key}" + ("" if style == "3d" else f"-{style}")
+    solid = style in SOLID
+    defs, hulls, sides, strokes, fronts, overs, blocks = [], [], [], [], [], [], []
     for i, name in enumerate(sc["segs"]):
         c = SEG[name]; pcs = sector(i, GAP, CR); d = path_d(pcs); sw = sweep(pcs, D)
         sid, fid = f"{pre}-side{i}", f"{pre}-front{i}"
-        defs.append(lin(sid, [(0, c["side"][0], None), (1, c["side"][1], None)], 0, -r, 0, D, user=True))
+        core = CORE[name]
+        side = c["side"] if style in ("3d", "clay") else [core, c["side"][1]] if style == "glass" else [c["side"][0], c["side"][1]]
+        defs.append(lin(sid, [(0, side[0], None), (1, side[1], None)], 0, -r, 0, D, user=True))
         sides.append("".join(f'<path d="{x}" fill="url(#{sid})" stroke="url(#{sid})" stroke-width="1.5"/>' for x in [d] + sw))
-        if not clay:
+        a1, a2 = 180 - 36 * i, 180 - 36 * (i + 1)
+        if solid:  # each block casts its own soft shadow down-right onto the card
+            blocks.append(layered([d, path_d([shift(q, D) for q in pcs])], 0.07, (56, 42, 28, 14, 0)))
+        if style == "3d":
             # outline: the solid filled and stroked navy at 2T under everything (outer half shows: T);
             # the front stroked navy at 2T under its fill draws the seam to the side face and between segments
             hulls.append("".join(f'<path d="{x}"/>' for x in [d] + sw))
@@ -150,26 +153,71 @@ def build(key, clay):
             defs.append(rad(fid, [(r / R, c["front"][1], None), (0.72, c["front"][1], None), (1, c["front"][0], None)]))
             fronts.append(f'<path d="{d}" fill="url(#{fid})"/>')
             # highlight along the top edge, over the first two thirds of the segment (light from the upper left)
-            a1, a2 = 180 - 36 * i, 180 - 36 * (i + 1); hr = R - 30
+            hr = R - 30
             s0, s1 = P(hr, a1 - 4 - (36 - 8) * 0.12), P(hr, a1 - 4 - (36 - 8) * 0.66)
             overs.append(f'<path d="M{pt(s0)}A{f(hr)} {f(hr)} 0 0 1 {pt(s1)}" fill="none" stroke="{c["hi"]}" stroke-width="13" stroke-linecap="round"/>')
-        else:
+        elif style == "clay":
             # clay: a puffy body (deep core at the inner edge, base, bright band toward the outer rim, rolling off at
             # the rim), a soft light from the upper left, a core shade to the lower right, a soft highlight blob and a
             # small crisp specular spot; all gradients, per segment
-            core = CORE[name]
             defs.append(rad(fid, [(r / R, core, None), (0.6, c["front"][1], None), (0.84, c["front"][0], None), (0.94, c["front"][0], None), (1, c["front"][1], None)]))
             fronts.append(f'<path d="{d}" fill="url(#{fid})"/>')
             defs.append(lin(f"{pre}-lit{i}", [(0, "#ffffff", 0.6), (0.2, "#ffffff", 0.32), (0.45, "#ffffff", 0)]))
             defs.append(lin(f"{pre}-shd{i}", [(0.45, core, 0), (0.75, core, 0.55), (1, c["side"][0], 0.85)]))
-            a1 = 180 - 36 * i; ab, asp = a1 - 36 * 0.36, a1 - 36 * 0.27
+            ab, asp = a1 - 36 * 0.36, a1 - 36 * 0.27
             (bx, by), (sx, sy) = P(835, ab), P(890, asp)
             defs.append(rad(f"{pre}-blob{i}", [(o, "#ffffff", 0.8 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
             overs.append(f'<path d="{d}" fill="url(#{pre}-lit{i})"/><path d="{d}" fill="url(#{pre}-shd{i})"/>'
                          f'<ellipse cx="{f(bx)}" cy="{f(by)}" rx="150" ry="62" transform="rotate({f(90 - ab)} {f(bx)} {f(by)})" fill="url(#{pre}-blob{i})"/>'
                          f'<ellipse cx="{f(sx)}" cy="{f(sy)}" rx="26" ry="11" transform="rotate({f(90 - asp)} {f(sx)} {f(sy)})" fill="#ffffff" opacity=".92"/>')
-    n = NEEDLE[sc["needle"]]; nd = needle_d(NL, NB, NT)
-    if not clay:
+        else:
+            # glass and gloss: crisp faces by value inside the front (clipped to it): a lit bevel band along the top,
+            # a darker facet along the inner edge, a darker same-hue band on the shadow (lower right) edges and a thin
+            # bright rim on the lit (upper left) edges; glossy speculars on top
+            cid = f"{pre}-clip{i}"
+            band = lambda r0, r1: (f"M{pt(P(r1, a1 + 3))}A{f(r1)} {f(r1)} 0 0 1 {pt(P(r1, a2 - 3))}"
+                                   f"L{pt(P(r0, a2 - 3))}A{f(r0)} {f(r0)} 0 0 0 {pt(P(r0, a1 + 3))}Z")
+            mid = (a1 + a2) / 2
+            defs.append(f'<clipPath id="{cid}"><path d="{d}"/></clipPath>')
+            defs.append(f'<linearGradient id="{pre}-bev{i}" x1="0" y1="{f(-R)}" x2="0" y2="{f(-R + 80)}" gradientUnits="userSpaceOnUse" '
+                        f'gradientTransform="rotate({f(90 - mid)})"><stop offset="0" stop-color="{c["hi"]}"/><stop offset="1" stop-color="{c["front"][0]}"/></linearGradient>')
+            defs.append(lin(f"{pre}-edge{i}", [(0.45, core, 0), (0.8, core, 0.75), (1, core, 0.95)]))
+            if style == "glass":
+                # slightly translucent front (the darker side colour shows through a little, like the card's glass)
+                defs.append(rad(fid, [(r / R, c["front"][1], None), (0.8, c["front"][1], None), (0.94, c["front"][0], None), (1, c["front"][0], None)]))
+                defs.append(lin(f"{pre}-rim{i}", [(0, "#ffffff", 0.9), (0.3, "#8fe0e0", 0.75), (0.55, "#8fe0e0", 0)]))
+                # a glass sheen: a soft diagonal reflection across the upper left of the face
+                defs.append(lin(f"{pre}-sheen{i}", [(0, "#ffffff", 0.32), (0.38, "#ffffff", 0.14), (0.4, "#ffffff", 0), (1, "#ffffff", 0)]))
+                fronts.append(f'<path d="{d}" fill="url(#{fid})" fill-opacity=".88"/>')
+                inner = (f'<path d="{band(R - 70, R + 10)}" fill="url(#{pre}-bev{i})" opacity=".9"/>'
+                         f'<path d="{band(r - 10, r + 40)}" fill="{core}" opacity=".5"/>'
+                         f'<path d="{d}" fill="url(#{pre}-sheen{i})"/>'
+                         f'<path d="{d}" fill="none" stroke="url(#{pre}-edge{i})" stroke-width="24"/>'
+                         f'<path d="{d}" fill="none" stroke="url(#{pre}-rim{i})" stroke-width="9"/>')
+                spec_w, spec_o = 10, 0.85
+            else:
+                # gloss: rich saturated body (bright top to deep core), a bevel all round (a wide edge band, lit at the
+                # upper left, dark at the lower right), a big hot specular streak and a soft sheen blob
+                defs.append(rad(fid, [(r / R, core, None), (0.55, c["front"][1], None), (0.78, c["front"][1], None), (0.9, c["front"][0], None), (1, c["front"][0], None)]))
+                defs.append(lin(f"{pre}-chamL{i}", [(0, "#ffffff", 0.75), (0.35, c["hi"], 0.55), (0.55, c["hi"], 0)]))
+                defs.append(lin(f"{pre}-chamD{i}", [(0.4, core, 0), (0.7, core, 0.8), (1, c["side"][1], 0.95)]))
+                defs.append(rad(f"{pre}-blob{i}", [(o, "#ffffff", 0.55 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+                fronts.append(f'<path d="{d}" fill="url(#{fid})"/>')
+                ab = a1 - 36 * 0.4; bx, by = P(800, ab)
+                inner = (f'<path d="{d}" fill="none" stroke="url(#{pre}-chamD{i})" stroke-width="60"/>'
+                         f'<path d="{d}" fill="none" stroke="url(#{pre}-chamL{i})" stroke-width="48"/>'
+                         f'<path d="{band(R - 62, R + 10)}" fill="url(#{pre}-bev{i})" opacity=".55"/>'
+                         f'<ellipse cx="{f(bx)}" cy="{f(by)}" rx="170" ry="70" transform="rotate({f(90 - ab)} {f(bx)} {f(by)})" fill="url(#{pre}-blob{i})"/>')
+                spec_w, spec_o = 16, 0.95
+            sa, sb = a1 - 36 * 0.16, a1 - 36 * 0.5
+            px_, py_ = P(R - 46, a1 - 36 * 0.64)
+            overs.append(f'<g clip-path="url(#{cid})">{inner}</g>'
+                         f'<path d="M{pt(P(R - 42, sa))}A{f(R - 42)} {f(R - 42)} 0 0 1 {pt(P(R - 42, sb))}" fill="none" stroke="#ffffff" stroke-opacity="{f(spec_o)}" stroke-width="{spec_w}" stroke-linecap="round"/>'
+                         f'<ellipse cx="{f(px_)}" cy="{f(py_)}" rx="{f(spec_w * 0.9)}" ry="{f(spec_w * 0.55)}" transform="rotate({f(90 - (a1 - 36 * 0.64))} {f(px_)} {f(py_)})" fill="#ffffff" opacity="{f(spec_o)}"/>')
+    n = NEEDLE[sc["needle"]]
+    nl, nb, nt = (NL2, NB2, NT2) if solid else (NL, NB, NT)
+    nd = needle_d(nl, nb, nt)
+    if style == "3d":
         defs.append(lin(f"{pre}-needle", [(0, n["light"], None), (0.5, n["light"], None), (0.5, n["base"], None), (1, n["dark"], None)], -NB, 0, NB, 0, user=True))
         defs.append(rad(f"{pre}-pivot", [(0, "#ffffff", None), (0.55, "#eef7ff", None), (1, "#d9eeff", None)], -10, -10, PIV + 10))
         needle = (f'<path d="{nd}" fill="{NAVY}" stroke="{NAVY}" stroke-width="{f(2 * T)}" stroke-linejoin="round"/>'
@@ -178,44 +226,44 @@ def build(key, clay):
         pivot = (f'<circle r="{f(PIV + T)}" fill="{NAVY}"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
                  f'<ellipse cx="-11" cy="-12" rx="10" ry="6" transform="rotate(-35 -11 -12)" fill="#ffffff"/>')
     else:
-        defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.35, n["light"], None), (0.7, n["base"], None), (1, n["dark"], None)], -NB, 0, NB, 0, user=True))
+        under = f'<path d="{nd}" transform="translate(9 10)" fill="{n["dark"]}"/>'  # the needle's thick underside
+        if style == "clay":
+            defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.35, n["light"], None), (0.7, n["base"], None), (1, n["dark"], None)], -nb, 0, nb, 0, user=True))
+            top = f'<path d="M-{f(nb * 0.42)},-{nb + 10}L-{f(nt * 0.4)},-{nl - 30}" stroke="#ffffff" stroke-opacity=".55" stroke-width="10" stroke-linecap="round"/>'
+        elif style == "glass":  # crisp two-tone blade with a bright rim on its lit edge
+            defs.append(lin(f"{pre}-needle", [(0, n["light"], None), (0.5, n["light"], None), (0.5, n["base"], None), (1, n["dark"], None)], -nb, 0, nb, 0, user=True))
+            defs.append(lin(f"{pre}-nrim", [(0, "#ffffff", 0.9), (0.45, "#9fe3f8", 0.6), (0.6, "#9fe3f8", 0)], -nb, 0, nb, 0, user=True))
+            top = (f'<path d="{nd}" fill="none" stroke="url(#{pre}-nrim)" stroke-width="7"/>'
+                   f'<path d="M-{f(nb * 0.42)},-{nb + 12}L-{f(nt * 0.4)},-{nl - 30}" stroke="#ffffff" stroke-opacity=".8" stroke-width="7" stroke-linecap="round"/>')
+        else:  # gloss: smooth rounded blade, a hot white streak and a glint near the tip
+            defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.25, n["light"], None), (0.6, n["base"], None), (1, n["dark"], None)], -nb, 0, nb, 0, user=True))
+            top = (f'<path d="M-{f(nb * 0.4)},-{nb + 6}L-{f(nt * 0.35)},-{nl - 26}" stroke="#ffffff" stroke-opacity=".95" stroke-width="12" stroke-linecap="round"/>'
+                   f'<ellipse cx="{f(nb * 0.3)}" cy="-{f(nb * 0.15)}" rx="10" ry="18" fill="#ffffff" opacity=".5"/>')
+        needle = under + f'<path d="{nd}" fill="url(#{pre}-needle)"/>' + top
         defs.append(rad(f"{pre}-pivot", [(0, "#ffffff", None), (0.5, "#eef7ff", None), (0.85, "#d9eeff", None), (1, "#a9d3ef", None)], -10, -12, PIV + 14))
-        # a thick underside (same shape, shifted toward its lower right, deep shade) and a soft light streak
-        needle = (f'<path d="{nd}" transform="translate(9 10)" fill="{n["dark"]}"/><path d="{nd}" fill="url(#{pre}-needle)"/>'
-                  f'<path d="M-{NB * 0.42},-{NB + 10}L-{NT * 0.4},-{NL - 30}" stroke="#ffffff" stroke-opacity=".55" stroke-width="10" stroke-linecap="round"/>')
         pivot = (f'<circle cx="7" cy="9" r="{PIV}" fill="#a9d3ef"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
                  f'<ellipse cx="-12" cy="-13" rx="10" ry="6" transform="rotate(-35 -12 -13)" fill="#ffffff"/>')
         # contact shadows: navy (dark teal is lighter than the card, so it would glow), bell fade, no blur:
         # one wide under the arch, one under each foot
-        defs.append(rad(f"{pre}-shadow", [(o, NAVY, 0.55 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
-        defs.append(rad(f"{pre}-foot", [(o, NAVY, 0.6 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
-        # gap occlusion: a navy band down each gap, behind the segments so it darkens only the card showing
-        # through (over the yellow/orange side faces navy would turn them olive), fading out at both ends
-        occl = []
-        for j in range(1, N):
-            b = 180 - 36 * j; u = (math.cos(math.radians(b)), -math.sin(math.radians(b))); w = (-u[1] * (GAP / 2 + 8), u[0] * (GAP / 2 + 8))
-            ends = [P(r - 4, b), P(R - 40, b)]
-            corners = [add(e, (sg * w[0], sg * w[1] + dy)) for e in ends for sg in (-1, 1) for dy in (0, D)]
-            gid = f"{pre}-occl{j}"
-            defs.append(lin(gid, [(0, NAVY, 0), (0.1, NAVY, 0.6), (0.8, NAVY, 0.55), (1, NAVY, 0)], *ends[0], *ends[1], user=True))
-            occl.append(f'<polygon points="{" ".join(pt(q) for q in hull(corners))}" fill="url(#{gid})"/>')
-        # the needle's soft shadow: its shape stacked at low opacity with growing strokes (soft edge without blur),
-        # offset down-right in page space; it turns with the needle (animate both rotations together)
-        nshadow = (f'<g data-k="needle-shadow" transform="translate(44 58) rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
-                   + "".join(f'<path d="{nd}" opacity=".07" stroke-width="{w}"/>' for w in (70, 60, 50, 40, 30, 20, 10, 0)) + "</g>")
+        k = {"clay": 1, "glass": 1.1, "gloss": 1.25}[style]
+        defs.append(rad(f"{pre}-shadow", [(o, NAVY, 0.55 * k * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+        defs.append(rad(f"{pre}-foot", [(o, NAVY, min(.8, 0.6 * k) * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+    # the needle's soft shadow, offset down-right in page space; it turns with the needle (animate both rotations together)
+    nshadow = (f'<g data-k="needle-shadow" transform="translate(40 52) rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
+               + layered([nd], 0.07, (60, 50, 40, 30, 20, 10, 0)) + "</g>") if solid else ""
     shadow = (f'<ellipse cx="0" cy="{f(D + 10)}" rx="{f(SHADOW_RX)}" ry="{f(SHADOW_RY)}" fill="url(#{pre}-shadow)"/>'
-              + "".join(f'<ellipse cx="{x}" cy="{f(D + 4)}" rx="360" ry="62" fill="url(#{pre}-foot)"/>' for x in (-750, 750))) if clay else ""
+              + "".join(f'<ellipse cx="{x}" cy="{f(D + 4)}" rx="360" ry="62" fill="url(#{pre}-foot)"/>' for x in (-750, 750))) if solid else ""
     ink = f'fill="{NAVY}" stroke="{NAVY}" stroke-width="{f(2 * T)}" stroke-linejoin="round" stroke-linecap="round"'
     body = (shadow
+            + (f'<g transform="translate(16 26)" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">{"".join(blocks)}</g>' if blocks else "")
             + (f'<g {ink}>{"".join(hulls)}</g>' if hulls else "")
-            + ("".join(occl) if clay else "")
             + "".join(sides)
             + (f'<g {ink}>{"".join(strokes)}</g>' if strokes else "")
-            + "".join(fronts) + "".join(overs) + (nshadow if clay else "")
+            + "".join(fronts) + "".join(overs) + nshadow
             # the needle is drawn pointing up and turned about the pivot (0,0); animate this group's rotation
             + f'<g data-k="needle" data-pivot="0 0" transform="rotate({f(90 - NEEDLE_DEG)})">{needle}</g>'
             + f'<g data-k="pivot">{pivot}</g>')
-    vb = VB_CLAY if clay else VB
+    vb = VB_SOLID if solid else VB
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(f(v) for v in vb)}" width="{f(vb[2])}" height="{f(vb[3])}">'
            f'<defs>{"".join(defs)}</defs>{body}</svg>')
     assert "filter" not in svg and "Blur" not in svg and "<image" not in svg
@@ -225,4 +273,4 @@ def build(key, clay):
     return pre
 
 if __name__ == "__main__":
-    print([build(k, c) for k in SCHEMES for c in (False, True)], "T =", T)
+    print([build(k, s) for k in SCHEMES for s in ("3d", *SOLID)], "T =", T)
