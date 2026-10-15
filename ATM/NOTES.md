@@ -952,8 +952,14 @@ artboard updated):
 - **Smooth wheel rims**: the masks that remove the bush and the receipt
   card nicked the wheels' outlines (the designer saw jagged edges). A
   smooth navy ellipse rim is now drawn over each wheel's outline band
-  (`WHEEL_CENTRES` in `cart.py`); the wheels are in front of
-  everything, so the rim on top is correct.
+  (`WHEEL_CENTRES` in `cart.py`). Still jagged: the source's wheels and
+  hubs are lumpy ovals, so no rim or mask lined up.
+- **Circle wheels (current)**: the designer suggested plain circles. D
+  now drops the original wheel shapes (`WHEEL_SHAPES`), cuts their
+  outline out of the silhouette, and draws each wheel as circles: navy
+  outline, light-blue tyre with a darker crescent, a blue hub ring and
+  the egg-yolk hub with a small highlight. The short stretch of ground
+  line under each wheel is redrawn where the cut-out bit into it.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
