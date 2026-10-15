@@ -15,7 +15,7 @@ PIV = 38                       # pivot dot radius
 
 STYLE = {  # D: side-face depth, GAP: perpendicular gap between segments, CR: corner rounding
     "3d": dict(D=58, GAP=T, CR=16),
-    "clay": dict(D=46, GAP=30, CR=56),
+    "clay": dict(D=84, GAP=30, CR=56),
 }
 
 NAVY = "#002c44"
@@ -28,6 +28,9 @@ SEG = {  # front [tint, base], side [shade, deep shade], hi: lightest tint
     "sky":    dict(front=["#5fd0f2", "#00acdd"], side=["#0094c6", "#0079a9"], hi="#9fe3f8"),
     "mint":   dict(front=["#d6f0e8", "#bce2d7"], side=["#8fd3c0", "#5fbfa6"], hi="#eefaf6"),
 }
+# clay only: core = the body's deep shade toward the lower right (2-3 steps darker, same hue)
+CORE = {"teal": "#00726f", "lteal": "#159e9c", "yolk": "#f4ad22", "orange": "#e3860f", "amber": "#c9780c",
+        "sky": "#0088bd", "mint": "#7fc9b4"}
 NEEDLE = {  # light half, base, dark half
     "sky":   dict(light="#5fd0f2", base="#00acdd", dark="#0094c6", hi="#9fe3f8"),
     "lblue": dict(light="#00acdd", base="#0079a9", dark="#005f88", hi="#5fd0f2"),
@@ -110,10 +113,24 @@ def rad(id_, stops, cx=0, cy=0, rr=R, user=True, extra=""):
             + "</radialGradient>")
 
 # one viewBox for all four: arch top/sides + outline, down to the clay shadow; ~4% padding
-X0, X1 = -R - T, R + T
-Y0, Y1 = -R - T, 150
-PAD = 0.04 * (X1 - X0)
-VB = (X0 - PAD, Y0 - PAD, X1 - X0 + 2 * PAD, Y1 - Y0 + 2 * PAD)
+def viewbox(x0, x1, y0, y1):
+    pad = 0.04 * (x1 - x0); return (x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad)
+VB = viewbox(-R - T, R + T, -R - T, 150)
+SHADOW_RX, SHADOW_RY = R + 150, 100   # clay contact shadow, wider than the arch
+VB_CLAY = viewbox(-SHADOW_RX, SHADOW_RX, -R, STYLE["clay"]["D"] + 10 + SHADOW_RY)
+BELL = ((0, 1), (.25, .8), (.45, .47), (.6, .25), (.72, .12), (.83, .045), (.92, .012), (1, 0))  # soft fade, no rim
+
+def hull(pts):
+    """Convex hull (monotone chain) of a few points."""
+    pts = sorted(set(pts)); cross = lambda o, a, b: (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    lo, hi = [], []
+    for q in pts:
+        while len(lo) > 1 and cross(lo[-2], lo[-1], q) <= 0: lo.pop()
+        lo.append(q)
+    for q in reversed(pts):
+        while len(hi) > 1 and cross(hi[-2], hi[-1], q) <= 0: hi.pop()
+        hi.append(q)
+    return lo[:-1] + hi[:-1]
 
 def build(key, clay):
     sc, st = SCHEMES[key], STYLE["clay" if clay else "3d"]
@@ -137,13 +154,20 @@ def build(key, clay):
             s0, s1 = P(hr, a1 - 4 - (36 - 8) * 0.12), P(hr, a1 - 4 - (36 - 8) * 0.66)
             overs.append(f'<path d="M{pt(s0)}A{f(hr)} {f(hr)} 0 0 1 {pt(s1)}" fill="none" stroke="{c["hi"]}" stroke-width="13" stroke-linecap="round"/>')
         else:
-            # clay: puffy body (light near the outer rim, deeper toward the inner edge), then a soft light
-            # from the upper left and a soft shade to the lower right, per segment, all gradients
-            defs.append(rad(fid, [(r / R, c["side"][0], None), (0.62, c["front"][1], None), (0.86, c["front"][0], None), (0.95, c["front"][0], None), (1, c["front"][1], None)]))
+            # clay: a puffy body (deep core at the inner edge, base, bright band toward the outer rim, rolling off at
+            # the rim), a soft light from the upper left, a core shade to the lower right, a soft highlight blob and a
+            # small crisp specular spot; all gradients, per segment
+            core = CORE[name]
+            defs.append(rad(fid, [(r / R, core, None), (0.6, c["front"][1], None), (0.84, c["front"][0], None), (0.94, c["front"][0], None), (1, c["front"][1], None)]))
             fronts.append(f'<path d="{d}" fill="url(#{fid})"/>')
-            defs.append(lin(f"{pre}-lit{i}", [(0, "#ffffff", 0.55), (0.42, "#ffffff", 0)]))
-            defs.append(lin(f"{pre}-shd{i}", [(0.55, c["side"][1], 0), (1, c["side"][1], 0.45)]))
-            overs.append(f'<path d="{d}" fill="url(#{pre}-lit{i})"/><path d="{d}" fill="url(#{pre}-shd{i})"/>')
+            defs.append(lin(f"{pre}-lit{i}", [(0, "#ffffff", 0.6), (0.2, "#ffffff", 0.32), (0.45, "#ffffff", 0)]))
+            defs.append(lin(f"{pre}-shd{i}", [(0.45, core, 0), (0.75, core, 0.55), (1, c["side"][0], 0.85)]))
+            a1 = 180 - 36 * i; ab, asp = a1 - 36 * 0.36, a1 - 36 * 0.27
+            (bx, by), (sx, sy) = P(835, ab), P(890, asp)
+            defs.append(rad(f"{pre}-blob{i}", [(o, "#ffffff", 0.8 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+            overs.append(f'<path d="{d}" fill="url(#{pre}-lit{i})"/><path d="{d}" fill="url(#{pre}-shd{i})"/>'
+                         f'<ellipse cx="{f(bx)}" cy="{f(by)}" rx="150" ry="62" transform="rotate({f(90 - ab)} {f(bx)} {f(by)})" fill="url(#{pre}-blob{i})"/>'
+                         f'<ellipse cx="{f(sx)}" cy="{f(sy)}" rx="26" ry="11" transform="rotate({f(90 - asp)} {f(sx)} {f(sy)})" fill="#ffffff" opacity=".92"/>')
     n = NEEDLE[sc["needle"]]; nd = needle_d(NL, NB, NT)
     if not clay:
         defs.append(lin(f"{pre}-needle", [(0, n["light"], None), (0.5, n["light"], None), (0.5, n["base"], None), (1, n["dark"], None)], -NB, 0, NB, 0, user=True))
@@ -156,22 +180,43 @@ def build(key, clay):
     else:
         defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.35, n["light"], None), (0.7, n["base"], None), (1, n["dark"], None)], -NB, 0, NB, 0, user=True))
         defs.append(rad(f"{pre}-pivot", [(0, "#ffffff", None), (0.5, "#eef7ff", None), (0.85, "#d9eeff", None), (1, "#a9d3ef", None)], -10, -12, PIV + 14))
-        needle = (f'<path d="{nd}" fill="url(#{pre}-needle)"/>')
-        pivot = f'<circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
-        # contact shadow: a radial ellipse with a bell-shaped fade (no blur)
-        defs.append(rad(f"{pre}-shadow", [(o, NAVY, a) for o, a in ((0, .55), (.3, .42), (.5, .25), (.65, .13), (.78, .06), (.88, .02), (1, 0))],
-                        0, 0, 1, user=False))
-    shadow = f'<ellipse cx="0" cy="{f(D + 18)}" rx="{f(R + 40)}" ry="70" fill="url(#{pre}-shadow)"/>' if clay else ""
+        # a thick underside (same shape, shifted toward its lower right, deep shade) and a soft light streak
+        needle = (f'<path d="{nd}" transform="translate(9 10)" fill="{n["dark"]}"/><path d="{nd}" fill="url(#{pre}-needle)"/>'
+                  f'<path d="M-{NB * 0.42},-{NB + 10}L-{NT * 0.4},-{NL - 30}" stroke="#ffffff" stroke-opacity=".55" stroke-width="10" stroke-linecap="round"/>')
+        pivot = (f'<circle cx="7" cy="9" r="{PIV}" fill="#a9d3ef"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
+                 f'<ellipse cx="-12" cy="-13" rx="10" ry="6" transform="rotate(-35 -12 -13)" fill="#ffffff"/>')
+        # contact shadows: navy (dark teal is lighter than the card, so it would glow), bell fade, no blur:
+        # one wide under the arch, one under each foot
+        defs.append(rad(f"{pre}-shadow", [(o, NAVY, 0.55 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+        defs.append(rad(f"{pre}-foot", [(o, NAVY, 0.6 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
+        # gap occlusion: a navy band down each gap, behind the segments so it darkens only the card showing
+        # through (over the yellow/orange side faces navy would turn them olive), fading out at both ends
+        occl = []
+        for j in range(1, N):
+            b = 180 - 36 * j; u = (math.cos(math.radians(b)), -math.sin(math.radians(b))); w = (-u[1] * (GAP / 2 + 8), u[0] * (GAP / 2 + 8))
+            ends = [P(r - 4, b), P(R - 40, b)]
+            corners = [add(e, (sg * w[0], sg * w[1] + dy)) for e in ends for sg in (-1, 1) for dy in (0, D)]
+            gid = f"{pre}-occl{j}"
+            defs.append(lin(gid, [(0, NAVY, 0), (0.1, NAVY, 0.6), (0.8, NAVY, 0.55), (1, NAVY, 0)], *ends[0], *ends[1], user=True))
+            occl.append(f'<polygon points="{" ".join(pt(q) for q in hull(corners))}" fill="url(#{gid})"/>')
+        # the needle's soft shadow: its shape stacked at low opacity with growing strokes (soft edge without blur),
+        # offset down-right in page space; it turns with the needle (animate both rotations together)
+        nshadow = (f'<g data-k="needle-shadow" transform="translate(44 58) rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
+                   + "".join(f'<path d="{nd}" opacity=".07" stroke-width="{w}"/>' for w in (70, 60, 50, 40, 30, 20, 10, 0)) + "</g>")
+    shadow = (f'<ellipse cx="0" cy="{f(D + 10)}" rx="{f(SHADOW_RX)}" ry="{f(SHADOW_RY)}" fill="url(#{pre}-shadow)"/>'
+              + "".join(f'<ellipse cx="{x}" cy="{f(D + 4)}" rx="360" ry="62" fill="url(#{pre}-foot)"/>' for x in (-750, 750))) if clay else ""
     ink = f'fill="{NAVY}" stroke="{NAVY}" stroke-width="{f(2 * T)}" stroke-linejoin="round" stroke-linecap="round"'
     body = (shadow
             + (f'<g {ink}>{"".join(hulls)}</g>' if hulls else "")
+            + ("".join(occl) if clay else "")
             + "".join(sides)
             + (f'<g {ink}>{"".join(strokes)}</g>' if strokes else "")
-            + "".join(fronts) + "".join(overs)
+            + "".join(fronts) + "".join(overs) + (nshadow if clay else "")
             # the needle is drawn pointing up and turned about the pivot (0,0); animate this group's rotation
             + f'<g data-k="needle" data-pivot="0 0" transform="rotate({f(90 - NEEDLE_DEG)})">{needle}</g>'
             + f'<g data-k="pivot">{pivot}</g>')
-    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(f(v) for v in VB)}" width="{f(VB[2])}" height="{f(VB[3])}">'
+    vb = VB_CLAY if clay else VB
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(f(v) for v in vb)}" width="{f(vb[2])}" height="{f(vb[3])}">'
            f'<defs>{"".join(defs)}</defs>{body}</svg>')
     assert "filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = [x.split('"')[0] for x in svg.split(' id="')[1:]]
