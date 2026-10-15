@@ -711,6 +711,9 @@ Decided so far:
 
 ### Lesson card animation
 
+**Before animating any new vector, read `artwork/ANIMATING-VECTORS.md`**:
+the colours, measured outline, checks and motion that worked on the cart.
+
 The designer asked for the lesson card animation first: it fills the
 bottom of the lesson card (the copy of the flip card that no longer
 flips, 734×1050 by default), where the image used to be. Colours must
@@ -1041,6 +1044,9 @@ the session had not loaded them).
   off in a bell shape (0.6 at the centre, then 0.48, 0.28, 0.15, 0.07,
   0.025, 0.007, 0) instead of a straight ramp, so there's no rim where it
   ends. Same pulse.
+- **Playbook** (designer: take notes on what worked, more vectors coming):
+  `artwork/ANIMATING-VECTORS.md`, plus `artwork/cart/preview/` (build
+  script, preview page, frame capture, outline measuring).
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
