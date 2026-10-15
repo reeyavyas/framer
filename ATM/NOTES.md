@@ -1014,6 +1014,11 @@ the session had not loaded them).
   outside the cart, `GROUND`), the hub glints turn exactly as far as the
   wheels would, and the cart gives a small squash, anchored at the
   ground, each time a box lands.
+- **Even rim line**: the basket rim's top outline was thick on the left
+  (the art's own outline) and thinner across the box area (the redrawn
+  line). The art's rim-top outline is now masked out (`RIM_BAND`) and
+  one even line (`RIM_TOP`, 22 units) draws the whole top edge, joining
+  the frame on the left and rounding into the right corner.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

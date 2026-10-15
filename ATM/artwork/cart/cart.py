@@ -158,7 +158,8 @@ HULLS = {
              "1201,388 1507,388 1484,590 1251,590", "1525,388 1662,388 1640,590 1503,590"],
     "green": ["1643,415 1919,415 1833,590 1557,590"],
 }
-RIM_TOP = "M800,609 H1893"  # the basket rim's top outline, redrawn whole (the box cut-out shaved it)  # the ground line, redrawn outside the cart so the cart can roll along it
+RIM_TOP = "M778,597 H1899 Q1914,598 1913,618"  # the basket rim's top outline, redrawn whole and even (the box cut-out shaved it)
+RIM_BAND = "M772,556 H1915 V606 H772 Z"  # the original rim top outline, removed so only RIM_TOP draws it  # the ground line, redrawn outside the cart so the cart can roll along it
 ITEM_SHAPES = {i for ix, _ in ITEMS.values() for i in ix}
 BOX_AREA = "M845,180 H1965 V600 H845 Z"
 def export_anim(key="D"):
@@ -166,7 +167,7 @@ def export_anim(key="D"):
     svg = open(f"{S}/cart-{key}.svg").read()
     line = pal["line"]
     # cut the box area out of the silhouette
-    svg = svg.replace("</mask>", f'<path d="{BOX_AREA}" fill="#000"/><rect x="300" y="1452" width="1900" height="60" fill="#000"/></mask>', 1)
+    svg = svg.replace("</mask>", f'<path d="{BOX_AREA}" fill="#000"/><rect x="300" y="1452" width="1900" height="60" fill="#000"/><path d="{RIM_BAND}" fill="#000"/></mask>', 1)
     svg = svg.replace('viewBox="190 200 2120 1360" width="2120" height="1360"', 'viewBox="190 80 2120 1480" width="2120" height="1480"')  # headroom for the hop
     body = svg[svg.index("</defs>") + 7:]
     shapes = list(re.finditer(r'<path\b[^>]*?/>', body))
@@ -213,7 +214,7 @@ def export_anim(key="D"):
     gstart = body.index("/>", body.index('data-k="glow"')) + 2
     sstart = body.index('<path data-k="spark0"')
     body = (body[:gstart] + f'<path d="{GROUND}" stroke="{line}" stroke-width="19" stroke-linecap="round" fill="none"/>'
-            + '<g data-k="cart">' + body[gstart:sstart].replace("<!--RIM-->", f'<path d="{RIM_TOP}" stroke="{line}" stroke-width="26" stroke-linecap="round" fill="none"/>') + "</g>" + body[sstart:])
+            + '<g data-k="cart">' + body[gstart:sstart].replace("<!--RIM-->", f'<path d="{RIM_TOP}" stroke="{line}" stroke-width="22" stroke-linecap="round" fill="none"/>') + "</g>" + body[sstart:])
     out_svg = svg[:svg.index("</defs>") + 7] + body
     open(f"{S}/cart-{key}-anim.svg", "w").write(out_svg)
     return ITEMS
