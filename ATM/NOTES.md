@@ -794,6 +794,30 @@ colourway 1. Changes:
   the preview shows both.
 - **Centred**: the pair runs 66..574 on the 640 canvas.
 
+**Round 4: starting over from the designer's scale vector.** The
+designer dialled back and supplied their own vector,
+`artwork/need-want/Need_Vs_Want.svg` (a seesaw: a grocery bag with
+bread, milk, carrot, broccoli and an apple, plus keys, on one side; a
+shopping bag and a game controller on the other). Brief: recolour it
+toward the brand, vibrant, no natural vegetable colours, merging and
+simplifying a little for the card, and **show still vector options
+before animating anything**. The bags component above is on hold.
+
+- `recolor.py` gives each of the vector's 89 shapes a colour role (one
+  outline path, then bread, bag front, controller button and so on);
+  each object is cut to one or two tones. `build.py` paints five
+  palettes onto those roles and writes the preview page (`head.html`
+  is its top half). Run `python3 recolor.py Need_Vs_Want.svg
+  shapes.svgfrag roles.json`, then `python3 build.py <folder>`.
+- Options: **A** egg yolk and sky with a navy line; **B** coral and egg
+  yolk, navy line; **C** a white line with deeper fills; **D** only
+  brand colours with a midnight line; **E** A's bags with C's white
+  line (anything white turns teal, sky or egg yolk so the line shows).
+  No grey in any of them. Preview: "Need or Want Scale Colours"
+  (https://claude.ai/artifact/HchWTu5B9VGnbah5NauyC9).
+- The shapes and lines are still the designer's own; simplifying
+  further (dropping small outline details) waits for their pick.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
