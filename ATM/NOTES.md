@@ -841,6 +841,25 @@ designer's direction:
 - Two options, differing only in the grocery bag: **F** glacier, **G**
   light egg yolk with orange sides.
 
+**Round 6: depth, keys and the key-ring cut-out** (same preview link).
+
+- **Not flat**: the designer wants tints, shades and gradients close to
+  the brand colours on every object (this replaces round 5's "gradients
+  on the scale only"), plus highlights and shadows. Each object now
+  runs light to shade across its shape. A soft white gloss band sits on
+  both bags and the controller, soft navy contact shadows on the board
+  (clipped to the board top), and a light-teal radial glow behind the
+  whole drawing.
+- **Shopping bag less flat**: a sky gradient front with the gloss, a
+  darker side and inside.
+- **Keys**: no teal keys against the scale. The top key is glacier, the
+  back key egg yolk, and both edges dark teal, so each key's face and
+  edge differ.
+- **Cut-out in the key ring**: the bit of the back key seen through the
+  ring (shape 33, role `keyHole`) is painted with the board's own
+  gradient. That gradient is in the drawing's coordinates, so it
+  matches the board around it exactly.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
