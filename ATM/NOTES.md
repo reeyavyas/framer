@@ -1037,6 +1037,10 @@ the session had not loaded them).
   in at 614×400. The drawing scales to the height and stays centred.
 - **Glow toned down** (designer: too much): core 0.75 (was 1), mid stops
   0.48 / 0.2 / 0.06. Same soft falloff and same pulse.
+- **Glow edge** (designer: edges still too visible): the gradient now falls
+  off in a bell shape (0.6 at the centre, then 0.48, 0.28, 0.15, 0.07,
+  0.025, 0.007, 0) instead of a straight ramp, so there's no rim where it
+  ends. Same pulse.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

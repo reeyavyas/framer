@@ -100,11 +100,11 @@ for key, name, pal in OPTIONS:
                + '<ellipse cx="777" cy="1327" rx="152" ry="141.5" fill="#fff"/>' if pal.get("_noBush") else "")
             + ("".join(f'<ellipse cx="{cx}" cy="{cy}" rx="165" ry="150" fill="#000"/>' for cx, cy in WHEEL_CENTRES) if pal.get("_circleWheels") else "")
             + '</mask>')
-    # strong core, then a long soft falloff so the edge diffuses instead of reading as an ellipse
-    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity=".75"/>'
-            f'<stop offset=".42" stop-color="{pal["_glow"]}" stop-opacity=".48"/>'
-            f'<stop offset=".68" stop-color="{GLACIER}" stop-opacity=".2"/><stop offset=".86" stop-color="{GLACIER}" stop-opacity=".06"/>'
-            f'<stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>'
+    # a bell-shaped falloff (no straight ramp to zero), so the edge melts away instead of showing a rim
+    glow = (f'<radialGradient id="{key}-glow">'
+            + "".join(f'<stop offset="{o}" stop-color="{pal["_glow"] if o < .5 else GLACIER}" stop-opacity="{a}"/>'
+                      for o, a in ((0, .6), (.25, .48), (.45, .28), (.6, .15), (.72, .07), (.83, .025), (.92, .007), (1, 0)))
+            + '</radialGradient>'
             if pal.get("_glow") else "")
     # inside the viewBox with room to spare, so the pulse never clips it
     behind = f'<ellipse cx="1250" cy="880" rx="1000" ry="640" fill="url(#{key}-glow)"/>' if glow else ""
