@@ -818,6 +818,29 @@ before animating anything**. The bags component above is on hold.
 - The shapes and lines are still the designer's own; simplifying
   further (dropping small outline details) waits for their pick.
 
+**Round 5: the scale, colours narrowed** (same preview link). The
+designer's direction:
+
+- **Food in natural colours**, made vibrant for the teal card: golden
+  bread (never white or teal), orange carrot, green broccoli, red apple.
+- **The whole shopping bag bright blue** (sky `#00acdd`, darker sky on
+  its side, light blue inside, sky handles).
+- **Controller from option E** with the darker yellow replaced by
+  orange `#f6a11d`: egg-yolk body, orange edges, navy buttons.
+- **Keys from option D**, with each key's edge in one colour. The top
+  key's edge was four shapes, and its tip was coloured as the key's
+  face, so it showed two colours; `recolor.py` now has separate face
+  and edge roles for each key. Top key glacier with a light-teal edge,
+  back key light teal with a teal edge.
+- **Mint scale**, the only part with gradients: a mint board top and
+  edge, a light-teal-to-teal stand, a glacier cylinder. Every other
+  object is flat colour.
+- **Midnight outline** is fine, but no object is midnight all over.
+  **No stark white objects**, and no grey. Use mint and glacier, and
+  shades and tints of the brand colours.
+- Two options, differing only in the grocery bag: **F** glacier, **G**
+  light egg yolk with orange sides.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
