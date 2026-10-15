@@ -211,9 +211,14 @@ def export_anim(key="D"):
         return m.group(0).replace("<path ", f'<path data-k="spark{n[0] - 1}" ', 1)
     body = re.sub(r'<path d="M0,-1 C0\.12[^>]*/>', tag_star, body)
     assert n[0] == 4 and all(groups.values()), (n[0], {k: len(v) for k, v in groups.items()})
+    # the ground line's end dashes (shapes 1 and 2) stay with the ground, not the rolling cart
+    dashes = []
+    for i in (1, 2):
+        m = re.search(r'<path\b[^>]*?\sd="' + re.escape(d(i)) + r'"[^>]*?/>', body)
+        dashes.append(m.group(0)); body = body.replace(m.group(0), "", 1)
     gstart = body.index("/>", body.index('data-k="glow"')) + 2
     sstart = body.index('<path data-k="spark0"')
-    body = (body[:gstart] + f'<path d="{GROUND}" stroke="{line}" stroke-width="19" stroke-linecap="round" fill="none"/>'
+    body = (body[:gstart] + f'<path d="{GROUND}" stroke="{line}" stroke-width="19" stroke-linecap="round" fill="none"/>' + "".join(dashes)
             + '<g data-k="cart">' + body[gstart:sstart].replace("<!--RIM-->", f'<path d="{RIM_TOP}" stroke="{line}" stroke-width="22" stroke-linecap="round" fill="none"/>') + "</g>" + body[sstart:])
     out_svg = svg[:svg.index("</defs>") + 7] + body
     open(f"{S}/cart-{key}-anim.svg", "w").write(out_svg)

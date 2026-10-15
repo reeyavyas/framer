@@ -1024,6 +1024,9 @@ the session had not loaded them).
   to about a third of their size (half of them out of step), and turn a
   quarter turn per loop, alternate ones the other way, which is seamless
   because a four-point star looks the same after a quarter turn.
+- **Still ground line** (designer): the ground line's two end dashes were
+  inside the rolling cart group, so they slid with it. They now sit with
+  the ground line, outside the cart group, and stay still.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
