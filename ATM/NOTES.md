@@ -994,7 +994,26 @@ the session had not loaded them).
   `cart.py`'s `export_anim()` writes `cart-D-anim.svg` with the boxes,
   glow and sparkles as named layers; the component embeds it, with ids
   made unique per instance.
-- Waiting on the designer's edits to the box shapes.
+- **Box shapes fixed** (designer's marked frames): the art only drew what
+  showed, so once lifted the flat box ended in the egg-yolk box's slant
+  and the egg-yolk box's side face stopped along the blue box. The flat
+  box's two layers now end in straight vertical edges, and the egg-yolk
+  box has a whole side face (bottom edge running back, back edge
+  parallel to the front edge, meeting it). The blue box is drawn in
+  front of the egg-yolk box's side, as in the art.
+- **Closed outlines**: stroking each box's pieces left notches and
+  unfinished corners, so each box's outline is now its faces as
+  polygons (`HULLS` in `cart.py`), filled and stroked in navy under its
+  fills, which gives closed shapes, rounded corners and solid lines
+  between faces. The basket rim's top outline, which the box cut-out
+  had shaved, is redrawn whole (`RIM_TOP`).
+- **No cut-off hop**: the drawing has more room at the top (viewBox
+  `190 80 2120 1480`).
+- **The cart moves too** (the designer asked): it rolls gently back and
+  forth twice per loop on a still ground line (the ground is redrawn
+  outside the cart, `GROUND`), the hub glints turn exactly as far as the
+  wheels would, and the cart gives a small squash, anchored at the
+  ground, each time a box lands.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

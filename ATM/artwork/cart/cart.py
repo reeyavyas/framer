@@ -137,9 +137,28 @@ print("ok", [k for k, _, _ in OPTIONS])
 # and it fills the gaps between faces). Layers carry data-k names the Framer component animates.
 ITEMS = {  # back to front, with the point each one squashes from (its foot)
     "flat": ((36, 52, 57, 58), (1050, 565)),
-    "green": ((23, 66, 67, 68, 69), (1745, 595)),
     "yolk": ((14, 15, 18, 27, 32, 38, 39, 40, 41, 43, 47, 53, 56, 73, 74, 75, 76), (1400, 570)),
+    "green": ((23, 66, 67, 68, 69), (1745, 595)),
 }
+# The art only drew what showed: the flat box ends along the egg-yolk box's slanted side, and the egg-yolk
+# box's side face stops along the blue box. Once they hop, those cut edges show, so the boxes are completed:
+# the flat box's two layers get straight vertical ends, and the egg-yolk box gets a whole side face (bottom
+# edge running back, back edge parallel to the front edge, meeting it).
+YOLK_SIDE = "M1503,590 L1525,388 L1662,388 L1640,590 Z"  # replaces shape 56
+FLAT_ENDS = [  # (points, palette role or colour) per band, top layer then bottom layer
+    ("1200,478 1222,478 1222,495 1209,495", "#d6f0e8"), ("1209,495 1222,495 1222,529 1217,529", "#a6dccb"),
+    ("1223,546 1235,546 1235,562 1226,562", "#a6dccb"), ("1226,562 1235,562 1235,590 1233,590", "#5fbfa6"),
+]
+GROUND = "M322,1471.5 H2178"
+# Each box's outline: its faces as polygons, filled and stroked in the line colour under the box's own fills,
+# so the outline is closed with rounded corners (like the art's) and the lines between faces are solid.
+HULLS = {
+    "flat": ["877,478 1222,478 1222,529 877,529", "877,546 1235,546 1235,590 877,590"],
+    "yolk": ["1274,253 1577,253 1511,367 1206,367", "1591,267 1657,367 1532,367",
+             "1201,388 1507,388 1484,590 1251,590", "1525,388 1662,388 1640,590 1503,590"],
+    "green": ["1643,415 1919,415 1833,590 1557,590"],
+}
+RIM_TOP = "M800,609 H1893"  # the basket rim's top outline, redrawn whole (the box cut-out shaved it)  # the ground line, redrawn outside the cart so the cart can roll along it
 ITEM_SHAPES = {i for ix, _ in ITEMS.values() for i in ix}
 BOX_AREA = "M845,180 H1965 V600 H845 Z"
 def export_anim(key="D"):
@@ -147,7 +166,8 @@ def export_anim(key="D"):
     svg = open(f"{S}/cart-{key}.svg").read()
     line = pal["line"]
     # cut the box area out of the silhouette
-    svg = svg.replace("</mask>", f'<path d="{BOX_AREA}" fill="#000"/></mask>', 1)
+    svg = svg.replace("</mask>", f'<path d="{BOX_AREA}" fill="#000"/><rect x="300" y="1452" width="1900" height="60" fill="#000"/></mask>', 1)
+    svg = svg.replace('viewBox="190 200 2120 1360" width="2120" height="1360"', 'viewBox="190 80 2120 1480" width="2120" height="1480"')  # headroom for the hop
     body = svg[svg.index("</defs>") + 7:]
     shapes = list(re.finditer(r'<path\b[^>]*?/>', body))
     # match the recoloured shapes back to source indices by their path data
@@ -162,17 +182,26 @@ def export_anim(key="D"):
         out.append(body[last:m.start()]); last = m.end()
         if i in ITEM_SHAPES:
             name = next(n for n, (ix, _) in ITEMS.items() if i in ix)
+            if i == 56:  # the egg-yolk box's side, completed
+                el = re.sub(r'\sd="[^"]+"', f' d="{YOLK_SIDE}"', el)
             groups[name].append(el)
             if first:
-                out.append("<!--ITEMS-->"); first = False
+                out.append("<!--RIM--><!--ITEMS-->"); first = False
             continue
         out.append(el)
     out.append(body[last:])
     def item_layer(name):
-        els = groups[name]
-        outline = "".join(re.sub(r'\sfill="[^"]*"', f' fill="{line}" stroke="{line}" stroke-width="36" stroke-linejoin="round"', e, count=1) for e in els)
+        els = groups[name] + ([f'<polygon points="{pts}" fill="{c}"/>' for pts, c in FLAT_ENDS] if name == "flat" else [])
+        outline = "".join(f'<polygon points="{pts}" fill="{line}" stroke="{line}" stroke-width="40" stroke-linejoin="round"/>' for pts in HULLS[name])
         return f'<g data-k="{name}">{outline}{"".join(els)}</g>'
     body = "".join(out).replace("<!--ITEMS-->", "".join(item_layer(n) for n in ITEMS))
+    # everything but the glow, the ground and the sparkles rolls as one cart; the hub glints turn as it rolls
+    gi = [0]
+    def tag_glint(m):
+        gi[0] += 1
+        return f'<g data-k="glint{gi[0] - 1}">{m.group(0)}</g>'
+    body = re.sub(r'<ellipse cx="[\d.]+" cy="[\d.]+" rx="22" ry="12"[^>]*/>', tag_glint, body)
+    assert gi[0] == 2, gi[0]
     # name the glow and each sparkle
     body = body.replace(f'fill="url(#{key}-glow)"/>', f'fill="url(#{key}-glow)" data-k="glow"/>', 1)
     n = [0]
@@ -181,6 +210,10 @@ def export_anim(key="D"):
         return m.group(0).replace("<path ", f'<path data-k="spark{n[0] - 1}" ', 1)
     body = re.sub(r'<path d="M0,-1 C0\.12[^>]*/>', tag_star, body)
     assert n[0] == 4 and all(groups.values()), (n[0], {k: len(v) for k, v in groups.items()})
+    gstart = body.index("/>", body.index('data-k="glow"')) + 2
+    sstart = body.index('<path data-k="spark0"')
+    body = (body[:gstart] + f'<path d="{GROUND}" stroke="{line}" stroke-width="19" stroke-linecap="round" fill="none"/>'
+            + '<g data-k="cart">' + body[gstart:sstart].replace("<!--RIM-->", f'<path d="{RIM_TOP}" stroke="{line}" stroke-width="26" stroke-linecap="round" fill="none"/>') + "</g>" + body[sstart:])
     out_svg = svg[:svg.index("</defs>") + 7] + body
     open(f"{S}/cart-{key}-anim.svg", "w").write(out_svg)
     return ITEMS
