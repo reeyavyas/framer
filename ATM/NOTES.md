@@ -908,6 +908,35 @@ to L (G unchanged):
 - Controllers now: H sunny yellow with purple buttons, I violet, J hot
   pink, K berry magenta, L purple with yellow buttons.
 
+**Round 10: a shopping cart from Adobe Stock** (`AdobeStock_1317578309.ai`,
+from the designer). Brief: make it vector, recolour it with brand
+colours, tints, shades and gradients, and remove the background, the
+clouds and the green receipt card at the bottom right. Present a
+handful of options in Claude Design.
+
+- The .ai is an EPS-style Illustrator file with no PDF inside. It is
+  already vector: Ghostscript turns it into a PDF (`gs -dEPSCrop
+  -sDEVICE=pdfwrite`), then `pdftocairo -svg` gives `src.svg` (105
+  shapes). Neither file is committed (the stock licence is the
+  designer's); `artwork/cart/cart.py` rebuilds the options from
+  `src.svg`.
+- The outline is one navy silhouette of the whole drawing with the
+  colours laid on top, and the see-through gaps (behind the boxes,
+  under the basket, between the wheels) were painted in the background
+  colour. `cart.py` drops the background, clouds and receipt card and
+  masks the gaps and the receipt card out of the silhouette, keeping
+  the right wheel in front.
+- Five colourways, each a role-per-shape recolour with gradients:
+  **A** egg-yolk basket, sky grip, mint boxes; **B** sky basket,
+  egg-yolk grip and box; **C** mint basket; **D** glacier basket on a
+  teal frame; **E** deep light-blue basket. Every option has navy
+  wheels with egg-yolk hubs and a light mint bush (darker greens
+  disappeared on the teal card).
+- Claude Design canvas "Need or Want Cart Options"
+  (https://claude.ai/artifact/3cwuWFG2nAkUzwUbiaDnCx): one artboard
+  per option, the cart on a teal glass card, with the Liberty FCU
+  Kiosks design system installed.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
