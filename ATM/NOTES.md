@@ -1027,6 +1027,11 @@ the session had not loaded them).
 - **Still ground line** (designer): the ground line's two end dashes were
   inside the rolling cart group, so they slid with it. They now sit with
   the ground line, outside the cart group, and stay still.
+- **Pulsing glow** (designer): the glow was too faint and read as still.
+  It's stronger (light-teal core at full strength, a longer glacier
+  falloff so the edge diffuses), a little smaller so it never touches the
+  viewBox edge, and it pulses twice a loop: scale 0.84 to 1 and opacity
+  0.45 to 1 about its centre.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

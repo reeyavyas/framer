@@ -100,10 +100,14 @@ for key, name, pal in OPTIONS:
                + '<ellipse cx="777" cy="1327" rx="152" ry="141.5" fill="#fff"/>' if pal.get("_noBush") else "")
             + ("".join(f'<ellipse cx="{cx}" cy="{cy}" rx="165" ry="150" fill="#000"/>' for cx, cy in WHEEL_CENTRES) if pal.get("_circleWheels") else "")
             + '</mask>')
-    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity=".6"/>'
-            f'<stop offset=".55" stop-color="{GLACIER}" stop-opacity=".14"/><stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>'
+    # strong core, then a long soft falloff so the edge diffuses instead of reading as an ellipse
+    glow = (f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{pal["_glow"]}" stop-opacity="1"/>'
+            f'<stop offset=".42" stop-color="{pal["_glow"]}" stop-opacity=".75"/>'
+            f'<stop offset=".68" stop-color="{GLACIER}" stop-opacity=".32"/><stop offset=".86" stop-color="{GLACIER}" stop-opacity=".09"/>'
+            f'<stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>'
             if pal.get("_glow") else "")
-    behind = f'<ellipse cx="1250" cy="880" rx="1060" ry="680" fill="url(#{key}-glow)"/>' if glow else ""
+    # inside the viewBox with room to spare, so the pulse never clips it
+    behind = f'<ellipse cx="1250" cy="880" rx="1000" ry="640" fill="url(#{key}-glow)"/>' if glow else ""
     star = "M0,-1 C0.12,-0.12 0.12,-0.12 1,0 C0.12,0.12 0.12,0.12 0,1 C-0.12,0.12 -0.12,0.12 -1,0 C-0.12,-0.12 -0.12,-0.12 0,-1 Z"
     sparks = "".join(f'<path d="{star}" transform="translate({x} {y}) scale({k})" fill="{c}"/>' for x, y, k, c in
                      [(300, 690, 60, YOLK), (900, 320, 42, "#ffffff"), (2050, 330, 80, YOLK), (2230, 720, 50, "#ffffff")]) if pal.get("_sparks") else ""  # every sparkle sits fully inside the viewBox (top is y 200), clear of the handle
