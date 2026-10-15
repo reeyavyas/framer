@@ -95,6 +95,29 @@ effect).
 - Product art: the Vertical Checking debit card (navy/teal, Mastercard),
   phone mockups, the ATM artwork (`ATM/artwork/`).
 
+**Where vectors come from** (in this order; don't draw a base shape from
+scratch when one of these covers it):
+
+1. **The designer's own SVGs** for signature shapes (wings, the hand).
+   Paste the path in as a constant, as `ATMTapIcon.tsx` does with `HAND`;
+   animate, colour and light it, never redraw it.
+2. **Icons: [Phosphor](https://phosphoricons.com), Light weight**
+   (Regular below about 48px). Light's line (about 6% of the icon's
+   width, round caps and joins) matches the hand's (about 5%). In code,
+   fetch the SVG and recolour it; on the canvas, Framer's Icon component
+   has Phosphor built in. One set, one weight, so every icon matches.
+   - Colours: white line on navy or teal; navy or midnight line on
+     glacier blue, mint or egg yolk. Fills only in brand colours (§2.1).
+   - Not in the app UI's style (§4.4): no iOS SF Symbols look on the ATM.
+3. **Illustrations** (scenario art, characters): a flat image in brand
+   colours, traced to SVG (`vtracer`), then simplified.
+4. **Drawn in code** only for simple geometry (confetti, rings,
+   chevrons, the check badge), built from the brand's shapes: circles,
+   the 50px pill radius, curve sections from the wing paths.
+
+Anything drawn or traced is rendered to PNG and looked at, beside its
+reference, before it's pushed.
+
 ### 2.5 Spacing
 
 The brand pages use a small set of gaps: **10, 15, 25, 50, 60px** (10 is
