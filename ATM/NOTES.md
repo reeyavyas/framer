@@ -873,6 +873,26 @@ dropped).
 - **Sparkles** like the earlier bags' (flat four-point stars, egg yolk
   and glacier, no white), only round the shopping bag and controller.
 
+**Round 8: G kept; open-palette options H to L** (same preview link).
+The designer kept G as the brand version and asked how the vector would
+look with no brand limit: at least four options, natural colours for
+the food, and colours that stand out on the teal card. All five keep
+natural food (golden bread, red apple, orange carrot, green broccoli, a
+white-and-blue milk carton) and gold or silver keys, and lean warm,
+which stands out most against teal. Each has its own outline, glow and
+sparkle colours.
+
+- **H Candy shop**: bubblegum-pink scale, violet stand, kraft grocery
+  bag, purple shopping bag, coral-red controller, plum outline.
+- **I Sunset**: peach scale, raspberry stand, sunny yellow grocery bag,
+  hot-magenta shopping bag, violet controller.
+- **J Arcade**: lemon scale, red-orange stand, kraft grocery bag,
+  electric-purple shopping bag, hot-pink controller with cyan buttons.
+- **K Citrus and berry**: lavender scale, indigo stand, kraft grocery
+  bag, tangerine shopping bag, berry-red controller.
+- **L Toy box**: primary colours, a cream scale, red stand, kraft
+  grocery bag, royal-blue shopping bag, sunflower controller.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
