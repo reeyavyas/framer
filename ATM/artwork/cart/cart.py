@@ -130,3 +130,59 @@ for key, name, pal in OPTIONS:
     assert "<style" not in svg and "<image" not in svg
     open(f"{S}/cart-{key}.svg", "w").write(svg)
 print("ok", [k for k, _, _ in OPTIONS])
+
+# ---- Animated export of D: the three boxes as separate groups with their own outlines ----
+# The silhouette (shape 12) draws every outline, so the box area is cut out of it and each box gets its own
+# outline: its shapes stroked in the line colour underneath its fills (the stroke's outer half is the outline,
+# and it fills the gaps between faces). Layers carry data-k names the Framer component animates.
+ITEMS = {  # back to front, with the point each one squashes from (its foot)
+    "flat": ((36, 52, 57, 58), (1050, 565)),
+    "green": ((23, 66, 67, 68, 69), (1745, 595)),
+    "yolk": ((14, 15, 18, 27, 32, 38, 39, 40, 41, 43, 47, 53, 56, 73, 74, 75, 76), (1400, 570)),
+}
+ITEM_SHAPES = {i for ix, _ in ITEMS.values() for i in ix}
+BOX_AREA = "M845,180 H1965 V600 H845 Z"
+def export_anim(key="D"):
+    _, _, pal = next(o for o in OPTIONS if o[0] == key)
+    svg = open(f"{S}/cart-{key}.svg").read()
+    line = pal["line"]
+    # cut the box area out of the silhouette
+    svg = svg.replace("</mask>", f'<path d="{BOX_AREA}" fill="#000"/></mask>', 1)
+    body = svg[svg.index("</defs>") + 7:]
+    shapes = list(re.finditer(r'<path\b[^>]*?/>', body))
+    # match the recoloured shapes back to source indices by their path data
+    src_d = {d(i): i for i in range(105)}
+    groups = {name: [] for name in ITEMS}
+    out, last = [], 0
+    first = True
+    for m in shapes:
+        el = m.group(0)
+        dm = re.search(r'\sd="([^"]+)"', el)
+        i = src_d.get(dm.group(1)) if dm else None
+        out.append(body[last:m.start()]); last = m.end()
+        if i in ITEM_SHAPES:
+            name = next(n for n, (ix, _) in ITEMS.items() if i in ix)
+            groups[name].append(el)
+            if first:
+                out.append("<!--ITEMS-->"); first = False
+            continue
+        out.append(el)
+    out.append(body[last:])
+    def item_layer(name):
+        els = groups[name]
+        outline = "".join(re.sub(r'\sfill="[^"]*"', f' fill="{line}" stroke="{line}" stroke-width="36" stroke-linejoin="round"', e, count=1) for e in els)
+        return f'<g data-k="{name}">{outline}{"".join(els)}</g>'
+    body = "".join(out).replace("<!--ITEMS-->", "".join(item_layer(n) for n in ITEMS))
+    # name the glow and each sparkle
+    body = body.replace(f'fill="url(#{key}-glow)"/>', f'fill="url(#{key}-glow)" data-k="glow"/>', 1)
+    n = [0]
+    def tag_star(m):
+        n[0] += 1
+        return m.group(0).replace("<path ", f'<path data-k="spark{n[0] - 1}" ', 1)
+    body = re.sub(r'<path d="M0,-1 C0\.12[^>]*/>', tag_star, body)
+    assert n[0] == 4 and all(groups.values()), (n[0], {k: len(v) for k, v in groups.items()})
+    out_svg = svg[:svg.index("</defs>") + 7] + body
+    open(f"{S}/cart-{key}-anim.svg", "w").write(out_svg)
+    return ITEMS
+export_anim()
+print("anim ok")

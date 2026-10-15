@@ -966,6 +966,36 @@ artboard updated):
   handle. Four now: egg yolk at the left and top right, white above the
   boxes and at the right.
 
+**Round 12: option D animated** (`ATMNeedWantCart.tsx`; preview
+"Need or Want Cart Loop", https://claude.ai/artifact/VCJmQeAiLwedG8XvJX7SFo).
+The designer chose D and asked for it to be animated on the card using
+GSAP, HyperFrames and Impeccable (the repo enables all three as plugins
+in `.claude/settings.json`; their skills were read from GitHub because
+the session had not loaded them).
+
+- **Motion**: the three boxes hop out of the cart in turn (flat box,
+  egg-yolk box, blue box). Each one gathers, leaps on a fast ease-out,
+  falls under gravity, squashes on landing and settles with a small
+  overshoot, tipping a few degrees in the air. The light-teal glow does
+  one slow breath per loop and the sparkles twinkle out of phase. The
+  cart, wheels and copy stay still.
+- **GSAP**: one `gsap.timeline({ repeat: -1 })` with a label per hop,
+  position parameters and `defaults`, transforms only (`svgOrigin` at
+  each box's foot), built inside `gsap.context()` and reverted on
+  unmount (the GSAP React skill's pattern without `@gsap/react`).
+  **Loop (s)** sets `timeScale`, so changing it never restarts the loop.
+- **HyperFrames' rules**: a single seekable timeline, nothing random,
+  finite repeats inside it, transform and opacity only.
+- **Impeccable's animate playbook**: one authored moment (the hop), no
+  scattered effects; reduced motion shows the drawing at rest.
+- **The boxes move with their own outlines**: the art's single navy
+  silhouette is cut away over the box area, and each box draws its own
+  outline (its shapes stroked in navy under its fills).
+  `cart.py`'s `export_anim()` writes `cart-D-anim.svg` with the boxes,
+  glow and sparkles as named layers; the component embeds it, with ids
+  made unique per instance.
+- Waiting on the designer's edits to the box shapes.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
