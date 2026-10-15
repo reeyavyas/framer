@@ -960,6 +960,11 @@ artboard updated):
   outline, light-blue tyre with a darker crescent, a blue hub ring and
   the egg-yolk hub with a small highlight. The short stretch of ground
   line under each wheel is redrawn where the cut-out bit into it.
+- **No ground shadow** in D (the dark teal band under the ground line).
+- **Sparkles fully inside the drawing**: two sat partly above the top of
+  the viewBox (y 200) and were cut off, and one was too close to the
+  handle. Four now: egg yolk at the left and top right, white above the
+  boxes and at the right.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

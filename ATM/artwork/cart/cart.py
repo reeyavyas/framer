@@ -63,7 +63,7 @@ OPTIONS = [
    **dict(YOLK_BOX, label="#ffffff", stripe="#ffffff", stripeShade="#fff4d6"),
    **flat(MINT_T, [MINT, MINT_S], MINT_SS), **gbox(SKY_TT, [SKY_T, SKY], SKY_S),
    **dict(WHEELS, tyre=["#5cb8e6", "#2f8fc4"], tyreHi="#8fd3f2", hubRim="#1d6a96"), **BUSH,  # lighter blue wheels, egg-yolk hubs
-   _noBush=True, _glow=LTEAL, _sparks=True, _circleWheels=True)),
+   _noBush=True, _glow=LTEAL, _sparks=True, _circleWheels=True, _noGround=True)),
  ("E", "Light-blue basket", dict(line=MID, ground=DTEAL, **basket("#1a9bd0", LBLUE, "#005f88", "#004a6b", SKY_T), **yolk_parts(), **grip(YOLK_T, YOLK, ORANGE),
    **FRAME_GLACIER, **MINT_BOX, **flat(YOLK_TT, [YOLK_T, YOLK], ORANGE), **gbox(GLACIER, [GLACIER, GLACIER_S], GLACIER_SS), **WHEELS, **BUSH)),
 ]
@@ -82,7 +82,7 @@ for key, name, pal in OPTIONS:
     out, last = [], 0
     for i, m in enumerate(els):
         out.append(body[last:m.start()]); last = m.end()  # keep the source's groups (some carry clip paths)
-        if i in DROP or (pal.get("_noBush") and i in BUSH_SHAPES) or (pal.get("_circleWheels") and i in WHEEL_SHAPES): continue
+        if i in DROP or (pal.get("_noBush") and i in BUSH_SHAPES) or (pal.get("_circleWheels") and i in WHEEL_SHAPES) or (pal.get("_noGround") and ROLE[i] == "ground"): continue
         el = m.group(0)
         el = re.sub(r'\sfill="[^"]*"', f' fill="{fill(ROLE[i])}"', el, count=1)
         el = re.sub(r'\sfill-opacity="[^"]*"', "", el)
@@ -106,7 +106,7 @@ for key, name, pal in OPTIONS:
     behind = f'<ellipse cx="1250" cy="880" rx="1060" ry="680" fill="url(#{key}-glow)"/>' if glow else ""
     star = "M0,-1 C0.12,-0.12 0.12,-0.12 1,0 C0.12,0.12 0.12,0.12 0,1 C-0.12,0.12 -0.12,0.12 -1,0 C-0.12,-0.12 -0.12,-0.12 0,-1 Z"
     sparks = "".join(f'<path d="{star}" transform="translate({x} {y}) scale({k})" fill="{c}"/>' for x, y, k, c in
-                     [(560, 330, 70, YOLK), (1080, 230, 45, "#ffffff"), (2020, 230, 85, YOLK), (2200, 640, 50, "#ffffff"), (330, 820, 45, YOLK)]) if pal.get("_sparks") else ""
+                     [(300, 690, 60, YOLK), (900, 320, 42, "#ffffff"), (2050, 330, 80, YOLK), (2230, 720, 50, "#ffffff")]) if pal.get("_sparks") else ""  # every sparkle sits fully inside the viewBox (top is y 200), clear of the handle
     # a smooth rim over each wheel's outline band, so the cuts for the bush and the receipt card never show on it
     if pal.get("_circleWheels"):
         # two clean circle wheels: navy outline, light-blue tyre with a darker crescent, navy-blue hub ring, egg-yolk hub;
