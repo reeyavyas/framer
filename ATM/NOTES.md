@@ -1019,6 +1019,11 @@ the session had not loaded them).
   line). The art's rim-top outline is now masked out (`RIM_BAND`) and
   one even line (`RIM_TOP`, 22 units) draws the whole top edge, joining
   the frame on the left and rounding into the right corner.
+- **More movement** (designer liked it, asked for more): the cart rolls
+  48 units each way (was 28). The sparkles twinkle four times a loop down
+  to about a third of their size (half of them out of step), and turn a
+  quarter turn per loop, alternate ones the other way, which is seamless
+  because a four-point star looks the same after a quarter turn.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 

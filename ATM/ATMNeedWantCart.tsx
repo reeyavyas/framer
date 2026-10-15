@@ -302,19 +302,22 @@ const ITEMS = [
     { k: "green", foot: "1745 595", at: 2.55, tip: -1 },
 ]
 const LAND = 0.16 + 0.42 + 0.34 // from a hop's start to its landing
-const ROLL = 28 // how far the cart rolls each way, in drawing units
+const ROLL = 48 // how far the cart rolls each way, in drawing units
 const WHEEL_R = 124 // the tyre's radius, so the hub glints turn exactly as far as the cart rolls
 const HUBS = ["778 1330", "1778 1330"]
 const GROUND_POINT = "1278 1475" // the cart squashes toward the ground here, so the wheels never sink
 const LOOP = 4.8 // seconds at Loop (s) = 4.8; the whole timeline is this long and repeats
 const HEIGHT = 120 // hop height, in drawing units (the drawing is 2120 wide)
-// Sparkles: position and size (they twinkle around this), and their offset in the loop.
+// Sparkles: position and size. Each twinkles four times a loop (half of them out of step) and turns a
+// quarter turn per loop, alternate ones the other way; a four-point star looks the same after a quarter turn,
+// so the loop stays seamless.
 const SPARKS = [
-    { x: 300, y: 690, k: 60, at: 0.2 },
-    { x: 900, y: 320, k: 42, at: 1.4 },
-    { x: 2050, y: 330, k: 80, at: 2.6 },
-    { x: 2230, y: 720, k: 50, at: 3.6 },
+    { x: 300, y: 690, k: 60 },
+    { x: 900, y: 320, k: 42 },
+    { x: 2050, y: 330, k: 80 },
+    { x: 2230, y: 720, k: 50 },
 ]
+const TWINKLES = 4
 
 // The whole loop as ONE GSAP timeline (repeat: -1). Every tween is transform or opacity, every value it
 // moves ends where it started, and nothing is random, so each pass is identical and the loop is seamless.
@@ -353,7 +356,10 @@ function buildLoop(svg: SVGSVGElement) {
     SPARKS.forEach((sp, i) => {
         const el = q(`spark${i}`)
         if (!el) return
-        tl.fromTo(el, { svgOrigin: `${sp.x} ${sp.y}`, scale: sp.k }, { scale: sp.k * 0.45, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 1 }, sp.at)
+        const [from, to] = i % 2 ? [sp.k * 0.35, sp.k] : [sp.k, sp.k * 0.35]
+        const half = LOOP / (TWINKLES * 2)
+        tl.fromTo(el, { svgOrigin: `${sp.x} ${sp.y}`, scale: from }, { scale: to, duration: half, ease: "sine.inOut", yoyo: true, repeat: TWINKLES * 2 - 1 }, 0)
+        tl.fromTo(el, { rotation: 0 }, { rotation: i % 2 ? -90 : 90, duration: LOOP, ease: "none" }, 0)
     })
     return tl
 }
