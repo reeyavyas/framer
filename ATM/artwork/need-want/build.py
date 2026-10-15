@@ -26,10 +26,9 @@ pal_common = dict(
     ctrl=["#ffe08a", YOLK, "#ffbe2e"], ctrlEdge=[ORANGE, "#e08a12"], ctrlRing=NAVY, ctrlBtn=["#0a4d70", NAVY],
 )
 OPTIONS = [
- ("F", "Glacier grocery bag", "The grocery bag in glacier blue, so the bread, carrot, broccoli and apple sit on a cool, light ground.",
-  dict(pal_common, gbag=["#eaf6ff", GLACIER, GLACIER2], gbagSide=[GLACIER2, GLACIER3], gbagFold=[GLACIER3, "#5f9fd0"], gbagIn=["#6aa9d8", "#4f8fc2"])),
- ("G", "Egg-yolk grocery bag", "The grocery bag in a light egg yolk with orange sides: warmer, and a stronger match for the controller.",
-  dict(pal_common, gbag=["#ffe596", "#ffd766", "#ffc23a"], gbagSide=[ORANGE, "#e08a12"], gbagFold=["#e08a12", "#c46a0a"], gbagIn=["#c46a0a", "#a85a08"])),
+ ("G", "Egg-yolk grocery bag, bright blue shopping bag", "G with a brighter shopping bag: a glacier-to-bright-blue gradient with the same gloss as the grocery bag, no shadow on the right, and sparkles round the shopping bag and controller.",
+  dict(pal_common, gbag=["#ffe596", "#ffd766", "#ffc23a"], gbagSide=[ORANGE, "#e08a12"], gbagFold=["#e08a12", "#c46a0a"], gbagIn=["#c46a0a", "#a85a08"],
+       sbag=[GLACIER, "#3cc0ef", SKY, "#0090d0"], sbagSide=[SKY, "#0094c6"], sbagFold=["#0094c6", LBLUE], sbagIn=[SKY, LBLUE], handle=[GLACIER, SKY])),
 ]
 
 # Each shape's path data, for the gloss and shadow clips.
@@ -38,7 +37,7 @@ assert len(shapes) == 89
 D = lambda i: shapes[i][1]
 GLOSS = (1, 2, 6)  # grocery bag, shopping bag, controller: a soft light band clipped to each
 BOARD_TOPS = (4, 5)
-SHADOWS = [(1460, 1660, 300, 70), (2980, 1390, 560, 95), (1620, 1840, 230, 50)]  # on the board: cx, cy, rx, ry
+SHADOWS = [(1460, 1660, 300, 70), (1620, 1840, 230, 50)]  # on the board: cx, cy, rx, ry
 
 def extras(key):
     defs = [f'<radialGradient id="{key}-glow"><stop offset="0" stop-color="{LTEAL}" stop-opacity=".55"/><stop offset=".5" stop-color="{GLACIER}" stop-opacity=".16"/><stop offset="1" stop-color="{GLACIER}" stop-opacity="0"/></radialGradient>',
@@ -62,6 +61,10 @@ def paint(key):
                 out.append(f'<g clip-path="url(#{key}-board)">' + "".join(
                     f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" transform="rotate(-14 {x} {y})" fill="url(#{key}-shadow)"/>' for x, y, rx, ry in SHADOWS) + "</g>")
     assert n == 88, n
+    # flat four-point sparkles round the shopping bag and controller only: x, y, size, colour
+    star = "M0,-1 C0.12,-0.12 0.12,-0.12 1,0 C0.12,0.12 0.12,0.12 0,1 C-0.12,0.12 -0.12,0.12 -1,0 C-0.12,-0.12 -0.12,-0.12 0,-1 Z"
+    sparkles = [(2300, 300, 80, YOLK), (3440, 130, 100, YOLK), (3720, 560, 60, GLACIER), (3800, 1000, 70, YOLK), (2250, 640, 45, GLACIER), (3020, 60, 45, GLACIER)]
+    out.append("".join(f'<path d="{star}" transform="translate({x} {y}) scale({k})" fill="{col}"/>' for x, y, k, col in sparkles))
     glow = f'<ellipse cx="2000" cy="1250" rx="2050" ry="1250" fill="url(#{key}-glow)"/>'
     return glow + "".join(out)
 

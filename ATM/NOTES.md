@@ -860,6 +860,19 @@ designer's direction:
   gradient. That gradient is in the drawing's coordinates, so it
   matches the board around it exactly.
 
+**Round 7: option G chosen** (same preview link, now G only; F is
+dropped).
+
+- **No contact shadow on the right**: the one under the shopping bag
+  and controller is gone. The two under the grocery bag and keys stay.
+- **Shopping bag more vibrant**: the front runs glacier (the lit corner)
+  into bright blue (sky `#00acdd`) and a deeper bright blue, with the
+  same gloss band as the grocery bag. Darker bright-blue side and
+  inside, and glacier-to-sky handles. A first try with glacier over
+  half the front looked washed out.
+- **Sparkles** like the earlier bags' (flat four-point stars, egg yolk
+  and glacier, no white), only round the shopping bag and controller.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
