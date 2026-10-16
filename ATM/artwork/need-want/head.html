@@ -1,0 +1,40 @@
+<title>Need or Want Scale Colours</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: the navy kiosk page with stand-in teal glass cards; each card's lower part holds one colour option of the designer's scale vector. One dark look on purpose: the cards live on the ATM's navy page. */
+@font-face { font-family: "Area Normal Black"; font-weight: 900; src: url(https://fonts.gstatic.com/s/figtree/v9/_Xmz-HUzqDCFdgfMsYiV_F7wfS-Bs_fWR15e.ttf) format("truetype"); }
+@font-face { font-family: "Area Normal"; font-weight: 400; src: url(https://fonts.gstatic.com/s/figtree/v9/_Xmz-HUzqDCFdgfMsYiV_F7wfS-Bs_d_QF5e.ttf) format("truetype"); }
+@font-face { font-family: "P22 Mackinac"; font-weight: 700; src: url(https://fonts.gstatic.com/s/youngserif/v2/3qTpojO2nS2VtkB3KtkQZ2t6.ttf) format("truetype"); }
+:root {
+  --navy: #002c44; --midnight: #11232d; --light-teal: #3bbfc0; --yolk: #ffcc40; --ink: #ffffff; --muted: #a9c6d6;
+  --serif: "P22 Mackinac", Georgia, serif; --sans: "Area Normal", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--navy); color: var(--ink); font: 16px/1.5 var(--sans); }
+main { max-width: 1180px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+header { display: grid; gap: 8px; max-width: 72ch; }
+h1 { font: 700 clamp(30px, 5vw, 46px)/1.1 var(--serif); margin: 0; text-wrap: balance; }
+header p, .note { margin: 0; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 36px 28px; }
+figure { margin: 0; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.card { border-radius: 36px; border: 2px solid rgba(59,191,192,.7); background: linear-gradient(148deg, rgba(0,97,94,.4) 0%, rgba(255,255,255,.2) 98%), var(--navy); padding: 28px 24px 28px; display: grid; gap: 18px; }
+.copy { display: grid; gap: 6px; padding-left: 14px; }
+.kicker { font: 900 15px/1 "Area Normal Black", var(--sans); letter-spacing: 1.5px; color: var(--yolk); }
+.title { font: 700 32px/1.1 var(--serif); }
+.card svg { width: 100%; height: auto; display: block; }
+figcaption { display: flex; gap: 12px; align-items: start; }
+figcaption p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+figcaption strong { font-size: 17px; }
+.letter { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--yolk); color: var(--midnight); font: 900 17px/1 "Area Normal Black", var(--sans); }
+/*OPTION_CSS*/
+</style>
+<main>
+  <header>
+    <h1>Need or Want? scale colours</h1>
+    <p>G is the brand version you kept. H to L are what I would do with no brand limit, now with red only on the apple and each scale made from tints and shades of one colour (board, stand, cylinder and pivot). The food keeps its natural colours and the keys are gold or silver; warm, light scales and dark outlines keep each drawing standing out on the teal card.</p>
+  </header>
+  <div class="grid">
+<!--FIGS-->
+  </div>
+  <p class="note">Stand-in teal glass cards on the ATM's navy page, cut down to the kicker and title. Figtree and Young Serif stand in for Area Normal and P22 Mackinac. Each option has its own outline colour, glow and sparkle colours; the shapes and lines are still the designer's.</p>
+</main>

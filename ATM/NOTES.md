@@ -151,6 +151,24 @@ doesn't change them; change them only when it's asked for the ATM.
   the same `system-overlay-change` signal as the app's, so the
   carousel holds its autoplay while it's up. Timings and the path are
   constants at the top of the file.
+- `ATMNeedWantLoop.tsx` (archived to `archived/atm-lesson-card/`; the lesson cards now use the glossy 3D set:
+  `ATMCartV2`, `ATMSavingsJar`, `ATMHourglass`, `ATMGauge`, `ATMBrowserSearch`) — the first looping illustration for the Lesson 1
+  ("Need or Want?") card on `/atm-start`. It fills the bottom of the
+  teal glass card; the card's copy and Get Started button stay still
+  above it. Nine options in its **Style** property (A Swipe, B Balance,
+  C Bags, D Cart, E Coin, F Sorter, G Claw, H Dial, I Bubbles), all
+  using the same six glossy items (house, groceries, water drop; phone,
+  TV, sneaker). No background of its own, so the glass shows through.
+  Drawn on a 640×480 canvas, scaled to fit the frame and clipped to it,
+  so nothing ever moves over the card's copy. One loop clock per style
+  (5–9 s; **Speed** scales it), and a still frame under reduced motion.
+  **Glow** (two soft glows breathing in turn) and **Shine** (a light
+  band sliding across the glossy shapes) switch on and off. Colours
+  (**Glacier**, **Mint**, **Egg Yolk**, **White**, **Navy**, **Teal**,
+  **Light Teal**) accept colour styles. Labels use Area Normal Black.
+  Preview of all nine: "Need or Want Card Loops"
+  (https://claude.ai/artifact/KN8Fc3XPuo3WFNGtNdKJ2S), which runs the
+  real component in stand-in cards.
 
 ## Using it in Framer
 
@@ -210,6 +228,13 @@ doesn't change them; change them only when it's asked for the ATM.
   6. **Transition** swaps between A + B + E (default), A + B, A, B, E
      and E + B.
 
+- `ATMNeedWantLoop.tsx` (archived to `archived/atm-lesson-card/`; place one of the glossy 3D
+  components instead): paste it into a new code file named
+  `ATMNeedWantLoop` and place it in the lesson card, filling the area
+  under the Get Started button (about 694×500 on the 734×1050 card;
+  any size works, the drawing keeps its 4:3 shape and centres). Pick
+  the option with **Style**. Like the overlay, it uses no blur and no
+  CSS transitions, so it is safe over the carousel.
 - `ATMInactivityOverlay.tsx`: paste it into a new code file named
   `ATMInactivityOverlay` and place one instance on `/atm-start` and on
   every ATM lesson page (not on `/atm` itself, which it returns to),
@@ -688,6 +713,9 @@ Decided so far:
 
 ### Lesson card animation
 
+**Before animating any new vector, read `artwork/ANIMATING-VECTORS.md`**:
+the colours, measured outline, checks and motion that worked on the cart.
+
 The designer asked for the lesson card animation first: it fills the
 bottom of the lesson card (the copy of the flip card that no longer
 flips, 734×1050 by default), where the image used to be. Colours must
@@ -708,6 +736,319 @@ illustration looping in place, eye-catching, with the card copy still),
 and don't ask for references again. Use the **design-taste-frontend**
 skill (the designer asked for it), with the ATM rules winning where it
 clashes (brand fonts and colours).
+
+**Round 1 (built, waiting on the designer's pick)**: nine options in
+`ATMNeedWantLoop.tsx`, shown on the preview page. The designer said the
+card animation does not need to match the wing background, so the
+shine is its own light band, not the wing's shimmer. Brand colours
+only: glacier blue and mint for the big light objects, a little egg
+yolk and white for accents, navy for dark objects and the dark
+labels. The person pushing the cart from the reference is left out of
+D (the cart alone carries it); ask if the designer wants the person.
+
+**Round 2: Bags in 3D** (the designer's pick to edit). Feedback: the
+movement was fine; the vector art was not 3D, vibrant or polished
+enough. References: the glossy 3D shopping bags (clay look, star,
+curly ribbons), plus the cart, Tradex, Financial UI and bouncing-bills
+videos for vibrancy. Changes, art only (the hop and pop timing is
+unchanged):
+
+- **Bags**: real 3D boxes (front, darker side face, dark open top, tube
+  handles front and back with rivets), a lit rim on the edges, a soft
+  gloss highlight, shade at the foot, a soft contact shadow, and bigger
+  NEED/WANT lettering with an embossed shadow. Colours are the **Need
+  Bag** and **Want Bag** properties (egg yolk and sky `#00acdd` by
+  default); light and shade are mixed from them, warm colours shading
+  toward amber (navy made the yellow look olive) and cool ones toward
+  navy. The lettering picks navy or white, whichever reads better.
+- **Items**: groceries (milk carton and an orange) and a T-shirt go in
+  NEED, a smartphone and sneakers in WANT. No house or water drop, and
+  no glacier or mint on the small items: whites, teals, blues, egg yolk,
+  plus orange and leaf green on the groceries. The other styles keep
+  their round-1 items.
+- **Headroom**: the bags are a little shorter and each item rises
+  clear of them. Once clear, a copy of the item drawn above everything
+  takes over, so it passes in front of the handle instead of behind it.
+- Bigger curly ribbons and a puffy 3D star, as in the reference.
+
+Preview with three colourways: "Need or Want 3D Bags"
+(https://claude.ai/artifact/FChwCiB7YGmrihTbw7zUpY).
+
+**Round 3: option 1 (egg yolk and sky) refined.** The designer picked
+colourway 1. Changes:
+
+- **No squiggles** (the curly ribbons are gone). Sparkles stay, all
+  flat; the big star is flat egg yolk too (no 3D back or gloss).
+- **Sharp top corners.** A rounded corner running into the side face's
+  straight diagonal looked unnatural, so the front's top corners are
+  sharp where they meet the opening and the side; only the foot is
+  rounded.
+- **No sheen or sweep on the bags** (the light band and the gloss
+  highlight are gone; Shine does nothing on this style). Instead a
+  radial glow behind each bag breathes and swells while that bag hops,
+  and a soft white glow follows each item at the top of its hop.
+- **Smartphone redrawn**: metal edge seen a little from the side, side
+  buttons, thin bezel, a teal-to-blue wallpaper with a widget, app
+  icons and a dock. **Sneaker redrawn**: a chunky modern trainer with a
+  wavy-lined midsole, stitched navy outsole, sky heel counter and toe,
+  egg-yolk stripe and heel tab, laces and eyelets.
+- **No grey anywhere.** White objects shade toward sky blue, never
+  toward navy or grey; the phone's metal is light blue.
+- **White outline** to try: the **Outline** property draws a white
+  sticker outline round the bags, handles and items. Off by default;
+  the preview shows both.
+- **Centred**: the pair runs 66..574 on the 640 canvas.
+
+**Round 4: starting over from the designer's scale vector.** The
+designer dialled back and supplied their own vector,
+`artwork/need-want/Need_Vs_Want.svg` (a seesaw: a grocery bag with
+bread, milk, carrot, broccoli and an apple, plus keys, on one side; a
+shopping bag and a game controller on the other). Brief: recolour it
+toward the brand, vibrant, no natural vegetable colours, merging and
+simplifying a little for the card, and **show still vector options
+before animating anything**. The bags component above is on hold.
+
+- `recolor.py` gives each of the vector's 89 shapes a colour role (one
+  outline path, then bread, bag front, controller button and so on);
+  each object is cut to one or two tones. `build.py` paints five
+  palettes onto those roles and writes the preview page (`head.html`
+  is its top half). Run `python3 recolor.py Need_Vs_Want.svg
+  shapes.svgfrag roles.json`, then `python3 build.py <folder>`.
+- Options: **A** egg yolk and sky with a navy line; **B** coral and egg
+  yolk, navy line; **C** a white line with deeper fills; **D** only
+  brand colours with a midnight line; **E** A's bags with C's white
+  line (anything white turns teal, sky or egg yolk so the line shows).
+  No grey in any of them. Preview: "Need or Want Scale Colours"
+  (https://claude.ai/artifact/HchWTu5B9VGnbah5NauyC9).
+- The shapes and lines are still the designer's own; simplifying
+  further (dropping small outline details) waits for their pick.
+
+**Round 5: the scale, colours narrowed** (same preview link). The
+designer's direction:
+
+- **Food in natural colours**, made vibrant for the teal card: golden
+  bread (never white or teal), orange carrot, green broccoli, red apple.
+- **The whole shopping bag bright blue** (sky `#00acdd`, darker sky on
+  its side, light blue inside, sky handles).
+- **Controller from option E** with the darker yellow replaced by
+  orange `#f6a11d`: egg-yolk body, orange edges, navy buttons.
+- **Keys from option D**, with each key's edge in one colour. The top
+  key's edge was four shapes, and its tip was coloured as the key's
+  face, so it showed two colours; `recolor.py` now has separate face
+  and edge roles for each key. Top key glacier with a light-teal edge,
+  back key light teal with a teal edge.
+- **Mint scale**, the only part with gradients: a mint board top and
+  edge, a light-teal-to-teal stand, a glacier cylinder. Every other
+  object is flat colour.
+- **Midnight outline** is fine, but no object is midnight all over.
+  **No stark white objects**, and no grey. Use mint and glacier, and
+  shades and tints of the brand colours.
+- Two options, differing only in the grocery bag: **F** glacier, **G**
+  light egg yolk with orange sides.
+
+**Round 6: depth, keys and the key-ring cut-out** (same preview link).
+
+- **Not flat**: the designer wants tints, shades and gradients close to
+  the brand colours on every object (this replaces round 5's "gradients
+  on the scale only"), plus highlights and shadows. Each object now
+  runs light to shade across its shape. A soft white gloss band sits on
+  both bags and the controller, soft navy contact shadows on the board
+  (clipped to the board top), and a light-teal radial glow behind the
+  whole drawing.
+- **Shopping bag less flat**: a sky gradient front with the gloss, a
+  darker side and inside.
+- **Keys**: no teal keys against the scale. The top key is glacier, the
+  back key egg yolk, and both edges dark teal, so each key's face and
+  edge differ.
+- **Cut-out in the key ring**: the bit of the back key seen through the
+  ring (shape 33, role `keyHole`) is painted with the board's own
+  gradient. That gradient is in the drawing's coordinates, so it
+  matches the board around it exactly.
+
+**Round 7: option G chosen** (same preview link, now G only; F is
+dropped).
+
+- **No contact shadow on the right**: the one under the shopping bag
+  and controller is gone. The two under the grocery bag and keys stay.
+- **Shopping bag more vibrant**: the front runs glacier (the lit corner)
+  into bright blue (sky `#00acdd`) and a deeper bright blue, with the
+  same gloss band as the grocery bag. Darker bright-blue side and
+  inside, and glacier-to-sky handles. A first try with glacier over
+  half the front looked washed out.
+- **Sparkles** like the earlier bags' (flat four-point stars, egg yolk
+  and glacier, no white), only round the shopping bag and controller.
+
+**Round 8: G kept; open-palette options H to L** (same preview link).
+The designer kept G as the brand version and asked how the vector would
+look with no brand limit: at least four options, natural colours for
+the food, and colours that stand out on the teal card. All five keep
+natural food (golden bread, red apple, orange carrot, green broccoli, a
+white-and-blue milk carton) and gold or silver keys, and lean warm,
+which stands out most against teal. Each has its own outline, glow and
+sparkle colours.
+
+- **H Candy shop**: bubblegum-pink scale, violet stand, kraft grocery
+  bag, purple shopping bag, coral-red controller, plum outline.
+- **I Sunset**: peach scale, raspberry stand, sunny yellow grocery bag,
+  hot-magenta shopping bag, violet controller.
+- **J Arcade**: lemon scale, red-orange stand, kraft grocery bag,
+  electric-purple shopping bag, hot-pink controller with cyan buttons.
+- **K Citrus and berry**: lavender scale, indigo stand, kraft grocery
+  bag, tangerine shopping bag, berry-red controller.
+- **L Toy box**: primary colours, a cream scale, red stand, kraft
+  grocery bag, royal-blue shopping bag, sunflower controller.
+
+**Round 9: H to L tightened.** Rules from the designer, applied to H
+to L (G unchanged):
+
+- **Red only on the apple.** The red stands, H's coral-red and K's
+  berry-red controllers, L's red buttons and H's rose-gold key are
+  gone. `build.py` asserts that no red is used anywhere but the apple.
+- **Each scale in one colour family**: the board, stand, cylinder and
+  pivot are tints and shades of one colour (the egg-yolk pivot is
+  gone). Pink (H), peach (I), lemon (J), lavender (K), butter yellow
+  (L).
+- **The whole drawing stands out on the teal card**: warm, light
+  scales, a dark outline and a glow behind each drawing.
+- Controllers now: H sunny yellow with purple buttons, I violet, J hot
+  pink, K berry magenta, L purple with yellow buttons.
+
+**Round 10: a shopping cart from Adobe Stock** (`AdobeStock_1317578309.ai`,
+from the designer). Brief: make it vector, recolour it with brand
+colours, tints, shades and gradients, and remove the background, the
+clouds and the green receipt card at the bottom right. Present a
+handful of options in Claude Design.
+
+- The .ai is an EPS-style Illustrator file with no PDF inside. It is
+  already vector: Ghostscript turns it into a PDF (`gs -dEPSCrop
+  -sDEVICE=pdfwrite`), then `pdftocairo -svg` gives `src.svg` (105
+  shapes). Neither file is committed (the stock licence is the
+  designer's); `artwork/cart/cart.py` rebuilds the options from
+  `src.svg`.
+- The outline is one navy silhouette of the whole drawing with the
+  colours laid on top, and the see-through gaps (behind the boxes,
+  under the basket, between the wheels) were painted in the background
+  colour. `cart.py` drops the background, clouds and receipt card and
+  masks the gaps and the receipt card out of the silhouette, keeping
+  the right wheel in front.
+- Five colourways, each a role-per-shape recolour with gradients:
+  **A** egg-yolk basket, sky grip, mint boxes; **B** sky basket,
+  egg-yolk grip and box; **C** mint basket; **D** glacier basket on a
+  teal frame; **E** deep light-blue basket. Every option has navy
+  wheels with egg-yolk hubs and a light mint bush (darker greens
+  disappeared on the teal card).
+- Claude Design canvas "Need or Want Cart Options"
+  (https://claude.ai/artifact/3cwuWFG2nAkUzwUbiaDnCx): one artboard
+  per option, the cart on a teal glass card, with the Liberty FCU
+  Kiosks design system installed.
+
+**Round 11: D (glacier basket) chosen and refined** (same canvas, D
+artboard updated):
+
+- The egg-yolk box's stripes and label are white (they were glacier).
+- The bush at the bottom left is removed, and so is its outline in the
+  silhouette (masked out, with the left wheel kept).
+- The frame is light teal instead of teal.
+- The wheels are a lighter blue, with the egg-yolk hubs unchanged.
+  Mint wheels were tried at the designer's suggestion and then
+  reverted.
+- A light-teal radial glow sits behind the cart, with five flat
+  sparkles in egg yolk and white.
+- **Smooth wheel rims**: the masks that remove the bush and the receipt
+  card nicked the wheels' outlines (the designer saw jagged edges). A
+  smooth navy ellipse rim is now drawn over each wheel's outline band
+  (`WHEEL_CENTRES` in `cart.py`). Still jagged: the source's wheels and
+  hubs are lumpy ovals, so no rim or mask lined up.
+- **Circle wheels (current)**: the designer suggested plain circles. D
+  now drops the original wheel shapes (`WHEEL_SHAPES`), cuts their
+  outline out of the silhouette, and draws each wheel as circles: navy
+  outline, light-blue tyre with a darker crescent, a blue hub ring and
+  the egg-yolk hub with a small highlight. The short stretch of ground
+  line under each wheel is redrawn where the cut-out bit into it.
+- **No ground shadow** in D (the dark teal band under the ground line).
+- **Sparkles fully inside the drawing**: two sat partly above the top of
+  the viewBox (y 200) and were cut off, and one was too close to the
+  handle. Four now: egg yolk at the left and top right, white above the
+  boxes and at the right.
+
+**Round 12: option D animated** (`ATMNeedWantCart.tsx`, since archived to `archived/atm-lesson-card/` at the designer's request; preview
+"Need or Want Cart Loop", https://claude.ai/artifact/VCJmQeAiLwedG8XvJX7SFo).
+The designer chose D and asked for it to be animated on the card using
+GSAP, HyperFrames and Impeccable (the repo enables all three as plugins
+in `.claude/settings.json`; their skills were read from GitHub because
+the session had not loaded them).
+
+- **Motion**: the three boxes hop out of the cart in turn (flat box,
+  egg-yolk box, blue box). Each one gathers, leaps on a fast ease-out,
+  falls under gravity, squashes on landing and settles with a small
+  overshoot, tipping a few degrees in the air. The light-teal glow does
+  one slow breath per loop and the sparkles twinkle out of phase. The
+  cart, wheels and copy stay still.
+- **GSAP**: one `gsap.timeline({ repeat: -1 })` with a label per hop,
+  position parameters and `defaults`, transforms only (`svgOrigin` at
+  each box's foot), built inside `gsap.context()` and reverted on
+  unmount (the GSAP React skill's pattern without `@gsap/react`).
+  **Loop (s)** sets `timeScale`, so changing it never restarts the loop.
+- **HyperFrames' rules**: a single seekable timeline, nothing random,
+  finite repeats inside it, transform and opacity only.
+- **Impeccable's animate playbook**: one authored moment (the hop), no
+  scattered effects; reduced motion shows the drawing at rest.
+- **The boxes move with their own outlines**: the art's single navy
+  silhouette is cut away over the box area, and each box draws its own
+  outline (its shapes stroked in navy under its fills).
+  `cart.py`'s `export_anim()` writes `cart-D-anim.svg` with the boxes,
+  glow and sparkles as named layers; the component embeds it, with ids
+  made unique per instance.
+- **Box shapes fixed** (designer's marked frames): the art only drew what
+  showed, so once lifted the flat box ended in the egg-yolk box's slant
+  and the egg-yolk box's side face stopped along the blue box. The flat
+  box's two layers now end in straight vertical edges, and the egg-yolk
+  box has a whole side face (bottom edge running back, back edge
+  parallel to the front edge, meeting it). The blue box is drawn in
+  front of the egg-yolk box's side, as in the art.
+- **Closed outlines**: stroking each box's pieces left notches and
+  unfinished corners, so each box's outline is now its faces as
+  polygons (`HULLS` in `cart.py`), filled and stroked in navy under its
+  fills, which gives closed shapes, rounded corners and solid lines
+  between faces. The basket rim's top outline, which the box cut-out
+  had shaved, is redrawn whole (`RIM_TOP`).
+- **No cut-off hop**: the drawing has more room at the top (viewBox
+  `190 80 2120 1480`).
+- **The cart moves too** (the designer asked): it rolls gently back and
+  forth twice per loop on a still ground line (the ground is redrawn
+  outside the cart, `GROUND`), the hub glints turn exactly as far as the
+  wheels would, and the cart gives a small squash, anchored at the
+  ground, each time a box lands.
+- **Even rim line**: the basket rim's top outline was thick on the left
+  (the art's own outline) and thinner across the box area (the redrawn
+  line). The art's rim-top outline is now masked out (`RIM_BAND`) and
+  one even line (`RIM_TOP`, 22 units) draws the whole top edge, joining
+  the frame on the left and rounding into the right corner.
+- **More movement** (designer liked it, asked for more): the cart rolls
+  48 units each way (was 28). The sparkles twinkle four times a loop down
+  to about a third of their size (half of them out of step), and turn a
+  quarter turn per loop, alternate ones the other way, which is seamless
+  because a four-point star looks the same after a quarter turn.
+- **Still ground line** (designer): the ground line's two end dashes were
+  inside the rolling cart group, so they slid with it. They now sit with
+  the ground line, outside the cart group, and stay still.
+- **Pulsing glow** (designer): the glow was too faint and read as still.
+  It's stronger (light-teal core at full strength, a longer glacier
+  falloff so the edge diffuses), a little smaller so it never touches the
+  viewBox edge, and it pulses twice a loop: scale 0.84 to 1 and opacity
+  0.45 to 1 about its centre.
+- **Sizing** (designer): the designer sets the height and leaves the width
+  on Fill, so the component takes any width and a fixed height, and drops
+  in at 614×400. The drawing scales to the height and stays centred.
+- **Glow toned down** (designer: too much): core 0.75 (was 1), mid stops
+  0.48 / 0.2 / 0.06. Same soft falloff and same pulse.
+- **Glow edge** (designer: edges still too visible): the gradient now falls
+  off in a bell shape (0.6 at the centre, then 0.48, 0.28, 0.15, 0.07,
+  0.025, 0.007, 0) instead of a straight ramp, so there's no rim where it
+  ends. Same pulse.
+- **Playbook** (designer: take notes on what worked, more vectors coming):
+  `artwork/ANIMATING-VECTORS.md`, plus `artwork/cart/preview/` (build
+  script, preview page, frame capture, outline measuring).
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
@@ -969,5 +1310,6 @@ In the order they were made with the designer:
 
 ATM work goes straight on `main`. If the owner asks for a branch, use
 `atm`, or `atm-lessons` for lesson work (the lesson card and the
-lessons). The banner and hood light work was done on `atm-additions`,
+lessons). The lesson card animation is on `atm-card-animations`, the
+name the owner asked for. The banner and hood light work was done on `atm-additions`,
 the name the designer asked for.

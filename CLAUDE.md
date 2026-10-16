@@ -49,3 +49,10 @@ file in a scratch folder with
 (`npx tsc --noEmit --strict --jsx react-jsx --skipLibCheck
 --moduleResolution bundler --module esnext --target es2020 File.tsx`);
 it must print nothing for the file. Don't push until it does.
+
+## Animating vector art
+
+Before animating any illustration the owner sends, read
+`ATM/artwork/ANIMATING-VECTORS.md` and follow it: the colours and
+measured outline that worked, and the checks for uneven strokes and
+open shapes, lines and edges on every moving part.
