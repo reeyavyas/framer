@@ -203,7 +203,7 @@ GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, band=(0, 12), rim=.95) 
 # face tint/shade steps (source lightness), edge band (out, in), rim highlight
 GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both schemes take scheme A's sky arrow
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
-STACK = dict(cx=2665, bottom=2400, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # top level with the lid
+STACK = dict(cx=2665, bottom=2459, r=245, k=.36, n=20, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
@@ -213,7 +213,7 @@ JAR_REST = [(1235, 1735, -16, .6), (2025, 1830, 20, .6)]  # tilted, resting on t
 JAR_FRONT = [(1410, 2355, 2), (1880, 2355, 3)]
 JAR_LEAN = [(1200, 2080, 72, .5), (2085, 2065, -72, .5)]  # leaning on the glass, left and right
 FALL = (1600, 150, -16, .8)
-SPACED_ART = (901, -45, 2935, 2470)
+SPACED_ART = (901, -45, 2935, 2490)
 DOLLAR = ("M .30,-.30 C .22,-.44 -.30,-.44 -.30,-.18 C -.30,.02 .30,-.02 .30,.20 C .30,.44 -.24,.44 -.32,.28 "
           "M 0,-.54 V -.40 M 0,.40 V .54")
 
@@ -453,7 +453,7 @@ def build_gloss(key):
         if o not in ("arrow", "lid"): body_ix.append(i)
     gs = NAVY
     shadows = "".join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{fade(gs, st["shadow"], .55)}"/>' for x, y, rx, ry in
-                      [(1625, 2445, 780, 70), (STACK["cx"] + 4, STACK["bottom"] + 4, 340, 56)])
+                      [(1915, 2457, 1090, 78)])  # one ground under the jar, the arrow and the stack
     glass_op = f' opacity="{st["glass"]}"' if st["glass"] < 1 else ""
     gsh = core["glassShadow"]
     loose = lambda L: "".join(coin(x, y, R_JAR, k, rot, gsh)[0] for x, y, rot, k in L)
@@ -506,9 +506,8 @@ def build_gloss(key):
                    + f'<path d="{pts(FRONT)}" fill="none" stroke="{WHITE}" stroke-width="44" stroke-linejoin="round" clip-path="url(#{fid})"/>'  # border: 22 inset, even
                    + f'<g clip-path="url(#{fid})"><ellipse cx="{fx0 + (fx1 - fx0) * .38:.0f}" cy="{fy0 + (fy1 - fy0) * .3:.0f}" rx="{(fx1 - fx0) * .4:.0f}" ry="{(fy1 - fy0) * .3:.0f}" fill="{fade(WHITE, .55, .5)}"/>'
                    f'<ellipse cx="{fx0 + (fx1 - fx0) * .7:.0f}" cy="{fy0 + (fy1 - fy0) * .85:.0f}" rx="{(fx1 - fx0) * .5:.0f}" ry="{(fy1 - fy0) * .3:.0f}" fill="{fade(LBLUE, .45, .55)}"/></g>')
-    # its shadow: the whole solid, offset down-right, in widening faint layers (each layer one opaque union, then faded)
-    arrow_shadow = (f'<ellipse cx="{ARROW_AT[0] + 20:.0f}" cy="{ARROW_AT[1]:.0f}" rx="380" ry="50" fill="{fade(NAVY, st["shadow"], .55)}"/>'
-                    f'<g transform="translate(26 30) {ARROW_T}">'
+    # its shadow (it stands on the shared ground shadow): the whole solid, offset down-right, in widening faint layers (each layer one opaque union, then faded)
+    arrow_shadow = (f'<g transform="translate(26 30) {ARROW_T}">'
                     + "".join(f'<g opacity=".03" fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round">'
                               + "".join(f'<path d="{d_}"/>' for d_ in solid) + "</g>" for w in range(72, -1, -6))
                     + "</g>")
