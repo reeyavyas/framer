@@ -127,9 +127,11 @@ BELL = ((0, 1), (.25, .8), (.45, .47), (.6, .25), (.72, .12), (.83, .045), (.92,
 
 def layered(paths, opacity, widths, extra=""):
     """A soft shadow without blur: the shapes stacked at low opacity with growing round strokes."""
-    return "".join(f'<path d="{d}" opacity="{f(opacity)}" stroke-width="{w}"{extra}/>' for w in widths for d in paths)
+    # fill-opacity/stroke-opacity, not opacity: group opacity makes Chromium composite each copy in its own layer,
+    # which shows as a faint rectangle (the layer's bounds) over the card's gradient
+    return "".join(f'<path d="{d}" fill-opacity="{f(opacity)}" stroke-opacity="{f(opacity)}" stroke-width="{w}"{extra}/>' for w in widths for d in paths)
 
-def build(key, style):
+def build(key, style, anim=False):
     sc, st = SCHEMES[key], STYLE[style]
     D, GAP, CR = st["D"], st["GAP"], st["CR"]
     pre = f"gauge-{key}" + ("" if style == "3d" else f"-{style}")
@@ -251,15 +253,18 @@ def build(key, style):
     # the needle's soft shadow, offset down-right in page space; it turns with the needle (animate both rotations together)
     nshadow = (f'<g data-k="needle-shadow" transform="translate(40 52) rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
                + layered([nd], 0.07, (60, 50, 40, 30, 20, 10, 0)) + "</g>") if solid else ""
+    if anim:  # the shadow's offset sits on an outer group, so the inner one turns about the same pivot (0,0) as the needle
+        nshadow = (f'<g transform="translate(40 52)"><g data-k="needle-shadow" transform="rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
+                   + layered([nd], 0.07, (60, 50, 40, 30, 20, 10, 0)) + "</g></g>")
     shadow = (f'<ellipse cx="0" cy="{f(D + 10)}" rx="{f(SHADOW_RX)}" ry="{f(SHADOW_RY)}" fill="url(#{pre}-shadow)"/>'
               + "".join(f'<ellipse cx="{x}" cy="{f(D + 4)}" rx="360" ry="62" fill="url(#{pre}-foot)"/>' for x in (-750, 750))) if solid else ""
     ink = f'fill="{NAVY}" stroke="{NAVY}" stroke-width="{f(2 * T)}" stroke-linejoin="round" stroke-linecap="round"'
     body = (shadow
             + (f'<g transform="translate(16 26)" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">{"".join(blocks)}</g>' if blocks else "")
             + (f'<g {ink}>{"".join(hulls)}</g>' if hulls else "")
-            + "".join(sides)
-            + (f'<g {ink}>{"".join(strokes)}</g>' if strokes else "")
-            + "".join(fronts) + "".join(overs) + nshadow
+            + (segment_groups(sides, fronts, overs, pre) if anim else
+               "".join(sides) + (f'<g {ink}>{"".join(strokes)}</g>' if strokes else "") + "".join(fronts) + "".join(overs))
+            + nshadow
             # the needle is drawn pointing up and turned about the pivot (0,0); animate this group's rotation
             + f'<g data-k="needle" data-pivot="0 0" transform="rotate({f(90 - NEEDLE_DEG)})">{needle}</g>'
             + f'<g data-k="pivot">{pivot}</g>')
@@ -269,8 +274,41 @@ def build(key, style):
     assert "filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = [x.split('"')[0] for x in svg.split(' id="')[1:]]
     assert len(ids) == len(set(ids)) and all(i.startswith(pre + "-") for i in ids), ids
+    if anim: return svg
     open(f"{OUT}/{pre}.svg", "w").write(svg)
     return pre
 
+def glint_d(i):
+    """The top specular streak of segment i (the same arc the gloss style draws), for the sliding glint."""
+    a1 = 180 - 36 * i; sa, sb = a1 - 36 * 0.16, a1 - 36 * 0.5
+    return f"M{pt(P(R - 42, sa))}A{f(R - 42)} {f(R - 42)} 0 0 1 {pt(P(R - 42, sb))}"
+
+def segment_groups(sides, fronts, overs, pre):
+    # one group per segment (side, front, highlights) so each can pop about its own centre; its glint rides on top
+    return "".join(f'<g data-k="seg{i}">{sides[i]}{fronts[i]}{overs[i]}'
+                   f'<g data-k="glint{i}" opacity="0" fill="none" stroke="#ffffff" stroke-linecap="round">'  # a soft glint: a faint wide glow under a brighter core
+                   f'<path d="{glint_d(i)}" stroke-width="40" stroke-opacity=".3"/><path d="{glint_d(i)}" stroke-width="18" stroke-opacity=".75"/></g></g>'
+                   for i in range(N))
+
+def export_anim(key="B", style="gloss"):
+    """gauge-anim.svg: the picked art (B, glossy 3D) with data-k groups for everything that moves: needle and
+    needle-shadow (both turn about (0,0)), seg0..seg4 (each pops about its centre) and glint0..glint4.
+    Ids keep their gauge-B-gloss- prefix; the component prefixes them again per instance."""
+    import re
+    svg = build(key, style, anim=True)
+    # lean: one decimal is plenty at this size (paths, positions, transforms, gradient ends)
+    svg = re.sub(r'(\s(?:d|points|transform|cx|cy|x1|y1|x2|y2)=")([^"]*)"',
+                 lambda m: m.group(1) + re.sub(r"-?\d+\.\d{2,}", lambda n: f(round(float(n.group(0)), 1)), m.group(2)) + '"', svg)
+    assert all(f'data-k="{k}"' in svg for k in ["needle", "needle-shadow", "pivot", *[f"seg{i}" for i in range(N)], *[f"glint{i}" for i in range(N)]])
+    open(f"{OUT}/gauge-anim.svg", "w").write(svg)
+    return svg
+
 if __name__ == "__main__":
     print([build(k, s) for k in SCHEMES for s in ("3d", *SOLID)], "T =", T)
+    anim = export_anim()
+    # the Framer component: the template with the art (everything inside <svg>) pasted in
+    inner = anim[anim.index(">") + 1:anim.rindex("</svg>")]
+    assert "`" not in inner and "${" not in inner
+    tsx = open(f"{OUT}/ATMGauge.template.tsx").read().replace("__ART__", inner)
+    open(os.path.join(OUT, "..", "..", "..", "ATMGauge.tsx"), "w").write(tsx)
+    print("anim", len(anim), "bytes; wrote ATM/ATMGauge.tsx")
