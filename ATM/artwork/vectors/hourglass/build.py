@@ -68,9 +68,18 @@ LAYOUTS = {
     "line": dict(posts=POSTS, clocks=((1492, 1220, "L"), (2510, 1220, "R")), clock_r=CLOCK_R, face_r=FACE_R,
                  stacks=STACKS, coin=(COIN_RX, COIN_RY), apart=False),
     # one clock up on the left over a short stack, a tall stack on the right: balanced about the hourglass
-    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((CX - 565, 1150, "L"),), clock_r=255, face_r=202,
-                   stacks=((1030, 3), (2972, 8)), coin=(260, 49), apart=True),
+    # designer: the savings jar's glossy coins, taller uneven stacks (7 and 12) placed the same distance either side
+    # of the hourglass so it sits exactly between them, and the clock 20% larger (255 -> 306), raised to clear the
+    # short stack
+    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((CX - 565, 1100, "L"),), clock_r=306, face_r=242,
+                   stacks=((CX - 960, 7), (CX + 960, 12)), coin=(245, 88), apart=True),
 }
+# the savings jar's coin (ATM/artwork/vectors/savings-jar/build.py): radius, tilt (ry / r), thickness (x r), the seam
+JAR_COIN = dict(r=245, k=.36, th=.32, seam=18)
+PILE_ON = (3, 5)  # coins that drop onto the left and right stacks during the loop (the stacks start that much shorter)
+DEEP_GOLD = "#cf7a0c"
+DOLLAR = ("M .30,-.30 C .22,-.44 -.30,-.44 -.30,-.18 C -.30,.02 .30,-.02 .30,.20 C .30,.44 -.24,.44 -.32,.28 "
+          "M 0,-.54 V -.40 M 0,.40 V .54")
 COIN_T = 50  # a spaced coin's thickness (pitch stays COIN_P, so a 36-unit sliver of the coin below shows)
 
 
@@ -195,7 +204,7 @@ def build(key, style, anim=False):
     side_stops = pal["frameSide"] if style != "gloss" else [pal["frameTop"][0], pal["frameTop"][1], pal["frameSide"][3], fd, pal["frameSide"][3]]
     coin_side = pal["coinSide"] if style != "gloss" else [YOLK_TT, YOLK, ORANGE, AMBER_S, ORANGE]
     if not line_art:  # contact shadows, pushed down-right so they show past each piece on the card
-        peak = {"clay": .5, "glass": .6, "gloss": .7}[style]
+        peak = {"clay": .5, "glass": .6, "gloss": .45}[style]  # designer: softer shadows
         for cx, rx, ry, dy in ((CX, 840, 112, 22), (lay["stacks"][0][0], lay["coin"][0] + 100, 74, 16), (lay["stacks"][1][0], lay["coin"][0] + 100, 74, 16)):
             soft("shadow", NAVY, peak, cx + 20, GROUND + dy, rx, ry)
         posts_clip = "".join(f'<rect x="{x - POST_W / 2}" y="{POST_TOP}" width="{POST_W}" height="{BASE["top"] - POST_TOP}"/>' for x in lay["posts"])
@@ -362,23 +371,36 @@ def build(key, style, anim=False):
             out.append(f'<ellipse cx="{sx}" cy="{top + 2}" rx="{COIN_RX - 52}" ry="{COIN_RY - 13}" fill="{grad("coinRecess", pal["coinRecess"], 0, 1)}"/>')
             hi(arc(sx, top + 2, COIN_RX - 90, COIN_RY - 24, 200, 245), WHITE, round(W * .5), .9)
             continue
-        # spaced: whole coins, bottom up, each with its own top; the one above casts a soft shadow on the sliver below
-        CRX, CRY = lay["coin"]
-        for i in reversed(range(cnt)):
-            cy = GROUND - CRY - COIN_T - (cnt - 1 - i) * COIN_P
-            if i < cnt - 1: soft("coinocc", cd, .55, sx + 8, cy + COIN_T + 10, CRX - 22, CRY * .72)
-            sd = f'd="{cyl_side(sx, CRX, CRY, cy, cy + COIN_T)}"'
-            shape("path", sd, grad("coinSide", coin_side, 1, 0), ce, True, cd)
-            if style == "gloss": out.append(f'<path {sd} fill="url(#{pre}-band)"/>')
-            if crisp: side_edges(sx, CRX, CRY, cy, cy + COIN_T, cd)
-            shape("ellipse", f'cx="{sx}" cy="{cy}" rx="{CRX}" ry="{CRY}"', grad("coinTop", pal["coinTop"]), ce, deep=cd)
-            out.append(f'<ellipse cx="{sx}" cy="{cy + 2}" rx="{CRX - 52}" ry="{CRY - 13}" fill="{grad("coinRecess", pal["coinRecess"], 0, 1)}"/>')
-            if crisp: top_edges(sx, cy, CRX, CRY)
-            hi(arc(sx, cy + 2, CRX - 90, CRY - 24, 200, 245), WHITE, round(W * .5), .9)
-            spec(sx - CRX * .57, cy - CRY * .4, 26, 9, -3)
+        # spaced: the savings jar's coins (a thick metal edge with reflections, a bevelled face, a raised $), stacked
+        # bottom up with a seam; the coin above shades the one below where it sits
+        r, k_, th = JAR_COIN["r"], JAR_COIN["k"], JAR_COIN["r"] * JAR_COIN["th"]; ry = r * k_
+        lg = lambda name, rows, x2=1, y2=1: stops(f"{pre}-{name}", "linearGradient", f'x1="0" y1="0" x2="{x2}" y2="{y2}"', rows)
+        rim_g = lg("jcRim", [(0, AMBER, 1), (.1, YOLK_T, 1), (.25, ORANGE, 1), (.42, YOLK_TT, 1), (.55, ORANGE, 1), (.8, AMBER, 1), (1, DEEP_GOLD, 1)], 1, 0)
+        rim_s = lg("jcSheen", [(0, WHITE, 0), (.15, WHITE, .35), (.3, WHITE, 0), (1, WHITE, 0)], 0, 1)
+        face_g = lg("jcFace", [(0, YOLK_TT, 1), (.35, YOLK, 1), (.7, ORANGE, 1), (1, AMBER, 1)])
+        bev_g = lg("jcBevel", [(0, AMBER, 1), (.4, ORANGE, 1), (.75, YOLK, 1), (1, YOLK_TT, 1)])
+        in_g = stops(f"{pre}-jcIn", "radialGradient", 'cx=".4" cy=".35" r=".8"', [(0, YOLK_T, 1), (.6, YOLK, 1), (1, ORANGE, 1)])
+        fd_ = lambda name, a, mid=.5: stops(f"{pre}-{name}", "radialGradient", "", [(0, WHITE, a), (mid * .5, WHITE, round(a * .8, 3)), (mid, WHITE, round(a * .45, 3)), (.75, WHITE, round(a * .15, 3)), (1, WHITE, 0)])
+        shade = stops(f"{pre}-jcShade", "radialGradient", "", [(0, DEEP_GOLD, .5), (.3, DEEP_GOLD, .4), (.55, DEEP_GOLD, .22), (.8, DEEP_GOLD, .06), (1, DEEP_GOLD, 0)])
+        band = f"M {-r},0 L {-r},{th:.1f} A {r},{ry:.1f} 0 0 0 {r},{th:.1f} L {r},0 A {r},{ry:.1f} 0 0 1 {-r},0 Z"
+        side_i = 0 if sx < CX else 1
+        for j in range(cnt):
+            ccy = GROUND - th - ry - j * (th + JAR_COIN["seam"])
+            pile = j - (cnt - PILE_ON[side_i])
+            if anim and pile >= 0: out.append(f'<g data-k="pile{side_i}_{pile}">')
+            if j: out.append(f'<ellipse cx="{n(sx)}" cy="{n(ccy + th + ry * .2)}" rx="{r}" ry="{n(ry * 1.05)}" fill="{shade}"/>')
+            out.append(f'<g transform="translate({n(sx)} {n(ccy)})"><path d="{band}" fill="{rim_g}"/><path d="{band}" fill="{rim_s}"/>'
+                       f'<ellipse rx="{r}" ry="{n(ry)}" fill="{face_g}"/><ellipse rx="{n(r * .84)}" ry="{n(ry * .84)}" fill="{bev_g}"/>'
+                       f'<ellipse rx="{n(r * .78)}" ry="{n(ry * .78)}" fill="{in_g}"/>'
+                       f'<g transform="scale(1 {k_}) scale({n(r * .75)})" fill="none" stroke-linecap="round" stroke-linejoin="round">'
+                       f'<path d="{DOLLAR}" stroke="{DEEP_GOLD}" stroke-width=".13" transform="translate(.035 .045)"/>'
+                       f'<path d="{DOLLAR}" stroke="{YOLK_T}" stroke-width=".13"/>'
+                       f'<path d="{DOLLAR}" stroke="{WHITE}" stroke-opacity=".7" stroke-width=".035" transform="translate(-.025 -.03)"/></g>'
+                       f'<ellipse cx="{n(-r * .42)}" cy="{n(-ry * .45)}" rx="{n(r * .3)}" ry="{n(ry * .16 + 6)}" transform="rotate(-25 {n(-r * .42)} {n(-ry * .45)})" fill="{fd_("jcSpec", .95, .6)}"/>'
+                       f'<circle cx="{n(-r * .55)}" cy="{n(-ry * .25)}" r="{n(r * .06)}" fill="{fd_("jcHot", 1, .7)}"/></g>')
             if anim:  # a glint that sweeps up the stack: off at rest
-                out.append(f'<ellipse data-k="glint{sx}_{cnt - 1 - i}" cx="{n(sx - CRX * .45)}" cy="{n(cy + COIN_T * .5 + CRY * .55)}" rx="{n(CRX * .34)}" ry="{n(COIN_T * .26)}" '
-                           f'fill="url(#{pre}-spec)" opacity="0"/>')
+                out.append(f'<ellipse data-k="glint{side_i}_{j}" cx="{n(sx - r * .45)}" cy="{n(ccy + th * .5 + ry * .55)}" rx="{n(r * .34)}" ry="{n(th * .26)}" fill="url(#{pre}-spec)" opacity="0"/>')
+            if anim and pile >= 0: out.append("</g>")
 
     vb = " ".join(map(str, vbox))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{vbox[2]}" height="{vbox[3]}">'

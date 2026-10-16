@@ -7,7 +7,7 @@ import { gsap } from "gsap"
 // place. Sand drops fall through the neck while the top sand sinks and the bottom pile grows; at the end of the
 // loop the hourglass flips end over end and lands with a small squash, full again. The clock's minute hand
 // goes round once a loop (the hour hand stays still) and the clock ticks with a small bounce; a
-// glint sweeps up each coin stack. No background of its own: place it on the teal glass card.
+// glint sweeps up each coin stack, and coins drop onto both stacks one by one. No background of its own: place it on the teal glass card.
 //
 // The artwork is redrawn and recoloured in ATM/artwork/vectors/hourglass/build.py (export_anim), with each moving
 // part on its own data-k layer. The hourglass art is in perspective, so it can't match itself turned over: the
@@ -39,9 +39,10 @@ const DROP_FALLS = 6
 const CLOCK = "__CLOCK__" // the clock's centre
 const BEAT = LOOP / 6 // the clock ticks 6 times a loop
 const STACKS = [
-    { x: 1030, coins: 3, at: [0.7, 2.9] },
-    { x: 2972, coins: 8, at: [0.95, 3.15] },
-] // a glint sweeps up each stack twice a loop
+    { side: 0, coins: 7, pileOn: 3, at: [0.7, 2.9] },
+    { side: 1, coins: 12, pileOn: 5, at: [0.95, 3.15] },
+] // a glint sweeps up each stack twice a loop; each starts short and pileOn coins drop onto it, one by one
+const PILE = { at: 0.3, every: 0.42, from: -230, fadeAt: 4.45 } // a short drop, so it stays clear of the clock // the drops alternate left and right
 
 // The whole loop as ONE GSAP timeline (repeat: -1). Every value it moves ends where it started (the flip ends
 // on hgB, which is the start state upright), and nothing is random, so each pass is identical.
@@ -91,11 +92,25 @@ function buildLoop(svg: SVGSVGElement) {
             tl.fromTo(clock, { svgOrigin: CLOCK, scale: 1 }, { scale: 1.035, duration: 0.08, ease: "power1.out", immediateRender: false }, b * BEAT + 0.05)
                 .to(clock, { scale: 1, duration: 0.3, ease: "back.out(3)" }, ">")
         }
+    // coins drop onto the stacks one by one, alternating sides, then fade together for the next pass
+    let drop = 0
+    for (let p = 0; p < Math.max(...STACKS.map((s) => s.pileOn)); p++)
+        for (const st of STACKS) {
+            const c = p < st.pileOn ? q(`pile${st.side}_${p}`) : null
+            if (!c) continue
+            const at = PILE.at + drop++ * PILE.every
+            // shown at full strength as it starts to drop (a half-faded coin shows its own shading as a dark ghost)
+            tl.fromTo(c, { y: PILE.from, opacity: 0 }, { y: 0, duration: 0.32, ease: "power2.in", immediateRender: true }, at)
+                .set(c, { opacity: 1 }, at)
+                .to(c, { y: -18, duration: 0.1, ease: "power2.out" }, at + 0.32)
+                .to(c, { y: 0, duration: 0.16, ease: "power2.in" }, at + 0.42)
+                .to(c, { opacity: 0, duration: 0.2, ease: "power1.in" }, PILE.fadeAt)
+        }
     // a glint sweeps up each coin stack, coin by coin
     for (const st of STACKS)
         for (const at of st.at)
             for (let j = 0; j < st.coins; j++) {
-                const g = q(`glint${st.x}_${j}`)
+                const g = q(`glint${st.side}_${j}`)
                 if (!g) continue
                 tl.fromTo(g, { opacity: 0 }, { opacity: 0.9, duration: 0.16, ease: "sine.out", immediateRender: false }, at + j * 0.07)
                     .to(g, { opacity: 0, duration: 0.28, ease: "sine.in" }, ">")
