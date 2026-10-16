@@ -290,6 +290,8 @@ CLAY = {
     "B": dict(body=LT5, side=TED, bar=SK5, dots=(YO5, GL5, MI5), pill=GL5, hit=YO5, ring=GL5, wall=["#7fb9e3", "#5ea3d4", "#a9d3ef"],
               neck=GL5, handle=OR5, occ="#00615e", ground=NAVY, glass=(SKY_TT, .3)),
 }
+# the designer's pick: Glossy 3D A, with Glossy 3D B's magnifier (rim, inner wall, glass, neck, handle)
+CLAY["AB"] = dict(CLAY["A"], **{k: CLAY["B"][k] for k in ("ring", "wall", "glass", "neck", "handle")})
 STYLES = {  # no-outline 3D styles: corner radius, slab and line depth, contact-shadow strength
     "clay": dict(R=260, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
     "glass": dict(R=190, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
@@ -407,6 +409,7 @@ def build_soft(key, style):
     return name, vb, artw
 
 if __name__ == "__main__":
-    for key in SCHEMES:
+    for key in ("A", "B"):
         print(*build(key))
         for style in STYLES: print(*build_soft(key, style))
+    print(*build_soft("AB", "gloss"))

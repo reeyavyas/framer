@@ -42,7 +42,7 @@ NEEDLE = {  # light half, base, dark half
 }
 SCHEMES = {
     "A": dict(segs=["teal", "lteal", "yolk", "orange", "amber"], needle="sky"),
-    "B": dict(segs=["sky", "lteal", "mint", "yolk", "orange"], needle="lblue"),
+    "B": dict(segs=["orange", "yolk", "mint", "lteal", "sky"], needle="lblue"),
 }
 
 f = lambda v: f"{v:.2f}".rstrip("0").rstrip(".")

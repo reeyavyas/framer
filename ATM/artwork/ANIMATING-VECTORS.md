@@ -7,6 +7,27 @@ this look, outline and motion unless they ask for something else. The
 round-by-round history is in `ATM/NOTES.md` under "Lesson card
 animation".
 
+## 0. The look: Glossy 3D (designer's choice, from the Vectors.ai round)
+
+**Use Glossy 3D for every new vector** unless the designer asks otherwise.
+No outline. Thick extruded parts, rich saturated brand gradients (tint →
+base → shade → deep), bevelled edges (white at top-left, dark at
+bottom-right), strong white sheen and crisp specular spots, parts spaced
+apart so each reads on its own, and a navy `#002c44` contact shadow
+(about 0.7; dark teal is lighter than the card and reads as a glow). No
+filters or blur. The shipped cart (option D, outlined) stays as it is.
+
+Picks from `artwork/vectors/` (each folder's `build.py` rebuilds all its
+options):
+
+| Vector | Pick |
+|---|---|
+| Gauge | `gauge-B-gloss.svg`, segments left to right: orange, egg yolk, mint, light teal, sky |
+| Browser with magnifier | `browser-search-AB-gloss.svg`: Glossy A window with Glossy B's magnifier |
+| Hourglass and coins | `hourglass-B-gloss.svg` |
+| Cart version 2 | `cart-v2-B-gloss.svg` (a separate cart; the first cart and its code are untouched) |
+| Savings jar | in progress, glossy only |
+
 ## 1. The order that worked
 
 1. **Convert.** The designer sends an Adobe Stock `.ai`; it's EPS
