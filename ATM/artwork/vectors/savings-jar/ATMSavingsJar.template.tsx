@@ -142,6 +142,20 @@ export default function ATMSavingsJar(props: Props) {
         tlRef.current?.timeScale(LOOP / Math.max(1, props.loopSeconds))
     }, [props.loopSeconds, reduceMotion, markup])
 
+    // Pause while a system overlay is open (ATMInactivityOverlay sets window.__systemOverlayOpen and fires
+    // "system-overlay-change", as CurvedCarouselV2 and TutorialOverlay listen for); resume where it left off.
+    React.useEffect(() => {
+        const sync = () => {
+            const tl = tlRef.current
+            if (!tl) return
+            if ((window as any).__systemOverlayOpen) tl.pause()
+            else tl.resume()
+        }
+        sync()
+        window.addEventListener("system-overlay-change", sync)
+        return () => window.removeEventListener("system-overlay-change", sync)
+    }, [reduceMotion, markup])
+
     return (
         <svg
             ref={svgRef}

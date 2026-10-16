@@ -231,6 +231,10 @@ so it's seamless.
   so changing it never restarts the loop.
 - Follow the Framer rules in `CLAUDE.md` and type-check before every
   push (`build.sh` does it).
+- Pause while a system overlay is open: `ATMInactivityOverlay` sets
+  `window.__systemOverlayOpen` and fires `system-overlay-change`; every
+  animation listens and calls `tl.pause()` / `tl.resume()` (designer's
+  request). New components copy that effect from any template.
 
 ## 7. Tool setup (scratch, not committed)
 
