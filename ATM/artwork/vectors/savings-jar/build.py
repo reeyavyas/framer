@@ -509,10 +509,11 @@ def build_gloss(key, anim=False):
                    + f'<path d="{pts([back[-1], back[0]])}" fill="none" stroke="{WHITE}" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/>'  # rim light on the lit back edge
                    + (lambda g: f'<path d="{pts(FRONT)}" fill="{g}" stroke="{g}" stroke-width="8" stroke-linejoin="round"/>')(
                        lin([(0, LTEAL_T, 1), (.45, LTEAL, 1), (1, TEAL, 1)], fx0, fy0, fx1, fy1, units=True))
-                   + f'<path d="{pts(FRONT)}" fill="none" stroke="{WHITE}" stroke-width="44" stroke-linejoin="round" clip-path="url(#{fid})"/>'  # border: 22 inset, even
-                   # crisp gloss: a hard-edged sheen across the upper left and a deeper band along the lower right
-                   + f'<g clip-path="url(#{fid})"><path d="M {fx0 - 50:.0f},{fy0 - 50:.0f} L {fx1 + 50:.0f},{fy0 - 50:.0f} L {fx0 - 50:.0f},{fy0 + (fy1 - fy0) * .62:.0f} Z" fill="{WHITE}" fill-opacity=".28"/>'
-                   f'<path d="M {fx1 + 50:.0f},{fy0 + (fy1 - fy0) * .55:.0f} L {fx1 + 50:.0f},{fy1 + 50:.0f} L {fx0 + (fx1 - fx0) * .35:.0f},{fy1 + 50:.0f} Z" fill="{TEAL}" fill-opacity=".3"/></g>')
+                   # gloss: smooth gradients only (no hard edges): light across the upper left, deeper toward the lower right
+                   + f'<path d="{pts(FRONT)}" fill="{lin([(0, WHITE, .4), (.45, WHITE, 0), (1, WHITE, 0)], fx0, fy0, fx1, fy1, units=True)}"/>'
+                   + f'<path d="{pts(FRONT)}" fill="{lin([(0, TEAL, 0), (.55, TEAL, 0), (1, TEAL, .35)], fx0, fy0, fx1, fy1, units=True)}"/>'
+                   # the white border last, so it sits on top of everything in the arrow (22 inset, even)
+                   + f'<path d="{pts(FRONT)}" fill="none" stroke="{WHITE}" stroke-width="44" stroke-linejoin="round" clip-path="url(#{fid})"/>')
     # its shadow (it stands on the shared ground shadow): the whole solid, offset down-right, in widening faint layers (each layer one opaque union, then faded)
     arrow_shadow = (f'<g transform="translate(26 30) {ARROW_T2}">'
                     + "".join(f'<g opacity=".018" fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round">'
