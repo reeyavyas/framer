@@ -199,15 +199,21 @@ RING, GROW = 30 * K, 14 * K  # the ring along the contour where faces are grown,
 DEEP_GOLD = "#cf7a0c"  # an amber shade, the deepest coin tone (still orange, never brown)
 CORE = dict(A=dict(glass="#5c9fd4", lid=TEAL, arrow=LBLUE, glassShadow="#5c9fd4"),
             B=dict(glass=TEAL, lid=SKY_S, arrow="#3fa58c", glassShadow=TEAL))
-GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, th=.56, band=(0, 12), rim=.95)  # contact shadow and glass
-# opacity, face tint/shade steps (source lightness), coin thickness (x radius), edge band (out, in), rim highlight
-ARROW_DX = 397  # the arrow moves right, clear of the stack
-STACK = dict(cx=2640, bottom=2400, r=170, k=.40, step=100, jitter=(0, 12, -8, 18, 4, -10, 14, 2, -6))
-JAR_STACKS = [(1230, 2320, 3), (1960, 2320, 2)]  # cx, bottom, coins
-LOOSE = [(1980, 1380, 25, .55), (1600, 1780, -8, .5)]  # plus NECK_COIN, under the shoulder  # cx, cy, rotation, tilt
-FALL = (1590, 175, -18, .82)
-R_JAR = 165
-SPACED_ART = (901, 30, 2503 + 609 + ARROW_DX, 2470)
+GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, band=(0, 12), rim=.95)  # contact shadow and glass opacity,
+# face tint/shade steps (source lightness), edge band (out, in), rim highlight
+GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both schemes take scheme A's sky arrow
+ARROW_DX = 487  # the arrow moves right, clear of the stack
+COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
+STACK = dict(cx=2665, bottom=2400, r=245, k=.36, n=8, jitter=(0, 14, -10, 18, 4, -12, 12, -4))
+R_JAR = 190
+# The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
+JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
+JAR_MID = [(1450, 1500, -18, .62), (1930, 1420, 24, .62)]  # a few loose coins higher up
+JAR_REST = [(1235, 1735, -16, .6), (2025, 1830, 20, .6)]  # tilted, resting on the back stacks
+JAR_FRONT = [(1410, 2355, 2), (1880, 2355, 3)]
+JAR_LEAN = [(1125, 2080, 72, .5), (2140, 2065, -72, .5)]  # leaning on the glass, left and right
+FALL = (1600, 150, -16, .8)
+SPACED_ART = (901, -45, 2503 + 609 + ARROW_DX, 2470)
 DOLLAR = ("M .30,-.30 C .22,-.44 -.30,-.44 -.30,-.18 C -.30,.02 .30,-.02 .30,.20 C .30,.44 -.24,.44 -.32,.28 "
           "M 0,-.54 V -.40 M 0,.40 V .54")
 
@@ -235,15 +241,20 @@ def fit_ellipse(pts):  # axis-aligned least squares: A x^2 + B y^2 + C x + D y =
     A, B, C, D = np.linalg.lstsq(np.c_[x * x, y * y, x, y], np.ones(len(x)), rcond=None)[0]
     cx, cy = -C / (2 * A), -D / (2 * B); g = 1 + A * cx * cx + B * cy * cy
     return cx, cy, (g / A) ** .5, (g / B) ** .5
-# The falling coin hid part of the lid's top rim; once the coin moves up, the lid is completed: its top edge in that
-# stretch follows an ellipse fitted to the rest of the rim, and the hidden top faces are filled from fitted ellipses.
-COIN_X = (1340, 1780)
+# The falling coin hid part of the lid's top; once the coin moves up, the lid's top is redrawn whole from clean
+# ellipses taken from the traced rings' boxes (a traced ring's box is its ellipse's box): the white rim (210), the
+# recess floor (219), and the recess's back wall, seen as a crescent whose top edge is the dark groove (224, 225).
+def box_ellipse(*ix):
+    b = [bbox(outer(PATHS[i][1])) for i in ix]
+    x0, y0, x1, y1 = min(v[0] for v in b), min(v[1] for v in b), max(v[2] for v in b), max(v[3] for v in b)
+    return (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2
+RIM_E, TOP_E = box_ellipse(210), box_ellipse(219)
+_wx0, _wy0, _wx1, _ = (lambda b: (min(v[0] for v in b), min(v[1] for v in b), max(v[2] for v in b), 0))([bbox(PATHS[i][1]) for i in (224, 225)])
+_wry = TOP_E[3] * (_wx1 - _wx0) / 2 / TOP_E[2]  # the wall's top edge: the floor's ellipse, as wide as the groove
+WALL_E = (TOP_E[0], _wy0 + _wry, (_wx1 - _wx0) / 2, _wry)
 _lid = flatten(outer(PATHS[2][1]), 48)  # the lid's traced outline is open (a C) where the coin covered its rim
-TOP_E = fit_ellipse([(x, y) for x, y in flatten(outer(PATHS[219][1]), 24) if y < 549 and not COIN_X[0] <= x <= COIN_X[1]])
-RIM_E = fit_ellipse([(x, y) for x, y in flatten(outer(PATHS[210][1]), 24) if y < 556 and not COIN_X[0] <= x <= COIN_X[1]])
-# the lid's outer top edge: centred on the rim surface's ellipse, as wide as the traced outline at that height and
-# reaching its traced top (y 407)
-LID_E = (RIM_E[0], RIM_E[1], max(abs(x - RIM_E[0]) for x, y in _lid if y <= RIM_E[1] + 5), RIM_E[1] - min(y for x, y in _lid))
+_out = RIM_E[1] - RIM_E[3] - min(y for x, y in _lid)  # the outline's width above the rim
+LID_E = (RIM_E[0], RIM_E[1], RIM_E[2] + _out, RIM_E[3] + _out)
 # the lid's whole outline: the fitted top arc, then the traced sides and bottom
 import math
 _cx, _cy, _rx, _ry = LID_E
@@ -257,15 +268,16 @@ _f = [v for _, v in sorted(_far.items())]
 _low = [(x, y) for k, (d_, x, y) in enumerate(_f)  # a bin that only caught the inner rim is a dent: skip it
         if d_ > .9 * max(_f[max(k - 1, 0)][0], _f[min(k + 1, len(_f) - 1)][0])]
 LID_CONTOUR = "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in _up + _low) + " Z"
-assert 560 < LID_E[2] < 700 and 380 < LID_E[1] - LID_E[3] < 430, LID_E  # spans the lid, top near y 407
+assert 620 < LID_E[2] < 680 and 400 < LID_E[1] - LID_E[3] < 415 and RIM_E[3] > WALL_E[3] > 80, (LID_E, WALL_E)
 
 # A coin sat behind the jar's shoulder and the neck's bands were traced around it, leaving a gap. A new coin goes
 # in the same place, under the neck (so it shows through that gap) with a glass tint where the shoulder covers it.
-NECK_COIN = (1550, 1015, -12, .5)  # cx, cy, rotation, tilt
+NECK_COIN = (1550, 1010, -12, .55)  # cx, cy, rotation, tilt
 GLASS_DROP = {190, 248, 251}  # the big glass layers were traced around the old coins; one clean base fill replaces them
 
 def build_gloss(key):
-    sc, st, core = SCHEMES[key], GLOSS, CORE[key]
+    sc, st, core = dict(SCHEMES[key], **GLOSS_ARROW), GLOSS, dict(CORE[key], arrow=LBLUE)
+    sc["edge"] = dict(sc["edge"], arrow=SKY_S)
     pre = f"{SLUG}-{key}-gloss"
     defs, n_id = [], [0]
     def nid(tag): n_id[0] += 1; return f"{pre}-{tag}{n_id[0]}"
@@ -310,7 +322,7 @@ def build_gloss(key):
 
     # ---- one coin, drawn in its own frame: face ellipse at 0,0, thickness down the local y axis ----
     def coin(cx, cy, r, k, rot, shadow=None):
-        ry, th = r * k, r * st["th"] * (0.75 if k > .7 else 1)
+        ry, th = r * k, r * COIN_TH
         band = f"M {-r},0 L {-r},{th:.1f} A {r},{ry:.1f} 0 0 0 {r},{th:.1f} L {r},0 A {r},{ry:.1f} 0 0 1 {-r},0 Z"
         out = [f'<g transform="translate({cx:.1f} {cy:.1f}) rotate({rot})">']
         if shadow:  # a soft shadow behind the coin, down and to the right
@@ -334,8 +346,8 @@ def build_gloss(key):
         return "".join(out), th, ry
     def coin_stack(cx, bottom, n, r, k, jit, shadow):
         parts = []
-        th, ry = r * st["th"], r * k
-        step = max(th + 20, STACK["step"] if r == STACK["r"] else th + 20)
+        th, ry = r * COIN_TH, r * k
+        step = th + 18  # a visible seam between coins
         for j in range(n):
             ccy = bottom - th - ry - j * step
             x = cx + jit[j % len(jit)]
@@ -394,10 +406,12 @@ def build_gloss(key):
         (arrow if o == "arrow" else lid if o == "lid" else body).append(el)
     gs = NAVY
     shadows = "".join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{fade(gs, st["shadow"], .55)}"/>' for x, y, rx, ry in
-                      [(1625, 2445, 780, 70), (STACK["cx"] + 4, STACK["bottom"] + 4, 270, 48), (2810 + ARROW_DX, 2440, 380, 56)])
+                      [(1625, 2445, 780, 70), (STACK["cx"] + 4, STACK["bottom"] + 4, 340, 56), (2810 + ARROW_DX, 2440, 380, 56)])
     glass_op = f' opacity="{st["glass"]}"' if st["glass"] < 1 else ""
-    jar_coins = "".join(coin_stack(cx, b, n, R_JAR, .42, (0, 10, -6), core["glassShadow"]) for cx, b, n in JAR_STACKS)
-    jar_coins += "".join(coin(x, y, R_JAR, k, rot, core["glassShadow"])[0] for x, y, rot, k in LOOSE)
+    gsh = core["glassShadow"]
+    loose = lambda L: "".join(coin(x, y, R_JAR, k, rot, gsh)[0] for x, y, rot, k in L)
+    stacks = lambda L: "".join(coin_stack(cx, b, n, R_JAR, .38, (0, 12, -8, 10, -4), gsh) for cx, b, n in L)
+    jar_coins = loose(JAR_MID) + stacks(JAR_BACK) + loose(JAR_REST) + stacks(JAR_FRONT) + loose(JAR_LEAN)
     # the source's glass was cut around its coins: one base glass fill under it closes those holes
     ncid = nid("c"); defs.append(f'<clipPath id="{ncid}"><ellipse cx="1625" cy="760" rx="760" ry="285"/></clipPath>')
     neck = [el for el in body if bbox(re.search(r'd="([^"]+)"', el).group(1))[3] < 1100]  # the shoulder's own bands
@@ -410,16 +424,16 @@ def build_gloss(key):
     fall_shadow = (f'<g clip-path="{clip("lid")}"><ellipse cx="1610" cy="530" rx="200" ry="40" '
                    f'fill="{fade(core["lid"], .4, .55)}"/></g>')  # the falling coin's shadow, on the lid only
     ell = lambda e, **kw: f'<ellipse cx="{e[0]:.1f}" cy="{e[1]:.1f}" rx="{e[2]:.1f}" ry="{e[3]:.1f}"' + "".join(f' {k.replace("_", "-")}="{v}"' for k, v in kw.items()) + "/>"
-    # under the lid's own faces (right after its silhouette), so it shows only where the coin hid them
-    assert ROLES[2][1] == "line" and lid[0].startswith(f'<path d="{closed(PATHS[2][1])[:20]}')
-    lid_patch = (ell(RIM_E, fill=fills[210]) + ell(TOP_E, fill=fills[219], stroke=edge_of(2, sc), stroke_width=f"{8 * K:.1f}"))
-    stack = coin_stack(STACK["cx"], STACK["bottom"], len(STACK["jitter"]), STACK["r"], STACK["k"], STACK["jitter"], None)
+    assert lid[-1].startswith(f'<path d="{closed(PATHS[312][1])[:20]}')  # the slot, the last lid shape, stays on top
+    lid_top = (ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
+               + ell(TOP_E, fill=fills[219]))
+    stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(map(str, VBs))}" width="{VBs[2]}" height="{VBs[3]}">'
            f'<defs>{{DEFS}}</defs>{shadows}'
            f'<g{glass_op}>{base_glass}{"".join(body)}</g>{lid_shadow}'
            + part_layers("jar", "jar", fills, front=("lid",)) + jar_coins + neck_coin  # coins over the glass's lighting, so it never tints them
-           + f'<g clip-path="{clip("lid")}">{lid[0]}{lid_patch}{"".join(lid[1:])}</g>' + part_layers("lid", "lid", fills) + fall_shadow
-           + coin(*FALL[:2], R_JAR, FALL[3], FALL[2])[0]
+           + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills) + fall_shadow
+           + coin(*FALL[:2], 205, FALL[3], FALL[2])[0]
            + stack
            + f'<g transform="translate({ARROW_DX} 0)">{"".join(arrow)}{part_layers("arrow", "arrow", fills)}</g></svg>')
     svg = svg.replace("{DEFS}", "".join(defs))
