@@ -18,7 +18,7 @@ STYLE = {  # D: side-face depth, GAP: perpendicular gap between segments, CR: co
     "3d": dict(D=58, GAP=T, CR=16),
     "clay": dict(D=84, GAP=72, CR=56),
     "glass": dict(D=84, GAP=72, CR=18),
-    "gloss": dict(D=84, GAP=110, CR=30),  # designer: more space between the blocks
+    "gloss": dict(D=84, GAP=85, CR=30),  # designer: more space between the blocks (110 was too much)
 }
 SOLID = ("clay", "glass", "gloss")
 NL2, NB2, NT2 = 425, 72, 17     # the solid styles' needle: its tip stops ~55 short of the segments
@@ -54,11 +54,14 @@ add = lambda a, b: (a[0] + b[0], a[1] + b[1])
 def toward(a, b, d):
     L = math.dist(a, b); return (a[0] + (b[0] - a[0]) * d / L, a[1] + (b[1] - a[1]) * d / L)
 
-def sector(i, gap, cr):
+def sector(i, gap, cr, depth=0):
     """Closed outline of segment i as pieces (kind, start, end, extra): straight radial ends offset parallel
-    by gap/2 (so the gap is even from inner to outer edge), true arcs, corners rounded by quadratic curves."""
+    by gap/2 (so the gap is even from inner to outer edge), true arcs, corners rounded by quadratic curves.
+    depth: the side face drawn straight down pokes into a tilted gap by depth*|cos(angle)| (none at the top, most
+    at the sides), so each gap is widened by that much to look the same width all round."""
     a1, a2 = 180 - 36 * i, 180 - 36 * (i + 1)          # a1 > a2: drawn left to right over the top
-    off = lambda rad, end: 0 if end in (0, 180) else math.degrees(math.asin(gap / 2 / rad))
+    g = lambda end: gap + depth * abs(math.cos(math.radians(end)))
+    off = lambda rad, end: 0 if end in (0, 180) else math.degrees(math.asin(g(end) / 2 / rad))
     o1, o2 = P(R, a1 - off(R, a1)), P(R, a2 + off(R, a2))
     i1, i2 = P(r, a1 - off(r, a1)), P(r, a2 + off(r, a2))
     A1o, A2o = a1 - off(R, a1) - math.degrees(cr / R), a2 + off(R, a2) + math.degrees(cr / R)
@@ -140,7 +143,7 @@ def build(key, style, anim=False):
     solid = style in SOLID
     defs, hulls, sides, strokes, fronts, overs, blocks = [], [], [], [], [], [], []
     for i, name in enumerate(sc["segs"]):
-        c = SEG[name]; pcs = sector(i, GAP, CR); d = path_d(pcs); sw = sweep(pcs, D)
+        c = SEG[name]; pcs = sector(i, GAP, CR, .45 * D if solid else 0); d = path_d(pcs); sw = sweep(pcs, D)  # .45: how much of a tilted gap the side face covers, by eye
         sid, fid = f"{pre}-side{i}", f"{pre}-front{i}"
         core = CORE[name]
         side = c["side"] if style in ("3d", "clay") else [core, c["side"][1]] if style == "glass" else [c["side"][0], c["side"][1]]
