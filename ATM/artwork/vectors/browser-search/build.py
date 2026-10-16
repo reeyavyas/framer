@@ -297,7 +297,7 @@ STYLES = {  # no-outline 3D styles: corner radius, slab and line depth, contact-
     "glass": dict(R=190, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
     "gloss": dict(R=220, depth=(-96, 112), pdepth=(-58, 72), ground=.8),
 }
-def build_soft(key, style):
+def build_soft(key, style, anim=False):
     """No ink outline, three looks sharing one layout:
     clay  - puffy radial fills (lit top-left, core shade bottom-right), soft light + crisp specular spot, thin darker same-hue rims;
     glass - crisp faces separated by value, thin bright rim light on lit edges and a darker same-hue band on shadow edges,
@@ -316,6 +316,7 @@ def build_soft(key, style):
         light = r[0] if glassy else WHITE  # lit edge top-left, fading out, then a darker same-hue band bottom-right
         g = D.lin([light, light, r[-1], r[-1]], [.85 if glassy else .95, 0, 0, .9], x1=0, y1=0, x2=.6, y2=1)
         return f' stroke="{g}" stroke-width="{EW * (1.1 if glassy else 1.8):.1f}" stroke-linejoin="round"'
+    tag = lambda k, inner: f'<g data-k="{k}">{inner}</g>' if anim else inner  # moving parts get their own named group
     spec = lambda x, y, rx, ry, a=-35: f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rx}" ry="{ry}" transform="rotate({a} {x:.0f} {y:.0f})" fill="{WHITE}" opacity=".95"/>'
     soft = lambda x, y, rx, ry, c, op, a=0: f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rx:.0f}" ry="{ry:.0f}" transform="rotate({a:.1f} {x:.0f} {y:.0f})" fill="{D.glow(c, op)}"/>'
     def soft_pill(d_grow, dx, dy, c, op, p):  # a pill-shaped soft shadow: four growing pills, each faint (no blur)
@@ -334,7 +335,7 @@ def build_soft(key, style):
     o.append(soft(1880, gy + 70, 1560, 160, pal["ground"], st["ground"]))
     o.append(soft(1880, gy + 40, 1300, 70, pal["ground"], st["ground"] + .05))
     hx_, hy_ = HCX + HL * math.cos(math.radians(HANG)), HCY + HL * math.sin(math.radians(HANG))
-    o.append(soft(hx_ - 10, hy_ + 110, 330, 90, pal["ground"], st["ground"]))
+    o.append(tag("magGround", soft(hx_ - 10, hy_ + 110, 330, 90, pal["ground"], st["ground"])))
     # slab: deep side faces, then the puffy front face
     o.append(f'<path d="{sd}" fill="{D.lin(pal["side"], x1=.2, y1=0, x2=.5, y2=1)}"{rim(pal["side"])}/>')
     o.append(f'<path d="{fd}" fill="{puff(pal["body"], cx=.3, cy=.22, r=1.05, fx=.2, fy=.12)}"/>')
@@ -342,8 +343,8 @@ def build_soft(key, style):
     sh = []  # shadows and occlusion on the screen, clipped to it
     sh.append(f'<rect x="0" y="{BAR}" width="4200" height="110" fill="{D.lin([pal["occ"], pal["occ"]], [.55, 0], x2=0)}"/>')  # under the bar
     sh.append(f'<path d="{fd}" fill="none" stroke="{D.lin([pal["occ"], pal["occ"], pal["occ"]], [0, .25, .6], x1=0, y1=0, x2=1, y2=1)}" stroke-width="90"/>')  # inner rim darkens to the bottom-right
-    sh.append(soft(LCX - 130, LCY + 230, LA + 90, LB + 80, pal["occ"], 1, LANG))  # the magnifier's soft shadow, well below it (it floats)
-    sh.append(soft(HCX - 130, HCY + 190, HL + 100, HW + 70, pal["occ"], .7, HANG))
+    sh.append(tag("magShadow", soft(LCX - 130, LCY + 230, LA + 90, LB + 80, pal["occ"], 1, LANG)  # the magnifier's soft shadow, well below it (it floats)
+                  + soft(HCX - 130, HCY + 190, HL + 100, HW + 70, pal["occ"], .7, HANG)))
     o.append(f'<g clip-path="url(#{clip})">{"".join(sh)}</g>')
     if not glassy: o.append(soft(LEFT(800) + 520, 820, 520, 300, WHITE, .55))  # soft light top-left of the screen
     if gloss:  # a polished reflection across the screen's top-left
@@ -355,10 +356,9 @@ def build_soft(key, style):
     if not glassy: o.append(soft(LEFT(TOP) + 420, TOP + 90, 340, 70, WHITE, .5))
     if gloss:  # polished sheen over the bar's upper half
         o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE], [.4, .05], x2=0)}"/></g>')
-    for (cx, cy), r in zip(dots, pal["dots"]):
+    for i, ((cx, cy), r) in enumerate(zip(dots, pal["dots"])):
         o.append(soft(cx + 12, cy + 26, dot_r * 1.15, dot_r * .7, pal["bar"][4], .7))
-        o.append(f'<circle cx="{cx:.0f}" cy="{cy}" r="{dot_r}" fill="{puff(r)}"{rim(r)}/>')
-        o.append(spec(cx - 15, cy - 17, 12, 8))
+        o.append(tag(f"dot{i}", f'<circle cx="{cx:.0f}" cy="{cy}" r="{dot_r}" fill="{puff(r)}"{rim(r)}/>' + spec(cx - 15, cy - 17, 12, 8)))
     # text lines: soft shadow on the screen, a thick deep side, a puffy top with a soft and a crisp highlight
     for n, p in enumerate(pills):
         r = pal["hit" if n == HIT else "pill"]
@@ -372,6 +372,9 @@ def build_soft(key, style):
         if gloss:  # polished sheen over the top half of the line
             o.append(f'<path d="{pill((x0 + h * .3, y0 + 6, x1 - h * .3, y0 + h * .95))[0]}" fill="{D.lin([WHITE, WHITE], [.55, .1], x2=0)}"/>')
         o.append(spec(x0 + h * .62, y0 + 30, 11, 7, -20))
+        if anim and n == HIT:  # the hit line's glow, hidden at rest; the loop pulses it while the lens pauses over it
+            o.append(f'<g data-k="hitGlow" opacity="0">{soft((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2 + 140, h + 120, YOLK_T, .8)}'
+                     f'<path d="{d}" fill="{D.lin([YOLK_TT, YOLK_T], [.95, .6], x2=0)}"/></g>')
     i0 = len(o)
     # magnifier. Neck tucks under the rim and the handle: deep ends (occlusion), lit stripe
     o.append(f'<g {HAND()}><rect x="{-HL - 280}" y="-62" width="300" height="124" fill="{D.lin(pal["neck"][1:], x2=0)}"{rim(pal["neck"])}/>'
@@ -401,15 +404,48 @@ def build_soft(key, style):
              f'<rect x="{-HL}" y="{-HW}" width="{2 * HL}" height="{2 * HW}" rx="{140 if clay else 110}" fill="{D.lin([r[4], r[4], r[4]], [.0, .0, .45], x1=0, y1=0, x2=1, y2=0)}"/>'
              f'<path d="M{-HL + 120},{-HW + 70} H{HL - 150}" stroke="{WHITE}" stroke-width="{SW * 1.8:.0f}" stroke-linecap="round" opacity="{.9 if gloss else .55}"/>'
              f'<ellipse cx="{-HL + 140}" cy="{-HW + 62}" rx="30" ry="16" fill="{WHITE}" opacity=".95"/></g>')
-    o[i0:] = [f'<g transform="translate({MAG[0]} {MAG[1]})">' + "".join(o[i0:]) + "</g>"]
+    o[i0:] = [tag("mag", f'<g transform="translate({MAG[0]} {MAG[1]})">' + "".join(o[i0:]) + "</g>")]
     gx0, gx1 = 1880 - 1560, 1880 + 1560
-    vb, artw = crop(ssp + [(x + DEP[0], y + DEP[1]) for x, y in ssp] + [(x + MAG[0], y + MAG[1]) for x, y in hand_pts()],
-                    [(gx0 + 300, gy - 130, gx1 - 300, gy + 70 + 110), (hx_ - 300, hy_ + 30, hx_ + 340, hy_ + 200)])
-    name = f"browser-search-{key}-{style}.svg"; write(name, vb, D, o)
+    mag_pts = [(x + MAG[0], y + MAG[1]) for x, y in hand_pts()]
+    extra = [(gx0 + 300, gy - 130, gx1 - 300, gy + 70 + 110), (hx_ - 300, hy_ + 30, hx_ + 340, hy_ + 200)]
+    if anim:  # room for the magnifier at every pose of the scan, popped to POP, and its ground shadow
+        lens_box = lambda dx, dy: [(LCX + MAG[0] + dx + sx * LA * POP, LCY + MAG[1] + dy + sy * LA * POP) for sx in (-1, 1) for sy in (-1, 1)]
+        cx_, cy_ = LCX + MAG[0], LCY + MAG[1]
+        for _, dx, dy, _ in POSES:
+            mag_pts += lens_box(dx, dy) + [(cx_ + dx + (x - cx_) * POP, cy_ + dy + (y - cy_) * POP) for x, y in hand_pts_mag()]
+            extra.append((hx_ - 300 + dx, hy_ + 30 + dy, hx_ + 340 + dx, hy_ + 200 + dy))
+    vb, artw = crop(ssp + [(x + DEP[0], y + DEP[1]) for x, y in ssp] + mag_pts, extra)
+    name = "browser-search-anim.svg" if anim else f"browser-search-{key}-{style}.svg"
+    if anim:  # lean: path data to 1 decimal
+        r1 = lambda m: re.sub(r"\d+\.\d{2,}", lambda n: f"{float(n.group()):.1f}", m.group())
+        o = [re.sub(r' d="[^"]+"', r1, x) for x in o]
+    write(name, vb, D, o)
     return name, vb, artw
+
+# ---- animated export (ATMBrowserSearch.tsx): the picked art, Glossy A with B's magnifier ----
+# The magnifier scans: it starts over the upper lines, drifts down and settles over the egg-yolk hit line, pauses
+# there with a small pop, then glides back. POSES: (time s, x, y offset from the drawing's rest pose, ground-shadow
+# opacity). Its ground shadow only shows while the handle is off the window, below it.
+POSES = [(0, -420, -300, 0), (1.1, -90, -190, .3), (2.0, -230, 160, 1), (3.0, -230, 160, 1), (3.9, 60, -60, .6), (4.8, -420, -300, 0)]
+POP = 1.06
+def hand_pts_mag(): return [(x + 50, y - 70) for x, y in hand_pts()]  # the handle at the rest pose (MAG)
+def export_anim():
+    name, vb, _ = build_soft("AB", "gloss", anim=True)
+    svg = open(f"{OUT}/{name}").read()
+    inner = svg[svg.index(">") + 1:svg.rindex("</svg>")]
+    assert all(f'data-k="{k}"' in inner for k in ("mag", "magShadow", "magGround", "hitGlow", "dot0", "dot1", "dot2"))
+    dots = [(round(DOTS[0][0] + k * 175, 1), DOTS[0][1]) for k in range(3)]  # as build_soft spaces them
+    tpl = open(f"{OUT}/ATMBrowserSearch.template.tsx").read()
+    tsx = (tpl.replace("__VIEWBOX__", " ".join(map(str, vb))).replace("__ORIGIN__", f"{LCX + 50} {LCY - 70}")
+           .replace("__POSES__", ", ".join(f"[{t}, {x}, {y}, {g}]" for t, x, y, g in POSES)).replace("__POP__", str(POP))
+           .replace("__DOTS__", ", ".join(f'"{x:g} {y:g}"' for x, y in dots)).replace("__ART__", inner))
+    assert "__" not in re.sub(r"__html", "", tsx)
+    open(f"{OUT}/../../../ATMBrowserSearch.tsx", "w").write(tsx)
+    return name, vb
 
 if __name__ == "__main__":
     for key in ("A", "B"):
         print(*build(key))
         for style in STYLES: print(*build_soft(key, style))
     print(*build_soft("AB", "gloss"))
+    print(*export_anim())
