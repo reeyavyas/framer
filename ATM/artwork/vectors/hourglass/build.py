@@ -62,13 +62,13 @@ OPTIONS = {
 # ---- layouts and viewBox: the art plus ~4% padding; the outline is 19 units when the outlined art is drawn 2120 wide ----
 STYLES = ("line", "clay", "glass", "gloss")
 # The outlined art keeps the source's layout. The other styles space every piece out so each reads as its own form:
-# one clock overlaps the left post (about 19% of it, clear of the glass), the posts stand clear of the glass, the coins sit apart with a sliver of
+# one clock centred on the left post, in front of it, the posts stand clear of the glass, the coins sit apart with a sliver of
 # the coin below showing, and the two stacks (3 and 8 coins) stand clear of the base.
 LAYOUTS = {
     "line": dict(posts=POSTS, clocks=((1492, 1220, "L"), (2510, 1220, "R")), clock_r=CLOCK_R, face_r=FACE_R,
                  stacks=STACKS, coin=(COIN_RX, COIN_RY), apart=False),
     # one clock up on the left over a short stack, a tall stack on the right: balanced about the hourglass
-    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((1235, 1150, "L"),), clock_r=255, face_r=202,
+    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((CX - 565, 1150, "L"),), clock_r=255, face_r=202,
                    stacks=((1030, 3), (2972, 8)), coin=(260, 49), apart=True),
 }
 COIN_T = 50  # a spaced coin's thickness (pitch stays COIN_P, so a 36-unit sliver of the coin below shows)
