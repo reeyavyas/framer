@@ -122,12 +122,15 @@ def n(v):  # a number as the SVG writes it: whole numbers stay whole
     return int(v) if float(v).is_integer() else round(v, 1)
 
 
-def build(key, style):
+def build(key, style, anim=False):
     """line: 3D with an even navy outline (source layout). clay: soft puffy clay. glass: crisp 3D, edges drawn by light,
     translucent glass. gloss: polished plastic and shiny gold. The last three have no outline and the spaced layout."""
     pal, line_art = OPTIONS[key], style == "line"
     lay = LAYOUTS["line" if line_art else "spaced"]
     vbox = viewbox(lay)
+    # anim: wrap each moving part in <g data-k="..."> for the component (export_anim); otherwise nothing changes
+    G = lambda k_: out.append(f'<g data-k="{k_}">') if anim else None
+    END = lambda: out.append("</g>") if anim else None
     pre = f"hourglass-{key}" + ("" if line_art else f"-{style}")
     defs, out = [], []
     fe, fd, cd, ce, se = pal["frameEdge"], pal["frameDeep"], pal["coinDeep"], pal["coinEdge"], pal["sandEdge"]
@@ -234,6 +237,7 @@ def build(key, style):
         k = cr / CLOCK_R
         for cx, cy, side in lay["clocks"]:
             c = pal[side]
+            G("clock")
             if not line_art: soft("drop", NAVY, .5 if style == "clay" else .6, cx + 46 * k, cy + 62 * k, cr + 34 * k, cr + 34 * k)  # its own shadow, cast on the card
             shape("circle", f'cx="{cx}" cy="{cy}" r="{cr}"', grad(f"bezel{side}", c["bezel"]), c["edge"], deep=c["deep"])
             if crisp:
@@ -251,12 +255,18 @@ def build(key, style):
                 out.append(f'<path d="M{round(cx + r0 * ca, 1)},{round(cy + r0 * sa, 1)} L{round(cx + r1 * ca, 1)},{round(cy + r1 * sa, 1)}" '
                            f'stroke="{c["tick"]}" stroke-width="{round(W * .7)}" stroke-linecap="round"/>')
             hand = NAVY if line_art else (c["edge"] if style == "clay" else c["deep"])
-            out.append(f'<path d="M{cx},{n(cy - 150 * k)} V{cy} H{n(cx + 112 * k)}" fill="none" stroke="{hand}" stroke-width="{round(W * 1.15)}" stroke-linecap="round" stroke-linejoin="round"/>')
+            hw_ = f'fill="none" stroke="{hand}" stroke-width="{round(W * 1.15)}" stroke-linecap="round" stroke-linejoin="round"'
+            if anim:  # the hands apart, so each can turn about the centre
+                out.append(f'<path data-k="hour" d="M{cx},{cy} H{n(cx + 112 * k)}" {hw_}/><path data-k="minute" d="M{cx},{n(cy - 150 * k)} V{cy}" {hw_}/>')
+            else:
+                out.append(f'<path d="M{cx},{n(cy - 150 * k)} V{cy} H{n(cx + 112 * k)}" {hw_}/>')
             out.append(f'<circle cx="{cx}" cy="{cy}" r="{round(W * 1.15)}" fill="{hand}"/><circle cx="{cx}" cy="{cy}" r="{round(W * .45)}" fill="{c["hub"]}"/>')
             if not line_art:
                 spec(cx - 168 * k, cy - 168 * k, 30, 15, -45); spec(cx - 105 * k, cy - 120 * k, 22, 11, -40)
+            END()
 
     # base, posts, plinth
+    if anim: out.append("<!--HG-->")
     cylinder(BASE)
     if not line_art:
         for x in lay["posts"]: soft("occ", fd, .55, x + 10, BASE["top"] + 8, 78, 26)
@@ -283,15 +293,22 @@ def build(key, style):
         if style in ("clay", "gloss"): out.append(f'<path d="{gp}" fill="{light(gdeep)}"/>')
     out.append(f'<g clip-path="url(#{pre}-glassclip)">')
     sw = glass_halfwidth(SAND_LEVEL) - (W / 2 if line_art else 0) + 6
+    G("sandTop")
     shape("path", f'd="M{CX - 500},{SAND_LEVEL} H{CX + 500} V1150 C{CX + 70},1215 {CX + 34},1305 {CX},1305 C{CX - 34},1305 {CX - 70},1215 {CX - 500},1150 Z"',
           grad("sand", pal["sand"]), se, crisp, cd)
+    END(); G("sandSurf")
     shape("ellipse", f'cx="{CX}" cy="{SAND_LEVEL}" rx="{round(sw)}" ry="52"', grad("sandTop", pal["sandTop"]), se, False)
     if crisp: line(arc(CX, SAND_LEVEL - e * .5, sw - e, 52 - e, 178, 2), YOLK_TT, e, .9)
     hi(arc(CX, SAND_LEVEL, sw - 70, 30, 205, 245), WHITE, round(W * .5), .8)
-    for x, y, r in DROPS:
-        out.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{pal["drop"]}"/>')
+    END()
+    for i_, (x, y, r) in enumerate(DROPS):
+        out.append(f'<circle{f" data-k=\"drop{i_}\"" if anim else ""} cx="{x}" cy="{y}" r="{r}" fill="{pal["drop"]}"/>')
     pile = f"M{CX - 440},1990 C{CX - 300},1830 {CX - 110},1645 {CX},1645 C{CX + 110},1645 {CX + 300},1830 {CX + 440},1990 V2100 H{CX - 440} Z"
+    pile_hi = lambda: hi(f"M{CX - 70},1700 C{CX - 150},1760 {CX - 230},1840 {CX - 290},1930", WHITE, round(W * .55), .7)
+    G("sandBot")
     shape("path", f'd="{pile}"', grad("pile", pal["sand"], 1, .6), se, not line_art, cd)
+    if anim: pile_hi()
+    END()
     if not line_art:
         g0, g1 = GLASS_R[-1][3], GLASS_R[0][0]
         occ(f"M{g0[0]},{g0[1]} A{PLINTH['rx']},{PLINTH['ry']} 0 0 1 {2 * CX - g0[0]},{g0[1]}", cd)  # sand and glass into the plinth
@@ -302,7 +319,7 @@ def build(key, style):
                      ((0, "#fff", round(.55 * k, 2)), (.1, "#fff", round(.25 * k, 2)), (.3, "#fff", 0), (.72, gdeep, 0), (.9, gdeep, .22), (1, "#fff", round(.45 * k, 2))))
         out.append(f'<path d="{gp}" fill="{refl}"/>')
         out.append(f'<path d="{gp}" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="{round(W * 1.8)}"/>')
-    hi(f"M{CX - 70},1700 C{CX - 150},1760 {CX - 230},1840 {CX - 290},1930", WHITE, round(W * .55), .7)
+    if not anim: pile_hi()
     out.append("</g>")
     # glass highlights: a long gleam down the left of each bulb, a short one on the right
     def wall(y0, y1, inset, side=-1):
@@ -329,6 +346,7 @@ def build(key, style):
     cylinder(CAP)
     if not line_art:
         for x in lay["posts"]: spec(x - 20, POST_TOP + 190, 9, 44)
+    if anim: out.append("<!--/HG-->")
 
     clocks()  # in front; spaced, the clock overlaps the left post only, and its shadow falls on the post and card
 
@@ -358,6 +376,9 @@ def build(key, style):
             if crisp: top_edges(sx, cy, CRX, CRY)
             hi(arc(sx, cy + 2, CRX - 90, CRY - 24, 200, 245), WHITE, round(W * .5), .9)
             spec(sx - CRX * .57, cy - CRY * .4, 26, 9, -3)
+            if anim:  # a glint that sweeps up the stack: off at rest
+                out.append(f'<ellipse data-k="glint{sx}_{cnt - 1 - i}" cx="{n(sx - CRX * .45)}" cy="{n(cy + COIN_T * .5 + CRY * .55)}" rx="{n(CRX * .34)}" ry="{n(COIN_T * .26)}" '
+                           f'fill="url(#{pre}-spec)" opacity="0"/>')
 
     vb = " ".join(map(str, vbox))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{vbox[2]}" height="{vbox[3]}">'
@@ -365,14 +386,49 @@ def build(key, style):
     assert "filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = re.findall(r'id="([^"]+)"', svg)
     assert len(ids) == len(set(ids)) and all(i.startswith(pre + "-") for i in ids), "gradient ids must be unique and prefixed"
+    if anim: return svg
     path = f"{HERE}/{pre}.svg"
     open(path, "w").write(svg)
     return path
 
 
+# ---- Animated export of B gloss (the designer's pick) for ATMHourglass.tsx ----
+# Every moving part gets its own <g data-k="...">. The hourglass flips end over end at the end of each loop, but
+# its art is drawn in perspective (lit tops), so it can't match itself turned over. So the flip group holds two
+# copies: hgA, the animated one, and hgB, a still copy of the start state turned 180 degrees and hidden. Halfway
+# through the flip (hourglass on its side) the two swap; when the flip lands at 180 degrees, hgB shows the start
+# state exactly upright, and the loop starts over seamlessly.
+FLIP_CENTRE = (CX, (CAP["top"] - CAP["ry"] + BASE["bot"] + BASE["ry"]) / 2)  # the hourglass's middle, its waist
+TOP_DRAIN = .5  # the top sand's height at the end of the drain, about its tip
+PILE_GROW = 1.4  # the bottom pile's height at the end of the drain, about the glass floor
+
+
+def export_anim():
+    svg = build("B", "gloss", anim=True)
+    a, b = svg.index("<!--HG-->"), svg.index("<!--/HG-->")
+    hg = svg[a + 9:b]
+    still = re.sub(r'<circle data-k="drop\d+"[^>]*/>', "", hg)  # the start state shows no falling drops
+    still = re.sub(r' data-k="[^"]*"', "", still)
+    cx, cy = FLIP_CENTRE
+    svg = (svg[:a] + '<g data-k="squash"><g data-k="hourglass"><g data-k="hgA">' + hg + "</g>"
+           + f'<g data-k="hgB" opacity="0" transform="rotate(180 {n(cx)} {n(cy)})">{still}</g></g></g>' + svg[b + 10:])
+    svg = re.sub(r"\d+\.\d{3,}", lambda m: f"{float(m.group()):.1f}", svg)  # lean: long decimals to 1 place
+    assert svg.count('data-k="hgA"') == 1 and svg.count('data-k="drop') == len(DROPS)
+    open(f"{HERE}/hourglass-anim.svg", "w").write(svg)
+    surf_y = 1305 - (1305 - SAND_LEVEL) * TOP_DRAIN  # where the sand's surface ends up
+    print("anim: viewBox", re.search(r'viewBox="([^"]*)"', svg).group(1), "flip centre", FLIP_CENTRE,
+          "surface dy", round(surf_y - SAND_LEVEL, 1), "surface scale", round(glass_halfwidth(surf_y) / glass_halfwidth(SAND_LEVEL), 3))
+    tpl = open(f"{HERE}/ATMHourglass.template.tsx").read()
+    inner = svg[svg.index(">") + 1:svg.rindex("</svg>")]
+    (ccx, ccy, _), = LAYOUTS["spaced"]["clocks"]
+    tpl = tpl.replace("__VIEWBOX__", re.search(r'viewBox="([^"]*)"', svg).group(1)).replace("__CLOCK__", f"{ccx} {ccy}")
+    open(f"{HERE}/../../../ATMHourglass.tsx", "w").write(tpl.replace("__ART__", inner))
+
+
 files = [build(k, st) for k in OPTIONS for st in STYLES]
 print("viewBox", VB, "outline", W, "units =", round(W * 2120 / VB[2], 1), "at 2120 wide")
 print("\n".join(files))
+export_anim()
 
 if SCRATCH:  # contact sheet on the lesson card, plus the redraw over the source to check the fit
     TC = "/tmp/claude-0/-home-user/918dff32-11f3-5700-8f92-8217278814f6/scratchpad/tc"
