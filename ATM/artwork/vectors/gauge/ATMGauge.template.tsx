@@ -4,9 +4,9 @@ import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 // The lesson card's gauge: five chunky glossy segments (orange, egg yolk, mint, light teal, sky, left to
-// right) with a light-blue needle, looping in place. The needle swings from the left end across to the right
+// right) with a white needle on a bright blue pivot, looping in place. The needle swings from the left end across to the right
 // with a springy overshoot and settle, holds, then eases back to the left; its soft shadow turns with it.
-// Each segment gives a small pop as the needle passes it, and a white glint slides across the segments'
+// Each segment gives a small pop as the needle passes it, both ways, and a white glint slides across the segments'
 // highlights once per loop. The pivot stays still. No background of its own: place it on the teal glass card.
 //
 // The artwork is redrawn as clean vector (ATM/artwork/vectors/gauge/build.py, export_anim): each moving part
@@ -37,12 +37,12 @@ const SEGMENTS = [0, 1, 2, 3, 4].map((i) => {
 })
 const GLINT_AT = 2.1 // the glint starts on the left segment and slides right, one segment every 0.12 s
 
-// When the swing (with its ease) first reaches a rotation, so each pop lands as the needle passes.
-function passTime(rotation: number) {
-    const ease = gsap.parseEase(SWEEP_EASE)
-    const target = (rotation - LEFT) / (RIGHT - LEFT)
-    for (let i = 1; i <= 400; i++) if (ease(i / 400) >= target) return SWEEP_AT + (SWEEP * i) / 400
-    return SWEEP_AT + SWEEP
+// When a move (from -> to, with its ease) first reaches a rotation, so each pop lands as the needle passes.
+function passTime(rotation: number, at: number, duration: number, easeName: string, from: number, to: number) {
+    const ease = gsap.parseEase(easeName)
+    const target = (rotation - from) / (to - from)
+    for (let i = 1; i <= 400; i++) if (ease(i / 400) >= target) return at + (duration * i) / 400
+    return at + duration
 }
 
 // The whole loop as ONE GSAP timeline (repeat: -1). Every tween is transform or opacity, every value it
@@ -61,9 +61,11 @@ function buildLoop(svg: SVGSVGElement) {
     SEGMENTS.forEach((seg, i) => {
         const el = q(seg.k)
         if (el) {
-            const at = passTime(seg.rotation)
-            tl.fromTo(el, { svgOrigin: seg.origin, scale: 1 }, { scale: 1.04, duration: 0.12, ease: "power2.out", immediateRender: false }, at)
-                .to(el, { scale: 1, duration: 0.34, ease: "sine.inOut" }, at + 0.12)
+            // a pop on the swing right and again on the way back left
+            for (const at of [passTime(seg.rotation, SWEEP_AT, SWEEP, SWEEP_EASE, LEFT, RIGHT), passTime(seg.rotation, RETURN_AT, RETURN, "power2.inOut", RIGHT, LEFT)]) {
+                tl.fromTo(el, { svgOrigin: seg.origin, scale: 1 }, { scale: 1.04, duration: 0.12, ease: "power2.out", immediateRender: false }, at)
+                    .to(el, { scale: 1, duration: 0.3, ease: "sine.inOut" }, at + 0.12)
+            }
         }
         const glint = q(seg.glint)
         if (glint) {

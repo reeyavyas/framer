@@ -18,7 +18,7 @@ STYLE = {  # D: side-face depth, GAP: perpendicular gap between segments, CR: co
     "3d": dict(D=58, GAP=T, CR=16),
     "clay": dict(D=84, GAP=72, CR=56),
     "glass": dict(D=84, GAP=72, CR=18),
-    "gloss": dict(D=84, GAP=72, CR=30),
+    "gloss": dict(D=84, GAP=110, CR=30),  # designer: more space between the blocks
 }
 SOLID = ("clay", "glass", "gloss")
 NL2, NB2, NT2 = 425, 72, 17     # the solid styles' needle: its tip stops ~55 short of the segments
@@ -39,10 +39,12 @@ CORE = {"teal": "#00726f", "lteal": "#159e9c", "yolk": "#f4ad22", "orange": "#e3
 NEEDLE = {  # light half, base, dark half
     "sky":   dict(light="#5fd0f2", base="#00acdd", dark="#0094c6", hi="#9fe3f8"),
     "lblue": dict(light="#00acdd", base="#0079a9", dark="#005f88", hi="#5fd0f2"),
+    # designer: a white pointer with a bright blue pivot, no streak inside it
+    "white": dict(light="#ffffff", base="#f4faff", dark="#d9eeff", hi="#ffffff", under="#a9d3ef", pivot=["#9fe3f8", "#5fd0f2", "#00acdd", "#0094c6"], pivotUnder="#0079a9"),
 }
 SCHEMES = {
     "A": dict(segs=["teal", "lteal", "yolk", "orange", "amber"], needle="sky"),
-    "B": dict(segs=["orange", "yolk", "mint", "lteal", "sky"], needle="lblue"),
+    "B": dict(segs=["orange", "yolk", "mint", "lteal", "sky"], needle="white"),
 }
 
 f = lambda v: f"{v:.2f}".rstrip("0").rstrip(".")
@@ -146,7 +148,7 @@ def build(key, style, anim=False):
         sides.append("".join(f'<path d="{x}" fill="url(#{sid})" stroke="url(#{sid})" stroke-width="1.5"/>' for x in [d] + sw))
         a1, a2 = 180 - 36 * i, 180 - 36 * (i + 1)
         if solid:  # each block casts its own soft shadow down-right onto the card
-            blocks.append(layered([d, path_d([shift(q, D) for q in pcs])], 0.07, (56, 42, 28, 14, 0)))
+            blocks.append(layered([d, path_d([shift(q, D) for q in pcs])], 0.035 if style == "gloss" else 0.07, (64, 48, 32, 16, 0)))
         if style == "3d":
             # outline: the solid filled and stroked navy at 2T under everything (outer half shows: T);
             # the front stroked navy at 2T under its fill draws the seam to the side face and between segments
@@ -228,7 +230,7 @@ def build(key, style, anim=False):
         pivot = (f'<circle r="{f(PIV + T)}" fill="{NAVY}"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
                  f'<ellipse cx="-11" cy="-12" rx="10" ry="6" transform="rotate(-35 -11 -12)" fill="#ffffff"/>')
     else:
-        under = f'<path d="{nd}" transform="translate(9 10)" fill="{n["dark"]}"/>'  # the needle's thick underside
+        under = f'<path d="{nd}" transform="translate(9 10)" fill="{n.get("under", n["dark"])}"/>'  # the needle's thick underside
         if style == "clay":
             defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.35, n["light"], None), (0.7, n["base"], None), (1, n["dark"], None)], -nb, 0, nb, 0, user=True))
             top = f'<path d="M-{f(nb * 0.42)},-{nb + 10}L-{f(nt * 0.4)},-{nl - 30}" stroke="#ffffff" stroke-opacity=".55" stroke-width="10" stroke-linecap="round"/>'
@@ -239,23 +241,24 @@ def build(key, style, anim=False):
                    f'<path d="M-{f(nb * 0.42)},-{nb + 12}L-{f(nt * 0.4)},-{nl - 30}" stroke="#ffffff" stroke-opacity=".8" stroke-width="7" stroke-linecap="round"/>')
         else:  # gloss: smooth rounded blade, a hot white streak and a glint near the tip
             defs.append(lin(f"{pre}-needle", [(0, n["hi"], None), (0.25, n["light"], None), (0.6, n["base"], None), (1, n["dark"], None)], -nb, 0, nb, 0, user=True))
-            top = (f'<path d="M-{f(nb * 0.4)},-{nb + 6}L-{f(nt * 0.35)},-{nl - 26}" stroke="#ffffff" stroke-opacity=".95" stroke-width="12" stroke-linecap="round"/>'
+            top = "" if "pivot" in n else (f'<path d="M-{f(nb * 0.4)},-{nb + 6}L-{f(nt * 0.35)},-{nl - 26}" stroke="#ffffff" stroke-opacity=".95" stroke-width="12" stroke-linecap="round"/>'
                    f'<ellipse cx="{f(nb * 0.3)}" cy="-{f(nb * 0.15)}" rx="10" ry="18" fill="#ffffff" opacity=".5"/>')
         needle = under + f'<path d="{nd}" fill="url(#{pre}-needle)"/>' + top
-        defs.append(rad(f"{pre}-pivot", [(0, "#ffffff", None), (0.5, "#eef7ff", None), (0.85, "#d9eeff", None), (1, "#a9d3ef", None)], -10, -12, PIV + 14))
-        pivot = (f'<circle cx="7" cy="9" r="{PIV}" fill="#a9d3ef"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
+        pc = n.get("pivot", ["#ffffff", "#eef7ff", "#d9eeff", "#a9d3ef"])
+        defs.append(rad(f"{pre}-pivot", [(0, pc[0], None), (0.5, pc[1], None), (0.85, pc[2], None), (1, pc[3], None)], -10, -12, PIV + 14))
+        pivot = (f'<circle cx="7" cy="9" r="{PIV}" fill="{n.get("pivotUnder", "#a9d3ef")}"/><circle r="{PIV}" fill="url(#{pre}-pivot)"/>'
                  f'<ellipse cx="-12" cy="-13" rx="10" ry="6" transform="rotate(-35 -12 -13)" fill="#ffffff"/>')
         # contact shadows: navy (dark teal is lighter than the card, so it would glow), bell fade, no blur:
         # one wide under the arch, one under each foot
-        k = {"clay": 1, "glass": 1.1, "gloss": 1.25}[style]
+        k = {"clay": 1, "glass": 1.1, "gloss": .7}[style]
         defs.append(rad(f"{pre}-shadow", [(o, NAVY, 0.55 * k * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
         defs.append(rad(f"{pre}-foot", [(o, NAVY, min(.8, 0.6 * k) * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
     # the needle's soft shadow, offset down-right in page space; it turns with the needle (animate both rotations together)
     nshadow = (f'<g data-k="needle-shadow" transform="translate(40 52) rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
-               + layered([nd], 0.07, (60, 50, 40, 30, 20, 10, 0)) + "</g>") if solid else ""
+               + layered([nd], 0.04 if style == "gloss" else 0.07, (70, 56, 42, 28, 14, 0)) + "</g>") if solid else ""
     if anim:  # the shadow's offset sits on an outer group, so the inner one turns about the same pivot (0,0) as the needle
         nshadow = (f'<g transform="translate(40 52)"><g data-k="needle-shadow" transform="rotate({f(90 - NEEDLE_DEG)})" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
-                   + layered([nd], 0.07, (60, 50, 40, 30, 20, 10, 0)) + "</g></g>")
+                   + layered([nd], 0.04 if style == "gloss" else 0.07, (70, 56, 42, 28, 14, 0)) + "</g></g>")
     shadow = (f'<ellipse cx="0" cy="{f(D + 10)}" rx="{f(SHADOW_RX)}" ry="{f(SHADOW_RY)}" fill="url(#{pre}-shadow)"/>'
               + "".join(f'<ellipse cx="{x}" cy="{f(D + 4)}" rx="360" ry="62" fill="url(#{pre}-foot)"/>' for x in (-750, 750))) if solid else ""
     ink = f'fill="{NAVY}" stroke="{NAVY}" stroke-width="{f(2 * T)}" stroke-linejoin="round" stroke-linecap="round"'

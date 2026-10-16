@@ -292,10 +292,12 @@ CLAY = {
 }
 # the designer's pick: Glossy 3D A, with Glossy 3D B's magnifier (rim, inner wall, glass, neck, handle)
 CLAY["AB"] = dict(CLAY["A"], **{k: CLAY["B"][k] for k in ("ring", "wall", "glass", "neck", "handle")})
+# designer: the magnifier's glacier and light blues become light teal and mint
+CLAY["AB"].update(ring=LT5, wall=["#5fbfa6", "#3fa58c", "#8fd3c0"], neck=MI5, glass=("#8fe0e0", .3))
 STYLES = {  # no-outline 3D styles: corner radius, slab and line depth, contact-shadow strength
     "clay": dict(R=260, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
     "glass": dict(R=190, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
-    "gloss": dict(R=220, depth=(-96, 112), pdepth=(-58, 72), ground=.8),
+    "gloss": dict(R=220, depth=(-96, 112), pdepth=(-58, 72), ground=.5),  # designer: softer shadows
 }
 def build_soft(key, style, anim=False):
     """No ink outline, three looks sharing one layout:
@@ -343,34 +345,35 @@ def build_soft(key, style, anim=False):
     sh = []  # shadows and occlusion on the screen, clipped to it
     sh.append(f'<rect x="0" y="{BAR}" width="4200" height="110" fill="{D.lin([pal["occ"], pal["occ"]], [.55, 0], x2=0)}"/>')  # under the bar
     sh.append(f'<path d="{fd}" fill="none" stroke="{D.lin([pal["occ"], pal["occ"], pal["occ"]], [0, .25, .6], x1=0, y1=0, x2=1, y2=1)}" stroke-width="90"/>')  # inner rim darkens to the bottom-right
-    sh.append(tag("magShadow", soft(LCX - 130, LCY + 230, LA + 90, LB + 80, pal["occ"], 1, LANG)  # the magnifier's soft shadow, well below it (it floats)
-                  + soft(HCX - 130, HCY + 190, HL + 100, HW + 70, pal["occ"], .7, HANG)))
+    mo = .55 if gloss else 1  # designer: softer shadows
+    sh.append(tag("magShadow", soft(LCX - 130, LCY + 230, LA + 90, LB + 80, pal["occ"], mo, LANG)  # the magnifier's soft shadow, well below it (it floats)
+                  + soft(HCX - 130, HCY + 190, HL + 100, HW + 70, pal["occ"], .7 * mo, HANG)))
     o.append(f'<g clip-path="url(#{clip})">{"".join(sh)}</g>')
-    if not glassy: o.append(soft(LEFT(800) + 520, 820, 520, 300, WHITE, .55))  # soft light top-left of the screen
+    if clay: o.append(soft(LEFT(800) + 520, 820, 520, 300, WHITE, .55))  # soft light top-left of the screen (gloss: crisp sheens only)
     if gloss:  # a polished reflection across the screen's top-left
-        o.append(f'<g clip-path="url(#{clip})"><path d="M{LEFT(BAR)-50:.0f},{BAR} H1500 L{LEFT(1500)-50:.0f},1500 Z" fill="{D.lin([WHITE, WHITE], [.6, 0], x1=0, y1=0, x2=.7, y2=.7)}"/></g>')
+        o.append(f'<g clip-path="url(#{clip})"><path d="M{LEFT(BAR)-50:.0f},{BAR} H1500 L{LEFT(1500)-50:.0f},1500 Z" fill="{D.lin([WHITE, WHITE], [.7, .04], x1=0, y1=0, x2=.7, y2=.7)}"/></g>')
     o.append(f'<path d="{fd}" fill="none"{rim(pal["body"])}/>')
     # top bar, its glossy lip, the dots each with a tiny shadow, a highlight and a specular spot
     o.append(f'<path d="{bd}" fill="{puff(pal["bar"], cx=.3, cy=.1, r=1.1, fx=.25, fy=0)}"{rim(pal["bar"])}/>')
     o.append(f'<path d="M{LEFT(TOP + 70) + 140:.0f},{TOP + 58} H{RIGHT(TOP) - 300:.0f}" stroke="{pal["bar"][0]}" stroke-width="{SW * 1.3:.0f}" stroke-linecap="round" opacity=".75"/>')
-    if not glassy: o.append(soft(LEFT(TOP) + 420, TOP + 90, 340, 70, WHITE, .5))
+    if clay: o.append(soft(LEFT(TOP) + 420, TOP + 90, 340, 70, WHITE, .5))
     if gloss:  # polished sheen over the bar's upper half
-        o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE], [.4, .05], x2=0)}"/></g>')
+        o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE], [.55, .08], x2=0)}"/></g>')
     for i, ((cx, cy), r) in enumerate(zip(dots, pal["dots"])):
-        o.append(soft(cx + 12, cy + 26, dot_r * 1.15, dot_r * .7, pal["bar"][4], .7))
+        o.append(soft(cx + 12, cy + 26, dot_r * 1.15, dot_r * .7, pal["bar"][4], .45 if gloss else .7))
         o.append(tag(f"dot{i}", f'<circle cx="{cx:.0f}" cy="{cy}" r="{dot_r}" fill="{puff(r)}"{rim(r)}/>' + spec(cx - 15, cy - 17, 12, 8)))
     # text lines: soft shadow on the screen, a thick deep side, a puffy top with a soft and a crisp highlight
     for n, p in enumerate(pills):
         r = pal["hit" if n == HIT else "pill"]
         x0, y0, x1, y1 = p; h = (y1 - y0) / 2
-        o.append(f'<g clip-path="url(#{clip})">{soft_pill((34, 22, 10, 0), PDEP[0] + 18, PDEP[1] + 30, pal["occ"], .14, p)}</g>')
+        o.append(f'<g clip-path="url(#{clip})">{soft_pill((40, 28, 16, 4), PDEP[0] + 18, PDEP[1] + 30, pal["occ"], .07 if gloss else .14, p)}</g>')
         d, sp = pill(p); side, _ = extrude(sp, PDEP)
         o.append(f'<path d="{side}" fill="{D.lin([r[3], r[4]], x1=0, y1=0, x2=0, y2=1)}"{rim(r) if not glassy else ""}/>')
         top = [r[0], r[1], r[2], r[3]] if not gloss else [r[1], r[2], r[3]]
         o.append(f'<path d="{d}" fill="{D.lin(top, x1=0, y1=0, x2=.05, y2=1)}"{rim(r)}/>')
         o.append(f'<path d="M{x0 + h * .8:.0f},{y0 + 30} H{min(x1 - h, x0 + h + 380):.0f}" stroke="{WHITE}" stroke-width="{SW * 1.1:.0f}" stroke-linecap="round" opacity="{.95 if gloss else .7}"/>')
         if gloss:  # polished sheen over the top half of the line
-            o.append(f'<path d="{pill((x0 + h * .3, y0 + 6, x1 - h * .3, y0 + h * .95))[0]}" fill="{D.lin([WHITE, WHITE], [.55, .1], x2=0)}"/>')
+            o.append(f'<path d="{pill((x0 + h * .3, y0 + 6, x1 - h * .3, y0 + h * .95))[0]}" fill="{D.lin([WHITE, WHITE], [.7, .12], x2=0)}"/>')
         o.append(spec(x0 + h * .62, y0 + 30, 11, 7, -20))
         if anim and n == HIT:  # the hit line's glow, hidden at rest; the loop pulses it while the lens pauses over it
             o.append(f'<g data-k="hitGlow" opacity="0">{soft((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2 + 140, h + 120, YOLK_T, .8)}'
@@ -390,7 +393,7 @@ def build_soft(key, style, anim=False):
     if glassy:  # translucent teal glass like the card, with its light-teal rim
         o.insert(len(o) - 2, f'{OPEN()} fill="{D.lin([DTEAL, WHITE], [.4, .2], x1=.2, y1=0, x2=.8, y2=1)}" stroke="{LTEAL}" stroke-opacity=".7" stroke-width="{EW:.0f}"/>')
     o.append(f'<path d="M{LCX - LA + 55},{LCY} A{LA - 55},{LB - 55} 0 0 1 {LCX},{LCY - LB + 55}" transform="rotate({LANG} {LCX} {LCY})" fill="none" stroke="{WHITE}" stroke-width="{SW * 1.4:.0f}" stroke-linecap="round" opacity=".8"/>')
-    if not glassy: o.append(soft(LCX - 330, LCY - 280, 160, 95, WHITE, .85, -40))
+    if clay: o.append(soft(LCX - 330, LCY - 280, 160, 95, WHITE, .85, -40))
     if gloss:  # a second reflection along the rim's lower-right, like polished plastic
         o.append(f'<path d="M{LCX + LA - 50},{LCY} A{LA - 50},{LB - 50} 0 0 1 {LCX},{LCY + LB - 50}" transform="rotate({LANG} {LCX} {LCY})" fill="none" stroke="{WHITE}" stroke-width="{SW * .9:.0f}" stroke-linecap="round" opacity=".6"/>')
     o.append(spec(LCX - 360, LCY - 300, 22, 13, -40))
