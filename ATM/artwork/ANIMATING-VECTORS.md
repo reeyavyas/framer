@@ -28,6 +28,15 @@ options):
 | Cart version 2 | `cart-v2-B-gloss.svg` (a separate cart; the first cart and its code are untouched) |
 | Savings jar | `savings-jar-B-gloss.svg`: full jar of big, wide coins, with Glossy A's sky arrow |
 
+**Animated components** (first drafts, one per pick): `ATM/ATMCartV2.tsx`,
+`ATMSavingsJar.tsx`, `ATMHourglass.tsx`, `ATMGauge.tsx`,
+`ATMBrowserSearch.tsx`. Each folder's `build.py` has `export_anim()`, which
+writes `<slug>-anim.svg` and the component from its `.template.tsx`.
+
+**Working rule (designer):** sub-agents were used only to make the first
+drafts in parallel. From here on, make every revision directly, without
+sub-agents.
+
 ## 1. The order that worked
 
 1. **Convert.** The designer sends an Adobe Stock `.ai`; it's EPS
