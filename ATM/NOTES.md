@@ -151,7 +151,8 @@ doesn't change them; change them only when it's asked for the ATM.
   the same `system-overlay-change` signal as the app's, so the
   carousel holds its autoplay while it's up. Timings and the path are
   constants at the top of the file.
-- `ATMNeedWantLoop.tsx` — the looping illustration for the Lesson 1
+- `ATMNeedWantLoop.tsx` (archived to `archived/atm-lesson-card/`; the lesson cards now use the glossy 3D set:
+  `ATMCartV2`, `ATMSavingsJar`, `ATMHourglass`, `ATMGauge`, `ATMBrowserSearch`) — the first looping illustration for the Lesson 1
   ("Need or Want?") card on `/atm-start`. It fills the bottom of the
   teal glass card; the card's copy and Get Started button stay still
   above it. Nine options in its **Style** property (A Swipe, B Balance,
@@ -227,7 +228,8 @@ doesn't change them; change them only when it's asked for the ATM.
   6. **Transition** swaps between A + B + E (default), A + B, A, B, E
      and E + B.
 
-- `ATMNeedWantLoop.tsx`: paste it into a new code file named
+- `ATMNeedWantLoop.tsx` (archived to `archived/atm-lesson-card/`; place one of the glossy 3D
+  components instead): paste it into a new code file named
   `ATMNeedWantLoop` and place it in the lesson card, filling the area
   under the Get Started button (about 694×500 on the 734×1050 card;
   any size works, the drawing keeps its 4:3 shape and centres). Pick

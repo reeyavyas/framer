@@ -36,6 +36,9 @@ each experiment is preserved here.
   `ATMSavingsJar.tsx`, `ATMHourglass.tsx`, `ATMGauge.tsx`, `ATMBrowserSearch.tsx`). Its art scripts stay in
   `ATM/artwork/cart/` (the playbook `ATM/artwork/ANIMATING-VECTORS.md` and the other carts build on them);
   `ATM/artwork/cart/preview/build.sh` now writes the component here. Still works if pulled back out.
+- `ATMNeedWantLoop.tsx`: the very first round of the lesson card animation, nine code-drawn ideas in one
+  component switched by its Style property (Swipe, Balance, Bags, Cart, Coin, Sorter, Claw, Dial, Bubbles; Bags
+  later rebuilt in 3D). Superseded by cart version 1 and then the glossy 3D set; nothing imports it.
 
 ## `tutorials-main-page/`
 
