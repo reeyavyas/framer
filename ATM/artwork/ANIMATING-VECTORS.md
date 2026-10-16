@@ -33,6 +33,23 @@ options):
 `ATMBrowserSearch.tsx`. Each folder's `build.py` has `export_anim()`, which
 writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 
+**Designer feedback on the first drafts (round 2), now applied:**
+- Glossiness: cart version 2 and the gauge were right; the others went up a notch. Edges crisp like cart version
+  2, not painterly: hard-edged sheens and specular spots, no soft white glow blobs. Gloss gradients stay smooth
+  (no sharp diagonal lines inside a face), and a white border is the top layer of its shape.
+- Shadows softer on all five (contact shadows about 0.45-0.5, cast shadows faint).
+- Moving parts must be whole: cart version 2's basket got its back rim, its right side running back to it, and its
+  inside; its yellow box is a true box, inside the basket's right side.
+- Savings jar: keep the original jar and lid shapes (a redrawn geometric jar was rejected), clean only the lid's
+  jagged sides. Colours from cart version 2: glass = the sky basket, lid = the teal handle and wheels, arrow = the
+  mint and teal boxes. No yellow beyond the coins. Arrow as tall as the jar's body. The coin that drops in lands
+  inside. Coin stacks start short and coins pile on one by one (shown at full strength as they drop: a half-faded
+  coin shows its own shading as a dark ghost).
+- Hourglass: the savings jar's coins, taller uneven stacks, the hourglass exactly centred between them, the clock
+  20% larger.
+- Gauge: white pointer, bright blue pivot, no streak in the pointer, wider gaps, pops on the way back too.
+- Browser: the magnifier in light teal and mint.
+
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
 sub-agents.
