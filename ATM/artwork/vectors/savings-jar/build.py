@@ -72,11 +72,11 @@ SCHEMES = {
         lid=[(0.38, TEAL), (0.50, LTEAL), (0.68, LTEAL_T), (0.86, LTEAL_TT), (0.97, WHITE)],
         arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)],
         edge=dict(gold=AMBER, glass=GLACIER_SS, lid=TEAL, arrow=SKY_S)),
-    "B": dict(  # light-teal glass, sky lid, mint arrow
-        glass=[(0.26, TEAL), (0.36, LTEAL), (0.52, LTEAL_T), (0.72, LTEAL_TT), (0.9, WHITE)],
-        lid=[(0.38, SKY_S), (0.50, SKY), (0.68, SKY_T), (0.86, SKY_TT), (0.97, GLACIER_T)],
+    "B": dict(  # sky glass (cart version 2's basket), teal lid (its handle and wheels), mint arrow
+        glass=[(0.26, LBLUE), (0.36, SKY_S), (0.52, SKY), (0.72, SKY_T), (0.9, SKY_TT)],
+        lid=[(0.38, DTEAL), (0.50, TEAL), (0.68, LTEAL), (0.86, LTEAL_T), (0.97, LTEAL_TT)],
         arrow=[(0.30, MINT_SS), (0.40, MINT_S), (0.50, MINT)],
-        edge=dict(gold=AMBER, glass=TEAL, lid=SKY_S, arrow=MINT_SS)),
+        edge=dict(gold=AMBER, glass=SKY_S, lid=DTEAL, arrow=MINT_SS)),
 }
 def colour(i, sc, dl=0.0):
     """Brand colour for path i; dl shifts the source lightness (tint > 0, shade < 0) inside the same ramp."""
@@ -198,12 +198,14 @@ RING, GROW = 30 * K, 14 * K  # the ring along the contour where faces are grown,
 # ======================================================================================================
 DEEP_GOLD = "#cf7a0c"  # an amber shade, the deepest coin tone (still orange, never brown)
 CORE = dict(A=dict(glass="#5c9fd4", lid=TEAL, arrow=LBLUE, glassShadow="#5c9fd4"),
-            B=dict(glass=TEAL, lid=SKY_S, arrow="#3fa58c", glassShadow=TEAL))
-GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, band=(0, 12), rim=.95)  # contact shadow and glass opacity,
+            B=dict(glass=SKY_S, lid=DTEAL, arrow="#3fa58c", glassShadow=SKY_S))
+GLOSS = dict(shadow=.45, glass=.86,  # designer: softer shadows
+             tint=.14, shade=-.12, band=(0, 12), rim=.95)  # contact shadow and glass opacity,
 # face tint/shade steps (source lightness), edge band (out, in), rim highlight
 GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both schemes take scheme A's sky arrow
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
-STACK = dict(cx=2665, bottom=2459, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
+STACK = dict(cx=2865,  # moved right with the taller arrow (was 2665)
+              bottom=2459, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
@@ -213,7 +215,7 @@ JAR_REST = [(1235, 1735, -16, .6), (2025, 1830, 20, .6)]  # tilted, resting on t
 JAR_FRONT = [(1410, 2355, 2), (1880, 2355, 3)]
 JAR_LEAN = [(1200, 2080, 72, .5), (2085, 2065, -72, .5)]  # leaning on the glass, left and right
 FALL = (1600, 150, -16, .8)
-SPACED_ART = (901, -45, 2935, 2490)
+SPACED_ART = (901, -45, 3135, 2490)
 DOLLAR = ("M .30,-.30 C .22,-.44 -.30,-.44 -.30,-.18 C -.30,.02 .30,-.02 .30,.20 C .30,.44 -.24,.44 -.32,.28 "
           "M 0,-.54 V -.40 M 0,.40 V .54")
 
@@ -374,7 +376,7 @@ def build_gloss(key, anim=False):
         band = f"M {-r},0 L {-r},{th:.1f} A {r},{ry:.1f} 0 0 0 {r},{th:.1f} L {r},0 A {r},{ry:.1f} 0 0 1 {-r},0 Z"
         out = [f'<g transform="translate({cx:.1f} {cy:.1f}) rotate({rot})">']
         if shadow:  # a soft shadow behind the coin, down and to the right
-            out.append(f'<ellipse cx="{r * .08:.1f}" cy="{th * .5 + ry * .35 + 16:.1f}" rx="{r * 1.12:.1f}" ry="{(ry + th) * .85:.1f}" fill="{fade(shadow, .6)}"/>')
+            out.append(f'<ellipse cx="{r * .08:.1f}" cy="{th * .5 + ry * .35 + 16:.1f}" rx="{r * 1.12:.1f}" ry="{(ry + th) * .85:.1f}" fill="{fade(shadow, .38)}"/>')
         # a thick metal edge with reflections, a bevelled face, a raised $
         out += [f'<path d="{band}" fill="{lin([(0, AMBER, 1), (.1, YOLK_T, 1), (.25, ORANGE, 1), (.42, YOLK_TT, 1), (.55, ORANGE, 1), (.8, AMBER, 1), (1, DEEP_GOLD, 1)], 0, 0, 1, 0)}"/>',
                 f'<path d="{band}" fill="{lin([(0, WHITE, 0), (.15, WHITE, .35), (.3, WHITE, 0), (1, WHITE, 0)], 0, 0, 0, 1)}"/>',
@@ -392,20 +394,22 @@ def build_gloss(key, anim=False):
         out.append(f'<ellipse cx="{r * .5:.1f}" cy="{ry * .35:.1f}" rx="{r * .14:.1f}" ry="{ry * .08 + 3:.1f}" transform="rotate(-25 {r * .5:.1f} {ry * .35:.1f})" fill="{fade(WHITE, .7, .6)}"/>')
         out.append("</g>")
         return "".join(out), th, ry
-    def coin_stack(cx, bottom, n, r, k, jit, shadow, top=None):
+    def coin_stack(cx, bottom, n, r, k, jit, shadow, top=None, pile=None):
         parts = []
         th, ry = r * COIN_TH, r * k
         step = th + 18 if top is None else (bottom - th - 2 * ry - top) / (n - 1)  # a visible seam; or spread so the top coin lands on `top`
         for j in range(n):
             ccy = bottom - th - ry - j * step
             x = cx + jit[j % len(jit)]
+            one = ""
             if j:  # the coin above shades the face below it where it sits
-                parts.append(f'<ellipse cx="{x:.1f}" cy="{ccy + th + ry * .2:.1f}" rx="{r * 1.0:.1f}" ry="{ry * 1.05:.1f}" fill="{fade(DEEP_GOLD, .6, .55)}"/>')
-            parts.append(coin(x, ccy, r, k, 0, shadow if j == 0 else None)[0])
+                one += f'<ellipse cx="{x:.1f}" cy="{ccy + th + ry * .2:.1f}" rx="{r * 1.0:.1f}" ry="{ry * 1.05:.1f}" fill="{fade(DEEP_GOLD, .5, .55)}"/>'
+            one += coin(x, ccy, r, k, 0, shadow if j == 0 else None)[0]
+            parts.append(f'<g data-k="pile{j - pile}">{one}</g>' if pile is not None and j >= pile else one)
         return "".join(parts)
 
     # ---- contours, bands and lighting overlays for the source parts (jar, lid, arrow) ----
-    contour = dict(CONTOURS); contour["lid"] = LID_CONTOUR
+    contour = dict(CONTOURS); contour["lid"] = LID_CLEAN
     o_w, i_w = (v * K for v in st["band"])
     def clip(n):
         cid = nid("c"); defs.append(f'<clipPath id="{cid}"><path d="{closed(contour[n])}"/></clipPath>'); return f"url(#{cid})"
@@ -494,26 +498,27 @@ def build_gloss(key, anim=False):
         (x0, y0), (x1, y1) = q[0], q[1]; L = math.hypot(x1 - x0, y1 - y0)
         nx, ny = (y1 - y0) / L, -(x1 - x0) / L  # outward for a clockwise polygon (screen coordinates)
         lit = -.25 * nx - .97 * ny  # light mostly from above: the head's top-left face bright, the shaft's side darker
-        return (lin([(0, SKY_TT, 1), (1, SKY_T, 1)], 0, 0, 1, 1) if lit > .5 else
-                lin([(0, SKY, 1), (1, SKY_S, 1)], 0, 0, 1, 1) if lit > -.2 else lin([(0, SKY_S, 1), (1, LBLUE, 1)], 0, 0, 0, 1))
+        return (lin([(0, MINT_T, 1), (1, MINT, 1)], 0, 0, 1, 1) if lit > .5 else
+                lin([(0, LTEAL, 1), (1, TEAL, 1)], 0, 0, 1, 1) if lit > -.2 else lin([(0, TEAL, 1), (1, DTEAL, 1)], 0, 0, 0, 1))
     fid = nid("c"); defs.append(f'<clipPath id="{fid}"><path d="{pts(FRONT)}"/></clipPath>')
     fx0, fy0 = min(x for x, y in FRONT), min(y for x, y in FRONT); fx1, fy1 = max(x for x, y in FRONT), max(y for x, y in FRONT)
-    arrow_solid = (f'<path d="{pts(back)}" fill="{LBLUE}" stroke="{LBLUE}" stroke-width="6" stroke-linejoin="round"/>'
+    arrow_solid = (f'<path d="{pts(back)}" fill="{DTEAL}" stroke="{DTEAL}" stroke-width="6" stroke-linejoin="round"/>'
                    # faces turned away from the viewer first, so they never paint over a visible face near a corner
                    + "".join(f'<path d="{pts(q)}" fill="{f}" stroke="{f}" stroke-width="6" stroke-linejoin="round"/>'
                              for q, f in ((q, side_fill(q)) for q in sorted(quads, key=facing)))
                    + f'<path d="{pts([back[-1], back[0]])}" fill="none" stroke="{WHITE}" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/>'  # rim light on the lit back edge
                    + (lambda g: f'<path d="{pts(FRONT)}" fill="{g}" stroke="{g}" stroke-width="8" stroke-linejoin="round"/>')(
-                       lin([(0, SKY_TT, 1), (.4, SKY_T, 1), (1, SKY, 1)], fx0, fy0, fx1, fy1, units=True))
+                       lin([(0, LTEAL_T, 1), (.45, LTEAL, 1), (1, TEAL, 1)], fx0, fy0, fx1, fy1, units=True))
                    + f'<path d="{pts(FRONT)}" fill="none" stroke="{WHITE}" stroke-width="44" stroke-linejoin="round" clip-path="url(#{fid})"/>'  # border: 22 inset, even
-                   + f'<g clip-path="url(#{fid})"><ellipse cx="{fx0 + (fx1 - fx0) * .38:.0f}" cy="{fy0 + (fy1 - fy0) * .3:.0f}" rx="{(fx1 - fx0) * .4:.0f}" ry="{(fy1 - fy0) * .3:.0f}" fill="{fade(WHITE, .55, .5)}"/>'
-                   f'<ellipse cx="{fx0 + (fx1 - fx0) * .7:.0f}" cy="{fy0 + (fy1 - fy0) * .85:.0f}" rx="{(fx1 - fx0) * .5:.0f}" ry="{(fy1 - fy0) * .3:.0f}" fill="{fade(LBLUE, .45, .55)}"/></g>')
+                   # crisp gloss: a hard-edged sheen across the upper left and a deeper band along the lower right
+                   + f'<g clip-path="url(#{fid})"><path d="M {fx0 - 50:.0f},{fy0 - 50:.0f} L {fx1 + 50:.0f},{fy0 - 50:.0f} L {fx0 - 50:.0f},{fy0 + (fy1 - fy0) * .62:.0f} Z" fill="{WHITE}" fill-opacity=".28"/>'
+                   f'<path d="M {fx1 + 50:.0f},{fy0 + (fy1 - fy0) * .55:.0f} L {fx1 + 50:.0f},{fy1 + 50:.0f} L {fx0 + (fx1 - fx0) * .35:.0f},{fy1 + 50:.0f} Z" fill="{TEAL}" fill-opacity=".3"/></g>')
     # its shadow (it stands on the shared ground shadow): the whole solid, offset down-right, in widening faint layers (each layer one opaque union, then faded)
-    arrow_shadow = (f'<g transform="translate(26 30) {ARROW_T}">'
-                    + "".join(f'<g opacity=".03" fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round">'
+    arrow_shadow = (f'<g transform="translate(26 30) {ARROW_T2}">'
+                    + "".join(f'<g opacity=".018" fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round">'
                               + "".join(f'<path d="{d_}"/>' for d_ in solid) + "</g>" for w in range(72, -1, -6))
                     + "</g>")
-    stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None, top=LID_E[1] - LID_E[3])  # 19 coins, top level with the lid
+    stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None, top=LID_E[1] - LID_E[3], pile=PILE_FROM if anim else None)  # 19 coins, top level with the lid
     # In the animated export each moving part is its own named layer (data-k), see export_anim.
     g = (lambda k, inner, extra="": f'<g data-k="{k}"{extra}>{inner}</g>') if anim else (lambda k, inner, extra="": inner)
     def fallen():  # built in drawing order, so the static file's ids stay as they were
@@ -532,16 +537,20 @@ def build_gloss(key, anim=False):
                  f'fill="{lin([(0, WHITE, 0), (.5, WHITE, .55), (1, WHITE, 0)], 0, STACK["bottom"] - 260, 0, STACK["bottom"], units=True)}" opacity="0"/></g>')
     else:
         glint = ""
+    # the coin that drops in lands here (its own layer in the animated export); the coins inside are clipped to the
+    # glass so the landing coin never shows above the jar (the lid is drawn over it)
+    landed = "".join(coin(x, y, R_JAR, k, rot, gsh)[0] for x, y, rot, k in JAR_TOP)
+    jar_coins = (g("landed", landed) + "".join(coin(x, y, R_JAR, k, rot, gsh)[0] for x, y, rot, k in JAR_MID) + stacks(JAR_BACK) + loose(JAR_REST) + stacks(JAR_FRONT) + loose(JAR_LEAN))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(map(str, VBs))}" width="{VBs[2]}" height="{VBs[3]}">'
            f'<defs>{{DEFS}}</defs>{shadows}'
            + g("jar", f'<g{glass_op}>{base_glass}{"".join(body)}{neck_bands}</g>{lid_shadow}'
-               + part_layers("jar", "jar", fills, front=("lid",)) + g("inner", jar_coins)  # coins over the glass's lighting, so it never tints them
+               + part_layers("jar", "jar", fills, front=("lid",)) + g("inner", f'<g clip-path="{clip("jar")}">{jar_coins}</g>')  # coins over the glass's lighting, so it never tints them
                + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills)
                + g("coinShadow", fall_shadow))
            + fallen()
            + stack + glint
            + g("arrowShadow", arrow_shadow)
-           + g("arrow", f'<g transform="{ARROW_T}">{arrow_solid}</g>') + '</svg>')
+           + g("arrow", f'<g transform="{ARROW_T2}">{arrow_solid}</g>') + '</svg>')
     svg = svg.replace("{DEFS}", "".join(defs))
     assert "<filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = re.findall(r'id="([^"]+)"', svg); assert len(ids) == len(set(ids)) and all(i.startswith(pre) for i in ids)
@@ -552,6 +561,19 @@ def build_gloss(key, anim=False):
 
 # The slot's front lip, from the traced slot (312): the falling coin is clipped below this line, so it slips in.
 SLOT_LIP = ((1415, 577), (1860, 524))
+
+# The lid's sides were jagged where the traced thread ridges stuck out past the top ellipse: the glossy lid is
+# clipped to, and edged along, a clean cylinder silhouette: the top ellipse (LID_E), straight sides, and a bottom arc
+# through the traced lid's lowest point (921.5).
+_lcx, _lcy, _lrx, _lry = LID_E
+LID_CLEAN = (f"M {_lcx - _lrx:.1f},{_lcy:.1f} A {_lrx:.1f},{_lry:.1f} 0 0 1 {_lcx + _lrx:.1f},{_lcy:.1f} L {_lcx + _lrx:.1f},800 "
+             f"A {_lrx:.1f},121.5 0 0 1 {_lcx - _lrx:.1f},800 Z")
+# designer: the arrow as tall as the jar's body (neck 965 to the base 2459), scaled evenly, still centred on the
+# jar-stack gap and standing on the ground line
+ARROW_S2 = (2459 - 965) / (SOLID_BOX[3] - SOLID_BOX[1])
+ARROW_T2 = (f"translate({ARROW_AT[0]:.1f} {ARROW_AT[1]}) scale({ARROW_S2:.4f}) "
+            f"translate({-(SOLID_BOX[0] + SOLID_BOX[2]) / 2:.1f} {-SOLID_BOX[3]:.1f})")
+PILE_FROM = 11                       # the side stack starts with 11 coins; the other 8 drop on one by one
 
 def lean(svg):
     """Smaller markup for the component: path data to 1 decimal, identical gradients and clip paths merged."""
