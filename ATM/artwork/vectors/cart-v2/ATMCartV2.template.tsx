@@ -22,7 +22,7 @@ const ART = `__ART__`
 const ITEMS = [
     { k: "flat", foot: "1940 1050", at: 0.35, tip: -1 },
     { k: "box", foot: "2450 900", at: 1.45, tip: 1 },
-    { k: "tall", foot: "2940 795", at: 2.55, tip: -1 },
+    { k: "tall", foot: "2790 820", at: 2.55, tip: -1 },
 ]
 const LAND = 0.16 + 0.42 + 0.34 // from a hop's start to its landing
 const ROLL = 56 // how far the cart rolls each way, in drawing units (this drawing is 2713 wide)

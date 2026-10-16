@@ -154,8 +154,8 @@ T_WHEEL = 22           # wheel outlines, centred on the line, so they also cover
 # the no-outline styles space the parts apart (back to front): name, shapes (None for a wheel), offset
 PIECES = [
     ("mid", None, (0, 34)), ("left", None, (-30, 26)),
-    ("basketBack", (50, 54, 56, 62, 63, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
-    ("tallBox", (17, 3, 42), (95, -55)),
+    ("basketBack", (50, 100, 54, 101, 102, 56, 62, 63, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
+    ("tallBox", (17, 3, 42), (-55, -30)),  # inside the basket's right side, not past it
     ("bigBox", (45, 52, 46, 28, 35, 26, 21, 24, 19, 22, 12, 4, 6), (40, -62)),
     # the three slabs are one slab (the top one, the only one the art draws whole) repeated 122.5 apart, plus spacing
     ("slab3", (14, 23, 5), (-40, 245 - 40)), ("slab2", (14, 23, 5), (-40, 122.5 - 100)), ("slab1", (14, 23, 5), (-40, -160)),
@@ -166,7 +166,7 @@ PIECES = [
     ("front", None, (0, 36)), ("right", None, (34, 30)),
 ]
 SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60}   # the lower slabs and the big box's underside, hidden once complete
-assert {i for _, ix, _ in PIECES if ix for i in ix} | SPACED_DROP == {i for i in ROLE if ROLE[i] != "slotRing"}
+assert {i for _, ix, _ in PIECES if ix for i in ix} | SPACED_DROP == {i for i in ROLE if ROLE[i] != "slotRing"} | {100, 101, 102}  # + the completed back rim and inside (EXTRA)
 # The big box's left face was cut where the stack hid it; spaced apart, it needs to be whole: five bands parallel
 # to its top edge (slope 0.526), from x 1961 to its corner at x 2298.5, boundaries read off the source at the corner.
 def _band(y0, y1, xa=1961.4, xb=2298.5, k=0.526):
@@ -176,10 +176,26 @@ GEOM.update({i: shape_geom(d) for i, d in SPACED_D.items()})
 BBOX = {i: (lambda n: (n[0::2].min(), n[1::2].min(), n[0::2].max(), n[1::2].max()))(np.array(re.findall(r'-?\d+\.?\d*', D[i]), float))
         for i in ROLE}
 BBOX.update({i: (1961.4, 492, 2298.5, 977.9) for i in SPACED_D})
+# The art never drew the basket's back rim or its inside (the items hid them). Once the items hop they show, so the
+# no-outline styles complete them: the inside (100) and the back rim band (101), from the left rim piece (54) to the
+# right corner of the front rim (13), drawn behind the items.
+# The right side runs back along the same direction as the left side (and the art's own short right corner piece,
+# (3107,821) -> (2999,762)) to a back-right corner at (2631,563); the back edge then runs to the left rim piece.
+EXTRA = {100: ("basketIn", "M 1446 845 L 2625 590 L 3011 816 L 1776 1111 L 1452 912 Z"),
+         101: ("rim", "M 1440 818.5 L 2631 563 L 2625 590 L 1446 845 Z"),            # back edge
+         102: ("rim", "M 2631 563 L 2999.5 762 L 2982 795 L 2625 590 Z")}            # right side, back to the corner
+# The tall box's front face zig-zagged on its left where the big box cut it: redrawn as the true parallelogram of
+# its top edge (2790,290)->(3060,447) and right edge (3060,447)->(2846,848), so it reads as a box when it hops.
+SPACED_D[3] = "M 2790 290 L 3060.3 447.3 L 2846.1 848 L 2575.8 690.7 Z"
+GEOM[3] = shape_geom(SPACED_D[3]); BBOX[3] = (2575.8, 290, 3060.3, 848)
+for i, (r_, d_) in EXTRA.items():
+    ROLE[i] = r_; SPACED_D[i] = d_; GEOM[i] = shape_geom(d_)
+    BBOX[i] = (lambda n: (n[0::2].min(), n[1::2].min(), n[0::2].max(), n[1::2].max()))(np.array(re.findall(r'-?\d+\.?\d*', d_), float))
 STYLE = {  # growth: same-paint stroke that closes the source's gaps and rounds corners; cast: (width, opacity) layers
     "clay": dict(grow=28, edge=6, cast=((44, .12), (24, .14), (6, .18)), ground=.55),
     "glass": dict(grow=7, cast=((18, .16), (4, .22)), ground=.6, see=.72, rim=(5, 7), band=(6, 8), rimOp=.8),
-    "gloss": dict(grow=7, cast=((26, .18), (8, .24)), ground=.7, rim=(7, 9), band=(7, 9), rimOp=.9, depth=8),
+    "gloss": dict(grow=7, cast=((32, .08), (16, .1), (4, .12)), ground=.5,  # designer: softer shadows
+                  rim=(7, 9), band=(7, 9), rimOp=.9, depth=8),
 }
 
 ITEM_OF = {"slab3": "flat", "slab2": "flat", "slab1": "flat", "bigBox": "box", "tallBox": "tall"}
@@ -201,7 +217,7 @@ def build(key, style, anim=False):
     def dark(v): return DARKER[last(v)]
     body = []
     DD = D if style == "outlined" else {**dict(enumerate(D)), **SPACED_D}
-    shapes_defs = "".join(f'<path id="{pre}-p{i}" d="{DD[i]}"/>' for i in ORDER if style == "outlined" or i not in SPACED_DROP)
+    shapes_defs = "".join(f'<path id="{pre}-p{i}" d="{DD[i]}"/>' for i in ORDER + ([] if style == "outlined" else list(EXTRA)) if style == "outlined" or i not in SPACED_DROP)
 
     if style == "outlined":
         use = lambda i, attrs: f'<use href="#{pre}-p{i}" {attrs}/>'
