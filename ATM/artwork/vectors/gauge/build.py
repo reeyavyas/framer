@@ -143,7 +143,7 @@ def build(key, style, anim=False):
     solid = style in SOLID
     defs, hulls, sides, strokes, fronts, overs, blocks = [], [], [], [], [], [], []
     for i, name in enumerate(sc["segs"]):
-        c = SEG[name]; pcs = sector(i, GAP, CR, .45 * D if solid else 0); d = path_d(pcs); sw = sweep(pcs, D)  # .45: how much of a tilted gap the side face covers, by eye
+        c = SEG[name]; pcs = sector(i, GAP, CR, .8 * D if solid else 0); d = path_d(pcs); sw = sweep(pcs, D)  # .8: how much of a tilted gap the side face covers, by eye
         sid, fid = f"{pre}-side{i}", f"{pre}-front{i}"
         core = CORE[name]
         side = c["side"] if style in ("3d", "clay") else [core, c["side"][1]] if style == "glass" else [c["side"][0], c["side"][1]]
