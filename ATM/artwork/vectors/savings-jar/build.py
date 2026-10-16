@@ -283,7 +283,9 @@ NECK_CX, NECK_W, NECK_RY = 1625.5, 640, 173
 _jc = flatten(outer(PATHS[1][1]), 8)
 _cw = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(_jc, _jc[1:] + _jc[:1])) > 0
 JAR_GLASS = closed(outer(PATHS[1][1])) + (" M 1030,820 L 2220,820 L 2220,1100 L 1030,1100 Z" if _cw else " M 1030,820 L 1030,1100 L 2220,1100 L 2220,820 Z")
-def neck_arc(ymid, ry=NECK_RY, n=96):
+NECK_N = 96  # points per arc (the animated export uses fewer)
+def neck_arc(ymid, ry=NECK_RY, n=None):
+    n = n or NECK_N
     top = ymid - ry
     return [(NECK_CX - NECK_W + 2 * NECK_W * k / n, top + ry * max(0.0, 1 - ((2 * k / n - 1)) ** 2) ** .5) for k in range(n + 1)]
 def neck_band(y0, y1, lens=False):  # between the arcs through y0 and y1 mid-jar; a lens when its ends meet
@@ -321,7 +323,7 @@ ARROW_S = _stack8 / (SOLID_BOX[3] - SOLID_BOX[1])
 ARROW_T = (f"translate({ARROW_AT[0]:.1f} {ARROW_AT[1]}) scale({ARROW_S:.4f}) "
            f"translate({-(SOLID_BOX[0] + SOLID_BOX[2]) / 2:.1f} {-SOLID_BOX[3]:.1f})")
 
-def build_gloss(key):
+def build_gloss(key, anim=False):
     sc, st, core = dict(SCHEMES[key], **GLOSS_ARROW), GLOSS, dict(CORE[key], arrow=LBLUE)
     sc["edge"] = dict(sc["edge"], arrow=SKY_S)
     pre = f"{SLUG}-{key}-gloss"
@@ -512,21 +514,101 @@ def build_gloss(key):
                               + "".join(f'<path d="{d_}"/>' for d_ in solid) + "</g>" for w in range(72, -1, -6))
                     + "</g>")
     stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None, top=LID_E[1] - LID_E[3])  # 19 coins, top level with the lid
+    # In the animated export each moving part is its own named layer (data-k), see export_anim.
+    g = (lambda k, inner, extra="": f'<g data-k="{k}"{extra}>{inner}</g>') if anim else (lambda k, inner, extra="": inner)
+    def fallen():  # built in drawing order, so the static file's ids stay as they were
+        fc = coin(*FALL[:2], 205, FALL[3], FALL[2])[0]
+        if not anim: return fc
+        # the coin drops into the slot: everything below the slot's front lip is clipped away
+        (lx0, ly0), (lx1, ly1) = SLOT_LIP
+        yl = lambda x: ly0 + (x - lx0) * (ly1 - ly0) / (lx1 - lx0)
+        scid = nid("c"); x0_, x1_ = VBs[0] - 200, VBs[0] + VBs[2] + 200
+        defs.append(f'<clipPath id="{scid}"><path d="M {x0_},{VBs[1] - 400} L {x1_},{VBs[1] - 400} L {x1_},{yl(x1_):.1f} L {x0_},{yl(x0_):.1f} Z"/></clipPath>')
+        return f'<g clip-path="url(#{scid})">' + g("coin", g("spin", fc)) + "</g>"
+    if anim:
+        # the glint that sweeps up the stack: a soft white band, clipped to the stack's coins
+        gcid = nid("c"); defs.append(f'<clipPath id="{gcid}"><rect x="{STACK["cx"] - STACK["r"] - 20}" y="{LID_E[1] - LID_E[3]}" width="{2 * STACK["r"] + 40}" height="{STACK["bottom"] - LID_E[1] + LID_E[3]}" rx="{STACK["r"]}" ry="{STACK["r"] * STACK["k"]}"/></clipPath>')
+        glint = (f'<g clip-path="url(#{gcid})"><rect data-k="glint" x="{STACK["cx"] - STACK["r"] - 20}" y="{STACK["bottom"] - 260}" width="{2 * STACK["r"] + 40}" height="260" '
+                 f'fill="{lin([(0, WHITE, 0), (.5, WHITE, .55), (1, WHITE, 0)], 0, STACK["bottom"] - 260, 0, STACK["bottom"], units=True)}" opacity="0"/></g>')
+    else:
+        glint = ""
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(map(str, VBs))}" width="{VBs[2]}" height="{VBs[3]}">'
            f'<defs>{{DEFS}}</defs>{shadows}'
-           f'<g{glass_op}>{base_glass}{"".join(body)}{neck_bands}</g>{lid_shadow}'
-           + part_layers("jar", "jar", fills, front=("lid",)) + jar_coins  # coins over the glass's lighting, so it never tints them
-           + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills) + fall_shadow
-           + coin(*FALL[:2], 205, FALL[3], FALL[2])[0]
-           + stack
-           + arrow_shadow
-           + f'<g transform="{ARROW_T}">{arrow_solid}</g></svg>')
+           + g("jar", f'<g{glass_op}>{base_glass}{"".join(body)}{neck_bands}</g>{lid_shadow}'
+               + part_layers("jar", "jar", fills, front=("lid",)) + g("inner", jar_coins)  # coins over the glass's lighting, so it never tints them
+               + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills)
+               + g("coinShadow", fall_shadow))
+           + fallen()
+           + stack + glint
+           + g("arrowShadow", arrow_shadow)
+           + g("arrow", f'<g transform="{ARROW_T}">{arrow_solid}</g>') + '</svg>')
     svg = svg.replace("{DEFS}", "".join(defs))
     assert "<filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = re.findall(r'id="([^"]+)"', svg); assert len(ids) == len(set(ids)) and all(i.startswith(pre) for i in ids)
+    if anim: return svg
     name = f"{SLUG}-{key}-gloss.svg"
     open(os.path.join(OUT, name), "w").write(svg)
     return name
 
+# The slot's front lip, from the traced slot (312): the falling coin is clipped below this line, so it slips in.
+SLOT_LIP = ((1415, 577), (1860, 524))
+
+def lean(svg):
+    """Smaller markup for the component: path data to 1 decimal, identical gradients and clip paths merged."""
+    def tidy(d):  # 1 decimal, no ".0", no space after a command, implicit line-tos
+        d = re.sub(r'-?\d+\.\d+', lambda m: f"{float(m.group(0)):.1f}".rstrip("0").rstrip("."), d)
+        out, last = [], None  # an L may be dropped only right after M or L (after C the pairs would be read as curves)
+        for cmd, args in re.findall(r'([A-Za-z])([^A-Za-z]*)', d):
+            out.append((" " if cmd == "L" and last in "ML" else cmd) + args.strip() + (" " if args.strip() else ""))
+            last = cmd if cmd != "Z" else "Z"
+        return "".join(out).strip().replace("  ", " ")
+    svg = re.sub(r'(\sd=")([^"]+)"', lambda m: m.group(1) + tidy(m.group(2)) + '"', svg)
+    # a long outline used more than once (clip, stroke, rim) is written once and reused
+    long = [d for d, n in __import__("collections").Counter(re.findall(r'<path d="([^"]{600,})"', svg)).items() if n > 1]
+    shared = "".join(f'<path id="P{k}" d="{d}"/>' for k, d in enumerate(long))
+    for k, d in enumerate(long):
+        svg = svg.replace(f'<path d="{d}"', f'<use href="#P{k}"')
+    svg = svg.replace("<defs>", "<defs>" + shared, 1)
+    svg = re.sub(r'(\s(?:cx|cy|rx|ry|r|x|y|width|height|x1|y1|x2|y2)=")(-?\d+\.\d)\d+"', r'\1\2"', svg)
+    defs = re.findall(r'<(linearGradient|radialGradient|clipPath) id="([^"]+)"(.*?)</\1>', svg)
+    seen, alias = {}, {}
+    for tag, gid, body in defs:
+        k = (tag, body)
+        if k in seen:
+            alias[gid] = seen[k]
+            svg = svg.replace(f'<{tag} id="{gid}"{body}</{tag}>', "", 1)
+        else:
+            seen[k] = gid
+    if alias:
+        svg = re.sub(r'url\(#([^)]+)\)', lambda m: f"url(#{alias.get(m.group(1), m.group(1))})", svg)
+    return svg.replace(f"{SLUG}-B-gloss-", "")  # short ids; the component prefixes every id per instance
+
+def export_anim():
+    """savings-jar-anim.svg: the picked art (B, glossy) with named layers for ATMSavingsJar.tsx:
+    jar (squashes on the drop) > inner (the coins inside, settle), coinShadow (on the lid), coin > spin (the falling
+    coin, clipped at the slot's lip), glint (sweeps up the stack), arrowShadow, arrow."""
+    global NECK_N, LID_CONTOUR
+    keep = NECK_N, LID_CONTOUR
+    pts = [tuple(map(float, p.split(","))) for p in LID_CONTOUR[2:-2].split(" L ")]
+    j = max(range(len(pts)), key=lambda k: math.hypot(pts[k][0] - pts[0][0], pts[k][1] - pts[0][1]))  # a ring: simplify both halves
+    ring = _rdp(pts[:j + 1], .4)[:-1] + _rdp(pts[j:] + [pts[0]], .4)[:-1]
+    NECK_N, LID_CONTOUR = 32, "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in ring) + " Z"
+    try:
+        svg = lean(build_gloss("B", anim=True))
+    finally:
+        NECK_N, LID_CONTOUR = keep
+    for k in ("jar", "inner", "coinShadow", "coin", "spin", "glint", "arrowShadow", "arrow"):
+        assert f'data-k="{k}"' in svg, k
+    ids = re.findall(r'id="([^"]+)"', svg); assert len(ids) == len(set(ids))
+    assert all(f"#{u}" in svg or u in ids for u in re.findall(r'url\(#([^)]+)\)', svg))
+    open(os.path.join(OUT, f"{SLUG}-anim.svg"), "w").write(svg)
+    # the component: the template with the art pasted in (ATM/ATMSavingsJar.tsx)
+    inner = svg[svg.index(">") + 1:svg.rindex("</svg>")]
+    assert "`" not in inner and "${" not in inner and "\\" not in inner  # safe inside a template literal
+    tsx = (open(os.path.join(OUT, "ATMSavingsJar.template.tsx")).read()
+           .replace("__VIEWBOX__", re.search(r'viewBox="([^"]+)"', svg).group(1)).replace("__ART__", inner))
+    open(os.path.join(OUT, "..", "..", "..", "ATMSavingsJar.tsx"), "w").write(tsx)
+    return f"{SLUG}-anim.svg", len(svg)
+
 if __name__ == "__main__":
-    print([build(k) for k in SCHEMES] + [build_gloss(k) for k in SCHEMES])
+    print([build(k) for k in SCHEMES] + [build_gloss(k) for k in SCHEMES], export_anim())
