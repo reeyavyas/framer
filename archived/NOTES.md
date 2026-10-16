@@ -29,6 +29,14 @@ The branches these came from
 was created — their full commit history is gone, but the final state of
 each experiment is preserved here.
 
+## `atm-lesson-card/`
+
+- `ATMNeedWantCart.tsx`: cart version 1, the first "Need or Want?" lesson card animation (option D, glacier
+  basket, outlined). Archived at the designer's request once the glossy 3D set replaced it (`ATM/ATMCartV2.tsx`,
+  `ATMSavingsJar.tsx`, `ATMHourglass.tsx`, `ATMGauge.tsx`, `ATMBrowserSearch.tsx`). Its art scripts stay in
+  `ATM/artwork/cart/` (the playbook `ATM/artwork/ANIMATING-VECTORS.md` and the other carts build on them);
+  `ATM/artwork/cart/preview/build.sh` now writes the component here. Still works if pulled back out.
+
 ## `tutorials-main-page/`
 
 - `CurvedCarousel.tsx` — the original (V1) curved/arc flip-card

@@ -969,7 +969,7 @@ artboard updated):
   handle. Four now: egg yolk at the left and top right, white above the
   boxes and at the right.
 
-**Round 12: option D animated** (`ATMNeedWantCart.tsx`; preview
+**Round 12: option D animated** (`ATMNeedWantCart.tsx`, since archived to `archived/atm-lesson-card/` at the designer's request; preview
 "Need or Want Cart Loop", https://claude.ai/artifact/VCJmQeAiLwedG8XvJX7SFo).
 The designer chose D and asked for it to be animated on the card using
 GSAP, HyperFrames and Impeccable (the repo enables all three as plugins

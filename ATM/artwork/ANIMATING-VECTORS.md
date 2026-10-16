@@ -1,6 +1,7 @@
 # Animating a vector: the playbook
 
-What worked on the **Need or Want?** cart (`ATM/ATMNeedWantCart.tsx`,
+What worked on the **Need or Want?** cart (cart version 1, now archived:
+`archived/atm-lesson-card/ATMNeedWantCart.tsx`,
 art in `artwork/cart/`), written so the next vector the designer sends
 starts from it. The designer loved how the cart looks on the canvas: keep
 this look, outline and motion unless they ask for something else. The

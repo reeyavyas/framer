@@ -1,5 +1,5 @@
 import * as React from "react"
-import ATMNeedWantCart from "../../../ATMNeedWantCart"
+import ATMNeedWantCart from "../../../../archived/atm-lesson-card/ATMNeedWantCart"
 function App() {
     const [still, setStill] = React.useState(false)
     const [secs, setSecs] = React.useState(4.8)

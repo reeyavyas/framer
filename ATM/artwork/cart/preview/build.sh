@@ -1,5 +1,5 @@
 #!/bin/sh
-# Rebuild the cart: recolour the stock art, write ATMNeedWantCart.tsx, type-check it, bundle the preview page,
+# Rebuild the cart: recolour the stock art, write archived/atm-lesson-card/ATMNeedWantCart.tsx, type-check it, bundle the preview page,
 # grab 12 frames and the 1:1 render for measuring outlines.
 #   build.sh <stock dir> <tool dir>
 # <stock dir>: holds src.svg (the Adobe Stock .ai, converted; never committed). Outputs land here too.
@@ -12,9 +12,9 @@ import sys
 S, HERE, ATM = sys.argv[1:]
 svg = open(f"{S}/cart-D-anim.svg").read()
 inner = svg[svg.index(">") + 1:svg.rindex("</svg>")]
-open(f"{ATM}/ATMNeedWantCart.tsx", "w").write(open(f"{HERE}/ATMNeedWantCart.template.tsx").read().replace("__ART__", inner))
+open(f"{ATM}/../archived/atm-lesson-card/ATMNeedWantCart.tsx", "w").write(open(f"{HERE}/ATMNeedWantCart.template.tsx").read().replace("__ART__", inner))
 PY
-cp "$ATM/ATMNeedWantCart.tsx" "$T/" && (cd "$T" && npx tsc --noEmit --strict --jsx react-jsx --skipLibCheck --moduleResolution bundler --module esnext --target es2020 ATMNeedWantCart.tsx)
+cp "$ATM/../archived/atm-lesson-card/ATMNeedWantCart.tsx" "$T/" && (cd "$T" && npx tsc --noEmit --strict --jsx react-jsx --skipLibCheck --moduleResolution bundler --module esnext --target es2020 ATMNeedWantCart.tsx)
 echo "tsc clean"
 (cd "$T" && npx esbuild "$HERE/cart-preview.tsx" --bundle --format=iife --alias:react="$HERE/stub/react.cjs" --alias:framer="$HERE/stub/framer.js" \
   --alias:framer-motion="$HERE/stub/framer-motion.js" --alias:gsap="$T/node_modules/gsap/index.js" --jsx=transform --jsx-factory=React.createElement \
