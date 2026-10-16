@@ -203,7 +203,7 @@ GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, band=(0, 12), rim=.95) 
 # face tint/shade steps (source lightness), edge band (out, in), rim highlight
 GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both schemes take scheme A's sky arrow
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
-STACK = dict(cx=2665, bottom=2459, r=245, k=.36, n=20, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
+STACK = dict(cx=2665, bottom=2459, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
@@ -390,10 +390,10 @@ def build_gloss(key):
         out.append(f'<ellipse cx="{r * .5:.1f}" cy="{ry * .35:.1f}" rx="{r * .14:.1f}" ry="{ry * .08 + 3:.1f}" transform="rotate(-25 {r * .5:.1f} {ry * .35:.1f})" fill="{fade(WHITE, .7, .6)}"/>')
         out.append("</g>")
         return "".join(out), th, ry
-    def coin_stack(cx, bottom, n, r, k, jit, shadow):
+    def coin_stack(cx, bottom, n, r, k, jit, shadow, top=None):
         parts = []
         th, ry = r * COIN_TH, r * k
-        step = th + 18  # a visible seam between coins
+        step = th + 18 if top is None else (bottom - th - 2 * ry - top) / (n - 1)  # a visible seam; or spread so the top coin lands on `top`
         for j in range(n):
             ccy = bottom - th - ry - j * step
             x = cx + jit[j % len(jit)]
@@ -511,7 +511,7 @@ def build_gloss(key):
                     + "".join(f'<g opacity=".03" fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round">'
                               + "".join(f'<path d="{d_}"/>' for d_ in solid) + "</g>" for w in range(72, -1, -6))
                     + "</g>")
-    stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None)
+    stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None, top=LID_E[1] - LID_E[3])  # 19 coins, top level with the lid
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(map(str, VBs))}" width="{VBs[2]}" height="{VBs[3]}">'
            f'<defs>{{DEFS}}</defs>{shadows}'
            f'<g{glass_op}>{base_glass}{"".join(body)}{neck_bands}</g>{lid_shadow}'
