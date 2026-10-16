@@ -202,18 +202,17 @@ CORE = dict(A=dict(glass="#5c9fd4", lid=TEAL, arrow=LBLUE, glassShadow="#5c9fd4"
 GLOSS = dict(shadow=.7, glass=.86, tint=.14, shade=-.12, band=(0, 12), rim=.95)  # contact shadow and glass opacity,
 # face tint/shade steps (source lightness), edge band (out, in), rim highlight
 GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both schemes take scheme A's sky arrow
-ARROW_DX = 487  # the arrow moves right, clear of the stack
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
-STACK = dict(cx=2665, bottom=2400, r=245, k=.36, n=8, jitter=(0, 14, -10, 18, 4, -12, 12, -4))
+STACK = dict(cx=2665, bottom=2400, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # top level with the lid
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
 JAR_MID = [(1450, 1500, -18, .62), (1930, 1420, 24, .62)]  # a few loose coins higher up
 JAR_REST = [(1235, 1735, -16, .6), (2025, 1830, 20, .6)]  # tilted, resting on the back stacks
 JAR_FRONT = [(1410, 2355, 2), (1880, 2355, 3)]
-JAR_LEAN = [(1125, 2080, 72, .5), (2140, 2065, -72, .5)]  # leaning on the glass, left and right
+JAR_LEAN = [(1200, 2080, 72, .5), (2085, 2065, -72, .5)]  # leaning on the glass, left and right
 FALL = (1600, 150, -16, .8)
-SPACED_ART = (901, -45, 2503 + 609 + ARROW_DX, 2470)
+SPACED_ART = (901, -45, 2935, 2470)
 DOLLAR = ("M .30,-.30 C .22,-.44 -.30,-.44 -.30,-.18 C -.30,.02 .30,-.02 .30,.20 C .30,.44 -.24,.44 -.32,.28 "
           "M 0,-.54 V -.40 M 0,.40 V .54")
 
@@ -249,6 +248,7 @@ def box_ellipse(*ix):
     x0, y0, x1, y1 = min(v[0] for v in b), min(v[1] for v in b), max(v[2] for v in b), max(v[3] for v in b)
     return (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2
 RIM_E, TOP_E = box_ellipse(210), box_ellipse(219)
+LID_TOP_PIECES = {210, 219, 222, 223, 224, 225, 312}  # the traced top pieces, cut where the coin was: never grown
 _wx0, _wy0, _wx1, _ = (lambda b: (min(v[0] for v in b), min(v[1] for v in b), max(v[2] for v in b), 0))([bbox(PATHS[i][1]) for i in (224, 225)])
 _wry = TOP_E[3] * (_wx1 - _wx0) / 2 / TOP_E[2]  # the wall's top edge: the floor's ellipse, as wide as the groove
 WALL_E = (TOP_E[0], _wy0 + _wry, (_wx1 - _wx0) / 2, _wry)
@@ -274,6 +274,16 @@ assert 620 < LID_E[2] < 680 and 400 < LID_E[1] - LID_E[3] < 415 and RIM_E[3] > W
 # in the same place, under the neck (so it shows through that gap) with a glass tint where the shoulder covers it.
 NECK_COIN = (1550, 1010, -12, .55)  # cx, cy, rotation, tilt
 GLASS_DROP = {190, 248, 251}  # the big glass layers were traced around the old coins; one clean base fill replaces them
+
+# The arrow: scaled uniformly to the height the 8-coin stack had (929.6), centred on the gap between the jar (right
+# edge 2349) and the stack (left edge 2408), standing on the stack's ground line, in front of everything.
+ARROW_BOX = bbox(outer(PATHS[3][1]))
+_stack8 = STACK["r"] * COIN_TH + 2 * STACK["r"] * STACK["k"] + 7 * (STACK["r"] * COIN_TH + 18)
+ARROW_S = _stack8 / (ARROW_BOX[3] - ARROW_BOX[1])
+ARROW_AT = ((2349 + STACK["cx"] - STACK["r"] + min(STACK["jitter"])) / 2, STACK["bottom"])
+ARROW_T = (f"translate({ARROW_AT[0]:.1f} {ARROW_AT[1]}) scale({ARROW_S:.4f}) "
+           f"translate({-(ARROW_BOX[0] + ARROW_BOX[2]) / 2:.1f} {-ARROW_BOX[3]:.1f})")
+assert abs(_stack8 - 929.6) < 1 and 1 < ARROW_S < 1.1, (_stack8, ARROW_S)
 
 def build_gloss(key):
     sc, st, core = dict(SCHEMES[key], **GLOSS_ARROW), GLOSS, dict(CORE[key], arrow=LBLUE)
@@ -370,7 +380,7 @@ def build_gloss(key):
         # grow the faces over the traced line along the contour, so the edge reads even
         ring = full_mask(f'<path d="{C}" fill="none" stroke="#fff" stroke-width="{2 * RING:.1f}"/>')
         grown = "".join(f'<path d="{closed(PATHS[i][1])}" fill="{f}" stroke="{f}" stroke-width="{2 * GROW:.1f}" stroke-linejoin="round"/>'
-                        for i, f in fills.items() if ROLES[i][0] == obj and i not in NO_GROW and (lambda b: (b[2] - b[0]) * (b[3] - b[1]))(bbox(PATHS[i][1])) > BIG)
+                        for i, f in fills.items() if ROLES[i][0] == obj and i not in NO_GROW | LID_TOP_PIECES and (lambda b: (b[2] - b[0]) * (b[3] - b[1]))(bbox(PATHS[i][1])) > BIG)
         op = f' opacity="{st["glass"]}"' if obj == "jar" else ""
         out.append(f'<g{msk}{op}><g clip-path="{cp}"><g mask="{ring}">{grown}</g></g></g>')
         # light: a soft highlight top-left and a deeper core shade bottom-right, inside the part
@@ -406,18 +416,17 @@ def build_gloss(key):
         (arrow if o == "arrow" else lid if o == "lid" else body).append(el)
     gs = NAVY
     shadows = "".join(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{ry}" fill="{fade(gs, st["shadow"], .55)}"/>' for x, y, rx, ry in
-                      [(1625, 2445, 780, 70), (STACK["cx"] + 4, STACK["bottom"] + 4, 340, 56), (2810 + ARROW_DX, 2440, 380, 56)])
+                      [(1625, 2445, 780, 70), (STACK["cx"] + 4, STACK["bottom"] + 4, 340, 56)])
     glass_op = f' opacity="{st["glass"]}"' if st["glass"] < 1 else ""
     gsh = core["glassShadow"]
     loose = lambda L: "".join(coin(x, y, R_JAR, k, rot, gsh)[0] for x, y, rot, k in L)
     stacks = lambda L: "".join(coin_stack(cx, b, n, R_JAR, .38, (0, 12, -8, 10, -4), gsh) for cx, b, n in L)
     jar_coins = loose(JAR_MID) + stacks(JAR_BACK) + loose(JAR_REST) + stacks(JAR_FRONT) + loose(JAR_LEAN)
     # the source's glass was cut around its coins: one base glass fill under it closes those holes
-    ncid = nid("c"); defs.append(f'<clipPath id="{ncid}"><ellipse cx="1625" cy="760" rx="760" ry="285"/></clipPath>')
     neck = [el for el in body if bbox(re.search(r'd="([^"]+)"', el).group(1))[3] < 1100]  # the shoulder's own bands
     neck_coin = (coin(NECK_COIN[0], NECK_COIN[1], R_JAR, NECK_COIN[3], NECK_COIN[2], core["glassShadow"])[0]
-                 + f'<g clip-path="url(#{ncid})"><g{glass_op}>{"".join(neck)}</g>'
-                 f'<path d="{closed(contour["jar"])}" fill="{ramp(sc["glass"], .45)}" opacity=".35"/></g>')
+                 + f'<g{glass_op}>{"".join(neck)}</g>'  # the shoulder's bands over it; then a glass tint fading out downward
+                 f'<path d="{closed(contour["jar"])}" fill="{lin([(0, ramp(sc["glass"], .45), .4), (.5, ramp(sc["glass"], .45), .3), (1, ramp(sc["glass"], .45), 0)], 0, 900, 0, 1110, units=True)}"/>')
     jc = closed(contour["jar"])
     base_glass = f'<path d="{jc}" fill="{face(ramp(sc["glass"], .5), ramp(sc["glass"], .5 + st["tint"]), ramp(sc["glass"], .5 + st["shade"]))}"/>'
     lid_shadow = f'<ellipse cx="1600" cy="955" rx="640" ry="48" fill="{fade(core["glass"], .55, .55)}"/>'  # the lid's shade on the neck
@@ -425,8 +434,16 @@ def build_gloss(key):
                    f'fill="{fade(core["lid"], .4, .55)}"/></g>')  # the falling coin's shadow, on the lid only
     ell = lambda e, **kw: f'<ellipse cx="{e[0]:.1f}" cy="{e[1]:.1f}" rx="{e[2]:.1f}" ry="{e[3]:.1f}"' + "".join(f' {k.replace("_", "-")}="{v}"' for k, v in kw.items()) + "/>"
     assert lid[-1].startswith(f'<path d="{closed(PATHS[312][1])[:20]}')  # the slot, the last lid shape, stays on top
-    lid_top = (ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
+    # the rim runs out to the outline (as the grown faces do elsewhere), then the recess wall and floor
+    lid_top = (ell(LID_E, fill=fills[210]) + ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
                + ell(TOP_E, fill=fills[219]))
+    # the arrow's shadow: its own shape, offset down-right, in widening navy layers that fade, so the edge is soft;
+    # plus a contact shadow on the ground
+    A = closed(contour["arrow"])
+    arrow_shadow = (f'<ellipse cx="{ARROW_AT[0] + 20:.0f}" cy="{ARROW_AT[1]:.0f}" rx="380" ry="50" fill="{fade(NAVY, st["shadow"], .55)}"/>'
+                    f'<g transform="translate(26 30) {ARROW_T}" fill="{NAVY}" stroke="{NAVY}" stroke-linejoin="round">'
+                    + "".join(f'<path d="{A}" stroke-width="{w}" fill-opacity=".028" stroke-opacity=".028"/>' for w in range(72, -1, -6))
+                    + "</g>")
     stack = coin_stack(STACK["cx"], STACK["bottom"], STACK["n"], STACK["r"], STACK["k"], STACK["jitter"], None)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(map(str, VBs))}" width="{VBs[2]}" height="{VBs[3]}">'
            f'<defs>{{DEFS}}</defs>{shadows}'
@@ -435,7 +452,8 @@ def build_gloss(key):
            + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills) + fall_shadow
            + coin(*FALL[:2], 205, FALL[3], FALL[2])[0]
            + stack
-           + f'<g transform="translate({ARROW_DX} 0)">{"".join(arrow)}{part_layers("arrow", "arrow", fills)}</g></svg>')
+           + arrow_shadow
+           + f'<g transform="{ARROW_T}">{"".join(arrow)}{part_layers("arrow", "arrow", fills)}</g></svg>')
     svg = svg.replace("{DEFS}", "".join(defs))
     assert "<filter" not in svg and "Blur" not in svg and "<image" not in svg
     ids = re.findall(r'id="([^"]+)"', svg); assert len(ids) == len(set(ids)) and all(i.startswith(pre) for i in ids)
