@@ -62,13 +62,13 @@ OPTIONS = {
 # ---- layouts and viewBox: the art plus ~4% padding; the outline is 19 units when the outlined art is drawn 2120 wide ----
 STYLES = ("line", "clay", "glass", "gloss")
 # The outlined art keeps the source's layout. The other styles space every piece out so each reads as its own form:
-# one clock tucks behind the left post (about 16% of it), the posts stand clear of the glass, the coins sit apart with a sliver of
+# one clock overlaps the left post (about 19% of it, clear of the glass), the posts stand clear of the glass, the coins sit apart with a sliver of
 # the coin below showing, and the two stacks (3 and 8 coins) stand clear of the base.
 LAYOUTS = {
     "line": dict(posts=POSTS, clocks=((1492, 1220, "L"), (2510, 1220, "R")), clock_r=CLOCK_R, face_r=FACE_R,
                  stacks=STACKS, coin=(COIN_RX, COIN_RY), apart=False),
     # one clock up on the left over a short stack, a tall stack on the right: balanced about the hourglass
-    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((1222, 1150, "L"),), clock_r=255, face_r=202,
+    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((1235, 1150, "L"),), clock_r=255, face_r=202,
                    stacks=((1030, 3), (2972, 8)), coin=(260, 49), apart=True),
 }
 COIN_T = 50  # a spaced coin's thickness (pitch stays COIN_P, so a 36-unit sliver of the coin below shows)
@@ -228,15 +228,10 @@ def build(key, style):
         hi(arc(CX, c["top"], c["rx"] - W * 2, c["ry"] - W * 1.1, 150, 110), pal["frameHi"], round(W * .5))
         hi(arc(CX, (c["top"] + c["bot"]) / 2 + c["ry"] * .1, c["rx"] - W * 1.6, c["ry"], 168, 140), WHITE, round(W * .45), .55)
 
-    # clocks: in the outlined art in front of the hourglass; spaced, the clock tucks behind the left post
+    # clocks, drawn after the hourglass
     def clocks():  # true circles, hands at three o'clock
         cr, fr = lay["clock_r"], lay["face_r"]
         k = cr / CLOCK_R
-        if not line_art:  # the post standing in front shades the clock's edge behind it
-            x0 = lay["posts"][0] - POST_W / 2
-            for cx, cy, _ in lay["clocks"]:
-                defs.append(f'<clipPath id="{pre}-clock"><circle cx="{cx}" cy="{cy}" r="{cr}"/></clipPath>')
-            stops(f"{pre}-postocc", "linearGradient", 'x1="0" y1="0" x2="1" y2="0"', ((0, NAVY, 0), (.55, NAVY, .22), (1, NAVY, .5)))
         for cx, cy, side in lay["clocks"]:
             c = pal[side]
             if not line_art: soft("drop", NAVY, .5 if style == "clay" else .6, cx + 46 * k, cy + 62 * k, cr + 34 * k, cr + 34 * k)  # its own shadow, cast on the card
@@ -260,10 +255,8 @@ def build(key, style):
             out.append(f'<circle cx="{cx}" cy="{cy}" r="{round(W * 1.15)}" fill="{hand}"/><circle cx="{cx}" cy="{cy}" r="{round(W * .45)}" fill="{c["hub"]}"/>')
             if not line_art:
                 spec(cx - 168 * k, cy - 168 * k, 30, 15, -45); spec(cx - 105 * k, cy - 120 * k, 22, 11, -40)
-                out.append(f'<rect x="{n(x0 - 70)}" y="{cy - cr}" width="70" height="{2 * cr}" fill="url(#{pre}-postocc)" clip-path="url(#{pre}-clock)"/>')
 
-    # base, posts, plinth (spaced: the clock goes first, behind them)
-    if not line_art: clocks()
+    # base, posts, plinth
     cylinder(BASE)
     if not line_art:
         for x in lay["posts"]: soft("occ", fd, .55, x + 10, BASE["top"] + 8, 78, 26)
@@ -337,7 +330,7 @@ def build(key, style):
     if not line_art:
         for x in lay["posts"]: spec(x - 20, POST_TOP + 190, 9, 44)
 
-    if line_art: clocks()
+    clocks()  # in front; spaced, the clock overlaps the left post only, and its shadow falls on the post and card
 
     # coin stacks
     for sx, cnt in lay["stacks"]:
