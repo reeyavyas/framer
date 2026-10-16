@@ -1,12 +1,18 @@
 # Animating a vector: the playbook
 
-What worked on the **Need or Want?** cart (cart version 1, now archived:
-`archived/atm-lesson-card/ATMNeedWantCart.tsx`,
-art in `artwork/cart/`), written so the next vector the designer sends
-starts from it. The designer loved how the cart looks on the canvas: keep
-this look, outline and motion unless they ask for something else. The
-round-by-round history is in `ATM/NOTES.md` under "Lesson card
-animation".
+How the ATM lesson card animations were made, written so the next vector the designer sends starts from what
+worked. The round-by-round history is in `ATM/NOTES.md` under "Lesson card animation".
+
+**Where things stand**
+- **Live:** five Glossy 3D animations, one Framer code component each: `ATM/ATMCartV2.tsx`, `ATMSavingsJar.tsx`,
+  `ATMHourglass.tsx`, `ATMGauge.tsx`, `ATMBrowserSearch.tsx` (art and build scripts in `artwork/vectors/<name>/`).
+  All pause while the inactivity overlay is open (section 6).
+- **Archived** (`archived/atm-lesson-card/`, see `archived/NOTES.md`): cart version 1, `ATMNeedWantCart.tsx` (the
+  outlined glacier-basket cart, art scripts still in `artwork/cart/`, which sections 1-5 below describe and which
+  the newer carts build on), and `ATMNeedWantLoop.tsx` (the first nine code-drawn ideas).
+- **Next (optional):** the designer may make more on-brand vector animations next week; it isn't a requirement.
+  If new vectors come in, start from section 0 (the Glossy 3D look and the round-2 feedback) and the checks in
+  section 4, and work directly, without sub-agents.
 
 ## 0. The look: Glossy 3D (designer's choice, from the Vectors.ai round)
 
