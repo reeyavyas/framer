@@ -62,19 +62,20 @@ OPTIONS = {
 # ---- layouts and viewBox: the art plus ~4% padding; the outline is 19 units when the outlined art is drawn 2120 wide ----
 STYLES = ("line", "clay", "glass", "gloss")
 # The outlined art keeps the source's layout. The other styles space every piece out so each reads as its own form:
-# the clocks float beside the hourglass, the posts stand clear of the glass, the coins sit apart with a sliver of
-# the coin below showing, and the stacks (fewer coins) stand clear of the base.
+# one clock floats beside the hourglass, the posts stand clear of the glass, the coins sit apart with a sliver of
+# the coin below showing, and the two stacks (3 and 8 coins) stand clear of the base.
 LAYOUTS = {
     "line": dict(posts=POSTS, clocks=((1492, 1220, "L"), (2510, 1220, "R")), clock_r=CLOCK_R, face_r=FACE_R,
-                 stacks=STACKS, apart=False),
-    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((1040, 1060, "L"), (2962, 880, "R")), clock_r=255, face_r=202,
-                   stacks=((880, 5), (3120, 7)), apart=True),
+                 stacks=STACKS, coin=(COIN_RX, COIN_RY), apart=False),
+    # one clock up on the left over a short stack, a tall stack on the right: balanced about the hourglass
+    "spaced": dict(posts=(CX - 565, CX + 565), clocks=((1030, 1150, "L"),), clock_r=255, face_r=202,
+                   stacks=((1030, 3), (2972, 8)), coin=(260, 49), apart=True),
 }
 COIN_T = 50  # a spaced coin's thickness (pitch stays COIN_P, so a 36-unit sliver of the coin below shows)
 
 
 def viewbox(lay):
-    x0, x1 = lay["stacks"][0][0] - COIN_RX, lay["stacks"][1][0] + COIN_RX
+    x0, x1 = lay["stacks"][0][0] - lay["coin"][0], lay["stacks"][1][0] + lay["coin"][0]
     y0, y1 = CAP["top"] - CAP["ry"], GROUND + 30
     pad = 0.04 * (x1 - x0)
     return (round(x0 - pad), round(y0 - pad), round(x1 - x0 + 2 * pad), round(y1 - y0 + 2 * pad))
@@ -192,7 +193,7 @@ def build(key, style):
     coin_side = pal["coinSide"] if style != "gloss" else [YOLK_TT, YOLK, ORANGE, AMBER_S, ORANGE]
     if not line_art:  # contact shadows, pushed down-right so they show past each piece on the card
         peak = {"clay": .5, "glass": .6, "gloss": .7}[style]
-        for cx, rx, ry, dy in ((CX, 840, 112, 22), (lay["stacks"][0][0], 400, 78, 16), (lay["stacks"][1][0], 400, 78, 16)):
+        for cx, rx, ry, dy in ((CX, 840, 112, 22), (lay["stacks"][0][0], lay["coin"][0] + 100, 74, 16), (lay["stacks"][1][0], lay["coin"][0] + 100, 74, 16)):
             soft("shadow", NAVY, peak, cx + 20, GROUND + dy, rx, ry)
         posts_clip = "".join(f'<rect x="{x - POST_W / 2}" y="{POST_TOP}" width="{POST_W}" height="{BASE["top"] - POST_TOP}"/>' for x in lay["posts"])
         defs.append(f'<clipPath id="{pre}-posts">{posts_clip}</clipPath>'
@@ -341,18 +342,19 @@ def build(key, style):
             hi(arc(sx, top + 2, COIN_RX - 90, COIN_RY - 24, 200, 245), WHITE, round(W * .5), .9)
             continue
         # spaced: whole coins, bottom up, each with its own top; the one above casts a soft shadow on the sliver below
+        CRX, CRY = lay["coin"]
         for i in reversed(range(cnt)):
-            cy = GROUND - COIN_RY - COIN_T - (cnt - 1 - i) * COIN_P
-            if i < cnt - 1: soft("coinocc", cd, .55, sx + 8, cy + COIN_T + 10, COIN_RX - 22, COIN_RY * .72)
-            sd = f'd="{cyl_side(sx, COIN_RX, COIN_RY, cy, cy + COIN_T)}"'
+            cy = GROUND - CRY - COIN_T - (cnt - 1 - i) * COIN_P
+            if i < cnt - 1: soft("coinocc", cd, .55, sx + 8, cy + COIN_T + 10, CRX - 22, CRY * .72)
+            sd = f'd="{cyl_side(sx, CRX, CRY, cy, cy + COIN_T)}"'
             shape("path", sd, grad("coinSide", coin_side, 1, 0), ce, True, cd)
             if style == "gloss": out.append(f'<path {sd} fill="url(#{pre}-band)"/>')
-            if crisp: side_edges(sx, COIN_RX, COIN_RY, cy, cy + COIN_T, cd)
-            shape("ellipse", f'cx="{sx}" cy="{cy}" rx="{COIN_RX}" ry="{COIN_RY}"', grad("coinTop", pal["coinTop"]), ce, deep=cd)
-            out.append(f'<ellipse cx="{sx}" cy="{cy + 2}" rx="{COIN_RX - 52}" ry="{COIN_RY - 13}" fill="{grad("coinRecess", pal["coinRecess"], 0, 1)}"/>')
-            if crisp: top_edges(sx, cy, COIN_RX, COIN_RY)
-            hi(arc(sx, cy + 2, COIN_RX - 90, COIN_RY - 24, 200, 245), WHITE, round(W * .5), .9)
-            spec(sx - 170, cy - 22, 26, 9, -3)
+            if crisp: side_edges(sx, CRX, CRY, cy, cy + COIN_T, cd)
+            shape("ellipse", f'cx="{sx}" cy="{cy}" rx="{CRX}" ry="{CRY}"', grad("coinTop", pal["coinTop"]), ce, deep=cd)
+            out.append(f'<ellipse cx="{sx}" cy="{cy + 2}" rx="{CRX - 52}" ry="{CRY - 13}" fill="{grad("coinRecess", pal["coinRecess"], 0, 1)}"/>')
+            if crisp: top_edges(sx, cy, CRX, CRY)
+            hi(arc(sx, cy + 2, CRX - 90, CRY - 24, 200, 245), WHITE, round(W * .5), .9)
+            spec(sx - CRX * .57, cy - CRY * .4, 26, 9, -3)
 
     vb = " ".join(map(str, vbox))
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" width="{vbox[2]}" height="{vbox[3]}">'
