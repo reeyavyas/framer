@@ -182,8 +182,11 @@ STYLE = {  # growth: same-paint stroke that closes the source's gaps and rounds 
     "gloss": dict(grow=7, cast=((26, .18), (8, .24)), ground=.7, rim=(7, 9), band=(7, 9), rimOp=.9, depth=8),
 }
 
-def build(key, style):
+ITEM_OF = {"slab3": "flat", "slab2": "flat", "slab1": "flat", "bigBox": "box", "tallBox": "tall"}
+
+def build(key, style, anim=False):
     pal = SCHEMES[key]; pre = f"{SLUG}-{key}" + ("" if style == "outlined" else f"-{style}")
+    if anim: pre = "v"   # short: the component prefixes every id again
     defs, grads, n = [], {}, [0]
     def nid(t): n[0] += 1; return f"{pre}-{t}{n[0]}"
     def paint(v):
@@ -243,8 +246,12 @@ def build(key, style):
                                       f'transform="translate({dx} {dy}) rotate({WANG} {c[0]:.1f} {c[1]:.1f})" {a}/>')
         def path_el(d):
             return lambda dx, dy, a: f'<path d="{d}" transform="translate({dx} {dy})" {a}/>'
-        def clip(els_, dx=0, dy=0):
-            cid = nid("c"); defs.append(f'<clipPath id="{cid}">' + "".join(e(dx, dy, "") for e in els_) + "</clipPath>"); return cid
+        clips = {}
+        def clip(els_, dx=0, dy=0):   # one clipPath per distinct content
+            inner = "".join(e(dx, dy, "") for e in els_)
+            if inner not in clips:
+                clips[inner] = cid = nid("c"); defs.append(f'<clipPath id="{cid}">{inner}</clipPath>')
+            return clips[inner]
         def white_radial(cx, cy, r, stops, col="#fff"):
             gid = nid("r")
             defs.append(f'<radialGradient id="{gid}" gradientUnits="userSpaceOnUse" cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}">'
@@ -268,7 +275,13 @@ def build(key, style):
         def spot(el, c, tl, size, op=.95):   # small crisp specular spot near the lit corner, clipped to the face
             sp = c + 0.68 * (tl - c); r = min(max(size * 0.08, 6), 24)
             return (f'<g clip-path="url(#{clip([el])})"><ellipse cx="{sp[0]:.1f}" cy="{sp[1]:.1f}" rx="{r * 1.6:.1f}" ry="{r:.1f}" '
-                    f'transform="rotate(-25 {sp[0]:.1f} {sp[1]:.1f})" fill="{white_radial(*sp, r * 1.6, ((0, op), (.5, op * .85), (1, 0)))}"/></g>')
+                    f'transform="rotate(-25 {sp[0]:.1f} {sp[1]:.1f})" fill="{spot_paint(op) if anim else white_radial(*sp, r * 1.6, ((0, op), (.5, op * .85), (1, 0)))}"/></g>')
+        spots = {}
+        def spot_paint(op):   # animated export: one shared spot gradient (fitted to each spot's own ellipse)
+            if op not in spots:
+                spots[op] = gid = nid("s")
+                defs.append(f'<radialGradient id="{gid}"><stop offset="0" stop-color="#fff" stop-opacity="{op}"/><stop offset=".5" stop-color="#fff" stop-opacity="{op * .85:.2f}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>')
+            return f"url(#{spots[op]})"
         def bevel(el, body_paint, rim_col):
             """Crisp edges from light: a bright rim along the top-left edges and a darker band along the bottom-right."""
             (rx, ry), (bx, by) = S["rim"], S["band"]
@@ -277,14 +290,21 @@ def build(key, style):
                     f'{el(-bx, -by, f"fill={chr(34)}{body_paint}{chr(34)}")}</g></g>')
         drawn = []        # element functions already painted (they receive the next pieces' cast shadows)
         bb = []
-        def cast(els_, dx=16, dy=20):
-            if not drawn: return ""
-            cid = clip(drawn)
+        recent = []   # animated export: shadows fall only on the last two still pieces (where they show), to stay lean
+        def cast(els_, dx=16, dy=20, recv=None):
+            recv = drawn if recv is None else [e for p_ in recv[-2:] for e in p_]
+            if not recv: return ""
+            cid = clip(recv)
             return (f'<g clip-path="url(#{cid})">' + "".join(
                 f'<g opacity="{a}">' + "".join(e(dx, dy, f'fill="{NAVY}" stroke="{NAVY}" stroke-width="{w}" stroke-linejoin="round"') for e in els_) + "</g>"
                 for w, a in S["cast"]) + "</g>")
-        for name, ix, T in PIECES:
+        glints = 0
+        for pi, (name, ix, T) in enumerate(PIECES):
             T = np.array(T, float)
+            item = ITEM_OF.get(name) if anim else None
+            if item and ITEM_OF.get(PIECES[pi - 1][0]) != item: body.append(f'<g data-k="{item}">')  # the items hop: each its own layer
+            Tg = np.zeros(2) if item else T   # an item's shapes are drawn in place and moved by one group transform
+            if item: body.append(f'<g transform="translate({T[0]:g} {T[1]:g})">')
             if ix is None:   # a wheel: side (extruded back ellipse + band), face, hub
                 c0, hub = next((c, h) for nm, c, h, _ in WHEELS if nm == name)
                 c, hull, band = wheel_geom(np.array(c0) + T)
@@ -296,17 +316,18 @@ def build(key, style):
                        (c, ept(c, np.radians(-150), HUB_A, HUB_B), HUB_A * HUB_B * 3)]
                 roles = [None] * len(faces)
             else:
-                els_ = [use_el(i, T) for i in ix]
+                els_ = [use_el(i, Tg) for i in ix]
                 faces = [(e, pal[ROLE[i]], False) for e, i in zip(els_, ix)]
                 for i in ix: x_, y_, X_, Y_ = BBOX[i]; bb.append((x_ + T[0], y_ + T[1], X_ + T[0], Y_ + T[1]))
-                geo = [(GEOM[i][0] + T, GEOM[i][1] + T, GEOM[i][2]) for i in ix]
+                geo = [(GEOM[i][0] + Tg, GEOM[i][1] + Tg, GEOM[i][2]) for i in ix]
                 roles = [ROLE[i] for i in ix]
-            body.append(cast(els_))
+            if not item and not (anim and ix is None): body.append(cast(els_, recv=recent if anim else None))   # an item that hops casts no fixed shadow and receives none
             if style == "gloss":  # extrusion: the piece's silhouette stacked toward the bottom-right in its deep shades
-                for k in range(S["depth"], 0, -1):
+                # (the animated export uses every other step, each copy a little wider, to stay lean)
+                for k in ((8, 5, 2) if anim else range(S["depth"], 0, -1)):
                     for (e, v, _), r in zip(faces, roles):
                         col = DARKER[DARKER[last(v)]] if k > 2 else DARKER[last(v)]
-                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"]}" stroke-linejoin="round"'))
+                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"] + (11 if anim else 0)}" stroke-linejoin="round"'))
             if style == "clay":  # soft darker edge of each part's own hue, under the whole piece
                 for (e, v, _), r in zip(faces, roles):
                     col = dark(colours(r) if r else v)
@@ -331,7 +352,7 @@ def build(key, style):
                     parts.append(bevel(e, p, rim).replace(f'fill="{rim}"', f'fill="{rim}" fill-opacity="{S["rimOp"]}"', 1))
                     parts.append(e(0, 0, f'fill="{core(band_col, .55 if style == "gloss" else .35)}"'))
                     if style == "gloss":   # polished plastic: a broad glossy sheen top-left and a crisp specular spot
-                        parts.append(e(0, 0, f'fill="{white_radial(*(c + 0.6 * (tl - c)), max(size * 0.75, 30), ((0, .75), (.35, .4), (.6, .08), (1, 0)))}"'))
+                        parts.append(e(0, 0, f'fill="{white_radial(*(c + 0.6 * (tl - c)), max(size * 0.75, 30), ((0, .75), (.4, .3), (1, 0)) if anim else ((0, .75), (.35, .4), (.6, .08), (1, 0)))}"'))
                         if area > 1500: parts.append(spot(e, c, tl, size * 1.3, 1))
                     else:                  # glass: a soft sheen, a small spot on the larger faces
                         parts.append(e(0, 0, f'fill="{white_radial(*(c + 0.6 * (tl - c)), max(size * 0.8, 30), ((0, .35), (.5, .1), (1, 0)))}"'))
@@ -341,9 +362,16 @@ def build(key, style):
                 body.append(f'<line x1="{GA[0] + T[0]:.1f}" y1="{GA[1] + T[1]:.1f}" x2="{GB[0] + T[0]:.1f}" y2="{GB[1] + T[1]:.1f}" stroke="{pal["gripHi"]}" '
                             f'stroke-width="{GHALF * 0.3:.1f}" stroke-linecap="round" opacity=".85"/>')
             if ix is None and len(faces) == 3:   # hub glint
-                g = c + ROT @ np.array([-HUB_A * 0.15, -HUB_B * 0.45])
-                body.append(ell(g, HUB_A * 0.32, HUB_B * 0.18, f' fill="{pal["hubHi"]}"'))
-            drawn.extend(els_)
+                if anim:  # drawn in the hub's own round frame (squashed to its ellipse), so turning it about 0,0 follows the hub
+                    body.append(f'<g transform="translate({c[0]:.1f} {c[1]:.1f}) rotate({WANG}) scale(1 {HUB_B / HUB_A:.4f})"><g data-k="glint{glints}">'
+                                f'<ellipse cx="{-HUB_A * .15:.1f}" cy="{-HUB_A * .45:.1f}" rx="{HUB_A * .32:.1f}" ry="{HUB_A * .18:.1f}" fill="{pal["hubHi"]}"/></g></g>')
+                    glints += 1
+                else:
+                    g = c + ROT @ np.array([-HUB_A * 0.15, -HUB_B * 0.45])
+                    body.append(ell(g, HUB_A * 0.32, HUB_B * 0.18, f' fill="{pal["hubHi"]}"'))
+            if item: body.append("</g>")
+            if item and (pi + 1 == len(PIECES) or ITEM_OF.get(PIECES[pi + 1][0]) != item): body.append("</g>")
+            if not item: drawn.extend(els_); recent.append(els_)
         # contact shadow under the whole cart and a darker one under each wheel (radial gradients, no blur)
         g0 = S["ground"]
         def rg(gid, stops):
@@ -359,11 +387,21 @@ def build(key, style):
         g = S["grow"] / 2 + S.get("edge", 0) + 3 * S.get("depth", 0) + 4
         bb = np.array(bb); x0, y0 = bb[:, :2].min(0) - g; x1, y1 = bb[:, 2:].max(0) + g + 3 * S.get("depth", 0)
         x0, x1, y1 = min(x0, cx - rx), max(x1, cx + rx), max(y1, cy + ry + 150)
+        if anim:
+            y0 -= 170   # headroom for the hop
+            assert glints == 2 and all(f'data-k="{k}"' in "".join(body) for k in ("flat", "box", "tall"))
+            shadow, body = f'<g data-k="shadow">{shadow}</g>', [f'<g data-k="cart">{"".join(body)}</g>']
 
     pad = 0.04 * (x1 - x0)
     vb = (x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad)
     svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb[0]:.0f} {vb[1]:.0f} {vb[2]:.0f} {vb[3]:.0f}" '
            f'width="{vb[2]:.0f}" height="{vb[3]:.0f}"><defs>{shapes_defs}{"".join(defs)}</defs>{shadow}{"".join(body)}</svg>')
+    if anim:   # lean: coordinates to 1 decimal (2-decimal values, e.g. opacities, kept), no zero moves, no trailing .0
+        svg = re.sub(r'(\d\.\d)\d{2,}', r'\1', svg)
+        svg = svg.replace(' transform="translate(0 0)"', '').replace(' transform="translate(0.0 0.0)"', '')
+        svg = re.sub(r'(\d)\.0(?![\d])', r'\1', svg).replace(' />', '/>')
+        svg = svg.replace(' stroke-linejoin="round"', '').replace('<svg ', '<svg stroke-linejoin="round" ', 1)   # inherited
+        svg = re.sub(r'="0\.', '=".', svg)
     assert "filter" not in svg and "Blur" not in svg and "<style" not in svg and "<image" not in svg
     ids = re.findall(r'\sid="([^"]+)"', svg)
     assert len(ids) == len(set(ids)) and all(x.startswith(pre + "-") for x in ids)
@@ -371,9 +409,25 @@ def build(key, style):
     for c in set(re.findall(r'#[0-9a-fA-F]{6}\b', svg)):   # brand colours, their tints and shades only
         assert c.lower() in ALLOWED, (pre, c)
     name = f"{pre}.svg"
+    if anim: return svg, vb
     open(os.path.join(OUT, name), "w").write(svg)
     return name
 
 ALLOWED = {NAVY, MID, YOLK, YOLK_T, YOLK_TT, ORANGE, AMBER, SKY, SKY_T, SKY_TT, SKY_S, LBLUE, MINT, MINT_T, MINT_S, MINT_SS,
            GL, GL_T, GL_S, GL_SS, TEAL, DTEAL, LTEAL, LTEAL_T, WHITE, "#fff4d6", "#5cb8e6", "#2f8fc4", "#8fd3f2", "#1d6a96"}
 print([build(k, st) for k in "AB" for st in ("outlined", "clay", "glass", "gloss")])
+
+def export_anim(key="B", style="gloss"):
+    """The picked option (B gloss) for ATMCartV2.tsx: data-k layers cart (rolls), flat / box / tall (hop), glint0-1
+    (turn with the roll), shadow (stays on the ground). Ids are bare-prefixed so the component can prefix them again."""
+    svg, vb = build(key, style, anim=True)
+    open(os.path.join(OUT, f"{SLUG}-anim.svg"), "w").write(svg)
+    # the component: the SVG's body pasted into the template (the root's inherited round joins kept on a group)
+    here = os.path.dirname(os.path.abspath(__file__))
+    inner = '<g stroke-linejoin="round">' + svg[svg.index(">") + 1:svg.rindex("</svg>")] + "</g>"
+    assert "`" not in inner and "${" not in inner
+    view = " ".join(f"{v:.0f}" for v in vb)
+    tsx = open(os.path.join(here, "ATMCartV2.template.tsx")).read().replace("__VIEWBOX__", view).replace("__ART__", inner)
+    open(os.path.join(here, "..", "..", "..", "ATMCartV2.tsx"), "w").write(tsx)
+    return f"{SLUG}-anim.svg", len(svg), view
+print(export_anim())
