@@ -1,6 +1,11 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
-import { motion, useMotionValue, animate, useReducedMotion } from "framer-motion"
+import {
+    motion,
+    useMotionValue,
+    animate,
+    useReducedMotion,
+} from "framer-motion"
 
 // The Score tab's "Recommended for You" offers: whole cards slide (unlike
 // CardSlider, where the card stays put), with the neighbours peeking in
@@ -15,7 +20,7 @@ const IMAGE_WIDTH = 190
 const IMAGE_MAX_HEIGHT = 240
 const DOT = 20
 const DOT_TAP = 64
-const NAVY = "#0e3a70"
+const NAVY = "#002C44"
 const FONT = "Inter, sans-serif"
 
 interface Card {
@@ -65,7 +70,12 @@ export default function OfferCardSlider(props: Props) {
     const goTo = (i: number) => {
         setIndex(i)
         if (reduceMotion) x.set(-i * step)
-        else animate(x, -i * step, { type: "spring", stiffness: 300, damping: 35 })
+        else
+            animate(x, -i * step, {
+                type: "spring",
+                stiffness: 300,
+                damping: 35,
+            })
     }
 
     return (
@@ -175,7 +185,8 @@ export default function OfferCardSlider(props: Props) {
                                     width: DOT,
                                     height: DOT,
                                     borderRadius: "50%",
-                                    background: i === current ? NAVY : "#dcdcdc",
+                                    background:
+                                        i === current ? NAVY : "#dcdcdc",
                                     transition: "background 0.2s",
                                 }}
                             />
@@ -287,7 +298,9 @@ function OfferCard({
                     maxWidth: width - 54 - 52 - IMAGE_WIDTH - 100,
                 }}
             >
-                <div style={{ fontSize: 38, fontWeight: 700, lineHeight: 1.35 }}>
+                <div
+                    style={{ fontSize: 38, fontWeight: 700, lineHeight: 1.35 }}
+                >
                     {card.title}
                 </div>
                 <div style={{ fontSize: 37, lineHeight: 1.4 }}>{card.body}</div>
@@ -298,7 +311,7 @@ function OfferCard({
 
 function Star() {
     return (
-        <svg width={36} height={36} viewBox="0 0 24 24" aria-hidden>
+        <svg width={45} height={45} viewBox="0 0 24 24" aria-hidden>
             <path
                 d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"
                 fill={NAVY}

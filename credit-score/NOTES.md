@@ -68,7 +68,8 @@ folders for them.
   cards. Unlike CardSlider, **whole cards slide**: the current card sits
   in the middle with its neighbours peeking in, clipped 33px in from
   each side as in the app. Not looped (the ends only stretch and spring
-  back). Dots below, Navy for the current card; tapping a dot or a
+  back). Dots below, Navy `#002C44` for the current card (star 45px,
+  both set by the owner in Framer); tapping a dot or a
   peeking card brings that card to the middle.
   - **Properties:** a Cards list (add/remove/reorder), each with Title,
     Body, Image and Link. Defaults are the four app offers (auto loan,
@@ -82,3 +83,6 @@ folders for them.
   - **Links:** the whole current card is the link (Framer Link control
     → a plain `<a href>`, like SetTravelNotice). A swipe never opens a
     link; a card with no link does nothing.
+  - **To check once links are set:** tapping the current card opens
+    its link (no card had one when tested in Preview on 2026-10-20).
+    Swipes, both ends, dots and tapping a peeking card were tested.
