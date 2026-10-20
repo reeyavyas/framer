@@ -91,6 +91,11 @@ folders for them.
   - Tested (2026-10-20): swipes, both ends, dots and tapping a peeking
     card in Preview; links on the **live site** — a tap on card 1 opened
     `/base-pages/accounts`; a later fast swipe opened card 2's link
-    (fixed by the swipe guard above; re-tested live after publishing). Test links on the live site only: Framer's Preview
+    (fixed by the swipe guard above). **Re-tested live after the fix:**
+    fast swipes across cards 1–3 moved one card each without opening a
+    link; swiping past the last and before the first card holds;
+    dots 4, 2, 3, 1 each brought their card to the middle; taps opened
+    `/base-pages/accounts`, `/base-pages/card-alerts`,
+    `/pin-reset-tutorial/accounts` and `/`. Test links on the live site only: Framer's Preview
     404s them. The four links are placeholders until the real page and
     section exist.
