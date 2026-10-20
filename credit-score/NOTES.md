@@ -83,6 +83,8 @@ folders for them.
   - **Links:** the whole current card is the link (Framer Link control
     → a plain `<a href>`, like SetTravelNotice). A swipe never opens a
     link; a card with no link does nothing.
-  - **To check once links are set:** tapping the current card opens
-    its link (no card had one when tested in Preview on 2026-10-20).
-    Swipes, both ends, dots and tapping a peeking card were tested.
+  - Tested in Preview (2026-10-20): swipes, both ends, dots, tapping a
+    peeking card, a swipe over a card (no link opened) and a tap (link
+    opened). The links are placeholders until the target page and
+    section exist; **re-check each card's link then** (the tap test hit
+    a 404 on its placeholder).
