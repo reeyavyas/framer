@@ -45,7 +45,11 @@ folders for them.
     browser's own link/image drag, which otherwise cancelled any mouse
     swipe that started on a button. Found on the live site 2026-10-20
     (a swipe from "Learn More" opened its link). Taps on "Start a Goal"
-    and "Learn More" opened their links live.
+    and "Learn More" opened their links live. **Re-tested live after
+    publishing the fix:** fast swipes starting on either button change
+    slide without opening its link (browser link-drag blocked each
+    time); both ends hold from the buttons; dots 1, 2, 1 land on 1, 2,
+    1; a plain tap on "Start a Goal" still opens its link.
 - `CreditScoreGauge.tsx` — the Score tab's credit score gauge, defaulting
   to the reference design: 742, green ▲ 1.
   - **Arc:** five equal segments, one per range — Deficient 300–499 red,
