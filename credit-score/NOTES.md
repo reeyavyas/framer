@@ -34,6 +34,25 @@ folders for them.
   - A drag settles on the nearest slide; a flick moves one slide. No
     looping, autoplay or arrows. A drag that ends over a button doesn't
     press it. Reduced motion jumps instead of animating.
-  - **To check once the slide buttons get actions:** a plain tap on
+  - **To check once the slide buttons get actions (CardSlider):** a plain tap on
     "Start a Goal" / "Learn More" should still fire it (they had no
     link or interaction when the slider was tested on 2026-10-20).
+- `CreditScoreGauge.tsx` — the Score tab's credit score gauge, defaulting
+  to the reference design: 742, green ▲ 1.
+  - **Arc:** five equal segments, one per range — Deficient 300–499 red,
+    Unfavorable 500–599 orange, Fair 600–659 yellow, Good 660–779 light
+    green, Excellent 780–850 dark green. Equal slices match the app, so
+    the pointer is placed by how far the score sits inside its own range
+    (742 lands near the end of Good; 806 a third into Excellent). The
+    pointer ring takes its range's colour.
+  - **Properties:** Score (300–850), Change (Up = green ▲ / Down = red ▼)
+    and Amount.
+  - **Date:** "Updated:" shows today's date and rolls over just after
+    midnight on a page left open. Hidden until mounted (fixed placeholder
+    on the server render) so no wrong date flashes.
+  - **Info pop-up:** the ⓘ button opens the ranges text on a dimmed full
+    screen, portaled to `<body>` at z-index 9999 (below
+    `AppInactivityOverlay`'s 99999). Closes on ×, a tap outside the card,
+    or Escape. Never opens on the canvas.
+  - Fixed 1000×690 layout in Inter (app styles); "VantageScore 3.0" in
+    dark app blue `#0e3a70`, "TransUnion" bold.
