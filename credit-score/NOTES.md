@@ -50,9 +50,13 @@ folders for them.
   - **Date:** "Updated:" shows today's date and rolls over just after
     midnight on a page left open. Hidden until mounted (fixed placeholder
     on the server render) so no wrong date flashes.
-  - **Info pop-up:** the ⓘ button opens the ranges text on a dimmed full
-    screen, portaled to `<body>` at z-index 9999 (below
-    `AppInactivityOverlay`'s 99999). Closes on ×, a tap outside the card,
+  - **Info pop-up:** the ⓘ button opens the ranges text over a dim that
+    covers only the page's **Scrollable Content** frame (found by its
+    layer name, `data-framer-name`), so the header and bottom nav stay
+    clear. It's portaled into that frame over its visible part, which
+    stops scrolling while open; if the frame is renamed it falls back to
+    the nearest scrolling ancestor. z-index 9999, below
+    `AppInactivityOverlay`'s 99999. Closes on ×, a tap outside the card,
     or Escape. Never opens on the canvas.
   - Fixed 1000×690 layout in Inter (app styles); "VantageScore 3.0" in
     dark app blue `#0e3a70`, "TransUnion" bold.

@@ -50,12 +50,14 @@ export default function CreditScoreGauge(props: Props) {
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const today = useToday()
     const [infoOpen, setInfoOpen] = React.useState(false)
+    const rootRef = React.useRef<HTMLDivElement>(null)
 
     const range = RANGES[rangeIndex(score)]
     const pointer = polar(angleOf(score))
 
     return (
         <div
+            ref={rootRef}
             style={{
                 position: "relative",
                 width: "100%",
@@ -204,8 +206,11 @@ export default function CreditScoreGauge(props: Props) {
                 </button>
             </div>
 
-            {infoOpen && !isCanvas && (
-                <InfoPopup onClose={() => setInfoOpen(false)} />
+            {infoOpen && !isCanvas && rootRef.current && (
+                <InfoPopup
+                    anchor={rootRef.current}
+                    onClose={() => setInfoOpen(false)}
+                />
             )}
         </div>
     )
@@ -240,7 +245,35 @@ function InfoIcon({ size }: { size: number }) {
     )
 }
 
-function InfoPopup({ onClose }: { onClose: () => void }) {
+// The pop-up dims only the page's "Scrollable Content" frame (the area
+// between the top nav and the bottom nav), not the whole screen.
+const OVERLAY_HOST = '[data-framer-name="Scrollable Content"]'
+
+function InfoPopup({
+    anchor,
+    onClose,
+}: {
+    anchor: HTMLElement
+    onClose: () => void
+}) {
+    // shortcut: falls back to the nearest scrolling ancestor if the frame is renamed.
+    const host = anchor.closest<HTMLElement>(OVERLAY_HOST) ?? scrollParent(anchor)
+    const [visible, setVisible] = React.useState({ top: 0, height: 0 })
+
+    React.useLayoutEffect(() => {
+        if (!host) return
+        // Cover the part that's on screen and stop it scrolling underneath.
+        const { overflow, position } = host.style
+        host.style.overflow = "hidden"
+        if (getComputedStyle(host).position === "static")
+            host.style.position = "relative"
+        setVisible({ top: host.scrollTop, height: host.clientHeight })
+        return () => {
+            host.style.overflow = overflow
+            host.style.position = position
+        }
+    }, [host])
+
     React.useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose()
@@ -253,8 +286,15 @@ function InfoPopup({ onClose }: { onClose: () => void }) {
         <div
             onClick={onClose}
             style={{
-                position: "fixed",
-                inset: 0,
+                ...(host
+                    ? {
+                          position: "absolute",
+                          left: 0,
+                          width: "100%",
+                          top: visible.top,
+                          height: visible.height,
+                      }
+                    : { position: "fixed", inset: 0 }),
                 // Below AppInactivityOverlay (99999) so the idle redirect still shows over it.
                 zIndex: 9999,
                 background: "rgba(0, 0, 0, 0.45)",
@@ -271,7 +311,7 @@ function InfoPopup({ onClose }: { onClose: () => void }) {
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     position: "relative",
-                    width: "min(920px, 88vw)",
+                    width: "min(920px, 88%)",
                     boxSizing: "border-box",
                     padding: "40px 110px 40px 44px",
                     background: "#fff",
@@ -309,8 +349,15 @@ function InfoPopup({ onClose }: { onClose: () => void }) {
                 </button>
             </div>
         </div>,
-        document.body
+        host ?? document.body
     )
+}
+
+function scrollParent(el: HTMLElement): HTMLElement | null {
+    for (let p = el.parentElement; p; p = p.parentElement) {
+        if (/auto|scroll/.test(getComputedStyle(p).overflowY)) return p
+    }
+    return null
 }
 
 // Today's date, re-read just after each midnight so a page left open
