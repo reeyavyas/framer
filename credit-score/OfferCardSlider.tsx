@@ -45,7 +45,8 @@ export default function OfferCardSlider(props: Props) {
     const count = cards.length
     const reduceMotion = useReducedMotion()
     const containerRef = React.useRef<HTMLDivElement>(null)
-    const dragged = React.useRef(false)
+    // Where the press started, so a swipe can't also open a link.
+    const downX = React.useRef(0)
     const [width, setWidth] = React.useState(0)
     const [index, setIndex] = React.useState(0)
     const x = useMotionValue(0)
@@ -102,9 +103,6 @@ export default function OfferCardSlider(props: Props) {
                     dragConstraints={{ left: -(count - 1) * step, right: 0 }}
                     dragElastic={0.15}
                     dragMomentum={false}
-                    onDragStart={() => {
-                        dragged.current = true
-                    }}
                     onDragEnd={(_, info) => {
                         // A flick moves one card; a slow drag settles on the nearest.
                         const flick =
@@ -117,13 +115,14 @@ export default function OfferCardSlider(props: Props) {
                     }}
                     // A swipe that starts or ends on a card never opens its link.
                     onClickCapture={(e) => {
-                        if (dragged.current) {
+                        // Checked by distance, not onDragStart, which can land a frame after a fast swipe's click.
+                        if (Math.abs(e.clientX - downX.current) > 10) {
                             e.preventDefault()
                             e.stopPropagation()
                         }
                     }}
-                    onPointerDownCapture={() => {
-                        dragged.current = false
+                    onPointerDownCapture={(e) => {
+                        downX.current = e.clientX
                     }}
                     style={{
                         x,

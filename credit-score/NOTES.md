@@ -34,6 +34,11 @@ folders for them.
   - A drag settles on the nearest slide; a flick moves one slide. No
     looping, autoplay or arrows. A drag that ends over a button doesn't
     press it. Reduced motion jumps instead of animating.
+  - **Swipe guard (both sliders):** a tap is cancelled if the pointer
+    moved more than 10px since it went down. It used to rely on
+    `onDragStart`, which Framer Motion runs on the next animation frame,
+    so a fast swipe's click could slip through first. On the live site a
+    swipe opened card 2's link that way (2026-10-20).
   - **To check once the slide buttons get actions (CardSlider):** a plain tap on
     "Start a Goal" / "Learn More" should still fire it (they had no
     link or interaction when the slider was tested on 2026-10-20).
@@ -85,7 +90,7 @@ folders for them.
     link; a card with no link does nothing.
   - Tested (2026-10-20): swipes, both ends, dots and tapping a peeking
     card in Preview; links on the **live site** — a tap on card 1 opened
-    `/base-pages/accounts`, a swipe over it moved to card 2 without
-    opening anything. Test links on the live site only: Framer's Preview
+    `/base-pages/accounts`; a later fast swipe opened card 2's link
+    (fixed by the swipe guard above; re-tested live after publishing). Test links on the live site only: Framer's Preview
     404s them. The four links are placeholders until the real page and
     section exist.

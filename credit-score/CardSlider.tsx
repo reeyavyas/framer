@@ -1,6 +1,11 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
-import { motion, useMotionValue, animate, useReducedMotion } from "framer-motion"
+import {
+    motion,
+    useMotionValue,
+    animate,
+    useReducedMotion,
+} from "framer-motion"
 
 // Swipeable slides with tappable dots, for cards whose slides each carry
 // their own button (Framer's native carousel can't lift its dots above
@@ -39,7 +44,8 @@ export default function CardSlider(props: Props) {
     const count = slides.length
     const reduceMotion = useReducedMotion()
     const containerRef = React.useRef<HTMLDivElement>(null)
-    const dragged = React.useRef(false)
+    // Where the press started, so a swipe can't also press a button.
+    const downX = React.useRef(0)
     const [width, setWidth] = React.useState(0)
     const [index, setIndex] = React.useState(0)
     const x = useMotionValue(0)
@@ -88,9 +94,6 @@ export default function CardSlider(props: Props) {
                 dragConstraints={{ left: -(count - 1) * width, right: 0 }}
                 dragElastic={0.15}
                 dragMomentum={false}
-                onDragStart={() => {
-                    dragged.current = true
-                }}
                 onDragEnd={(_, info) => {
                     // A flick moves one slide; a slow drag settles on the nearest.
                     const flick =
@@ -103,10 +106,12 @@ export default function CardSlider(props: Props) {
                 }}
                 // Keeps a drag that ends over a button from also pressing it.
                 onClickCapture={(e) => {
-                    if (dragged.current) e.stopPropagation()
+                    // Checked by distance, not onDragStart, which can land a frame after a fast swipe's click.
+                    if (Math.abs(e.clientX - downX.current) > 10)
+                        e.stopPropagation()
                 }}
-                onPointerDownCapture={() => {
-                    dragged.current = false
+                onPointerDownCapture={(e) => {
+                    downX.current = e.clientX
                 }}
                 style={{
                     x,
@@ -142,7 +147,9 @@ export default function CardSlider(props: Props) {
                         left: 0,
                         right: 0,
                         // Measured to the dots' bottom edge, not their larger tap areas.
-                        bottom: dotsBottom - (Math.max(dotTapArea, dotSize) - dotSize) / 2,
+                        bottom:
+                            dotsBottom -
+                            (Math.max(dotTapArea, dotSize) - dotSize) / 2,
                         display: "flex",
                         justifyContent: "center",
                         // Negative margins below let tap areas overlap, so gap is dot to dot.
