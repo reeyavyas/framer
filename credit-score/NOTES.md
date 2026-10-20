@@ -83,8 +83,9 @@ folders for them.
   - **Links:** the whole current card is the link (Framer Link control
     → a plain `<a href>`, like SetTravelNotice). A swipe never opens a
     link; a card with no link does nothing.
-  - Tested in Preview (2026-10-20): swipes, both ends, dots, tapping a
-    peeking card, a swipe over a card (no link opened) and a tap (link
-    opened). The links are placeholders until the target page and
-    section exist; **re-check each card's link then** (the tap test hit
-    a 404 on its placeholder).
+  - Tested (2026-10-20): swipes, both ends, dots and tapping a peeking
+    card in Preview; links on the **live site** — a tap on card 1 opened
+    `/base-pages/accounts`, a swipe over it moved to card 2 without
+    opening anything. Test links on the live site only: Framer's Preview
+    404s them. The four links are placeholders until the real page and
+    section exist.
