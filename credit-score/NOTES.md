@@ -45,6 +45,10 @@ folders for them.
     the pointer is placed by how far the score sits inside its own range
     (742 lands near the end of Good; 806 a third into Excellent). The
     pointer ring takes its range's colour.
+  - **Details from the app screenshot:** each block is a filled shape
+    with a 2.5px outline a shade darker than its colour (`outline` in
+    `RANGES`); the pointer ring has the same darker edge inside and out;
+    the ▲/▼ has softly rounded corners.
   - **Properties:** Score (300–850), Change (Up = green ▲ / Down = red ▼)
     and Amount.
   - **Date:** "Updated:" shows today's date and rolls over just after

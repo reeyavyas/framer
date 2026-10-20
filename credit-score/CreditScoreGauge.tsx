@@ -10,13 +10,14 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
 const MIN = 300
 const MAX = 850
 
-// Lowest score of each range, low to high, and its arc colour.
+// Lowest score of each range, low to high, its arc colour and the
+// slightly darker outline around that block.
 const RANGES = [
-    { from: 300, color: "#e5483b" }, // Deficient
-    { from: 500, color: "#f0832f" }, // Unfavorable
-    { from: 600, color: "#f2c444" }, // Fair
-    { from: 660, color: "#4db67a" }, // Good
-    { from: 780, color: "#2f7f52" }, // Excellent
+    { from: 300, color: "#e5483b", outline: "#c0372b" }, // Deficient
+    { from: 500, color: "#f0832f", outline: "#c9691f" }, // Unfavorable
+    { from: 600, color: "#f2c444", outline: "#c9a02e" }, // Fair
+    { from: 660, color: "#4db67a", outline: "#389360" }, // Good
+    { from: 780, color: "#2f7f52", outline: "#22603d" }, // Excellent
 ]
 
 const INFO_TEXT =
@@ -83,10 +84,10 @@ export default function CreditScoreGauge(props: Props) {
                     return (
                         <path
                             key={r.from}
-                            d={arc(start, end)}
-                            fill="none"
-                            stroke={r.color}
-                            strokeWidth={STROKE}
+                            d={sector(start, end)}
+                            fill={r.color}
+                            stroke={r.outline}
+                            strokeWidth={2.5}
                         />
                     )
                 })}
@@ -98,6 +99,18 @@ export default function CreditScoreGauge(props: Props) {
                     stroke={range.color}
                     strokeWidth={10}
                 />
+                {/* Thin darker edge around the ring, inside and out. */}
+                {[30, 20].map((edge) => (
+                    <circle
+                        key={edge}
+                        cx={pointer.x}
+                        cy={pointer.y}
+                        r={edge}
+                        fill="none"
+                        stroke={range.outline}
+                        strokeWidth={2.5}
+                    />
+                ))}
             </svg>
 
             <Label x={CX - R} text="300" />
@@ -139,9 +152,13 @@ export default function CreditScoreGauge(props: Props) {
                     }}
                 >
                     <svg width={34} height={26} viewBox="0 0 34 26" aria-hidden>
+                        {/* A same-colour round-joined stroke softens the corners. */}
                         <path
-                            d={trend === "up" ? "M17 0 L34 26 L0 26 Z" : "M0 0 L34 0 L17 26 Z"}
+                            d={trend === "up" ? "M17 3 L31 23 L3 23 Z" : "M3 3 L31 3 L17 23 Z"}
                             fill={trend === "up" ? "#4db67a" : "#e5483b"}
+                            stroke={trend === "up" ? "#4db67a" : "#e5483b"}
+                            strokeWidth={5}
+                            strokeLinejoin="round"
                         />
                     </svg>
                     <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1 }}>
@@ -403,16 +420,21 @@ function rangeIndex(score: number) {
     return i
 }
 
-function polar(deg: number) {
+function polar(deg: number, radius = R) {
     const rad = (deg * Math.PI) / 180
-    return { x: CX + R * Math.cos(rad), y: CY - R * Math.sin(rad) }
+    return { x: CX + radius * Math.cos(rad), y: CY - radius * Math.sin(rad) }
 }
 
-// Clockwise on screen from the larger angle to the smaller one.
-function arc(fromDeg: number, toDeg: number) {
-    const a = polar(fromDeg)
-    const b = polar(toDeg)
-    return `M ${a.x} ${a.y} A ${R} ${R} 0 0 1 ${b.x} ${b.y}`
+// A filled block of the arc between two angles (larger to smaller,
+// clockwise on screen), so its outline runs round all four sides.
+function sector(fromDeg: number, toDeg: number) {
+    const outer = R + STROKE / 2
+    const inner = R - STROKE / 2
+    const a = polar(fromDeg, outer)
+    const b = polar(toDeg, outer)
+    const c = polar(toDeg, inner)
+    const d = polar(fromDeg, inner)
+    return `M ${a.x} ${a.y} A ${outer} ${outer} 0 0 1 ${b.x} ${b.y} L ${c.x} ${c.y} A ${inner} ${inner} 0 0 0 ${d.x} ${d.y} Z`
 }
 
 CreditScoreGauge.defaultProps = {
