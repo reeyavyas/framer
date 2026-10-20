@@ -64,3 +64,21 @@ folders for them.
     or Escape. Never opens on the canvas.
   - Fixed 1000×690 layout in Inter (app styles); "VantageScore 3.0" in
     dark app blue `#0e3a70`, "TransUnion" bold.
+- `OfferCardSlider.tsx` — the Score tab's "Recommended for You" offer
+  cards. Unlike CardSlider, **whole cards slide**: the current card sits
+  in the middle with its neighbours peeking in, clipped 33px in from
+  each side as in the app. Not looped (the ends only stretch and spring
+  back). Dots below, Navy for the current card; tapping a dot or a
+  peeking card brings that card to the middle.
+  - **Properties:** a Cards list (add/remove/reorder), each with Title,
+    Body, Image and Link. Defaults are the four app offers (auto loan,
+    balance transfer, consolidation, home loan) with empty image slots
+    (grey placeholder) — images are picked in Framer, never committed.
+  - The "Recommended for You" badge and its star are fixed, with no
+    property.
+  - **Images** all render 190px wide and keep their own proportions
+    (height capped at 240px), so different-sized images line up at the
+    top right like the app.
+  - **Links:** the whole current card is the link (Framer Link control
+    → a plain `<a href>`, like SetTravelNotice). A swipe never opens a
+    link; a card with no link does nothing.
