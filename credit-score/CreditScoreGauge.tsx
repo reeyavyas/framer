@@ -144,7 +144,8 @@ export default function CreditScoreGauge(props: Props) {
                 <div
                     style={{
                         width: 60,
-                        paddingTop: 30,
+                        // Inter 150px digits start 18.9px into their 150px line; the triangle's visible top is 0.5px into its SVG.
+                        paddingTop: 18,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
