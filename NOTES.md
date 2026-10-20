@@ -93,6 +93,8 @@ money-management/<feature>
 main/<feature>
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
+credit-score/<feature>
+credit-score
 atm
 ```
 
