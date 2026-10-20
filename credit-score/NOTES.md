@@ -39,9 +39,13 @@ folders for them.
     `onDragStart`, which Framer Motion runs on the next animation frame,
     so a fast swipe's click could slip through first. On the live site a
     swipe opened card 2's link that way (2026-10-20).
-  - **To check once the slide buttons get actions (CardSlider):** a plain tap on
-    "Start a Goal" / "Learn More" should still fire it (they had no
-    link or interaction when the slider was tested on 2026-10-20).
+  - **CardSlider with link buttons:** the guard calls `preventDefault`
+    as well as `stopPropagation`, since a slide's button can be a link
+    whose `href` would still open; and `onDragStartCapture` blocks the
+    browser's own link/image drag, which otherwise cancelled any mouse
+    swipe that started on a button. Found on the live site 2026-10-20
+    (a swipe from "Learn More" opened its link). Taps on "Start a Goal"
+    and "Learn More" opened their links live.
 - `CreditScoreGauge.tsx` — the Score tab's credit score gauge, defaulting
   to the reference design: 742, green ▲ 1.
   - **Arc:** five equal segments, one per range — Deficient 300–499 red,
@@ -99,3 +103,7 @@ folders for them.
     `/pin-reset-tutorial/accounts` and `/`. Test links on the live site only: Framer's Preview
     404s them. The four links are placeholders until the real page and
     section exist.
+  - **Live-tested 2026-10-20:** "Updated:" showed that day's date; ⓘ
+    opened the pop-up dimming exactly Scrollable Content's visible area
+    with its scroll locked; ×, a tap outside and Escape each closed it
+    and restored scrolling.

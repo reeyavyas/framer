@@ -107,12 +107,17 @@ export default function CardSlider(props: Props) {
                 // Keeps a drag that ends over a button from also pressing it.
                 onClickCapture={(e) => {
                     // Checked by distance, not onDragStart, which can land a frame after a fast swipe's click.
-                    if (Math.abs(e.clientX - downX.current) > 10)
+                    // preventDefault too: a slide's button can be a link, whose href would still open.
+                    if (Math.abs(e.clientX - downX.current) > 10) {
+                        e.preventDefault()
                         e.stopPropagation()
+                    }
                 }}
                 onPointerDownCapture={(e) => {
                     downX.current = e.clientX
                 }}
+                // A mouse drag on a link or image starts the browser's own drag, which cancels the swipe.
+                onDragStartCapture={(e) => e.preventDefault()}
                 style={{
                     x,
                     display: "flex",
