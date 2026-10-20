@@ -111,3 +111,67 @@ folders for them.
     `/pin-reset-tutorial/accounts` and `/`. Test links on the live site only: Framer's Preview
     404s them. The four links are placeholders until the real page and
     section exist.
+- `PointsJourneyBar.tsx` — Score Rating → Points Journey. The score's
+  range and the next one up (or the one below, for Excellent) as two
+  equal bars with a pointer, the boundary numbers (e.g. 659 / 779 / 850),
+  a tick and "Your Score: 720". Properties: **Score**, **Label** ("Your
+  Score:"). 840×290. The range names above the bars are native text and
+  must be changed by hand if the score moves into another range.
+- `ScoreHistoryChart.tsx` — Score Rating → Score History. Line and area
+  chart with dots, dashed gridlines, a y-axis in 20s that fits the
+  scores, and a callout on the latest score. Property: **Scores** (oldest
+  first; the last is this month). The month labels are worked out from
+  today's date and always end on the current month (in November:
+  JUN–NOV), hidden until mounted and re-read just after midnight.
+  840×660.
+- `MiniScoreGauge.tsx` — Score Rating → Average Score. The small arc
+  gauge: red → green gradient from 300 to the score, a dot in the
+  score's range colour, the score and 300 / 850. Property: **Score**.
+  330×215. Use two side by side (yours and the ZIP average).
+
+## Native build spec: Analysis tab + Score Rating accordion
+
+Built natively in Framer (the owner keeps full control of the text);
+only the charts above are code. Sizes are for the 1080-wide kiosk
+(1.25× the phone screenshots). Inter throughout, app styles. Icons come
+from the **Credit Score Icons** vector set on the canvas; where a vector
+isn't made yet, leave a same-sized empty frame for it. Content is for a
+**720** score.
+
+- **Section tabs** (Analysis / Report / Simulator / Goals): one row,
+  four equal tabs, ~125 tall, on the page's light grey. Labels 36px
+  Semibold, active Navy `#0e3a70`, others `#212121`. Active tab gets a
+  5px Navy underline as wide as the tab; a 2px `#e3e3e3` line runs under
+  the whole row. A component with one variant per active tab, Tap →
+  change variant.
+- **Score Rating accordion** (a component, Closed / Open variants, Tap
+  on the header toggles):
+  - Card: white, 2px `#e3e3e3` border, radius 8, an 8px left accent bar
+    in the rating colour (Good `#4db67a`; Excellent `#2f7f52`), full
+    content width with ~33px page margins, 25px between accordions.
+  - Header ~160 tall: "Score Rating" 38px Bold at 60px from the accent
+    bar; the rating ("Good") 38px Semibold on the right; chevron vector
+    at 52px from the right edge (down when closed, up when open).
+  - Open: 2px `#e3e3e3` divider under the header, content padding 60
+    left / 52 right. Two intro paragraphs 37px Regular `#5e5e5e`, line
+    height 1.65, 44px apart. "Score Rating Analysis" 37px Bold, ~90px
+    above it. Four bullets 33px `#212121`, line height 1.45, 10px dots,
+    46px text indent, 26px apart.
+  - Inner tabs panel: `#f7f7f7`, radius 8, ~900 wide. Three equal tabs
+    (Points Journey / Score History / Average Score), two-line labels
+    36px Semibold centred; active Navy with a 5px Navy underline, others
+    `#212121` with a 4px `#e0e0e0` underline, 12px between underlines. A
+    component with one variant per tab. Content padding 32.
+    - Points Journey: "Keep it up!" 36px Bold, then "You're 60 points
+      away from an Excellent rating." 37px; "GOOD" (left) and
+      "EXCELLENT" (right) 26px Semibold, letter spacing 3; then
+      PointsJourneyBar (Score 720).
+    - Score History: ScoreHistoryChart (scores ending at 720).
+    - Average Score: "Congratulations, you're above the average credit
+      score in your ZIP code." 37px; two columns, each a 26px Semibold
+      heading with letter spacing 3 ("YOUR SCORE", "AVE. SCORE IN ZIP"),
+      a MiniScoreGauge (720; 690) and "Rating: Good" 32px.
+  - Credit Score Simulator card: white, 2px `#e3e3e3` border, radius 8,
+    padding 60, centred: the atom vector (~105px), "Credit Score
+    Simulator" 38px Bold, the description 33px `#212121`, and a "Learn
+    More" button — reuse the **Slider Button** component.
