@@ -73,6 +73,10 @@ folders for them.
     or Escape. Never opens on the canvas.
   - Fixed 1000×690 layout in Inter (app styles); "VantageScore 3.0" in
     dark app blue `#0e3a70`, "TransUnion" bold.
+  - **Live-tested 2026-10-20:** "Updated:" showed that day's date; ⓘ
+    opened the pop-up dimming exactly Scrollable Content's visible area
+    with its scroll locked; ×, a tap outside and Escape each closed it
+    and restored scrolling.
 - `OfferCardSlider.tsx` — the Score tab's "Recommended for You" offer
   cards. Unlike CardSlider, **whole cards slide**: the current card sits
   in the middle with its neighbours peeking in, clipped 33px in from
@@ -103,7 +107,3 @@ folders for them.
     `/pin-reset-tutorial/accounts` and `/`. Test links on the live site only: Framer's Preview
     404s them. The four links are placeholders until the real page and
     section exist.
-  - **Live-tested 2026-10-20:** "Updated:" showed that day's date; ⓘ
-    opened the pop-up dimming exactly Scrollable Content's visible area
-    with its scroll locked; ×, a tap outside and Escape each closed it
-    and restored scrolling.
