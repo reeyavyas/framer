@@ -18,7 +18,7 @@ folders for them.
   - **The card stays still; only the content slides.** CardSlider is
     transparent and clips. The card's look (fill, border, radius, clip)
     is on its parent frame on the page, e.g. "Credit Score Card":
-    `#E9F0F0` at 10%, 2px `#575757` border, radius 10, 1026×789.
+    `#9BB3B3` at 10%, 2px `#575757` border, radius 10, 1026×789.
   - **Slides** are connected in the Slides control from top-level canvas
     layers (left of the Kiosk frame): "Slide 1 Boost Score" and
     "Slide 2 High-Yield Checking", instances of the Credit Score Slider
