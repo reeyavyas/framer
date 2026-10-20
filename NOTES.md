@@ -37,6 +37,12 @@ with the detail on what's in it; this file is just the map.
   to begin" icon, and the ATM page itself (lights on the machine, the
   tap transition and its beeps). `ATM/artwork/` holds the ATM image,
   the scripts that draw it and every option shown. See `ATM/NOTES.md`.
+- **`credit-score/`** — The app's Credit Score pages
+  (`/base-pages/credit-score-*`): the Score tab's sliders, sections and
+  tabs. Offers, Alerts and Resources are separate pages. Code lives in
+  the Framer project's Phone Components → App UI → Credit Score folders
+  (under Components and Code).
+  See `credit-score/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
