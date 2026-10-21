@@ -144,6 +144,21 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   5px Navy underline as wide as the tab; a 2px `#e3e3e3` line runs under
   the whole row. A component with one variant per active tab, Tap →
   change variant.
+  - **Built 2026-10-21:** component **Section Tabs** (Components →
+    Project → Phone Components → App UI → Credit Score), variants
+    Analysis (primary) / Report / Simulator / Goals. 1080×125
+    horizontal stack, gap 0, no fill, 2px `#E3E3E3` bottom border.
+    Each cell ("Tab Analysis"…) is 1fr × 125, centred, with a bottom
+    border linked to **Deep Interface** (`#0E335E`): 5px on the active
+    cell, 0 on the others. Labels Inter Semibold 36, line 1.2, no text
+    style; active linked to Deep Interface, others plain `#212121`
+    (no near-black colour style exists). Each cell has Click (onTap) →
+    Set variant on the primary, inherited by every variant. One instance
+    sits off-page on the Score canvas (x1448, y150); not yet placed on
+    the page or live-tested.
+  - Framer files a new component at the top of Components → Project;
+    renaming it `Phone Components/App UI/Credit Score/<Name>` moves it
+    into the existing folder (the asset menu has no Move item).
 - **Score Rating accordion** (a component, Closed / Open variants, Tap
   on the header toggles):
   - Card: white, 2px `#e3e3e3` border, radius 8, an 8px left accent bar
