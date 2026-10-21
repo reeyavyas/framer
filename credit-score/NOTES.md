@@ -194,3 +194,35 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     padding 60, centred: the atom vector (~105px), "Credit Score
     Simulator" 38px Bold, the description 33px `#212121`, and a "Learn
     More" button — reuse the **Slider Button** component.
+  - **Built 2026-10-21 (not yet placed or live-tested):**
+    - **Score Rating Accordion** component (App UI → Credit Score),
+      variants **Closed** (primary, Body hidden) / **Open**. Click on
+      Header → Open; overridden to → Closed in Open. 1014 wide, white,
+      radius 8, clip; border 2px `#E3E3E3` top/right/bottom, 0 left; the
+      8px Good-green accent is an **inside shadow** (x 8, blur 0,
+      `#4DB67A`), not a layer. Header: 160 tall, padding 68 left / 52
+      right, "Score Rating" Bold 38 and "Good" Semibold 38 (`#212121`),
+      plus an empty 36×36 **Chevron** frame (no chevron in Credit Score
+      Icons yet). Body: 2px `#E3E3E3` top border, padding 60/52/60/68,
+      gap 44: intro (one text layer, two paragraphs, 37 Regular
+      `#5E5E5E`, line 1.65, paragraph spacing 44), "Analysis" group
+      (46 top padding, gap 30: heading Bold 37, one native bulleted list
+      Regular 33 line 1.45 — paragraph spacing didn't visibly apply to
+      list items), the Score Rating Tabs instance, the Simulator card.
+    - **Score Rating Tabs** component (App UI → Credit Score), variants
+      Points Journey (primary) / Score History / Average Score; each
+      cell's Click → its variant. Panel `#F7F7F7`, radius 8, padding
+      0/27/32/27, gap 32. Tab cells copied from Section Tabs (two-line
+      labels), gap 12; active 5px Deep Interface + Deep Interface label,
+      others 4px `#E0E0E0` + `#212121`. Each variant shows only its
+      content: Points Journey ("Keep it up!" Bold 36, sentence 37
+      `#5E5E5E`, GOOD/EXCELLENT 26 Semibold 3px tracking, PointsJourneyBar
+      720), ScoreHistoryChart (defaults, ends at 720), Average Score
+      (sentence + two columns: heading, MiniScoreGauge 720 / 690,
+      "Rating: Good" 32).
+    - Simulator card: "Credit Score Icons" instance set to the Credit
+      Score Simulator (atom) icon at 105; "Slider Button" is a native
+      stack inside Credit Score Slides (not a component), so it was
+      copied in and relabelled "Learn More" (no link).
+    - The intro, bullets and simulator description are **draft copy**
+      written for a 720 score; the owner should replace them.
