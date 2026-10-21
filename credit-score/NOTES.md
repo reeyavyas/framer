@@ -134,7 +134,20 @@ folders for them.
   label carries its two-digit year (MAY 26). Property: **On Time %**
   (oldest first, 0–100; defaults to six 100s). 840×660. The owner needs
   to drag it into Components → App UI → Credit Score (code components
-  can't be renamed into a folder).
+  can't be renamed into a folder). Has **Line** and **Fill** colour
+  properties (green defaults) so Credit Usage → Card Usage History reuses
+  it in blue (`#4C6EF5` / `#AFC0F7`); the array control is now titled
+  "Percents".
+- `CardUsageBars.tsx` — Credit Usage → Primary Cards Usage. One row per
+  card: name (ellipsised, underlined, tracked), a track split at the
+  marker percents (30 / 50), green fill + ringed knob at the percent used,
+  the percent above the knob, dashed marker lines through all rows and
+  30% / 50% / 100% labels below. Properties: **Cards** (Name, Used %),
+  **Markers**, colours (Fill, Track, Knob Centre, Marker Lines, Text),
+  Name / Percent / Axis fonts, tracking, Underline Names, and sizes (Name
+  Width, Name Gap, Row Height, Bar Height, Knob Size, Knob Ring, Segment
+  Gap, Percent Gap, Axis Space). Width any, height auto. Made-up defaults:
+  Vertical Checking 7%, Platinum Rewards Checking 3%.
 
 ## Native build spec: Analysis tab + Score Rating accordion
 
@@ -281,3 +294,16 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     as a conic gradient (Score Rating's Simulator card title and
     description, and the copies here); all set back to solid `#212121`.
     Always pick the Solid tab before typing a hex.
+
+- **Credit Usage accordion** (Grade A), built 2026-10-21, not yet
+  live-tested: **Credit Usage Accordion**, a duplicate of Payment History
+  Accordion with its own texts (23% intro, "Nicely Done!…", Recommended
+  Actions without the owner's name, Pro Tip), then **Credit Usage Tabs**
+  (duplicate of Performance Tabs: Primary Cards Usage / Card Usage
+  History), then a "Transfer Balances and Save" card ($79, Learn More, no
+  icon). Primary Cards Usage: "You're using $920 out of your $20,000 total
+  credit limit." + CardUsageBars + "View all accounts" (Bold, `#0D294B`,
+  no link) + italic 30px "Charge cards not included in calculation". Card
+  Usage History: "1% increase since last month." + blue PaymentHistoryChart
+  (2, 6, 18, 3, 4, 5%). All amounts are made up. Placed in Accordions
+  Frame under Payment History, width Fill.

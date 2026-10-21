@@ -5,6 +5,7 @@ import { addPropertyControls, ControlType } from "framer"
 // time each month, as a line and area chart on a fixed 0–100% axis, with a
 // callout on the latest month. Months end on the current month; the first
 // one carries its two-digit year (MAY 26). Built for the 1080-wide kiosk.
+// Also used, in blue, for Credit Usage → Card Usage History.
 
 const W = 840
 const H = 660
@@ -12,11 +13,12 @@ const AXIS = 90 // y-axis labels
 const TOP = 30
 const BOTTOM = 560 // bottom of the plot; month labels sit below
 const RIGHT_ROOM = 110 // space right of the last point for its callout
-const LINE = "#4a9a5f"
 const FONT = "Inter, sans-serif"
 
 interface Props {
     percents: number[]
+    lineColor: string
+    fillColor: string
 }
 
 /**
@@ -49,7 +51,7 @@ export default function PaymentHistoryChart(props: Props) {
             viewBox={`0 0 ${W} ${H}`}
             style={{ fontFamily: FONT, display: "block" }}
             role="img"
-            aria-label={`On-time payments: ${values.join("%, ")}%`}
+            aria-label={`Percent by month: ${values.join("%, ")}%`}
         >
             {ticks.map((p) => (
                 <g key={p}>
@@ -72,7 +74,7 @@ export default function PaymentHistoryChart(props: Props) {
 
             <path
                 d={`${line} L ${last.x} ${BOTTOM} L ${xy[0].x} ${BOTTOM} Z`}
-                fill="#d3e6db"
+                fill={props.fillColor}
             />
             <line
                 x1={last.x}
@@ -85,12 +87,18 @@ export default function PaymentHistoryChart(props: Props) {
             <path
                 d={line}
                 fill="none"
-                stroke={LINE}
+                stroke={props.lineColor}
                 strokeWidth={5}
                 strokeLinejoin="round"
             />
             {xy.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={10} fill={LINE} />
+                <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={10}
+                    fill={props.lineColor}
+                />
             ))}
 
             {/* Callout with the latest value, just below-right of its point. */}
@@ -170,12 +178,14 @@ function useMonthLabels(count: number): string[] | undefined {
 
 PaymentHistoryChart.defaultProps = {
     percents: [100, 100, 100, 100, 100, 100],
+    lineColor: "#4A9A5F",
+    fillColor: "#D3E6DB",
 }
 
 addPropertyControls(PaymentHistoryChart, {
     percents: {
         type: ControlType.Array,
-        title: "On Time %",
+        title: "Percents",
         // Oldest first; the last value is this month's.
         control: {
             type: ControlType.Number,
@@ -186,5 +196,15 @@ addPropertyControls(PaymentHistoryChart, {
             displayStepper: true,
         },
         defaultValue: PaymentHistoryChart.defaultProps.percents,
+    },
+    lineColor: {
+        type: ControlType.Color,
+        title: "Line",
+        defaultValue: PaymentHistoryChart.defaultProps.lineColor,
+    },
+    fillColor: {
+        type: ControlType.Color,
+        title: "Fill",
+        defaultValue: PaymentHistoryChart.defaultProps.fillColor,
     },
 })
