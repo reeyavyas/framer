@@ -237,3 +237,13 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
       closes; inner tabs Score History → Average Score → Points Journey
       each move the 5px Deep Interface underline/label and show only their
       content; the Simulator card shows while open; no navigation.
+    - **Fuller live test 2026-10-21 (stopped early at owner's request):**
+      section tabs Report/Simulator/Goals/Analysis and re-tap all correct;
+      under Analysis all six inner-tab transitions + re-taps correct,
+      chevron flips 180° when open, Learn More does nothing (no link);
+      accordion open state and inner tab carry across section-tab
+      switches; under Report all inner tabs, close and re-open correct
+      (re-open resets to Points Journey). Goals' underline is 5px while
+      the others are 6px. **Not tested:** accordion under Simulator and
+      Goals, and the boost card / gauge ⓘ / offer slider after the
+      Section Tabs swap.
