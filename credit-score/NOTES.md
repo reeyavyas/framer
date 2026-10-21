@@ -128,6 +128,13 @@ folders for them.
   gauge: red → green gradient from 300 to the score, a dot in the
   score's range colour, the score and 300 / 850. Property: **Score**.
   330×215. Use two side by side (yours and the ZIP average).
+- `PaymentHistoryChart.tsx` — Payment History → Performance Chart. The
+  ScoreHistoryChart pattern on a fixed 0–100% axis: green line `#4a9a5f`,
+  fill `#d3e6db`, a "%" callout on the latest month, and the first month
+  label carries its two-digit year (MAY 26). Property: **On Time %**
+  (oldest first, 0–100; defaults to six 100s). 840×660. The owner needs
+  to drag it into Components → App UI → Credit Score (code components
+  can't be renamed into a folder).
 
 ## Native build spec: Analysis tab + Score Rating accordion
 
@@ -247,3 +254,30 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
       the others are 6px. **Not tested:** accordion under Simulator and
       Goals, and the boost card / gauge ⓘ / offer slider after the
       Section Tabs swap.
+
+- **Payment History accordion** (Grade A), built 2026-10-21, not yet
+  live-tested:
+  - **Payment History Accordion** component (App UI → Credit Score), a
+    copy of Score Rating Accordion: Closed (primary, Body hidden) / Open,
+    variant transition Spring 0.4 with Bounce 0 (Score Rating's also
+    toned down to Bounce 0). Accent shadow `#3D895D`; header pill
+    "Grade A" (`#C0F3DE` fill, `#19412D` text).
+  - Body order: intro (**40%** and **Payment History,** bold) → Grade
+    Section (pill + "Way to go!…", **keeps your grade at an A.** bold) →
+    Recommended Actions (`#F2F4F6`, 3px `#0D294B` border, radius 8,
+    padding 50) → Pro Tip (`#FAFAFA`, no border, radius 8, padding 50,
+    icon + title row gap 30) → Performance Tabs → consolidation card (the
+    Simulator card copy: coin-in-hand "Debt Consolidation" icon, $80
+    text, Learn More with no link).
+  - **Performance Tabs** component (App UI → Credit Score), duplicated
+    from Score Rating Tabs: variants Performance History (primary) /
+    Performance Chart, panel `#FAFAFA`. History: three `#F6F6F6` rows
+    (radius 8, padding 30, gap 30) with a **placeholder "Score" icon**
+    (no check icon in Credit Score Icons yet). Chart: "Track the
+    percentage of open accounts being paid on time." + PaymentHistoryChart.
+  - Placed in Section Tabs → Analysis → Analysis Tab Content →
+    Accordions Frame, under Score Rating, width Fill.
+  - Fixed: texts coloured while the picker was on its Conic tab rendered
+    as a conic gradient (Score Rating's Simulator card title and
+    description, and the copies here); all set back to solid `#212121`.
+    Always pick the Solid tab before typing a hex.
