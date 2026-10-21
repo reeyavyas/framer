@@ -153,9 +153,13 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     cell, 0 on the others. Labels Inter Semibold 36, line 1.2, no text
     style; active linked to Deep Interface, others plain `#212121`
     (no near-black colour style exists). Each cell has Click (onTap) →
-    Set variant on the primary, inherited by every variant. One instance
-    sits off-page on the Score canvas (x1448, y150); not yet placed on
-    the page or live-tested.
+    Set variant on the primary, inherited by every variant. Placed by the
+    owner in Scrollable Content below the last slider; the original
+    instance is still off-page on the Score canvas (x1448, y150).
+  - **Live-tested 2026-10-21:** four 270×125 cells. Real clicks on
+    Report, Simulator, Goals, then Analysis each moved the 5px underline
+    and the `#0E335E` label to the tapped tab and left the others at 0px
+    / `#212121`; the page never navigated.
   - Framer files a new component at the top of Components → Project;
     renaming it `Phone Components/App UI/Credit Score/<Name>` moves it
     into the existing folder (the asset menu has no Move item).
