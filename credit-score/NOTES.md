@@ -226,3 +226,14 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
       copied in and relabelled "Learn More" (no link).
     - The intro, bullets and simulator description are **draft copy**
       written for a 720 score; the owner should replace them.
+    - **Placement (owner):** the accordion lives inside **Section Tabs**
+      (each variant: "Tabs" row + "Accordions Frame"), so the tab content
+      switches with the section tab. The page instance must be height
+      **Fit content**: a fixed 125 clipped everything below the tab row
+      (only a 125px strip was visible/tappable and the accordion grew
+      upward). Setting Fit on that instance didn't take, so it was
+      replaced with a fresh Fit copy after OfferCardSlider.
+    - **Live-tested 2026-10-21:** header tap opens (header stays put) and
+      closes; inner tabs Score History → Average Score → Points Journey
+      each move the 5px Deep Interface underline/label and show only their
+      content; the Simulator card shows while open; no navigation.
