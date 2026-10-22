@@ -114,39 +114,56 @@ export default function SimulatorScoreHeader(props: Props) {
             >
                 {filled ? (
                     // The number and the change centre together as one group.
-                    <span
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "flex-end",
-                        }}
-                    >
+                    // The change is an inline-block, so its last line (the
+                    // points) sits on the score's baseline: the digits' bottoms
+                    // line up whatever the two font sizes are.
+                    <span style={{ whiteSpace: "nowrap" }}>
                         <span style={{ ...props.scoreFont, lineHeight: 1 }}>
                             {score}
                         </span>
                         {props.showArrow && (
                             <span
                                 style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
+                                    display: "inline-block",
+                                    textAlign: "center",
                                     marginLeft: 8,
                                     ...props.changeFont,
                                     lineHeight: 1,
                                 }}
                             >
-                                <span
+                                {/* A drawn triangle: the stroke in the fill colour
+                                    with round joins softens its corners. */}
+                                <svg
                                     aria-hidden
+                                    viewBox="0 0 20 16"
                                     style={{
-                                        color:
-                                            diff < 0
-                                                ? props.downColor
-                                                : props.upColor,
-                                        fontSize: "0.9em",
+                                        display: "block",
+                                        width: "0.8em",
+                                        height: "0.64em",
+                                        margin: "0 auto 0.15em",
                                     }}
                                 >
-                                    {diff < 0 ? "▼" : "▲"}
-                                </span>
-                                <span>
+                                    <path
+                                        d={
+                                            diff < 0
+                                                ? "M3 3 L17 3 L10 13 Z"
+                                                : "M10 3 L17 13 L3 13 Z"
+                                        }
+                                        fill={
+                                            diff < 0
+                                                ? props.downColor
+                                                : props.upColor
+                                        }
+                                        stroke={
+                                            diff < 0
+                                                ? props.downColor
+                                                : props.upColor
+                                        }
+                                        strokeWidth={3}
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                                <span style={{ display: "block" }}>
                                     <span style={visuallyHidden}>
                                         {diff < 0 ? "down " : "up "}
                                     </span>
@@ -462,7 +479,7 @@ addPropertyControls(SimulatorScoreHeader, {
         title: "Change Font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 32, variant: "Semibold" },
+        defaultValue: { fontSize: 24, variant: "Semibold" },
     },
     resetFont: {
         type: ControlType.Font,

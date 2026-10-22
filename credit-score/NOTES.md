@@ -578,3 +578,8 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Mortgage gives 707 ▼35 with the number centred on its arc (matching 742
   on the current gauge) and the ▼35 to its right; Reset brings the atom
   back.
+- **Score change restyled (2026-10-22):** the ▼/▲ points are smaller
+  (Change Font default 24, was 32) and sit on 707's baseline (inline-block
+  column, so the bottoms of both numbers line up). The triangle is drawn
+  in SVG with round stroke joins, so its corners are slightly rounded
+  like the app's.
