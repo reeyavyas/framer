@@ -111,13 +111,22 @@ export default function SimulatorScoreHeader(props: Props) {
                 reset={filled ? props.resetText : undefined}
             >
                 {filled ? (
-                    <>
-                        <span style={{ ...props.scoreFont, lineHeight: 1 }}>
-                            {score}
-                        </span>
+                    // Only the number takes up width, so it centres like the
+                    // current score; the change hangs off its right edge.
+                    <span
+                        style={{
+                            ...props.scoreFont,
+                            lineHeight: 1,
+                            position: "relative",
+                        }}
+                    >
+                        {score}
                         {props.showArrow && (
                             <span
                                 style={{
+                                    position: "absolute",
+                                    left: "100%",
+                                    bottom: 0,
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -146,7 +155,7 @@ export default function SimulatorScoreHeader(props: Props) {
                                 </span>
                             </span>
                         )}
-                    </>
+                    </span>
                 ) : (
                     props.showIconWhenEmpty &&
                     // Framer may pass the slot as one element or a one-item array.
