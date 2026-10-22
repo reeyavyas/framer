@@ -583,3 +583,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   column, so the bottoms of both numbers line up). The triangle is drawn
   in SVG with round stroke joins, so its corners are slightly rounded
   like the app's.
+- **Score change live-checked 2026-10-22** (after the owner republished
+  twice; the first live check still served the previous build): group
+  box 737–939 vs arc 698–978, both centred at 838 (page px at 1080 wide);
+  "707" and "35" share a baseline (both at y 822); triangle drawn with
+  rounded corners. Measuring tip: a Range over the group also counts the
+  screen-reader-only "down/up" text and reads ~17px right; measure the
+  group's box instead.
