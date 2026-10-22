@@ -10,6 +10,47 @@ the existing **Phone Components → App UI → Credit Score** folder, under
 both Assets → Components → Project and Assets → Code. Don't create new
 folders for them.
 
+## Alerts page — where we stopped (22 Oct 2026)
+
+Spec: `docs/superpowers/specs/2026-10-22-credit-score-alerts-design.md`.
+Page `/base-pages/credit-score-alerts` (draft). Component **Alerts Feed**
+(Phone Components/App UI/Credit Score, node `LdC9I0EAx`) sits between
+the description and the owner's "Welcome to Credit Alerts Feed" block,
+95% wide.
+
+Done in Framer:
+- 8 variants: All, New, Updates, Monitoring, each with an Open one.
+  Cards hidden per variant as the spec's table says; field label per
+  variant; chevron flipped and options list shown in the Open ones.
+- Current option is Bold in each Open variant.
+- Filter Field tap: each closed variant → its Open one and back (all 8
+  checked).
+- Option taps set on the primary (All Alerts → All, New Alerts → New,
+  Credit Updates → Updates, Credit Monitoring Alerts → Monitoring).
+  Not yet checked that every Open variant inherits them.
+- `AlertsStore.tsx` is in Framer under Code (matches the repo).
+
+Still to do:
+1. Check the option taps in each Open variant (Interactions shows the
+   target).
+2. Open the component's variables (Interactions + → New event shows
+   them) and delete a stray "Click" event if one is there; it was made by
+   mistake.
+3. Attach `withMarkAllRead` to the "Mark All Read" layer and
+   `withAlertBadge` to each NEW "Grade Pill".
+4. Options push the cards down; the reference shows them floating over
+   the cards. Decide with the owner whether to make Options absolute.
+5. Check the page instance and the clipped bottom in Preview, then ask
+   the owner to publish and live-test every variant × tap and Mark all
+   as read (badges back after refresh).
+6. Waiting on the owner: screenshot of an opened monitoring alert, and
+   the check icon next to "Mark all as read".
+7. PR #19 merges only after the alerts page is done (merge commit).
+
+Framer tip: menu items in the Interactions + menu don't respond to
+clicks from the browser tools; open the menu, then press Down and
+Return (Down once = New transition = tap → Set variant).
+
 ## Current
 
 - `CardSlider.tsx` — swipeable slides with tappable dots, for cards whose
