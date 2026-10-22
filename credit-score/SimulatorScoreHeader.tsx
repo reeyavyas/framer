@@ -101,7 +101,7 @@ export default function SimulatorScoreHeader(props: Props) {
                 score={currentScore}
                 filled
             >
-                <span style={{ ...props.scoreFont, lineHeight: 1 }}>
+                <span style={{ ...props.scoreFont, ...SIT_ON_LINE }}>
                     {currentScore}
                 </span>
             </Gauge>
@@ -117,7 +117,13 @@ export default function SimulatorScoreHeader(props: Props) {
                     // The change is an inline-block, so its last line (the
                     // points) sits on the score's baseline: the digits' bottoms
                     // line up whatever the two font sizes are.
-                    <span style={{ whiteSpace: "nowrap" }}>
+                    <span
+                        style={{
+                            whiteSpace: "nowrap",
+                            fontSize: props.scoreFont?.fontSize,
+                            ...SIT_ON_LINE,
+                        }}
+                    >
                         <span style={{ ...props.scoreFont, lineHeight: 1 }}>
                             {score}
                         </span>
@@ -178,6 +184,11 @@ export default function SimulatorScoreHeader(props: Props) {
                             style={{
                                 width: props.iconSize,
                                 height: props.iconSize,
+                                // The atom ends 3.05px above the bottom of its
+                                // 40px vector frame; drop it onto the line.
+                                // shortcut: tied to the current drawing; redo if
+                                // the vector's frame changes.
+                                marginBottom: -props.iconSize * (3.05 / 40),
                             }}
                         />
                     )
@@ -276,14 +287,14 @@ function Gauge(
                         </text>
                     ))}
                 </svg>
-                {/* Score (or the empty icon) sits on the arc's centre line. */}
+                {/* The score (or the icon) sits on the line where the arc ends. */}
                 <div
                     role={props.filled ? "status" : undefined}
                     style={{
                         position: "absolute",
                         left: 0,
                         right: 0,
-                        bottom: H - CY + 6,
+                        bottom: H - CY,
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "flex-end",
@@ -342,6 +353,14 @@ function useTweened(target: number, on: boolean, duration: number): number {
         return () => controls.stop()
     }, [target, on, duration])
     return value
+}
+
+// Puts the digits' baseline on the box's bottom edge: with line-height 1,
+// Inter's baseline sits 0.136em above the bottom of the line box.
+// shortcut: assumes Inter's metrics; recheck if the score font changes.
+const SIT_ON_LINE: React.CSSProperties = {
+    lineHeight: 1,
+    marginBottom: "-0.136em",
 }
 
 const visuallyHidden: React.CSSProperties = {

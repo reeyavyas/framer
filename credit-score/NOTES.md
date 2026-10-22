@@ -590,3 +590,11 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   rounded corners. Measuring tip: a Range over the group also counts the
   screen-reader-only "down/up" text and reads ~17px right; measure the
   group's box instead.
+- **Score sits on the arc's end line (2026-10-22):** the current score,
+  the simulated group (number + ▼/▲ change) and the empty-state atom now
+  rest on the line where the arc's two ends finish (digits' baseline on
+  the line via a -0.136em Inter offset; the atom offset by the 3.05px of
+  empty space at the bottom of its 40px vector frame). Checked on the
+  canvas in both states. The − / + steppers stay (owner decision): greyed
+  and inert. Picking a loan never fills the card-limit or transfer
+  fields; each row is its own action (Starts On pre-fills one if wanted).
