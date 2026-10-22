@@ -712,16 +712,41 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     the harness: labels OCT 26 … MAR (6M), OCT 26 / JAN 27 / APR / JUL /
     OCT (1Y), OCT 26 / APR 27 / OCT / APR 28 / OCT (2Y); goal line at
     month 12 in 1Y and 2Y, none in 6M.
-  - Recommendations (to build): four native tip accordions. Closed: mint
-    "Great Job!" pill, tip text, chevron down. Open: chevron up and a
-    detail panel under a divider. Tip 1 (late payments): two grey rows,
-    "0 Late Payment(s)" / "0 Unpaid Collection(s)". Tip 2 (utilization):
-    two grey usage-bar panels (All Revolving, keep below 10%; Credit
-    Cards, keep below 5%), "Lines of Credit" + "View all accounts in
-    your credit report", "Credit Cards" list of grey card panels (name,
-    Total Balance, Credit Limit, Credit Utilization in red when over
-    the limit), then the credit report line again. Tips 3–4 open states
-    not seen yet. Use made-up values and generic card names.
+  - **Recommendations** (built 2026-10-22, canvas-checked, not live yet):
+    Goals Tab Content → **Goal Recommendations** stack (95% Rel, gap 30,
+    left-aligned, `withGoalSet` override): heading (Extra Bold 40),
+    subtitle (Regular 34), four tip components, grey disclaimer (Regular
+    34 `#757575`, line 1.5).
+  - Four native components in App UI → Credit Score, each duplicated from
+    Payment History Accordion (Closed primary / Open, Click → toggle,
+    chevron flips): no accent shadow, 2px `#E3E3E3` border all round,
+    Header vertical (pill row with "Great Job!" + chevron, then tip text
+    Regular 36, line 1.4; gap 40, padding 52), Body padding 52 / gap 40.
+    Links are bold `#0D294B` text with no link target yet.
+    - **Goal Tip Payments**: rows "0 Late Payment(s)", "0 Unpaid
+      Collection(s)" (`#FAFAFA`, centred Medium 36).
+    - **Goal Tip Utilization**: Revolving Bar Panel (UtilizationBar All
+      Revolving 5% / keep below 10%), Card Bar Panel (Credit Cards 3% /
+      5%), "LINES OF CREDIT", "View all accounts in your **credit
+      report**", "CREDIT CARDS", three Card Panels (made up: VISA REWARDS
+      $410 / $5,500 / **7%** red; PLATINUM CARD $260 / $7,800 / 3%; CASH
+      BACK CARD $0 / $6,500 / 0%), the credit report line again.
+    - **Goal Tip Balances**: "…keep revolving account balances below
+      $2,500. **Learn strategies…**"; panel: Balance Status ▼ (green)
+      **$1,339 Below Target**, Revolving Balances **$1,160**, Target
+      **$2,499**, **Review Current Balances** (38, navy). $1,160 = the
+      three cards' $670 + a $490 line of credit.
+    - **Goal Tip New Accounts**: paragraph + "0 New Account(s)" row.
+  - `UtilizationBar.tsx` (code): caption, "You are at N%" with a status
+    dot, 0–100% track filled to the value with a ring knob, dashed marker
+    at the limit with "Keep below L%"; green under the limit, red at or
+    over. Tested in the harness at 6/10, 3/5, 8/5 and 0/95.
+  - Owner must drag **UtilizationBar** and **GoalProgressChart** (top of
+    Components → Project) into App UI → Credit Score.
+  - Renaming layers through Chrome: click the row first, then
+    double-click and check the focused element is the rename INPUT
+    before typing; typing into the canvas fires tool shortcuts (O oval,
+    V pen…). Letter spacing defaults to Em: switch the unit to Px first.
   - Reordering stack children in Framer: right-click the layer → Move →
     Bring to front (moves it to the end) / Send backward (one up).
     Cmd+[ and Cmd+] navigate back/forward instead.
