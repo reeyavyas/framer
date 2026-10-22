@@ -109,7 +109,7 @@ One instance per amount row.
 |---|---|---|
 | Identity | Row ID | String, unique per row |
 | Label | Label / Show Label | String / Boolean |
-| Value | Amount Text | String, e.g. "$1,000" or "6" |
+| Value | Amount Text | String, e.g. "$2,500" or "9" |
 | | Placeholder | String, "$0" |
 | | Points | Number, −200…+200 |
 | | Starts On | Boolean, off |
@@ -118,9 +118,10 @@ One instance per amount row.
 | Colours | Field fill, border, placeholder, value, greyed stepper, ⓧ | Color |
 | Fonts | Label, Value | Font |
 
-Expected instances, with made-up defaults: new card credit limit
-($1,000), transfer balances ($1,000), increase balance ($3,000), raise
-limit ($3,000), pay down ($3,000), on-time payments (6, centred, split
+Expected instances, with made-up defaults (none taken from the owner's
+screenshots): new card credit limit ($2,500, −9), transfer balances
+($1,500, +6), increase balance ($2,000, −22), raise limit ($4,000, +8),
+pay down ($1,200, +15), on-time payments (9, +11, centred, split
 steppers).
 
 #### SimulatorChoiceRow
@@ -138,9 +139,10 @@ steppers).
 
 - **Dropdown-look:** the selected option shows in a field with ⓧ, and
   the options are listed as tappable chips below it. Used for the loan
-  row (Auto $25,000 / Personal $15,000 / Mortgage $250,000, made-up
-  points).
-- **Segmented:** used for missed payments (1 / 2 / 3 mo).
+  row (Auto $28,000 −18 / Personal $12,000 −14 / Mortgage $320,000
+  −35).
+- **Segmented:** used for missed payments (1 / 2 / 3 mo: −45 / −70 /
+  −95).
 
 #### SimulatorToggleRow
 
@@ -153,8 +155,8 @@ steppers).
 | Colours | Track off, track on, knob, text | Color, `#3A3A3A`, `#0D294B`, `#FFFFFF`, `#212121` |
 | Fonts | Label, On/Off | Font |
 
-Used for "Inquiry on file from a credit card application" and "Pay off
-all credit card balances".
+Used for "Inquiry on file from a credit card application" (−7) and
+"Pay off all credit card balances" (+19).
 
 ## Layout (native Framer)
 
