@@ -570,8 +570,9 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   that vector carry through. Properties: Icon When Empty, Icon Size (110).
   For the local type-check, add a scratch `framer-url-modules.d.ts`
   declaring `"https://framer.com/m/*"` as a component module. Also: the
-  simulated number is now centred on its own, with the ▼/▲ change hanging
-  off its right edge.
+  simulated number and its ▼/▲ change are centred on the arc as one group
+  (the owner's call; centring the number alone left the group looking
+  off-centre).
 - **Live-checked 2026-10-22** (owner republished): the empty simulated
   gauge shows the Credit Score Simulator atom centred in the grey arc;
   Mortgage gives 707 ▼35 with the number centred on its arc (matching 742
