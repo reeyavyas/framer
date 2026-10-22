@@ -454,3 +454,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
 - The Credit Score Icons vector set's Icon picker (Style panel →
   Credit Score Icons → Icon) lists all the drawn icons, including
   Inquiries (magnifier).
+- **Inquiries live-tested 2026-10-22:** opens under its fixed header
+  with the chevron flipping and closes again; accent `#3D895D`; texts,
+  bold words and the `#0D294B` link sentence as built (tapping it does
+  nothing, no link); the empty state shows the Inquiries icon above "NO
+  INQUIRIES ON CREDIT REPORT" (Semibold 25, 4px, centred). Afterwards all
+  six accordions still opened and closed, and Report → Analysis brought
+  back all six plus the Credit Score Events chart.
