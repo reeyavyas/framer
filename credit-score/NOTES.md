@@ -655,3 +655,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Auto Loan $28,000 / Personal Loan $12,000 / Mortgage $320,000, no
   caption field. Without the field there's no ⓧ; tapping the selected
   loan again clears it. Goes live with the next publish.
+- **Loan options trimmed (2026-10-22):** segment top/bottom padding 12 →
+  28px (one-line segments keep their 104px minimum, so All / One Account
+  and the months are unchanged; this matches their ~28px above and below
+  the text). Loan labels "Auto Loan" / "Personal Loan" → "Auto" /
+  "Personal" (Mortgage unchanged), set on the loan instance. Both rows
+  already use the same Option Font (38 Regular). Checked side by side on
+  the canvas. Goes live with the next publish.

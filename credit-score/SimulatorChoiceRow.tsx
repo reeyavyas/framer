@@ -151,7 +151,7 @@ export default function SimulatorChoiceRow(props: Props) {
                             alignItems: "center",
                             justifyContent: "center",
                             gap: 12,
-                            padding: "12px 8px",
+                            padding: "28px 8px",
                             cursor: "pointer",
                             textAlign: "center",
                             backgroundColor: props.fieldColor,

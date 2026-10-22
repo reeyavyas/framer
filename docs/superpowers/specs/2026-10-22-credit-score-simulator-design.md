@@ -144,7 +144,7 @@ steppers).
 - **Dropdown-look:** the selected option shows in a field with ⓧ, and
   the options are listed as tappable chips below it. Not used on the
   page (kept as an option).
-- **Segmented, no caption:** the loan row (Auto $28,000 −18 / Personal
+- **Segmented, no caption:** the loan row (labels "Auto" / "Personal" / "Mortgage": Auto $28,000 −18 / Personal
   $12,000 −14 / Mortgage $320,000 −35) uses the same joined segments as
   the account pick, with Fixed Caption blank so there's no "Loan Type"
   field. Tap the selected loan again to clear it.
