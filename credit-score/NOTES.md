@@ -678,3 +678,18 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     reason pick and re-tap clear, Next saves, reload clears.
   - Pasting code into Framer: copy with `LANG=en_US.UTF-8 pbcopy`, or
     non-ASCII like ® arrives garbled ("¬Æ").
+  - `GoalSummaryCard.tsx`: the Analysis goal card, inside Section Tabs →
+    Analysis → Promo Cards, after Set Up your Goal and before Credit
+    Score Events (width 100% Rel). Carries its own card look (white,
+    radius 8, padding 40, the promo cards' shadow) because with no goal
+    it renders nothing at all; on the canvas it shows Canvas Goal (780).
+    See Your Progress calls `openGoalsTab()`.
+  - `withGoalsTab` (in GoalStore.tsx) is on the page's Section Tabs
+    instance: each request remounts it on its Goals variant and scrolls
+    the tab row into view. Tested in the harness with stand-in tabs: the
+    card appears only after Next, the link opens Goals showing the set
+    goal, and works again after tapping back to Analysis. Not live-tested
+    yet (needs a publish). The Goals variant has no content yet.
+  - Reordering stack children in Framer: right-click the layer → Move →
+    Bring to front (moves it to the end) / Send backward (one up).
+    Cmd+[ and Cmd+] navigate back/forward instead.
