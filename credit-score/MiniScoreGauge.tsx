@@ -7,23 +7,42 @@ import { addPropertyControls, ControlType } from "framer"
 // side ("Your score" and the ZIP average); their headings and "Rating:"
 // lines are native text. Built for the 1080-wide kiosk.
 
-const W = 330
-const H = 215
-const CX = W / 2
-const CY = 160
-const R = 140
-const MIN = 300
-const MAX = 850
+// Exported for SimulatorScoreHeader, which draws the same gauge.
+export const W = 330
+export const H = 215
+export const CX = W / 2
+export const CY = 160
+export const R = 140
+export const MIN = 300
+export const MAX = 850
 const FONT = "Inter, sans-serif"
 
 // Same ranges and colours as CreditScoreGauge; the dot takes its range's colour.
-const RANGES = [
+export const RANGES = [
     { from: 300, color: "#e5483b" },
     { from: 500, color: "#f0832f" },
     { from: 600, color: "#f2c444" },
     { from: 660, color: "#4db67a" },
     { from: 780, color: "#2f7f52" },
 ]
+
+// Left to right across the arc, so each point's colour matches its place on the scale.
+export const GRADIENT_STOPS = [
+    { offset: 0, color: "#e5483b" },
+    { offset: 0.3, color: "#f0832f" },
+    { offset: 0.5, color: "#f2c444" },
+    { offset: 0.75, color: "#4db67a" },
+    { offset: 1, color: "#2f7f52" },
+]
+
+export function colorFor(score: number): string {
+    return [...RANGES].reverse().find((r) => score >= r.from)!.color
+}
+
+// The angle on the arc for a score: 180° at 300, 0° at 850.
+export function angleFor(score: number): number {
+    return 180 - ((score - MIN) / (MAX - MIN)) * 180
+}
 
 interface Props {
     score: number
@@ -38,9 +57,9 @@ interface Props {
 export default function MiniScoreGauge(props: Props) {
     const score = Math.round(Math.min(MAX, Math.max(MIN, props.score)))
     const id = "g" + React.useId().replace(/:/g, "")
-    const end = 180 - ((score - MIN) / (MAX - MIN)) * 180
+    const end = angleFor(score)
     const dot = polar(end)
-    const color = [...RANGES].reverse().find((r) => score >= r.from)!.color
+    const color = colorFor(score)
 
     return (
         <svg
@@ -52,7 +71,6 @@ export default function MiniScoreGauge(props: Props) {
             aria-label={`Score ${score} on a scale of 300 to 850`}
         >
             <defs>
-                {/* Left to right across the arc, so each point's colour matches its place on the scale. */}
                 <linearGradient
                     id={id}
                     gradientUnits="userSpaceOnUse"
@@ -61,11 +79,13 @@ export default function MiniScoreGauge(props: Props) {
                     y1={0}
                     y2={0}
                 >
-                    <stop offset="0" stopColor="#e5483b" />
-                    <stop offset="0.3" stopColor="#f0832f" />
-                    <stop offset="0.5" stopColor="#f2c444" />
-                    <stop offset="0.75" stopColor="#4db67a" />
-                    <stop offset="1" stopColor="#2f7f52" />
+                    {GRADIENT_STOPS.map((s) => (
+                        <stop
+                            key={s.offset}
+                            offset={s.offset}
+                            stopColor={s.color}
+                        />
+                    ))}
                 </linearGradient>
             </defs>
             <path
@@ -119,13 +139,13 @@ export default function MiniScoreGauge(props: Props) {
     )
 }
 
-function polar(deg: number) {
+export function polar(deg: number) {
     const rad = (deg * Math.PI) / 180
     return { x: CX + R * Math.cos(rad), y: CY - R * Math.sin(rad) }
 }
 
 // Clockwise on screen from the larger angle to the smaller one.
-function arc(fromDeg: number, toDeg: number) {
+export function arc(fromDeg: number, toDeg: number) {
     const a = polar(fromDeg)
     const b = polar(toDeg)
     return `M ${a.x} ${a.y} A ${R} ${R} 0 0 1 ${b.x} ${b.y}`
