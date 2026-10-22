@@ -399,3 +399,25 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Goal" promo card, last child of Promo Cards (so it sits above the
   Disclaimer), with only its title kept ("Credit Score Events", Extra
   Bold 40, left) and a CreditScoreEventsChart instance below.
+
+- **Live test 2026-10-22 (second publish):**
+  - Performance Tabs and Credit Usage Tabs: labels now swap with the
+    underline both ways; re-taps keep the state. (Tab transitions take
+    ~2 s to settle, so reads right after a tap show in-between colours.)
+  - Account Mix: opens/closes with the chevron flipping, accent
+    `#51B07A`, texts and bold as built, link sentence `#0D294B` with no
+    link (tap does nothing). Account Mix Tabs: both tabs, re-taps and
+    label colours correct; AccountBalanceBars and the three category
+    rows render. Its first open after page load took over 2 s; later
+    opens ~1 s.
+  - Credit Age: opens/closes in under 1 s, accent `#3D895D`, texts, bold,
+    link colour and Age Panel as built.
+  - Credit Score Events: renders in 6M with the latest month selected
+    (720 / 100% / 5%), labels MAY 26 → OCT. Taps on JUL and MAY and a
+    drag to SEP move the marker and all three callouts; taps past either
+    end clamp. **Bug:** tapping 1Y crashed the component (the card went
+    blank). Right after a range switch `useMonths` still held the old
+    range's 6 months, so `label()` read an undefined date. Fixed by
+    returning the months only when their count matches; pasted into
+    Framer and saved (matches the repo). **Range toggle not yet
+    re-tested live** — needs another publish.

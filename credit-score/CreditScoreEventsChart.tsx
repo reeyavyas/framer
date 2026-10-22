@@ -418,7 +418,8 @@ function useMonths(count: number): Date[] | undefined {
         tick()
         return () => window.clearTimeout(timer)
     }, [count])
-    return months
+    // Right after a range switch the state still holds the old range's months.
+    return months?.length === count ? months : undefined
 }
 
 // Made-up history for a 720 score: 26 months, oldest first. The last six
