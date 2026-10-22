@@ -648,3 +648,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   "$28,000"). SimulatorChoiceRow's option gap 4 → 12px (also spaces the
   month segments, which have no amount). Checked in the code Preview.
   Goes live with the next publish.
+- **Loan row segmented (2026-10-22):** the owner wanted "Get a new loan"
+  to look like the All / One Account pick, with no "Loan Type" field.
+  No code change: the loan instance (Simulator variant) is now Style
+  Segmented with Fixed Caption blank. On the canvas: one joined bar,
+  Auto Loan $28,000 / Personal Loan $12,000 / Mortgage $320,000, no
+  caption field. Without the field there's no ⓧ; tapping the selected
+  loan again clears it. Goes live with the next publish.

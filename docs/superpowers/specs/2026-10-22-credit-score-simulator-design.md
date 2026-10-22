@@ -21,8 +21,8 @@ turns on.
   Mortgage) and "Miss a monthly payment" (1 / 2 / 3 mo) show tappable
   options, each with its own amount and points. Tapping an option
   selects it (replacing the previous one); tapping the selected option
-  again turns the row off. The loan row's dropdown becomes fixed caption
-  text the owner sets. The missed-payment row instead has a pick between
+  again turns the row off. The loan row is a joined segmented bar like
+  the account pick, with no "Loan Type" field. The missed-payment row has a pick between
   "All Accounts" and "One Account" (All by default); each month has a
   points value for each, so the score follows the pair picked.
 - **Amount rows keep the app's look.** Off: grey "$0" placeholder. Tap
@@ -142,9 +142,12 @@ steppers).
 | Fonts | Label, Option, Selected | Font |
 
 - **Dropdown-look:** the selected option shows in a field with ⓧ, and
-  the options are listed as tappable chips below it. Used for the loan
-  row (Auto $28,000 −18 / Personal $12,000 −14 / Mortgage $320,000
-  −35).
+  the options are listed as tappable chips below it. Not used on the
+  page (kept as an option).
+- **Segmented, no caption:** the loan row (Auto $28,000 −18 / Personal
+  $12,000 −14 / Mortgage $320,000 −35) uses the same joined segments as
+  the account pick, with Fixed Caption blank so there's no "Loan Type"
+  field. Tap the selected loan again to clear it.
 - **Segmented:** used for missed payments, with Account Choice on
   (1 / 2 / 3 mo: All Accounts −45 / −70 / −95, One Account −15 / −25 /
   −35).
