@@ -512,7 +512,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   "Your total balance is $0" with all bars $0 and "2 REVOLVING", Credit
   Age "Based on 2 open accounts." **Bug found and fixed in Framer (needs
   republish):** the "See any errors?" card's fill was white at 20% (grey
-  on the page) while the freeze card was solid; set to 100%.
+  on the page) while the freeze card was solid; set to 100%. Rechecked live
+  after the owner republished: both cards render solid white
+  (`rgb(255, 255, 255)`). (The owner's first republish went out before
+  the fix saved; Framer's Publish panel showed it as 1 pending change.)
   Testing note: a tap right after a scripted `scrollBy` is sometimes
   ignored; a real wheel scroll doesn't do this.
   Still the owner's figure elsewhere: OfferCardSlider's "$79 Interest
