@@ -598,3 +598,10 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   canvas in both states. The − / + steppers stay (owner decision): greyed
   and inert. Picking a loan never fills the card-limit or transfer
   fields; each row is its own action (Starts On pre-fills one if wanted).
+- **Arc end-line alignment live-checked 2026-10-22:** empty state: arc end
+  1440.0, 742's baseline 1440.0, atom's drawn bottom 1440.0 (frame bottom
+  1448.4 − 8.4px of vector padding). Filled (Mortgage): arc end 840.0,
+  707's baseline 840.1, 35's baseline 840.3 (page px at 1080 wide).
+  Measuring note: inline spans report the font's content box (baseline at
+  0.969em from top for Inter); block/flex spans with line-height 1 report
+  the line box (baseline at 0.864em).
