@@ -770,7 +770,11 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
       override kept forcing Goals on every mount). Fixed in GoalStore:
       only requests made while the tabs are mounted jump. Tested in the
       harness (link, tap back, link, remount → Analysis, link → Goals);
-      pasted into Framer. **Needs a publish and a live re-check.**
+      pasted into Framer. **Re-checked live after the owner republished
+      (2026-10-22):** set a goal, See Your Progress → Goals, Close →
+      Back → Analysis active, goal card shown, page at the top (no
+      jump); See Your Progress → Goals again; a second Close → Back
+      also lands on Analysis.
     - Not checked: the Goals underline bar itself (screenshots time out
       on the live site in Chrome; the Goals label turns navy).
   - Renaming layers through Chrome: click the row first, then
