@@ -662,3 +662,19 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   "Personal" (Mortgage unchanged), set on the loan instance. Both rows
   already use the same Option Font (38 Regular). Checked side by side on
   the canvas. Goes live with the next publish.
+
+- **Goals tab** (spec: `docs/superpowers/specs/2026-10-22-credit-score-goals-design.md`), 2026-10-22:
+  - `GoalStore.tsx`: the one goal (score, months, reason), in memory
+    only, so a refresh or new tab clears it for the next user.
+  - `GoalSetupCard.tsx`: the Goals tab card's contents (no card chrome),
+    No goal → form → set. Current score 720; goal slider 721–850; months
+    6/12/18/24; optional reason (tap the picked one again to clear).
+  - In Framer: both files in Code → Phone Components → Credit Score.
+    GoalSetupCard landed at the top of Components → Project; the owner
+    must drag it into App UI → Credit Score. An instance sits off-page
+    on the Score canvas at x2700 y-13, 906 wide, for checking.
+  - Tested in a local harness (real component, stub `framer`): all three
+    states, both sliders by drag and keys (ends hold at 721/850, 6/24),
+    reason pick and re-tap clear, Next saves, reload clears.
+  - Pasting code into Framer: copy with `LANG=en_US.UTF-8 pbcopy`, or
+    non-ASCII like ® arrives garbled ("¬Æ").
