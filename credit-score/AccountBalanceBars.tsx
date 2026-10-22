@@ -95,10 +95,9 @@ export default function AccountBalanceBars(props: Props) {
     )
 }
 
-// Made-up balances; the total matches Credit Usage's $920.
 AccountBalanceBars.defaultProps = {
     rows: [
-        { label: "Credit Cards", amount: 920 },
+        { label: "Credit Cards", amount: 0 },
         { label: "Auto Loans", amount: 0 },
         { label: "Student Loans", amount: 0 },
         { label: "Real Estate", amount: 0 },

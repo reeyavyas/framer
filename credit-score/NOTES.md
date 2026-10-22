@@ -168,7 +168,8 @@ folders for them.
   account type: tracked caps label, a rounded bar filled in proportion to
   the largest balance, the balance on the right. Properties: **Rows**
   (Label, Amount), Fill / Track / Text colours. Width any, height auto.
-  Made-up defaults: Credit Cards $920, everything else $0. Needs dragging
+  Defaults: every row $0 (the owner set Credit Cards to $0 in Framer;
+  $920 was the owner's own figure and must not be used). Needs dragging
   into App UI → Credit Score.
 
 ## Native build spec: Analysis tab + Score Rating accordion
@@ -327,7 +328,7 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   credit limit." + CardUsageBars + "View all accounts" (Bold, `#0D294B`,
   no link) + italic 30px "Charge cards not included in calculation". Card
   Usage History: "1% increase since last month." + blue PaymentHistoryChart
-  (2, 6, 18, 3, 4, 5%). All amounts are made up. Placed in Accordions
+  (2, 6, 18, 3, 4, 5%). $920 turned out to be the owner's (see below). Placed in Accordions
   Frame under Payment History, width Fill.
 
 - **Live test 2026-10-22** (published by the owner, 1080×1920 viewport,
@@ -461,3 +462,36 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   INQUIRIES ON CREDIT REPORT" (Semibold 25, 4px, centred). Afterwards all
   six accordions still opened and closed, and Report → Analysis brought
   back all six plus the Credit Score Events chart.
+
+- **No owner figures (2026-10-22):** $920 came from the owner's
+  screenshots (Credit Usage), so it is gone everywhere it had spread:
+  AccountBalanceBars defaults (owner edited in Framer, repo synced),
+  Account Mix "Your total balance is $0", Report summary Total Balances
+  and Monthly Payments $0, both credit card balances $0. Copied account
+  counts changed to 2: Credit Age "Based on 2 open accounts.", Account
+  Mix "2 REVOLVING", Payment History "Both open accounts are being paid
+  on time." Still to check with the owner: the Credit Usage figures
+  ("$920 out of your $20,000", 23%, 1%, $79, chart 2/6/18/3/4/5%).
+- **Report tab** (Section Tabs → Report → Report Tab Content → Report
+  Sections: vertical stack, gap 100, padding 40 top and bottom), built
+  2026-10-22, not yet live-tested. In order:
+  - Summary Section: Download Report Row (right-aligned "Download
+    Report", Bold 37 `#0D294B`, placeholder Score icon 40, gap 16, no
+    link), Summary Header (icon + "SUMMARY"), Summary Card (two centred
+    columns: Open Accounts 2 / Total Balances $0 / Monthly Payments $0
+    and Delinquent 0 / Derogatory 0 / Inquiries 0).
+  - Credit Cards Section: header, Vertical Checking Row and Platinum
+    Rewards Row (dark inside-shadow accent, name with masked number and
+    "Last updated …" filling the width, Balance $0, the accordion
+    Chevron at 40, gap 20), "Show Closed Accounts" (no link).
+  - Auto Loans Section: "You have no open auto loans" card, "Show Closed
+    Accounts".
+  - Collections, Inquiries, Public Records: label, ⓘ placeholder icon,
+    "You have no …" card.
+  - Personal Details Section: made-up name, address and birth date.
+  - Two Simulator Card copies: "See any errors?" / "Start a Dispute" and
+    "Put on a credit freeze" / "Manage Credit Freeze" (atom icon as a
+    placeholder; buttons have no link or tap action).
+  Some inner layers still carry "Auto Loans …" names from the copy they
+  started as. Reorder with cut, select the parent, paste (appends last);
+  dragging rows in the Layers panel didn't take.
