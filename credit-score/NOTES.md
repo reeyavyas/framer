@@ -132,9 +132,10 @@ folders for them.
   ScoreHistoryChart pattern on a fixed 0–100% axis: green line `#4a9a5f`,
   fill `#d3e6db`, a "%" callout on the latest month, and the first month
   label carries its two-digit year (MAY 26). Property: **On Time %**
-  (oldest first, 0–100; defaults to six 100s). 840×660. The owner needs
-  to drag it into Components → App UI → Credit Score (code components
-  can't be renamed into a folder). Has **Line** and **Fill** colour
+  (oldest first, 0–100; defaults to six 100s). 840×660. Still at the
+  top of Components → Project on 2026-10-22: the owner needs to drag it
+  into App UI → Credit Score (code components can't be renamed into a
+  folder, and asset drags don't register through Chrome). Has **Line** and **Fill** colour
   properties (green defaults) so Credit Usage → Card Usage History reuses
   it in blue (`#4C6EF5` / `#AFC0F7`); the array control is now titled
   "Percents".
@@ -148,6 +149,27 @@ folders for them.
   Width, Name Gap, Row Height, Bar Height, Knob Size, Knob Ring, Segment
   Gap, Percent Gap, Axis Space). Width any, height auto. Made-up defaults:
   Vertical Checking 7%, Platinum Rewards Checking 3%.
+- `CreditScoreEventsChart.tsx` — the Analysis tab's "Credit Score Events"
+  card (after Promo Cards, above the Disclaimer). A 6M / 1Y / 2Y toggle,
+  a legend, and two stacked line-and-area charts on one month axis:
+  score (fits its axis in 20s) on top, Payment History and Credit Usage
+  (0–100%) below. The toggle is in code, not native variants, so the
+  months are entered once. Properties: **Scores**, **On Time %**,
+  **Usage %** (oldest first, last = this month; 2Y uses the last 26) and
+  line/fill colours. Each range shows 6 / 13 / 25 months plus one
+  lead-in month at the left edge; dots only in 6M. Labels: every month /
+  3rd / 6th, with the two-digit year on the first label and wherever the
+  year changes (MAY 26; OCT 25, JAN 26…). The marker and callouts sit on
+  the latest month; a tap or drag moves them, switching range resets.
+  906×1420. Made-up 720 data; the last six scores and usage values match
+  ScoreHistoryChart and Card Usage History. Needs dragging into App UI →
+  Credit Score (still at the top of Components → Project).
+- `AccountBalanceBars.tsx` — Account Mix → Accounts Breakdown. One row per
+  account type: tracked caps label, a rounded bar filled in proportion to
+  the largest balance, the balance on the right. Properties: **Rows**
+  (Label, Amount), Fill / Track / Text colours. Width any, height auto.
+  Made-up defaults: Credit Cards $920, everything else $0. Needs dragging
+  into App UI → Credit Score.
 
 ## Native build spec: Analysis tab + Score Rating accordion
 
@@ -307,3 +329,73 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Usage History: "1% increase since last month." + blue PaymentHistoryChart
   (2, 6, 18, 3, 4, 5%). All amounts are made up. Placed in Accordions
   Frame under Payment History, width Fill.
+
+- **Live test 2026-10-22** (published by the owner, 1080×1920 viewport,
+  real clicks):
+  - Credit Usage, Payment History and Score Rating each open and close
+    with the header fixed and the chevron flipping; Learn More and "View
+    all accounts" do nothing.
+  - Credit Usage Tabs and Performance Tabs switched content and
+    underlines correctly, **but in their second variant the labels kept
+    the first variant's colours** (inactive tab Deep Interface, active
+    `#212121`). Fixed in Framer the same day: the second variant's first
+    label is now plain `#212121`, its second label linked to Deep
+    Interface. Score Rating Tabs was already right. Not yet re-tested
+    live.
+  - CardUsageBars and the blue Card Usage History chart render (MAY 26 →
+    OCT); the Simulator card text is solid `#212121`.
+  - Section tabs: all four plus re-taps correct. Report, Simulator and
+    Goals now hold only the tab row, so the accordions close whenever
+    you leave Analysis. Goals' underline is still 5px (others 6px).
+  - Boost card: dots, swipes both ways, both ends hold; Start a Goal and
+    Learn More now have no link. Gauge ⓘ: today's date; × / outside tap
+    / Escape close it and restore scrolling. Offer slider: all dots,
+    swipes, both ends, taps on both peeking cards; card taps do nothing
+    (links removed).
+  - The gauge still shows **742**; the accordions are written for 720.
+
+- **Account Mix accordion** (Grade B), built 2026-10-22, not yet
+  live-tested: **Account Mix Accordion**, a duplicate of Credit Usage
+  Accordion. Accent shadow `#51B07A` (both variants), header and body
+  pills "Grade B". Body: intro (**11% of your score is Account Mix,**
+  bold), grade text, Recommended Actions without the owner's name ("You
+  currently have **no** open installment accounts…", link sentence bold
+  `#0D294B`, no link), Pro Tip (the screenshot cut off its last words;
+  "…as a gap in your credit history." is a guess), then **Account Mix
+  Tabs**. No promo card.
+  - **Account Mix Tabs** (duplicate of Credit Usage Tabs, so its labels
+    carry the colour fix): variants Accounts Breakdown (primary) /
+    Account Categories. Breakdown: "Your total balance is $920" +
+    AccountBalanceBars (Fill). Categories: three rows copied from
+    Performance Tabs, each a vertical stack (padding 30, gap 30): a
+    header ("**0** INSTALLMENTS", "**4** REVOLVING", "**0** COLLECTIONS";
+    Semibold 25, 0.16em, `#212121`) above the icon + message row. Icons
+    are the placeholder "Score" vector; the app uses a yellow ! and
+    green ticks.
+- **Credit Age accordion** (Grade A, `#3D895D` kept from Credit Usage),
+  built 2026-10-22, not yet live-tested: **Credit Age Accordion**,
+  duplicate of Credit Usage Accordion with its own intro (**21%**), grade
+  text (**avoid accidental damage**), Recommended Actions without the
+  name (link sentence `#0D294B`), Pro Tip, then **Age Panel** (a Pro Tip
+  copy: "Oldest Account vs Average Age of Credit" title and two
+  `#F6F6F6` rows, radius 8, padding 30). Row texts are made up, not the
+  screenshot's: "**6 Yrs.** is your average age of credit." / "Based on
+  4 open accounts." (28) and "**10 Yrs. And 5 Mos.** is the age of your
+  oldest open account." / "PLATINUM REWARDS CARD" (25 Semibold, 4px
+  tracking, not underlined) / "Open since: May 15, 2016". No card icon
+  yet. No tabs, no promo card.
+- Both placed in Accordions Frame after Credit Usage, width Fill. The
+  owner's screenshots also show an **Inquiries** accordion (Grade A);
+  not built yet.
+- **Building text in Framer through Chrome:** select a text layer, press
+  Return to edit, cmd+A, then dispatch a `paste` ClipboardEvent with
+  `text/html` on the focused ProseMirror editor: `<strong>` survives,
+  inline colour doesn't. To style part of a text, set a DOM Selection on
+  the words while editing and change Color / Size / Letter / Weight in
+  the Style panel; only the selection changes. Wrap layers in a stack
+  with right-click → type "stack" → Return. Sizing and font-weight
+  dropdowns are native selects (set value + change event).
+- **Credit Score Events card** (2026-10-22): a copy of the "Set Up your
+  Goal" promo card, last child of Promo Cards (so it sits above the
+  Disclaimer), with only its title kept ("Credit Score Events", Extra
+  Bold 40, left) and a CreditScoreEventsChart instance below.
