@@ -36,6 +36,13 @@ export function useGoal(): Goal | null {
     return React.useSyncExternalStore(subscribe, getGoal, getGoal)
 }
 
+// Override for native layers that only show once a goal is set (the Goals
+// tab's Track progress card and tips). Overrides don't run on the canvas,
+// so there they always show for editing.
+export function withGoalSet(Component: ComponentType<any>): ComponentType<any> {
+    return (props: any) => (useGoal() ? <Component {...props} /> : null)
+}
+
 // Counts the requests, so every See Your Progress tap is a new one.
 let tabRequest = 0
 const tabListeners = new Set<() => void>()

@@ -39,9 +39,14 @@ Below it, only once a goal is set:
 - **Recommendations** (native, owner edits the text): heading,
   subtitle, four "Great Job!" cards, grey disclaimer.
 
-**GoalGate** (code) shows these only once a goal is set: it has one
-component slot (`ControlType.ComponentInstance`) and renders it only
-when the store has a goal, so the native content stays native.
+**withGoalSet** (an override in GoalStore.tsx) hides the Track progress
+card and the recommendations until a goal is set. Overrides don't run on
+the canvas, so the native content stays visible there for editing.
+(This replaces the GoalGate slot component first planned.)
+
+Each recommendation is a native accordion: closed shows the pill, the tip
+and a down chevron; tapping opens a detail panel under a divider and
+flips the chevron up.
 
 ## Analysis tab
 

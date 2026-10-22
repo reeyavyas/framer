@@ -690,6 +690,32 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     card appears only after Next, the link opens Goals showing the set
     goal, and works again after tapping back to Analysis. Not live-tested
     yet (needs a publish). The Goals variant has no content yet.
+  - **Goals variant content** (built 2026-10-22): Section Tabs → Goals →
+    Goals Tab Content (stack, Fill, gap 50, padding 40/0/40/0; added in
+    the Goals variant so it is hidden in the other three). Inside:
+    Goal Setup Card (copy of the Credit Score Events card look: white,
+    radius 8, shadow 0 1 6, 95% wide) holding GoalSetupCard (100% Rel),
+    then Track Progress Card (title "Track progress" + GoalProgressChart)
+    with the `withGoalSet` override, so it only shows once a goal is set.
+    The off-page GoalSetupCard test instance on the Score canvas was
+    deleted.
+  - `GoalProgressChart.tsx`: Track progress chart, 906×800 fixed like
+    CreditScoreEventsChart. Months run forward from this month (6M
+    monthly, 1Y every 3, 2Y every 6); six score lines from 720 to the
+    goal; grey line on the goal's month when it is in range. Tested in
+    the harness: labels OCT 26 … MAR (6M), OCT 26 / JAN 27 / APR / JUL /
+    OCT (1Y), OCT 26 / APR 27 / OCT / APR 28 / OCT (2Y); goal line at
+    month 12 in 1Y and 2Y, none in 6M.
+  - Recommendations (to build): four native tip accordions. Closed: mint
+    "Great Job!" pill, tip text, chevron down. Open: chevron up and a
+    detail panel under a divider. Tip 1 (late payments): two grey rows,
+    "0 Late Payment(s)" / "0 Unpaid Collection(s)". Tip 2 (utilization):
+    two grey usage-bar panels (All Revolving, keep below 10%; Credit
+    Cards, keep below 5%), "Lines of Credit" + "View all accounts in
+    your credit report", "Credit Cards" list of grey card panels (name,
+    Total Balance, Credit Limit, Credit Utilization in red when over
+    the limit), then the credit report line again. Tips 3–4 open states
+    not seen yet. Use made-up values and generic card names.
   - Reordering stack children in Framer: right-click the layer → Move →
     Bring to front (moves it to the end) / Send backward (one up).
     Cmd+[ and Cmd+] navigate back/forward instead.
