@@ -8,7 +8,9 @@ import { useRowEntry } from "./SimulatorAmountRow.tsx"
 // selects it (replacing the last), tapping it again turns the row off, and
 // the ⓧ clears it. Dropdown style shows the choice in a field with the
 // options as chips below; Segmented shows equal segments under a fixed
-// caption ("All Accounts"). Built for the 1080-wide kiosk.
+// caption. With Account Choice on, the caption becomes an "All Accounts" /
+// "One Account" pick and each option has a second points value for One
+// Account. Built for the 1080-wide kiosk.
 
 type Style = "dropdown" | "segmented"
 
@@ -16,13 +18,19 @@ interface Option {
     label: string
     amountText: string
     points: number
+    pointsOne?: number
 }
+
+type Account = "all" | "one"
 
 interface Props {
     rowId: string
     label: string
     style: Style
     fixedCaption: string
+    accountChoice: boolean
+    allLabel: string
+    oneLabel: string
     options: Option[]
     startsOn: number
     fieldColor: string
@@ -52,14 +60,19 @@ export default function SimulatorChoiceRow(props: Props) {
             ? Math.floor(props.startsOn)
             : 0
     const [selected, setSelected] = React.useState(start)
+    const [account, setAccount] = React.useState<Account>("all")
+    const chosen = selected ? options[selected - 1] : undefined
+    const oneAccount = props.accountChoice && account === "one"
     useRowEntry(
         props.rowId,
-        selected ? (options[selected - 1]?.points ?? null) : null,
-        () => setSelected(start)
+        chosen ? ((oneAccount ? chosen.pointsOne : chosen.points) ?? 0) : null,
+        () => {
+            setSelected(start)
+            setAccount("all")
+        }
     )
     React.useEffect(() => setSelected(start), [start])
 
-    const chosen = selected ? options[selected - 1] : undefined
     const pick = (i: number) => setSelected(selected === i ? 0 : i)
     const border = `2px solid ${props.borderColor}`
 
@@ -98,89 +111,104 @@ export default function SimulatorChoiceRow(props: Props) {
         </div>
     )
 
+    // One row of equal segments (or chips, Dropdown style); 1-based `current`.
+    const segments = (
+        items: { label: string; amountText?: string }[],
+        current: number,
+        onPick: (i: number) => void,
+        ariaLabel: string
+    ) => (
+        <div
+            role="radiogroup"
+            aria-label={ariaLabel}
+            style={{
+                display: "flex",
+                gap: props.style === "dropdown" ? 16 : 0,
+                border: props.style === "segmented" ? border : undefined,
+                borderRadius: 6,
+                overflow: "hidden",
+            }}
+        >
+            {items.map((o, idx) => {
+                const i = idx + 1
+                const on = current === i
+                return (
+                    <motion.div
+                        key={i}
+                        role="radio"
+                        aria-checked={on}
+                        tabIndex={0}
+                        onClick={() => onPick(i)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") onPick(i)
+                        }}
+                        whileTap={{ backgroundColor: props.pressColor }}
+                        style={{
+                            flex: 1,
+                            minHeight: FIELD_H,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 4,
+                            padding: "12px 8px",
+                            cursor: "pointer",
+                            textAlign: "center",
+                            backgroundColor: props.fieldColor,
+                            ...(props.style === "dropdown"
+                                ? {
+                                      border: on
+                                          ? `3px solid ${props.selectedColor}`
+                                          : border,
+                                      borderRadius: 6,
+                                  }
+                                : {
+                                      borderLeft: idx ? border : undefined,
+                                  }),
+                        }}
+                    >
+                        <span
+                            style={{
+                                ...(on ? props.selectedFont : props.optionFont),
+                                color: on
+                                    ? props.selectedColor
+                                    : props.textColor,
+                            }}
+                        >
+                            {o.label}
+                        </span>
+                        {o.amountText && (
+                            <span
+                                style={{
+                                    ...props.amountFont,
+                                    color: on
+                                        ? props.selectedColor
+                                        : props.captionColor,
+                                }}
+                            >
+                                {o.amountText}
+                            </span>
+                        )}
+                    </motion.div>
+                )
+            })}
+        </div>
+    )
+
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div style={{ ...props.labelFont, color: props.labelColor }}>
                 {props.label}
             </div>
-            {(props.style === "dropdown" || props.fixedCaption) && field}
-            <div
-                role="radiogroup"
-                aria-label={props.label}
-                style={{
-                    display: "flex",
-                    gap: props.style === "dropdown" ? 16 : 0,
-                    border: props.style === "segmented" ? border : undefined,
-                    borderRadius: 6,
-                    overflow: "hidden",
-                }}
-            >
-                {options.map((o, idx) => {
-                    const i = idx + 1
-                    const on = selected === i
-                    return (
-                        <motion.div
-                            key={i}
-                            role="radio"
-                            aria-checked={on}
-                            tabIndex={0}
-                            onClick={() => pick(i)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") pick(i)
-                            }}
-                            whileTap={{ backgroundColor: props.pressColor }}
-                            style={{
-                                flex: 1,
-                                minHeight: FIELD_H,
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 4,
-                                padding: "12px 8px",
-                                cursor: "pointer",
-                                textAlign: "center",
-                                backgroundColor: props.fieldColor,
-                                ...(props.style === "dropdown"
-                                    ? {
-                                          border: on
-                                              ? `3px solid ${props.selectedColor}`
-                                              : border,
-                                          borderRadius: 6,
-                                      }
-                                    : {
-                                          borderLeft: idx ? border : undefined,
-                                      }),
-                            }}
-                        >
-                            <span
-                                style={{
-                                    ...(on
-                                        ? props.selectedFont
-                                        : props.optionFont),
-                                    color: on
-                                        ? props.selectedColor
-                                        : props.textColor,
-                                }}
-                            >
-                                {o.label}
-                            </span>
-                            {o.amountText && (
-                                <span
-                                    style={{
-                                        ...props.amountFont,
-                                        color: on
-                                            ? props.selectedColor
-                                            : props.captionColor,
-                                    }}
-                                >
-                                    {o.amountText}
-                                </span>
-                            )}
-                        </motion.div>
-                    )
-                })}
-            </div>
+            {props.style === "segmented" && props.accountChoice
+                ? segments(
+                      [{ label: props.allLabel }, { label: props.oneLabel }],
+                      account === "all" ? 1 : 2,
+                      (i) => setAccount(i === 1 ? "all" : "one"),
+                      `${props.label}: account`
+                  )
+                : (props.style === "dropdown" || props.fixedCaption) && field}
+            {segments(options, selected, pick, props.label)}
         </div>
     )
 }
@@ -237,11 +265,14 @@ SimulatorChoiceRow.defaultProps = {
     label: "Get a new loan",
     style: "dropdown" as Style,
     fixedCaption: "Loan Type",
+    accountChoice: false,
+    allLabel: "All Accounts",
+    oneLabel: "One Account",
     options: [
         { label: "Auto Loan", amountText: "$28,000", points: -18 },
         { label: "Personal Loan", amountText: "$12,000", points: -14 },
         { label: "Mortgage", amountText: "$320,000", points: -35 },
-    ],
+    ] as Option[],
     startsOn: 0,
     fieldColor: "#FFFFFF",
     borderColor: "#E3E3E3",
@@ -277,6 +308,29 @@ addPropertyControls(SimulatorChoiceRow, {
         title: "Fixed Caption",
         description: "Shown in the field; blank hides it (Segmented).",
         defaultValue: SimulatorChoiceRow.defaultProps.fixedCaption,
+        hidden: (props: Partial<Props>) =>
+            props.style === "segmented" && !!props.accountChoice,
+    },
+    accountChoice: {
+        type: ControlType.Boolean,
+        title: "Account Choice",
+        description: "All / One Account pick; each option gets Points (One).",
+        defaultValue: SimulatorChoiceRow.defaultProps.accountChoice,
+        hidden: (props: Partial<Props>) => props.style !== "segmented",
+    },
+    allLabel: {
+        type: ControlType.String,
+        title: "All Label",
+        defaultValue: SimulatorChoiceRow.defaultProps.allLabel,
+        hidden: (props: Partial<Props>) =>
+            props.style !== "segmented" || !props.accountChoice,
+    },
+    oneLabel: {
+        type: ControlType.String,
+        title: "One Label",
+        defaultValue: SimulatorChoiceRow.defaultProps.oneLabel,
+        hidden: (props: Partial<Props>) =>
+            props.style !== "segmented" || !props.accountChoice,
     },
     options: {
         type: ControlType.Array,
@@ -293,6 +347,15 @@ addPropertyControls(SimulatorChoiceRow, {
                 points: {
                     type: ControlType.Number,
                     title: "Points",
+                    min: -200,
+                    max: 200,
+                    step: 1,
+                    displayStepper: true,
+                },
+                pointsOne: {
+                    type: ControlType.Number,
+                    title: "Points (One)",
+                    description: "Used when One Account is picked.",
                     min: -200,
                     max: 200,
                     step: 1,

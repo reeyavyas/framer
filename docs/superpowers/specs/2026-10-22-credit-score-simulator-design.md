@@ -21,8 +21,10 @@ turns on.
   Mortgage) and "Miss a monthly payment" (1 / 2 / 3 mo) show tappable
   options, each with its own amount and points. Tapping an option
   selects it (replacing the previous one); tapping the selected option
-  again turns the row off. The account dropdown becomes fixed caption
-  text the owner sets (e.g. "All Accounts").
+  again turns the row off. The loan row's dropdown becomes fixed caption
+  text the owner sets. The missed-payment row instead has a pick between
+  "All Accounts" and "One Account" (All by default); each month has a
+  points value for each, so the score follows the pair picked.
 - **Amount rows keep the app's look.** Off: grey "$0" placeholder. Tap
   anywhere on the field: the owner's amount appears in dark text with a
   small ⓧ, and the score moves. Tap again or tap ⓧ: cleared. The − / +
@@ -131,8 +133,10 @@ steppers).
 | Identity | Row ID | String |
 | Label | Label | String, e.g. "Get a new loan" |
 | Style | Style | Enum: dropdown-look / segmented |
-| | Fixed Caption | String, e.g. "Loan Type" or "All Accounts"; blank hides it |
-| Options | Options (up to 6) | Array of { Label, Amount Text, Points } |
+| | Fixed Caption | String, e.g. "Loan Type"; blank hides it |
+| | Account Choice | Boolean (Segmented only): All / One Account pick in place of the caption |
+| | All Label / One Label | String, "All Accounts" / "One Account" |
+| Options | Options (up to 6) | Array of { Label, Amount Text, Points, Points (One) } |
 | | Starts On | Number, 0 = none |
 | Colours | Field, border, selected (`#0D294B`), text, ⓧ | Color |
 | Fonts | Label, Option, Selected | Font |
@@ -141,8 +145,9 @@ steppers).
   the options are listed as tappable chips below it. Used for the loan
   row (Auto $28,000 −18 / Personal $12,000 −14 / Mortgage $320,000
   −35).
-- **Segmented:** used for missed payments (1 / 2 / 3 mo: −45 / −70 /
-  −95).
+- **Segmented:** used for missed payments, with Account Choice on
+  (1 / 2 / 3 mo: All Accounts −45 / −70 / −95, One Account −15 / −25 /
+  −35).
 
 #### SimulatorToggleRow
 
@@ -171,8 +176,8 @@ stack like Report Sections (gap 100, padding 40 top and bottom, width
    loan choice row, new card limit, transfer balances, inquiry toggle.
 3. **Manage Your Balances** card: increase balance, raise limit, pay down,
    pay-off-all toggle.
-4. **Manage Payment Activity** card: missed payment (segmented, "All
-   Accounts" caption), on-time payments.
+4. **Manage Payment Activity** card: missed payment (segmented, All /
+   One Account pick), on-time payments.
 5. **Disclaimer** (grey text, as in the app).
 
 Cards match the Report cards: white, 2px `#E3E3E3` border, radius 8.

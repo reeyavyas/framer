@@ -536,7 +536,7 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Disclaimer. Made-up values: Auto $28,000 −18, Personal $12,000 −14,
   Mortgage $320,000 −35, card limit $2,500 −9, transfer $1,500 +6,
   inquiry −7, increase $2,000 −22, raise limit $4,000 +8, pay down
-  $1,200 +15, pay off all +19, missed 1/2/3 mo −45/−70/−95, on-time 9 +11.
+  $1,200 +15, pay off all +19, missed 1/2/3 mo −45/−70/−95 (One Account −15/−25/−35), on-time 9 +11.
   Still for the owner: connect the Credit Score Icons atom to the header's
   Empty Icon slot (canvas connector drag), and drag the four Simulator
   components from top-level Components into App UI → Credit Score.
@@ -617,3 +617,12 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   (Tinting the navy one from code with a CSS mask failed: the vector
   component's ref gives no image src.) Checked on the canvas: grey atom
   on the arc's end line. Goes live with the next publish.
+- **All Accounts / One Account (2026-10-22):** the missed-payment row only
+  had a fixed "All Accounts" caption, so the score couldn't differ by
+  account. SimulatorChoiceRow gained Account Choice (Segmented only): an
+  All Accounts / One Account pick (All by default, back to All on Reset)
+  above the months, and each option a Points (One) value. The row
+  reports the month's Points for All, Points (One) for One; switching
+  account with a month picked moves the score at once. Made-up values:
+  All −45/−70/−95, One −15/−25/−35. Checked on the canvas; the tap test
+  needs the next publish.
