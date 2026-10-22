@@ -605,3 +605,9 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Measuring note: inline spans report the font's content box (baseline at
   0.969em from top for Inter); block/flex spans with line-height 1 report
   the line box (baseline at 0.864em).
+- **Gauge labels centred (2026-10-22):** "CURRENT SCORE" / "SIMULATED
+  SCORE" read 2px left of their arcs on the live page (text box centred,
+  but CSS letter spacing also trails the last letter, so the visible
+  letters sat 2px left). The label now has left padding equal to its
+  letter spacing; on the canvas both labels' visible text centres within
+  1px of their arcs. Goes live with the next publish.

@@ -225,7 +225,15 @@ function Gauge(
                 gap: 24,
             }}
         >
-            <div style={{ ...props.labelFont, textTransform: "uppercase" }}>
+            {/* Letter spacing also follows the last letter; the same space on
+                the left keeps the visible letters centred over the arc. */}
+            <div
+                style={{
+                    ...props.labelFont,
+                    textTransform: "uppercase",
+                    paddingLeft: props.labelFont?.letterSpacing,
+                }}
+            >
                 {props.label}
             </div>
             <div style={{ position: "relative", width: W, height: H }}>
