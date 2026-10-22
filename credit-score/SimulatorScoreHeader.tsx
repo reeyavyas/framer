@@ -33,7 +33,7 @@ interface Props {
     currentLabel: string
     simulatedLabel: string
     resetText: string
-    emptyIcon: React.ReactNode[]
+    emptyIcon: React.ReactNode
     showIconWhenEmpty: boolean
     showArrow: boolean
     downColor: string
@@ -148,7 +148,11 @@ export default function SimulatorScoreHeader(props: Props) {
                         )}
                     </>
                 ) : (
-                    props.showIconWhenEmpty && props.emptyIcon?.[0]
+                    props.showIconWhenEmpty &&
+                    // Framer may pass the slot as one element or a one-item array.
+                    (Array.isArray(props.emptyIcon)
+                        ? props.emptyIcon[0]
+                        : props.emptyIcon)
                 )}
             </Gauge>
         </div>
@@ -167,9 +171,11 @@ function Gauge(
     const { min, max } = props
     const id = "s" + React.useId().replace(/:/g, "")
     const s = Math.min(max, Math.max(min, props.score))
-    const end = 180 - ((s - min) / (max - min)) * 180
+    const end = max > min ? 180 - ((s - min) / (max - min)) * 180 : 180
     const dot = polar(end)
-    const color = [...RANGES].reverse().find((r) => s >= r.from)!.color
+    // Below the first range (Min set under 300) falls back to its colour.
+    const color = ([...RANGES].reverse().find((r) => s >= r.from) ?? RANGES[0])
+        .color
 
     return (
         <div
