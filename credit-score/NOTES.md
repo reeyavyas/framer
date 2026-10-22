@@ -643,3 +643,8 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   the canvas with Preview Points +11 and −35: green ▲, red ▼, group ink
   centred on the arc within ~0.5px. Preview Points set back to 0. Goes
   live with the next publish.
+- **Option label–amount spacing (2026-10-22):** the owner asked for more
+  room between an option's label and its amount ("Auto Loan" /
+  "$28,000"). SimulatorChoiceRow's option gap 4 → 12px (also spaces the
+  month segments, which have no amount). Checked in the code Preview.
+  Goes live with the next publish.

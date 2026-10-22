@@ -150,7 +150,7 @@ export default function SimulatorChoiceRow(props: Props) {
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: 4,
+                            gap: 12,
                             padding: "12px 8px",
                             cursor: "pointer",
                             textAlign: "center",
