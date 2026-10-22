@@ -400,6 +400,12 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Goal" promo card, last child of Promo Cards (so it sits above the
   Disclaimer), with only its title kept ("Credit Score Events", Extra
   Bold 40, left) and a CreditScoreEventsChart instance below.
+  - Widened 2026-10-22 at the owner's request: the chart is now 946
+    wide (the card's inner width; instance set to 946 Fixed), so the
+    6M / 1Y / 2Y toggle and the graphs sit centred with 40 px either
+    side, and the latest month moved to 50 px from the right edge (was
+    106 px of empty grid after it). The legend stays at the chart's left
+    edge, in line with the heading. Checked on the canvas; not live yet.
 
 - **Live test 2026-10-22 (second publish):**
   - Performance Tabs and Credit Usage Tabs: labels now swap with the

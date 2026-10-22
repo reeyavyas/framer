@@ -8,11 +8,11 @@ import { addPropertyControls, ControlType } from "framer"
 // The toggle lives here, not in native variants, so the months are entered
 // once. Months end on the current month. Built for the 1080-wide kiosk.
 
-const W = 906
+const W = 946 // the Credit Score Events card's inner width, so the chart fills it
 const H = 1420
 const TOGGLE_H = 102
 const LEFT = 94 // plot starts here; y-axis labels sit left of it
-const LAST_X = 800 // the latest month; room to its right for callouts
+const LAST_X = W - 50 // the latest month; just room to its right for a callout
 const SCORE_TOP = 329
 const SCORE_BOTTOM = 617
 const PCT_TOP = 749
@@ -46,7 +46,7 @@ interface Props {
 /**
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
- * @framerIntrinsicWidth 906
+ * @framerIntrinsicWidth 946
  * @framerIntrinsicHeight 1420
  */
 export default function CreditScoreEventsChart(props: Props) {
