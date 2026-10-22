@@ -74,7 +74,7 @@ values, block-body callback refs, `as` on union defaults).
 #### SimulatorScoreHeader
 
 Both gauges side by side, drawn like MiniScoreGauge (same arc, ranges,
-colours, 300 / 850 labels).
+colours, 300 / 850 labels). The current-score gauge is always filled.
 
 - Empty state (no row on): the simulated arc is the grey track only, with
   the owner's icon in the middle and no Reset.
