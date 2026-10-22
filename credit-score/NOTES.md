@@ -520,3 +520,39 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   ignored; a real wheel scroll doesn't do this.
   Still the owner's figure elsewhere: OfferCardSlider's "$79 Interest
   Savings / 6 months*" offer (same $79 as the old transfer card).
+
+- **Simulator tab** (spec `docs/superpowers/specs/2026-10-22-credit-score-simulator-design.md`,
+  plan `docs/superpowers/plans/2026-10-22-credit-score-simulator.md`), built
+  2026-10-22. Code: `SimulatorStore.tsx` (shared points store + Node
+  self-check `SimulatorStore.check.ts`), `SimulatorScoreHeader.tsx` (two
+  gauges drawn with MiniScoreGauge's exported helpers), `SimulatorAmountRow.tsx`
+  (also exports `useRowEntry`, the row lifecycle the other rows share),
+  `SimulatorChoiceRow.tsx`, `SimulatorToggleRow.tsx`. Visitors only tap;
+  every amount and point value is a property. Score = clamp(742 + points
+  of every row that's on, 300, 850).
+  Layout: Section Tabs → Simulator → Simulator Tab Content (95%, gap 100,
+  padding 40/40): Score Header Card (Sticky, top 0), Apply for New Credit
+  Card, Manage Your Balances Card, Manage Payment Activity Card,
+  Disclaimer. Made-up values: Auto $28,000 −18, Personal $12,000 −14,
+  Mortgage $320,000 −35, card limit $2,500 −9, transfer $1,500 +6,
+  inquiry −7, increase $2,000 −22, raise limit $4,000 +8, pay down
+  $1,200 +15, pay off all +19, missed 1/2/3 mo −45/−70/−95, on-time 9 +11.
+  Still for the owner: connect the Credit Score Icons atom to the header's
+  Empty Icon slot (canvas connector drag), and drag the four Simulator
+  components from top-level Components into App UI → Credit Score.
+  Type-checks need `--allowImportingTsExtensions` because Framer imports
+  use `.tsx` paths.
+- **Simulator live-tested 2026-10-22** (owner published, 1080×1920, real
+  taps): empty state (grey arc, no Reset); Auto 724 ▼18, Mortgage
+  replaces it 707 ▼35, re-tap clears, Personal 728 ▼14, loan ⓧ clears;
+  card limit 733 ▼9, + transfer 739 ▼3, greyed −/+ do nothing, ⓧ clears
+  (748 ▲6), re-tap clears; inquiry YES 735 ▼7 / NO; increase 720 ▼22,
+  + raise 728, + pay down 743 ▲1, + pay off all 762 ▲20 (dark ▲); 1 mo
+  717 ▼25, 3 mo replaces 667 ▼75, + on-time 678 ▼64, 2 mo 703 ▼39,
+  re-tap clears 773 ▲31; Reset empties the gauge and turns every row
+  off; header stays pinned while scrolling; leaving for Analysis with 3
+  mo on and coming back starts empty; Analysis and Report unaffected.
+  Not checked live: clamping (the made-up values can't leave 300–850;
+  covered by the self-check and the canvas Preview Points test), and the
+  count-up smoothness (the test pane was a hidden background tab, so
+  animation frames were throttled).
