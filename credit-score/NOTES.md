@@ -556,3 +556,8 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   covered by the self-check and the canvas Preview Points test), and the
   count-up smoothness (the test pane was a hidden background tab, so
   animation frames were throttled).
+- **Review fixes live-checked 2026-10-22** (owner republished): header
+  starts empty, Mortgage gives 707 ▼35 with the red ▼ and Reset, Reset
+  empties it and turns every row off. The Min-below-300 fix was checked on
+  the canvas (Min 250 → 250 ▼492 instead of blank); the Empty Icon fix
+  can't be seen until the atom is connected.
