@@ -421,3 +421,18 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     returning the months only when their count matches; pasted into
     Framer and saved (matches the repo). **Range toggle not yet
     re-tested live** — needs another publish.
+- **Live test 2026-10-22 (third publish, range toggle):** no crash.
+  6M → 1Y → 2Y → 6M plus a re-tap of each all work; the selected range
+  turns Bold Deep Interface. 6M: 6 scrubber circles, dots on the lines,
+  labels MAY 26 → OCT. 1Y: 13 circles, no dots, labels OCT 25 / JAN 26 /
+  APR / JUL / OCT. 2Y: 25 circles, labels OCT 24 / APR 25 / OCT / APR 26
+  / OCT. Score axis 680–720 in every range. Month taps matched the
+  default data in every range (6M: MAY 702/2%, AUG 711/3%; 1Y: OCT 25
+  705/8%, JAN 707/3%, APR 704/3%, OCT 720/5%; 2Y: OCT 24 690/10%, APR 25
+  703/10%, OCT 25 705/8%, APR 26 704/3%), so a month shows the same values
+  in each range. Drags land on the month under the pointer (1Y → JUL
+  699/18%, 6M back to JUN 708/6%, 2Y across the whole chart → OCT).
+  Switching range, **or re-tapping the active one**, puts the marker
+  back on the latest month. Not tested: a real touch drag (mouse only),
+  so vertical page scrolling over the chart (`touch-action: pan-y`) is
+  unconfirmed.
