@@ -1,6 +1,8 @@
 import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { animate } from "framer-motion"
+// The Credit Score Simulator icon from the Credit Score Icons vector set.
+import SimulatorIcon from "https://framer.com/m/Credit-Score-Simulator-odYa5A.js"
 import {
     anyOn,
     resetAll,
@@ -33,7 +35,7 @@ interface Props {
     currentLabel: string
     simulatedLabel: string
     resetText: string
-    emptyIcon: React.ReactNode
+    iconSize: number
     showIconWhenEmpty: boolean
     showArrow: boolean
     downColor: string
@@ -157,11 +159,14 @@ export default function SimulatorScoreHeader(props: Props) {
                         )}
                     </span>
                 ) : (
-                    props.showIconWhenEmpty &&
-                    // Framer may pass the slot as one element or a one-item array.
-                    (Array.isArray(props.emptyIcon)
-                        ? props.emptyIcon[0]
-                        : props.emptyIcon)
+                    props.showIconWhenEmpty && (
+                        <SimulatorIcon
+                            style={{
+                                width: props.iconSize,
+                                height: props.iconSize,
+                            }}
+                        />
+                    )
                 )}
             </Gauge>
         </div>
@@ -341,6 +346,7 @@ SimulatorScoreHeader.defaultProps = {
     simulatedLabel: "Simulated Score",
     resetText: "Reset",
     showIconWhenEmpty: true,
+    iconSize: 110,
     showArrow: true,
     downColor: "#E5483B",
     upColor: "#212121",
@@ -394,9 +400,14 @@ addPropertyControls(SimulatorScoreHeader, {
         title: "Icon When Empty",
         defaultValue: SimulatorScoreHeader.defaultProps.showIconWhenEmpty,
     },
-    emptyIcon: {
-        type: ControlType.ComponentInstance,
-        title: "Empty Icon",
+    iconSize: {
+        type: ControlType.Number,
+        title: "Icon Size",
+        min: 20,
+        max: 200,
+        step: 1,
+        unit: "px",
+        defaultValue: SimulatorScoreHeader.defaultProps.iconSize,
         hidden: (props: Partial<Props>) => !props.showIconWhenEmpty,
     },
     showArrow: {

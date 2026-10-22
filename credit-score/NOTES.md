@@ -561,3 +561,14 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   empties it and turns every row off. The Min-below-300 fix was checked on
   the canvas (Min 250 → 250 ▼492 instead of blank); the Empty Icon fix
   can't be seen until the atom is connected.
+- **Simulator empty-state icon (2026-10-22):** the ComponentInstance slot
+  never appears in the properties panel (Framer shows it only as a canvas
+  outlet for top-level frames), so SimulatorScoreHeader now imports the
+  Credit Score Simulator vector directly:
+  `https://framer.com/m/Credit-Score-Simulator-odYa5A.js` (from the vector
+  set → Credit Score Simulator → right-click → Copy → Copy URL). Edits to
+  that vector carry through. Properties: Icon When Empty, Icon Size (110).
+  For the local type-check, add a scratch `framer-url-modules.d.ts`
+  declaring `"https://framer.com/m/*"` as a component module. Also: the
+  simulated number is now centred on its own, with the ▼/▲ change hanging
+  off its right edge.
