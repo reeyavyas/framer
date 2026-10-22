@@ -611,3 +611,9 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   letters sat 2px left). The label now has left padding equal to its
   letter spacing; on the canvas both labels' visible text centres within
   1px of their arcs. Goes live with the next publish.
+- **Grey empty-state icon (2026-10-22):** the owner added "Credit Score
+  Simulator-Grey" to the Credit Score Icons set; SimulatorScoreHeader now
+  imports `https://framer.com/m/Credit-Score-Simulator-Grey-ndndRc.js`.
+  (Tinting the navy one from code with a CSS mask failed: the vector
+  component's ref gives no image src.) Checked on the canvas: grey atom
+  on the arc's end line. Goes live with the next publish.

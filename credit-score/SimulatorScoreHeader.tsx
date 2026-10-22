@@ -1,8 +1,8 @@
 import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { animate } from "framer-motion"
-// The Credit Score Simulator icon from the Credit Score Icons vector set.
-import SimulatorIcon from "https://framer.com/m/Credit-Score-Simulator-odYa5A.js"
+// The grey Credit Score Simulator icon from the Credit Score Icons vector set.
+import SimulatorIcon from "https://framer.com/m/Credit-Score-Simulator-Grey-ndndRc.js"
 import {
     anyOn,
     resetAll,
