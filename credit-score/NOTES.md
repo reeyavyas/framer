@@ -436,3 +436,21 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   back on the latest month. Not tested: a real touch drag (mouse only),
   so vertical page scrolling over the chart (`touch-action: pan-y`) is
   unconfirmed.
+
+- **Inquiries accordion** (Grade A, `#3D895D`), built 2026-10-22, not
+  yet live-tested: **Inquiries Accordion**, a duplicate of Credit Age
+  Accordion. Intro (**5%**), grade text (**mindful borrowing.**),
+  Recommended Actions without the owner's name ("If you're comparing
+  rates… **14-day window.** …", link sentence "Learn more about rate
+  shopping." bold `#0D294B`, no link), Pro Tip, then **Inquiries Panel**
+  (the Age Panel copy): "Your Recent Inquiries" title, the subtitle
+  "Inquiries stay in your credit report for two years." (row 1 with its
+  fill and padding removed), and an empty state (row 2: no fill, centred,
+  padding 100, gap 60) with the Credit Score Icons **Inquiries** icon at
+  125 and "NO INQUIRIES ON CREDIT REPORT" (Semibold 25, 4px tracking,
+  centred). Placed last in Accordions Frame, width Fill.
+- PaymentHistoryChart, CreditScoreEventsChart and AccountBalanceBars were
+  dragged into App UI → Credit Score by the owner (2026-10-22).
+- The Credit Score Icons vector set's Icon picker (Style panel →
+  Credit Score Icons → Icon) lists all the drawn icons, including
+  Inquiries (magnifier).
