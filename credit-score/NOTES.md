@@ -324,8 +324,8 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Actions without the owner's name, Pro Tip), then **Credit Usage Tabs**
   (duplicate of Performance Tabs: Primary Cards Usage / Card Usage
   History), then a "Transfer Balances and Save" card ($79, Learn More, no
-  icon). Primary Cards Usage: "You're using $920 out of your $20,000 total
-  credit limit." + CardUsageBars + "View all accounts" (Bold, `#0D294B`,
+  icon). Primary Cards Usage: "You're using $1,215 out of your $6,000 total
+  credit limit." (was the owner's $920 / $20,000) + CardUsageBars + "View all accounts" (Bold, `#0D294B`,
   no link) + italic 30px "Charge cards not included in calculation". Card
   Usage History: "1% increase since last month." + blue PaymentHistoryChart
   (2, 6, 18, 3, 4, 5%). $920 turned out to be the owner's (see below). Placed in Accordions
@@ -470,8 +470,12 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   and Monthly Payments $0, both credit card balances $0. Copied account
   counts changed to 2: Credit Age "Based on 2 open accounts.", Account
   Mix "2 REVOLVING", Payment History "Both open accounts are being paid
-  on time." Still to check with the owner: the Credit Usage figures
-  ("$920 out of your $20,000", 23%, 1%, $79, chart 2/6/18/3/4/5%).
+  on time." Credit Usage figures (also the owner's) replaced with a
+  made-up set the owner approved (not $0, and not as low as 7%/3%):
+  "You're using $1,215 out of your $6,000 total credit limit.",
+  CardUsageBars 24% / 15% (code defaults too, Framer and repo identical),
+  intro "20% of your score…", transfer card "$96", Card Usage History
+  chart 18/22/27/24/21/20% with "1% decrease since last month."
 - **Report tab** (Section Tabs → Report → Report Tab Content → Report
   Sections: vertical stack, gap 100, padding 40 top and bottom), built
   2026-10-22, not yet live-tested. In order:

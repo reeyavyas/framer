@@ -247,8 +247,8 @@ export default function CardUsageBars(props: Props) {
 
 CardUsageBars.defaultProps = {
     cards: [
-        { name: "VERTICAL CHECKING", percent: 7 },
-        { name: "PLATINUM REWARDS CHECKING", percent: 3 },
+        { name: "VERTICAL CHECKING", percent: 24 },
+        { name: "PLATINUM REWARDS CHECKING", percent: 15 },
     ],
     markers: [30, 50],
     fillColor: "#4DB67A",
