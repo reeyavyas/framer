@@ -741,8 +741,11 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     dot, 0–100% track filled to the value with a ring knob, dashed marker
     at the limit with "Keep below L%"; green under the limit, red at or
     over. Tested in the harness at 6/10, 3/5, 8/5 and 0/95.
-  - Owner must drag **UtilizationBar** and **GoalProgressChart** (top of
-    Components → Project) into App UI → Credit Score.
+  - All Goals code components (GoalSetupCard, GoalSummaryCard,
+    GoalProgressChart, UtilizationBar) filed in App UI → Credit Score by
+    the owner (2026-10-22).
+  - Owner decisions (2026-10-22): the tip links stay as styled text with
+    no target for now; tip 3 keeps the fixed "Over the next 12 months".
   - **Live test 2026-10-22** (owner published; real clicks, 1440 wide):
     - Before a goal: Analysis has no goal card; Goals shows the empty
       state, no Track progress or tips.
