@@ -499,3 +499,21 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   Some inner layers still carry "Auto Loans …" names from the copy they
   started as. Reorder with cut, select the parent, paste (appends last);
   dragging rows in the Layers panel didn't take.
+- **Report tab + new figures live-tested 2026-10-22** (owner published,
+  1080×1920, real clicks): Report tab opens from Analysis and back with
+  one tap each (also right after a real scroll); every section in order
+  with the texts and $0 balances as built; Download Report, both
+  chevrons, both "Show Closed Accounts", the three ⓘ icons and both card
+  buttons do nothing on tap (no navigation, no scroll jump). Analysis:
+  Payment History "Both open accounts…", Credit Usage 20% intro, "$1,215
+  out of your $6,000", bars 24% / 15%, Card Usage History chart
+  18→20% with "1% decrease since last month." (the chart is static: taps
+  don't move the marker, by design), transfer card $96, Account Mix
+  "Your total balance is $0" with all bars $0 and "2 REVOLVING", Credit
+  Age "Based on 2 open accounts." **Bug found and fixed in Framer (needs
+  republish):** the "See any errors?" card's fill was white at 20% (grey
+  on the page) while the freeze card was solid; set to 100%.
+  Testing note: a tap right after a scripted `scrollBy` is sometimes
+  ignored; a real wheel scroll doesn't do this.
+  Still the owner's figure elsewhere: OfferCardSlider's "$79 Interest
+  Savings / 6 months*" offer (same $79 as the old transfer card).
