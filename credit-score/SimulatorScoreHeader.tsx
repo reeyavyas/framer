@@ -390,7 +390,7 @@ SimulatorScoreHeader.defaultProps = {
     iconSize: 110,
     showArrow: true,
     downColor: "#E5483B",
-    upColor: "#212121",
+    upColor: "#4DB67A",
     trackColor: "#E3E3E3",
     textColor: "#212121",
     resetColor: "#0D294B",
@@ -488,7 +488,7 @@ addPropertyControls(SimulatorScoreHeader, {
         title: "Score Font",
         controls: "extended",
         defaultFontType: "sans-serif",
-        defaultValue: { fontSize: 92, variant: "Semibold" },
+        defaultValue: { fontSize: 72, variant: "Semibold" },
     },
     labelFont: {
         type: ControlType.Font,

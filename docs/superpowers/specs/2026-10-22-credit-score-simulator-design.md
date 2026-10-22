@@ -97,9 +97,9 @@ Properties:
 | Empty state | Empty Icon | ComponentInstance (owner connects the Credit Score Icons atom) |
 | | Show Icon When Empty | Boolean, on |
 | Change | Show Arrow | Boolean, on |
-| | Down Colour / Up Colour | Color, `#E5483B` / `#212121` |
+| | Down Colour / Up Colour | Color, `#E5483B` / `#4DB67A` (the gauge's red and green) |
 | Colours | Track, Text, Reset Text | Color, `#E3E3E3`, `#212121`, `#0D294B` |
-| Fonts | Score, Labels, Change | Font (sans-serif, `fontSize` + `variant`) |
+| Fonts | Score, Labels, Change | Font (sans-serif, `fontSize` + `variant`); Score 72 Semibold, Change 24 Semibold |
 | Motion | Animate / Duration | Boolean on / Number 0.4 s |
 | Canvas | Preview Points | Number, ignored outside the Framer canvas |
 

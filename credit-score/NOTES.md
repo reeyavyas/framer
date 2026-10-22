@@ -626,3 +626,20 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
   account with a month picked moves the score at once. Made-up values:
   All −45/−70/−95, One −15/−25/−35. Checked on the canvas; the tap test
   needs the next publish.
+- **All / One Account live-tested 2026-10-22** (owner published,
+  1080×1920, real taps): starts on All Accounts; All 1/2/3 mo 697 ▼45 /
+  672 ▼70 / 647 ▼95; One 1/2/3 mo 727 ▼15 / 717 ▼25 / 707 ▼35;
+  switching account with a month picked moves the score at once;
+  tapping All again keeps it; re-tapping the month clears; One with no
+  month leaves the gauge empty; One 1 mo + on-time 738 ▼4; Reset empties
+  the gauge, turns on-time off and goes back to All; leaving for
+  Analysis and returning starts empty on All. Group centring live: box
+  centre = arc centre (838) for every value; visible ink within 1–1.7px
+  (glyph side bearings).
+- **Smaller score, green ▲ (2026-10-22):** the owner's reference shows
+  the score taking ~46% of the arc's width (ours was ~57%), so Score
+  Font default 92 → 72 (both gauges). Up Colour default `#212121` →
+  `#4DB67A`, the gauge's green (down stays the gauge red). Checked on
+  the canvas with Preview Points +11 and −35: green ▲, red ▼, group ink
+  centred on the arc within ~0.5px. Preview Points set back to 0. Goes
+  live with the next publish.
