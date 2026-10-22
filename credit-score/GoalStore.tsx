@@ -61,10 +61,11 @@ function subscribeTab(fn: () => void): () => void {
 
 const getTabRequest = () => tabRequest
 
-// Override for the Section Tabs instance: on each request, remount it on
-// its Goals variant (the key makes the jump work even after the visitor
-// tapped back to Analysis) and scroll the tab row into view. Until the
-// first request it passes through untouched.
+// Override for the Section Tabs instance: on each request made while it is
+// mounted, remount it on its Goals variant (the key makes the jump work
+// even after the visitor tapped back to Analysis) and scroll the tab row
+// into view. Requests from before it mounted are ignored, so coming back
+// to the page opens on the tabs' own default again.
 export function withGoalsTab(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -74,17 +75,19 @@ export function withGoalsTab(
             getTabRequest,
             getTabRequest
         )
+        const atMount = React.useRef(request)
+        const jump = request > atMount.current ? request : 0
         const ref = React.useRef<HTMLDivElement>(null)
         React.useEffect(() => {
-            if (!request) return
+            if (!jump) return
             const tabs = ref.current?.firstElementChild
             if (tabs instanceof HTMLElement)
                 tabs.scrollIntoView({ behavior: "smooth", block: "start" })
-        }, [request])
+        }, [jump])
         return (
             <div ref={ref} style={{ display: "contents" }}>
-                {request ? (
-                    <Component key={request} {...props} variant="Goals" />
+                {jump ? (
+                    <Component key={jump} {...props} variant="Goals" />
                 ) : (
                     <Component {...props} />
                 )}

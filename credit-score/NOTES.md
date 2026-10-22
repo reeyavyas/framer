@@ -743,6 +743,36 @@ isn't made yet, leave a same-sized empty frame for it. Content is for a
     over. Tested in the harness at 6/10, 3/5, 8/5 and 0/95.
   - Owner must drag **UtilizationBar** and **GoalProgressChart** (top of
     Components → Project) into App UI → Credit Score.
+  - **Live test 2026-10-22** (owner published; real clicks, 1440 wide):
+    - Before a goal: Analysis has no goal card; Goals shows the empty
+      state, no Track progress or tips.
+    - Set Up Your Goal → form at 760 / 40 points, ranges 721–850 and
+      6–24; dragging the score to 824 gives 104 points and Excellent;
+      months dragged to 18; reason list shows all five, picks, closes,
+      re-tap clears; Next → "Your Credit Goal" 824 / 104 points, form
+      gone, Track progress + four tips + disclaimer appear.
+    - Chart: 720…824 labels; 6M OCT 26…MAR, 1Y OCT 26/JAN 27/APR/JUL/OCT,
+      2Y OCT 26/APR 27/OCT/APR 28/OCT; goal-month line only in 2Y, at
+      month 18.
+    - Each tip opens to its panel (rows; both bars, three cards, two
+      credit report lines; balance panel; paragraph + row) and closes;
+      every chevron flips 180° and back.
+    - Analysis: "Your goal: 824 score", "104 points away", 0% completed,
+      card between Set Up your Goal and Credit Score Events.
+    - See Your Progress opens Goals showing the goal with the tab row at
+      the top; again after tapping back to Analysis; Report / Simulator /
+      Goals taps still work afterwards.
+    - Leaving through Close (More page) and Back keeps the goal (same
+      document). Refresh clears it: Analysis default, no card, Goals
+      empty state.
+    - **Bug found:** after See Your Progress had been used, coming back
+      to the page opened Section Tabs on Goals instead of Analysis (the
+      override kept forcing Goals on every mount). Fixed in GoalStore:
+      only requests made while the tabs are mounted jump. Tested in the
+      harness (link, tap back, link, remount → Analysis, link → Goals);
+      pasted into Framer. **Needs a publish and a live re-check.**
+    - Not checked: the Goals underline bar itself (screenshots time out
+      on the live site in Chrome; the Goals label turns navy).
   - Renaming layers through Chrome: click the row first, then
     double-click and check the focused element is the rename INPUT
     before typing; typing into the canvas fires tool shortcuts (O oval,
