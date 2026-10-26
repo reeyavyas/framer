@@ -74,8 +74,8 @@ Done in Framer:
 
 Still to do:
 1. The top tabs (Score, Offers, Alerts, Resources) on the alerts page
-   have no link set. Owner said leave them unlinked for now (26 Oct);
-   don't count this against the alerts page being done.
+   have no link set. The owner will link them (26 Oct); leave them
+   alone and don't count this against the alerts page being done.
 2. Waiting on the owner: screenshot of an opened monitoring alert, and
    the check icon next to "Mark all as read".
 3. PR #19 merges only after the alerts page is done (merge commit).
