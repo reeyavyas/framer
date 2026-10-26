@@ -75,7 +75,11 @@ Done in Framer:
   `withNineteenMonthsAgo` on Alert Monitoring 2 ("March 2025", kept at
   the same distance back). Format "Month YYYY", re-read after midnight,
   hidden until mounted. The canvas still shows the typed dates. Set on
-  the primary; all 8 variants inherit them.
+  the primary; all 8 variants inherit them. **Live check (26 Oct):**
+  real date shows October 2026 ×3, August 2026, March 2025; with the
+  page clock faked to 15 Jan 2027 (then Accounts and back to remount)
+  every filter, open and closed, showed January 2027 ×3, November 2026,
+  June 2025. Back to the real dates after a refresh.
 - Live-testing tip: the built-in browser pane resized the kiosk page
   mid-test and its taps didn't register; Chrome with real clicks worked.
   Scroll the target to the viewport centre with JS, then click there.
