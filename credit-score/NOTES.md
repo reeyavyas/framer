@@ -104,6 +104,22 @@ Done in Framer:
   (values at the half-width column, address wraps to two lines), the
   2px `#E3E3E3` divider and the flipped chevron; refresh starts with
   both closed; Mark all as read still hides the 3 badges.
+- **Full-row option taps (26 Oct):** `withFullRow` on the four option
+  texts (set on the primary, all variants inherit) grows each text's
+  box by Options' 40 side padding and half its 56 gap, with negative
+  margins so nothing moves. Wrapping the options in stacks was tried
+  and undone: it lost the per-variant bold text.
+- **"No Results" for New Alerts after Mark all as read (26 Oct):**
+  layer **Empty State** in the feed (visible only in New and New Open)
+  holds the "Inquiries" icon from the Credit Score Icons vector set
+  (an instance, so it follows the set; 120×120), "No Results for this
+  Alert Type" (Bold 36, `#212121`) and "Please select a new filter to
+  view your other alerts." (Regular 36), centred, padding 80.
+  `withNoResultsWhenRead` shows it once read and, via a CSS rule that
+  only matches where Empty State is rendered, hides Mark All Read and
+  the three update cards there. Other filters are unchanged. Code
+  overrides apply to a layer in every variant (tried and removed), so
+  hiding per variant needs this CSS.
 - Framer editing tips: single-letter keys typed while a layer (not its
   text) is selected trigger shortcuts; enter text with Return on the
   selected text layer instead of double-click. In the context menu,

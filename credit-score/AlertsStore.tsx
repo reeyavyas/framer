@@ -167,3 +167,46 @@ export function withMonitoringAlert2(
 ): ComponentType<any> {
     return withMonitoringAlert(Component, 2, 19)
 }
+
+// On each filter option: the whole row is tappable, not just the words.
+// Options has 40 side padding and a 56 gap, so the hit area grows by 40
+// sideways and 28 up and down; the negative margin keeps the text in place.
+export function withFullRow(Component: ComponentType<any>): ComponentType<any> {
+    return (props: any) => (
+        <Component
+            {...props}
+            style={{
+                ...props.style,
+                boxSizing: "border-box",
+                width: "calc(100% + 80px)",
+                padding: "28px 40px",
+                margin: "-28px -40px",
+                cursor: "pointer",
+            }}
+        />
+    )
+}
+
+// "No Results" block, shown only in the New and New Open variants (hidden
+// in the rest). Once everything is read it appears and hides the
+// "Mark all as read" row and the update cards beside it; the rule only
+// matches where this block is rendered, so the other filters keep their
+// cards. Code overrides can't differ per variant, hence the CSS.
+const HIDE_WHEN_NO_RESULTS = `:has(> [data-framer-name="Empty State"]) > :is(
+    [data-framer-name="Mark All Read"],
+    [data-framer-name="Alert Payment History"],
+    [data-framer-name="Alert Credit Score"],
+    [data-framer-name="Alert Credit Usage"]
+) { display: none !important; }`
+
+export function withNoResultsWhenRead(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return (props: any) =>
+        React.useSyncExternalStore(subscribe, getRead, getRead) ? (
+            <>
+                <style>{HIDE_WHEN_NO_RESULTS}</style>
+                <Component {...props} />
+            </>
+        ) : null
+}
