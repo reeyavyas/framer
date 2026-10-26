@@ -80,6 +80,30 @@ Done in Framer:
   page clock faked to 15 Jan 2027 (then Accounts and back to remount)
   every filter, open and closed, showed January 2027 ×3, November 2026,
   June 2025. Back to the real dates after a refresh.
+- **Opened monitoring alerts (26 Oct, in progress):** new component
+  **Monitoring Alert** (Phone Components/App UI/Credit Score), variants
+  Closed / Open. Open shows a "Details" stack (2px `#E3E3E3` top
+  border, padding-top 30, rows gap 24): Account Balance, Account
+  Number, Address, Creditor Name, Industry Type, label left / bold value
+  right in equal columns; the chevron is rotated 180°. Each value is a
+  component variable. Made-up values only (owner's rule): card 1 $240 /
+  47219300**** / PO BOX 4420, COLUMBUS, OH, 43218 / NORTHWIND CARD
+  SERVICES / Credit Card Services; card 2 $1,180 / 83620500**** / PO
+  BOX 1875, TAMPA, FL, 33631 / BLUE HARBOR RETAIL CARD / Department
+  Stores. Both feed cards are instances with `withMonitoringAlert1` /
+  `withMonitoringAlert2` (only one open at a time; tap again closes);
+  the date inside uses `withMonitoringDate`, which reads the card's
+  months-back from React context. Framer's "Auto rename" ran once by
+  mistake inside this component (layer names Month, Title, Chevron,
+  Description, Balance Row…); nothing outside it changed.
+  **Preview:** taps didn't open either card, and card 2's date showed
+  this month instead of 19 months back, so the card overrides weren't
+  running there. Needs a live check after publishing.
+- Framer editing tips: single-letter keys typed while a layer (not its
+  text) is selected trigger shortcuts; enter text with Return on the
+  selected text layer instead of double-click. In the context menu,
+  type the action, then Down + Return ("rename" picks Auto rename, so
+  double-click the layer name instead).
 - Live-testing tip: the built-in browser pane resized the kiosk page
   mid-test and its taps didn't register; Chrome with real clicks worked.
   Scroll the target to the viewport centre with JS, then click there.

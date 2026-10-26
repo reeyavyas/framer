@@ -61,11 +61,17 @@ function monthLabel(monthsAgo: number, now: Date): string {
     ).toLocaleDateString("en-US", { month: "long", year: "numeric" })
 }
 
+// Set by each monitoring alert card, so the date layer inside the shared
+// Monitoring Alert component knows how far back its card is.
+const CardMonthsAgo = React.createContext(0)
+
 function withMonthsAgo(
     Component: ComponentType<any>,
-    monthsAgo: number
+    fixed?: number
 ): ComponentType<any> {
     return (props: any) => {
+        const fromCard = React.useContext(CardMonthsAgo)
+        const monthsAgo = fixed ?? fromCard
         const [label, setLabel] = React.useState<string>()
         React.useEffect(() => {
             let timer: number
@@ -81,7 +87,7 @@ function withMonthsAgo(
             }
             tick()
             return () => window.clearTimeout(timer)
-        }, [])
+        }, [monthsAgo])
         return (
             <Component
                 {...props}
@@ -102,16 +108,62 @@ export function withThisMonth(
     return withMonthsAgo(Component, 0)
 }
 
-// On "Alert Monitoring 1"'s date.
-export function withTwoMonthsAgo(
+// On the date inside the Monitoring Alert component; the card says how far back.
+export function withMonitoringDate(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withMonthsAgo(Component, 2)
+    return withMonthsAgo(Component)
 }
 
-// On "Alert Monitoring 2"'s date.
-export function withNineteenMonthsAgo(
+// Monitoring alerts: tapping one opens it and closes the other. Kept in
+// memory like "read", so a refresh starts with both closed.
+let openAlert: number | null = null
+
+const getOpenAlert = () => openAlert
+
+function toggleAlert(id: number): void {
+    openAlert = openAlert === id ? null : id
+    listeners.forEach((fn) => fn())
+}
+
+function withMonitoringAlert(
+    Component: ComponentType<any>,
+    id: number,
+    monthsAgo: number
+): ComponentType<any> {
+    return (props: any) => {
+        const open =
+            React.useSyncExternalStore(
+                subscribe,
+                getOpenAlert,
+                getOpenAlert
+            ) === id
+        return (
+            <CardMonthsAgo.Provider value={monthsAgo}>
+                <Component
+                    {...props}
+                    variant={open ? "Open" : "Closed"}
+                    onClick={(e: React.MouseEvent) => {
+                        props.onClick?.(e)
+                        toggleAlert(id)
+                    }}
+                    style={{ ...props.style, cursor: "pointer" }}
+                />
+            </CardMonthsAgo.Provider>
+        )
+    }
+}
+
+// On the first Monitoring Alert instance (dated two months back).
+export function withMonitoringAlert1(
     Component: ComponentType<any>
 ): ComponentType<any> {
-    return withMonthsAgo(Component, 19)
+    return withMonitoringAlert(Component, 1, 2)
+}
+
+// On the second Monitoring Alert instance (dated 19 months back).
+export function withMonitoringAlert2(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withMonitoringAlert(Component, 2, 19)
 }
