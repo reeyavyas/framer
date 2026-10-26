@@ -68,6 +68,14 @@ Done in Framer:
   and Updates, lists unchanged, a second tap is harmless; still hidden
   after going to Accounts and back; back after a refresh. The three
   "View …" links and both monitoring cards do nothing (no targets yet).
+- **Card dates follow today** (owner's ask, 26 Oct): overrides in
+  `AlertsStore.tsx` swap each date layer's text, keeping its style.
+  `withThisMonth` on the three credit update dates ("October 2026"),
+  `withTwoMonthsAgo` on Alert Monitoring 1 ("August 2026"),
+  `withNineteenMonthsAgo` on Alert Monitoring 2 ("March 2025", kept at
+  the same distance back). Format "Month YYYY", re-read after midnight,
+  hidden until mounted. The canvas still shows the typed dates. Set on
+  the primary; all 8 variants inherit them.
 - Live-testing tip: the built-in browser pane resized the kiosk page
   mid-test and its taps didn't register; Chrome with real clicks worked.
   Scroll the target to the viewport centre with JS, then click there.

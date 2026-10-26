@@ -48,3 +48,70 @@ export function withAlertBadge(
             <Component {...props} />
         )
 }
+
+// Card dates ("October 2026"), counted back from today so the feed never
+// goes stale. Re-read just after each midnight so a kiosk left open rolls
+// over on its own. Hidden until mounted so the server-rendered date can't
+// flash; overrides don't run on the canvas, which keeps the typed dates.
+function monthLabel(monthsAgo: number, now: Date): string {
+    return new Date(
+        now.getFullYear(),
+        now.getMonth() - monthsAgo,
+        1
+    ).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+}
+
+function withMonthsAgo(
+    Component: ComponentType<any>,
+    monthsAgo: number
+): ComponentType<any> {
+    return (props: any) => {
+        const [label, setLabel] = React.useState<string>()
+        React.useEffect(() => {
+            let timer: number
+            const tick = () => {
+                const now = new Date()
+                setLabel(monthLabel(monthsAgo, now))
+                const midnight = new Date(now)
+                midnight.setHours(24, 0, 1, 0)
+                timer = window.setTimeout(
+                    tick,
+                    midnight.getTime() - now.getTime()
+                )
+            }
+            tick()
+            return () => window.clearTimeout(timer)
+        }, [])
+        return (
+            <Component
+                {...props}
+                text={label ?? props.text}
+                style={{
+                    ...props.style,
+                    visibility: label ? props.style?.visibility : "hidden",
+                }}
+            />
+        )
+    }
+}
+
+// On each credit update card's date.
+export function withThisMonth(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withMonthsAgo(Component, 0)
+}
+
+// On "Alert Monitoring 1"'s date.
+export function withTwoMonthsAgo(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withMonthsAgo(Component, 2)
+}
+
+// On "Alert Monitoring 2"'s date.
+export function withNineteenMonthsAgo(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withMonthsAgo(Component, 19)
+}
