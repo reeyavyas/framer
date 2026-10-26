@@ -80,7 +80,7 @@ Done in Framer:
   page clock faked to 15 Jan 2027 (then Accounts and back to remount)
   every filter, open and closed, showed January 2027 ×3, November 2026,
   June 2025. Back to the real dates after a refresh.
-- **Opened monitoring alerts (26 Oct, in progress):** new component
+- **Opened monitoring alerts (26 Oct, done):** new component
   **Monitoring Alert** (Phone Components/App UI/Credit Score), variants
   Closed / Open. Open shows a "Details" stack (2px `#E3E3E3` top
   border, padding-top 30, rows gap 24): Account Balance, Account
@@ -96,9 +96,14 @@ Done in Framer:
   months-back from React context. Framer's "Auto rename" ran once by
   mistake inside this component (layer names Month, Title, Chevron,
   Description, Balance Row…); nothing outside it changed.
-  **Preview:** taps didn't open either card, and card 2's date showed
-  this month instead of 19 months back, so the card overrides weren't
-  running there. Needs a live check after publishing.
+  **Preview** got this wrong (taps did nothing, card 2's date showed
+  this month): overrides on component instances don't run there.
+  **Live check (26 Oct), all passed:** dates August 2026 / March 2025;
+  in All and in Monitoring, opening either card closes the other, a
+  second tap closes it, both orders; open card shows its own five rows
+  (values at the half-width column, address wraps to two lines), the
+  2px `#E3E3E3` divider and the flipped chevron; refresh starts with
+  both closed; Mark all as read still hides the 3 badges.
 - Framer editing tips: single-letter keys typed while a layer (not its
   text) is selected trigger shortcuts; enter text with Return on the
   selected text layer instead of double-click. In the context menu,
@@ -112,9 +117,11 @@ Still to do:
 1. The top tabs (Score, Offers, Alerts, Resources) on the alerts page
    have no link set. The owner will link them (26 Oct); leave them
    alone and don't count this against the alerts page being done.
-2. Waiting on the owner: screenshot of an opened monitoring alert, and
-   the check icon next to "Mark all as read".
-3. PR #19 merges only after the alerts page is done (merge commit).
+2. Opened monitoring alert built from the owner's screenshots and the
+   check icon added by the owner (both 26 Oct). Nothing else open on
+   the alerts page.
+3. PR #19 merges only after the owner confirms the alerts page is done
+   (merge commit).
 
 Framer tip: menu items in the Interactions + menu don't respond to
 clicks from the browser tools; open the menu, then press Down and
