@@ -37,8 +37,8 @@ Done in Framer:
   has no interaction.
 - **Options float over the cards** (owner's choice, 26 Oct): Options is
   Absolute, pinned top 114 / left 0 / right 0, width 100%, z-index 10,
-  with its own white fill, 2px `#E3E3E3` border, radius 8, shadow
-  0 1 6 black 20% (same as the field), padding 32 40 32 40. Filter
+  with its own white fill, 2px `#E3E3E3` border, radius 8, a shadow
+  (the owner restyled it), padding 32 40 32 40. Filter
   Field's overflow is Visible so the list can show outside it. All set
   on the primary; the Open variants inherit it.
 - Preview check (26 Oct): every variant opens and closes by its header,
@@ -168,8 +168,12 @@ Still to do:
 2. Opened monitoring alert built from the owner's screenshots and the
    check icon added by the owner (both 26 Oct). Nothing else open on
    the alerts page.
-3. PR #19 merges only after the owner confirms the alerts page is done
-   (merge commit).
+3. PR #19 merged into `main` with a merge commit (26 Oct), on the
+   owner's go-ahead after the alerts page was done.
+
+Shadows: the owner restyled every shadow Claude added on these pages
+(26 Oct). The values in these notes may be out of date; read shadows
+from Framer, not from here.
 
 Framer tip: menu items in the Interactions + menu don't respond to
 clicks from the browser tools; open the menu, then press Down and
