@@ -120,6 +120,15 @@ Done in Framer:
   the three update cards there. Other filters are unchanged. Code
   overrides apply to a layer in every variant (tried and removed), so
   hiding per variant needs this CSS.
+- **Live check of both (26 Oct), all passed:** option rows are
+  full-width (55–1385) and touch, with no gaps; taps at a row's left
+  padding, right edge, and old top/bottom gap land on the right filter
+  for all four options; text unmoved (40 in, 106 apart), current option
+  bold, header open/close fine. Empty state: New before read shows the
+  row and 3 cards; Mark all as read in New, or in All then New, leaves
+  only "No Results" (icon renders 120×120 in navy from the set, text
+  correct); New Open the same with the list open; All, Updates and
+  Monitoring keep their cards; refresh brings everything back.
 - Framer editing tips: single-letter keys typed while a layer (not its
   text) is selected trigger shortcuts; enter text with Return on the
   selected text layer instead of double-click. In the context menu,
