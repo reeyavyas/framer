@@ -129,6 +129,12 @@ Done in Framer:
   only "No Results" (icon renders 120×120 in navy from the set, text
   correct); New Open the same with the list open; All, Updates and
   Monitoring keep their cards; refresh brings everything back.
+- **Welcome block hides with "No Results" (26 Oct):** the same CSS
+  rule also hides the page's "Welcome to Credit Alerts Feed" layer
+  (rocket, title, body; it sits beside the feed in "Header +
+  Description") while Empty State is showing. Rule checked by
+  injecting it on the live page: hidden in New after read, still
+  shown in All. If that page layer is renamed, update the rule.
 - Framer editing tips: single-letter keys typed while a layer (not its
   text) is selected trigger shortcuts; enter text with Return on the
   selected text layer instead of double-click. In the context menu,

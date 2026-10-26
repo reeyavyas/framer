@@ -191,13 +191,19 @@ export function withFullRow(Component: ComponentType<any>): ComponentType<any> {
 // in the rest). Once everything is read it appears and hides the
 // "Mark all as read" row and the update cards beside it; the rule only
 // matches where this block is rendered, so the other filters keep their
-// cards. Code overrides can't differ per variant, hence the CSS.
+// cards. It also hides the page's rocket "Welcome to Credit Alerts Feed"
+// block beside the feed. Code overrides can't differ per variant, hence
+// the CSS.
 const HIDE_WHEN_NO_RESULTS = `:has(> [data-framer-name="Empty State"]) > :is(
     [data-framer-name="Mark All Read"],
     [data-framer-name="Alert Payment History"],
     [data-framer-name="Alert Credit Score"],
     [data-framer-name="Alert Credit Usage"]
-) { display: none !important; }`
+),
+:has([data-framer-name="Empty State"])
+    > [data-framer-name="Welcome to Credit Alerts Feed"] {
+    display: none !important;
+}`
 
 export function withNoResultsWhenRead(
     Component: ComponentType<any>
