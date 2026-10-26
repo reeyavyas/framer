@@ -26,9 +26,24 @@ Done in Framer:
 - Filter Field tap: each closed variant → its Open one and back (all 8
   checked).
 - Option taps (All Alerts → All, New Alerts → New, Credit Updates →
-  Updates, Credit Monitoring Alerts → Monitoring) checked in all 4 Open
-  variants: 16 of 16 right. "Click" in Interactions is Framer's own tap
-  trigger, not a component event.
+  Updates, Credit Monitoring Alerts → Monitoring) set in all 4 Open
+  variants. "Click" in Interactions is Framer's own tap trigger, not a
+  component event.
+- **Open/close tap is on "Header", not "Filter Field".** Options sit
+  inside Filter Field, so a tap on Filter Field also fired after every
+  option tap and sent it back to the closed variant of the current
+  filter (options never worked). Moved the tap to Header in all 8
+  variants (closed → its Open one, Open → its closed one); Filter Field
+  has no interaction.
+- **Options float over the cards** (owner's choice, 26 Oct): Options is
+  Absolute, pinned top 114 / left 0 / right 0, width 100%, z-index 10,
+  with its own white fill, 2px `#E3E3E3` border, radius 8, shadow
+  0 1 6 black 20% (same as the field), padding 32 40 32 40. Filter
+  Field's overflow is Visible so the list can show outside it. All set
+  on the primary; the Open variants inherit it.
+- Preview check (26 Oct): every variant opens and closes by its header,
+  and all 16 option taps land on the right variant; the list floats over
+  the first card.
 - The component has no variables or events (toolbar's variables
   button shows none), so there was no stray "Click" event to delete.
 - Code overrides from `AlertsStore`: `withMarkAllRead` on "Mark All
@@ -45,13 +60,11 @@ Done in Framer:
   instance at x 1554. They sit outside Kiosk and don't render.
 
 Still to do:
-1. Options push the cards down; the reference shows them floating over
-   the cards. Decide with the owner whether to make Options absolute.
-2. After that, ask the owner to publish and live-test every variant ×
-   tap and Mark all as read (badges back after refresh).
-3. Waiting on the owner: screenshot of an opened monitoring alert, and
+1. Ask the owner to publish, then live-test every variant × tap and
+   Mark all as read (badges back after refresh).
+2. Waiting on the owner: screenshot of an opened monitoring alert, and
    the check icon next to "Mark all as read".
-4. PR #19 merges only after the alerts page is done (merge commit).
+3. PR #19 merges only after the alerts page is done (merge commit).
 
 Framer tip: menu items in the Interactions + menu don't respond to
 clicks from the browser tools; open the menu, then press Down and
