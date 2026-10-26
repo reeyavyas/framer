@@ -140,6 +140,16 @@ Done in Framer:
   "No Results" (welcome block, row and cards hidden); All, Updates and
   Monitoring keep the welcome block and their cards; back in New it's
   hidden again; refresh brings it back.
+- **Clipping check (26 Oct), nothing cut off:** after the owner fixed
+  the clipped "Please select…" line, a script on the live page compared
+  every text, vector and icon with each clipping frame above it and
+  each text with its own box, in All, All Open, both monitoring alerts
+  open and New after read; plus a whole-page sweep. Only box overhangs
+  came up, none visible: the three chevrons' SVG box is 3.6px above its
+  40px frame (canvas zoom: stroke whole), the status-bar arrow's icon
+  box is taller than its 28px frame (arrow whole), and "© 2026
+  SavvyMoney, Inc." has line height 1 (glyphs whole). Scrolled the
+  whole page in Preview too.
 - Chrome tip: if the page reports a 0×0 viewport (window minimized),
   open a new tab with tabs_create_mcp; that tab gets a real size.
 - Framer editing tips: single-letter keys typed while a layer (not its
