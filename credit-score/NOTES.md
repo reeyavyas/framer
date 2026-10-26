@@ -59,9 +59,23 @@ Done in Framer:
   (Slide 1, Slide 2, Section Tabs) and a spare Phone Components
   instance at x 1554. They sit outside Kiosk and don't render.
 
+- **Live test (26 Oct, after the owner's publish), all passed:** header
+  opens and closes in all 4 filters (current option bold); all 16
+  option taps land on the right filter with the right cards (All: Mark
+  all as read + 3 updates + 2 monitoring; New/Updates: Mark all as read
+  + 3 updates; Monitoring: 2 monitoring); the open list sits on top of
+  the first card. Mark all as read hides the 3 NEW badges in All, New
+  and Updates, lists unchanged, a second tap is harmless; still hidden
+  after going to Accounts and back; back after a refresh. The three
+  "View …" links and both monitoring cards do nothing (no targets yet).
+- Live-testing tip: the built-in browser pane resized the kiosk page
+  mid-test and its taps didn't register; Chrome with real clicks worked.
+  Scroll the target to the viewport centre with JS, then click there.
+
 Still to do:
-1. Ask the owner to publish, then live-test every variant × tap and
-   Mark all as read (badges back after refresh).
+1. The top tabs (Score, Offers, Alerts, Resources) on the alerts page
+   have no link set, so tapping Score does nothing. Ask the owner where
+   each should go.
 2. Waiting on the owner: screenshot of an opened monitoring alert, and
    the check icon next to "Mark all as read".
 3. PR #19 merges only after the alerts page is done (merge commit).
