@@ -135,6 +135,13 @@ Done in Framer:
   Description") while Empty State is showing. Rule checked by
   injecting it on the live page: hidden in New after read, still
   shown in All. If that page layer is renamed, update the rule.
+  **Live check after publish (26 Oct), passed:** New before read shows
+  the welcome block; after Mark all as read, New and New Open show only
+  "No Results" (welcome block, row and cards hidden); All, Updates and
+  Monitoring keep the welcome block and their cards; back in New it's
+  hidden again; refresh brings it back.
+- Chrome tip: if the page reports a 0×0 viewport (window minimized),
+  open a new tab with tabs_create_mcp; that tab gets a real size.
 - Framer editing tips: single-letter keys typed while a layer (not its
   text) is selected trigger shortcuts; enter text with Return on the
   selected text layer instead of double-click. In the context menu,
