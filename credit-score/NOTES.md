@@ -10,7 +10,7 @@ the existing **Phone Components → App UI → Credit Score** folder, under
 both Assets → Components → Project and Assets → Code. Don't create new
 folders for them.
 
-## Alerts page — where we stopped (22 Oct 2026)
+## Alerts page — where we stopped (26 Oct 2026)
 
 Spec: `docs/superpowers/specs/2026-10-22-credit-score-alerts-design.md`.
 Page `/base-pages/credit-score-alerts` (draft). Component **Alerts Feed**
@@ -25,27 +25,33 @@ Done in Framer:
 - Current option is Bold in each Open variant.
 - Filter Field tap: each closed variant → its Open one and back (all 8
   checked).
-- Option taps set on the primary (All Alerts → All, New Alerts → New,
-  Credit Updates → Updates, Credit Monitoring Alerts → Monitoring).
-  Not yet checked that every Open variant inherits them.
+- Option taps (All Alerts → All, New Alerts → New, Credit Updates →
+  Updates, Credit Monitoring Alerts → Monitoring) checked in all 4 Open
+  variants: 16 of 16 right. "Click" in Interactions is Framer's own tap
+  trigger, not a component event.
+- The component has no variables or events (toolbar's variables
+  button shows none), so there was no stray "Click" event to delete.
+- Code overrides from `AlertsStore`: `withMarkAllRead` on "Mark All
+  Read", `withAlertBadge` on the three cards' "Grade Pill". Set on the
+  primary; layer search shows all 8 variants inherit them (hidden
+  layers in the Monitoring ones).
 - `AlertsStore.tsx` is in Framer under Code (matches the repo).
+- Page: the instance is on the All variant, 95% wide, Fit height, inside
+  "Header + Description" (Fit). "Scrollable Content" is fixed 1423 with
+  Overflow Scroll, so the canvas cuts it off; in Preview it scrolls to
+  the copyright and bottom nav with nothing clipped.
+- Left alone: three top-level canvas layers copied from the Score page
+  (Slide 1, Slide 2, Section Tabs) and a spare Phone Components
+  instance at x 1554. They sit outside Kiosk and don't render.
 
 Still to do:
-1. Check the option taps in each Open variant (Interactions shows the
-   target).
-2. Open the component's variables (Interactions + → New event shows
-   them) and delete a stray "Click" event if one is there; it was made by
-   mistake.
-3. Attach `withMarkAllRead` to the "Mark All Read" layer and
-   `withAlertBadge` to each NEW "Grade Pill".
-4. Options push the cards down; the reference shows them floating over
+1. Options push the cards down; the reference shows them floating over
    the cards. Decide with the owner whether to make Options absolute.
-5. Check the page instance and the clipped bottom in Preview, then ask
-   the owner to publish and live-test every variant × tap and Mark all
-   as read (badges back after refresh).
-6. Waiting on the owner: screenshot of an opened monitoring alert, and
+2. After that, ask the owner to publish and live-test every variant ×
+   tap and Mark all as read (badges back after refresh).
+3. Waiting on the owner: screenshot of an opened monitoring alert, and
    the check icon next to "Mark all as read".
-7. PR #19 merges only after the alerts page is done (merge commit).
+4. PR #19 merges only after the alerts page is done (merge commit).
 
 Framer tip: menu items in the Interactions + menu don't respond to
 clicks from the browser tools; open the menu, then press Down and
