@@ -7,9 +7,21 @@ import { useReducedMotion } from "framer-motion"
 // small hand-rolled physics loop (gravity, walls, floor, bumping, spin),
 // so no physics library is needed. On the Framer canvas the pile is drawn
 // settled and nothing runs.
+//
+// Sorting: a picture someone has grabbed that falls into a basket's mouth
+// (NeedsWantsBasket's `data-nw-mouth` rect, anywhere on the page) is sent
+// to that basket with "nw-catch" if its kind matches, and leaves the pile.
+// If not, the basket gets "nw-reject" and the picture is tossed back out.
+// The opening rain is never sorted, so it falls past the baskets.
+//
+// Put it at the top of the page's layers, so pictures fall in front of the
+// text and baskets. Only the pictures take taps; the rest passes through.
+
+type Kind = "need" | "want"
 
 interface Item {
     image?: { src: string; alt?: string }
+    kind?: Kind
 }
 
 interface Props {
@@ -30,6 +42,16 @@ interface Body {
     spawnAt: number
     live: boolean
     touching: boolean
+    grabbed: boolean // only pictures someone threw get sorted
+}
+
+interface Mouth {
+    el: Element
+    kind: string
+    left: number
+    top: number
+    right: number
+    bottom: number
 }
 
 const STEP = 1 / 120
@@ -67,6 +89,8 @@ export default function TumbleWall(props: Props) {
     const elRefs = React.useRef<(HTMLDivElement | null)[]>([])
     const [box, setBox] = React.useState({ w: 0, h: 0 })
     const count = items.length
+    const itemsRef = React.useRef(items)
+    itemsRef.current = items
 
     React.useEffect(() => {
         const el = boxRef.current
@@ -75,7 +99,16 @@ export default function TumbleWall(props: Props) {
             setBox({ w: el.clientWidth, h: el.clientHeight })
         )
         ro.observe(el)
-        return () => ro.disconnect()
+        // Framer's own wrapper around the component would still catch taps
+        // meant for the page underneath, so it lets them through too.
+        // shortcut: assumes one wrapper div, check if Framer changes its markup
+        const wrapper = el.parentElement
+        const before = wrapper?.style.pointerEvents ?? ""
+        if (wrapper) wrapper.style.pointerEvents = "none"
+        return () => {
+            ro.disconnect()
+            if (wrapper) wrapper.style.pointerEvents = before
+        }
     }, [])
 
     React.useEffect(() => {
@@ -85,7 +118,7 @@ export default function TumbleWall(props: Props) {
         const bodies: Body[] = Array.from({ length: count }, (_, i) => {
             const rest = restingSpot(i, w, h, r)
             return reduceMotion
-                ? { ...rest, vx: 0, vy: 0, angle: 0, spin: 0, spawnAt: 0, live: true, touching: false }
+                ? { ...rest, vx: 0, vy: 0, angle: 0, spin: 0, spawnAt: 0, live: true, touching: false, grabbed: false }
                 : {
                       x: spawnX(i, w, r),
                       y: -r - (i % 3) * r,
@@ -96,6 +129,7 @@ export default function TumbleWall(props: Props) {
                       spawnAt: i * dropDelay,
                       live: false,
                       touching: false,
+                      grabbed: false,
                   }
         })
 
@@ -125,6 +159,7 @@ export default function TumbleWall(props: Props) {
                 const p = toLocal(e)
                 held = i
                 awake = true
+                b.grabbed = true
                 grabDX = b.x - p.x
                 grabDY = b.y - p.y
                 lastPX = p.x
@@ -166,12 +201,58 @@ export default function TumbleWall(props: Props) {
             }
         })
 
+        // Basket mouths in this frame's local pixels, found fresh each frame
+        // so baskets can be anywhere and move.
+        let mouths: Mouth[] = []
+        const findMouths = () => {
+            const box = boxRef.current!.getBoundingClientRect()
+            const s = box.width / w || 1
+            mouths = Array.from(document.querySelectorAll("[data-nw-mouth]"), (el) => {
+                const m = el.getBoundingClientRect()
+                return {
+                    el,
+                    kind: el.getAttribute("data-nw-mouth") || "",
+                    left: (m.left - box.left) / s,
+                    top: (m.top - box.top) / s,
+                    right: (m.right - box.left) / s,
+                    bottom: (m.bottom - box.top) / s,
+                }
+            })
+        }
+        const sort = (b: Body, i: number) => {
+            const m = mouths.find(
+                (m) => b.x > m.left && b.x < m.right && b.y > m.top && b.y < m.bottom
+            )
+            if (!m || b.vy <= 0) return
+            const item = itemsRef.current[i] || {}
+            if ((item.kind || "need") === m.kind) {
+                b.live = false
+                b.spawnAt = Infinity // never comes back
+                m.el.dispatchEvent(
+                    new CustomEvent("nw-catch", {
+                        detail: { src: item.image?.src || "", alt: item.image?.alt || "" },
+                    })
+                )
+            } else {
+                // Tossed out, and it has to be grabbed again to be sorted,
+                // so it can't land in the other basket by itself.
+                b.grabbed = false
+                b.vy = -1100
+                b.vx = (b.x < (m.left + m.right) / 2 ? -1 : 1) * 320
+                b.spin = b.vx
+                m.el.dispatchEvent(new CustomEvent("nw-reject"))
+            }
+        }
+
         const g = gravity
         const step = (t: number) => {
             if (!awake) return
             for (const b of bodies) {
                 if (!b.live && t >= b.spawnAt) b.live = true
             }
+            bodies.forEach((b, i) => {
+                if (b.live && b.grabbed && i !== held) sort(b, i)
+            })
             for (let i = 0; i < bodies.length; i++) {
                 const b = bodies[i]
                 if (!b.live || i === held) continue
@@ -215,6 +296,7 @@ export default function TumbleWall(props: Props) {
             // Capped so a backgrounded tab doesn't come back in one huge jump.
             acc += Math.min(0.05, (now - prev) / 1000)
             prev = now
+            findMouths()
             while (acc >= STEP) {
                 step((now - start) / 1000)
                 acc -= STEP
@@ -246,8 +328,10 @@ export default function TumbleWall(props: Props) {
                 width: "100%",
                 height: "100%",
                 overflow: "hidden",
-                touchAction: "none",
                 userSelect: "none",
+                // Sits above the rest of the page so pictures fall in front
+                // of it; taps pass through everywhere but the pictures.
+                pointerEvents: "none",
             }}
         >
             {items.map((item, i) => {
@@ -265,6 +349,8 @@ export default function TumbleWall(props: Props) {
                             width: itemSize,
                             height: itemSize,
                             cursor: "grab",
+                            pointerEvents: "auto",
+                            touchAction: "none",
                             // Running pages place these every frame; this is
                             // the canvas pose and the first paint.
                             transform: `translate(${rest.x - r}px, ${rest.y - r}px)`,
@@ -361,6 +447,13 @@ addPropertyControls(TumbleWall, {
             type: ControlType.Object,
             controls: {
                 image: { type: ControlType.ResponsiveImage, title: "Image" },
+                kind: {
+                    type: ControlType.Enum,
+                    title: "Is a",
+                    options: ["need", "want"],
+                    optionTitles: ["Need", "Want"],
+                    defaultValue: "need",
+                },
             },
         },
         defaultValue: TumbleWall.defaultProps.items,

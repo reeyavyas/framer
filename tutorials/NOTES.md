@@ -598,17 +598,40 @@ for the Framer setup and the step list.
 
 ## `needs-wants-tutorial/`
 
-The Needs vs. Wants tutorial. In progress: the pile is built, and the
-Needs and Wants baskets come next, once the owner sends the vector art.
+The Needs vs. Wants tutorial: a pile of pictures to throw into a Needs
+and a Wants basket. Still to come: the owner is designing a pop-up for a
+right answer and one for a wrong answer, for me to animate.
 
 - `TumbleWall.tsx`: pictures from the Properties panel rain in, land in
-  a pile, and can be grabbed and thrown. It runs on its own small
-  physics loop with no library. Each picture bumps others as a circle
-  `Size` wide and spins as it rolls. On the Framer canvas the pile is
-  drawn settled and nothing runs. With reduced motion the pile starts
-  settled and stays still until touched. Thrown pictures can fly above
-  the top edge for a moment, because there's no ceiling: the rain-in
-  starts above the frame.
+  a pile at the very bottom, and can be grabbed and thrown. It runs on
+  its own small physics loop with no library. Each picture bumps others
+  as a circle `Size` wide and spins as it rolls, and each is set as a
+  Need or a Want. A picture someone threw that falls into a basket's
+  mouth gets sorted: the right basket catches it, and the wrong one
+  makes it bounce back out. A rejected picture has to be grabbed again
+  before it can be sorted, so it can't land in the other basket by
+  itself. The opening rain is never sorted. Put it at the **top of the
+  page's layers**, so pictures fall in front of the text and baskets.
+  Only the pictures take taps, and taps pass through everywhere else,
+  including Framer's wrapper around the component. On the Framer canvas
+  the pile is drawn settled. With reduced motion it starts settled and
+  stays still until touched. Thrown pictures can fly above the top edge
+  for a moment, because there's no ceiling: the rain-in starts above
+  the frame.
+- `NeedsWantsBasket.tsx`: one basket, chosen with `Basket` (Needs or
+  Wants), as the owner drew it. The owner places both on the page
+  themselves (in the centre). TumbleWall finds them anywhere on the page
+  by their invisible mouth rect (`data-nw-mouth`), and they talk through
+  DOM events (`nw-catch`, `nw-reject`). A caught picture drops in behind
+  the front wall and stays, peeking over the rim, and the basket
+  squashes. A wrong one makes the basket shake. Reduced motion: the
+  picture just appears and nothing moves. **Generated, don't edit it:**
+  change `artwork/NeedsWantsBasket.template.tsx` and run
+  `artwork/build.py` (instructions inside). The .ai itself isn't
+  committed. The only changes to the art: Wants' front handle was two
+  embedded flat-navy raster patches, now vector rects of the same
+  colour. A Glossy 3D restyle was tried and the owner kept the drawn
+  look.
 
 ## `reset-pin-tutorial/` (reserved, not created yet)
 
