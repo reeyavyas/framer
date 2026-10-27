@@ -596,6 +596,20 @@ for the Framer setup and the step list.
 - `AccountControlsTutorialReset.tsx`: clears the tutorial store when
   the tutorial's first page opens.
 
+## `needs-wants-tutorial/`
+
+The Needs vs. Wants tutorial. In progress: the pile is built, and the
+Needs and Wants baskets come next, once the owner sends the vector art.
+
+- `TumbleWall.tsx`: pictures from the Properties panel rain in, land in
+  a pile, and can be grabbed and thrown. It runs on its own small
+  physics loop with no library. Each picture bumps others as a circle
+  `Size` wide and spins as it rolls. On the Framer canvas the pile is
+  drawn settled and nothing runs. With reduced motion the pile starts
+  settled and stays still until touched. Thrown pictures can fly above
+  the top edge for a moment, because there's no ceiling: the rain-in
+  starts above the frame.
+
 ## `reset-pin-tutorial/` (reserved, not created yet)
 
 The home for tutorial-only duplicates of `reset-pin/` components, if
