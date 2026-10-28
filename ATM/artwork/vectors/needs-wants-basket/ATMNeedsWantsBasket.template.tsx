@@ -3,17 +3,17 @@ import { addPropertyControls, ControlType } from "framer"
 import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
-// Needs vs. Wants tutorial: the Needs or the Wants basket, as the owner drew
-// it. TumbleWall finds it on the page by its mouth (the `data-nw-mouth`
+// ATM lesson Needs vs. Wants: the Needs or the Wants basket, as the owner drew
+// it. ATMTumbleWall finds it on the page by its mouth (the `data-nw-mouth`
 // rect) and sends it "nw-catch" when the right picture is thrown in, or
 // "nw-reject" when the wrong one is. A caught picture drops in behind the
 // front wall and stays there, peeking over the rim, and the basket squashes
-// and bounces. A rejected one makes the basket shake (TumbleWall tosses the
+// and bounces. A rejected one makes the basket shake (ATMTumbleWall tosses the
 // picture back out). Reduced motion: the picture just appears in the basket
 // and nothing moves.
 //
-// Built by artwork/build.py from the owner's .ai; edit the template, not
-// NeedsWantsBasket.tsx.
+// Built by artwork/vectors/needs-wants-basket/build.py from the owner's
+// .ai; edit the template, not ATM/ATMNeedsWantsBasket.tsx.
 
 type Kind = "need" | "want"
 
@@ -60,7 +60,7 @@ interface Props {
  * @framerIntrinsicWidth 400
  * @framerIntrinsicHeight 350
  */
-export default function NeedsWantsBasket(props: Props) {
+export default function ATMNeedsWantsBasket(props: Props) {
     const kind = props.kind === "want" ? "want" : "need"
     const reduceMotion = useReducedMotion()
     // ids made unique per instance, so two baskets never share clips or glyphs
@@ -159,16 +159,16 @@ export default function NeedsWantsBasket(props: Props) {
     )
 }
 
-NeedsWantsBasket.defaultProps = {
+ATMNeedsWantsBasket.defaultProps = {
     kind: "need" as Kind,
 }
 
-addPropertyControls(NeedsWantsBasket, {
+addPropertyControls(ATMNeedsWantsBasket, {
     kind: {
         type: ControlType.Enum,
         title: "Basket",
         options: ["need", "want"],
         optionTitles: ["Needs", "Wants"],
-        defaultValue: NeedsWantsBasket.defaultProps.kind,
+        defaultValue: ATMNeedsWantsBasket.defaultProps.kind,
     },
 })

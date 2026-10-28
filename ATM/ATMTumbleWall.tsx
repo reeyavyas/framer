@@ -2,14 +2,14 @@ import * as React from "react"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { useReducedMotion } from "framer-motion"
 
-// Needs vs. Wants tutorial: a pile of pictures that rains in from above
+// ATM lesson Needs vs. Wants: a pile of pictures that rains in from above
 // and can be grabbed and thrown around. Each picture is a round body in a
 // small hand-rolled physics loop (gravity, walls, floor, bumping, spin),
 // so no physics library is needed. On the Framer canvas the pile is drawn
 // settled and nothing runs.
 //
 // Sorting: a picture someone has grabbed that falls into a basket's mouth
-// (NeedsWantsBasket's `data-nw-mouth` rect, anywhere on the page) is sent
+// (ATMNeedsWantsBasket's `data-nw-mouth` rect, anywhere on the page) is sent
 // to that basket with "nw-catch" if its kind matches, and leaves the pile.
 // If not, the basket gets "nw-reject" and the picture is tossed back out.
 // The opening rain is never sorted, so it falls past the baskets.
@@ -81,7 +81,7 @@ function restingSpot(i: number, w: number, h: number, r: number) {
  * @framerIntrinsicWidth 1080
  * @framerIntrinsicHeight 900
  */
-export default function TumbleWall(props: Props) {
+export default function ATMTumbleWall(props: Props) {
     const { items, itemSize, gravity, bounce, dropDelay } = props
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const reduceMotion = useReducedMotion()
@@ -296,6 +296,8 @@ export default function TumbleWall(props: Props) {
             // Capped so a backgrounded tab doesn't come back in one huge jump.
             acc += Math.min(0.05, (now - prev) / 1000)
             prev = now
+            // Holds still while ATMInactivityOverlay's box is open.
+            if ((window as any).__systemOverlayOpen) acc = 0
             findMouths()
             while (acc >= STEP) {
                 step((now - start) / 1000)
@@ -431,7 +433,7 @@ function walls(b: Body, w: number, h: number, r: number, e: number) {
     }
 }
 
-TumbleWall.defaultProps = {
+ATMTumbleWall.defaultProps = {
     items: Array.from({ length: 12 }, () => ({})),
     itemSize: 160,
     gravity: 2400,
@@ -439,7 +441,7 @@ TumbleWall.defaultProps = {
     dropDelay: 0.12,
 }
 
-addPropertyControls(TumbleWall, {
+addPropertyControls(ATMTumbleWall, {
     items: {
         type: ControlType.Array,
         title: "Pictures",
@@ -456,7 +458,7 @@ addPropertyControls(TumbleWall, {
                 },
             },
         },
-        defaultValue: TumbleWall.defaultProps.items,
+        defaultValue: ATMTumbleWall.defaultProps.items,
     },
     itemSize: {
         type: ControlType.Number,
@@ -465,7 +467,7 @@ addPropertyControls(TumbleWall, {
         max: 400,
         step: 1,
         unit: "px",
-        defaultValue: TumbleWall.defaultProps.itemSize,
+        defaultValue: ATMTumbleWall.defaultProps.itemSize,
     },
     gravity: {
         type: ControlType.Number,
@@ -473,7 +475,7 @@ addPropertyControls(TumbleWall, {
         min: 200,
         max: 6000,
         step: 100,
-        defaultValue: TumbleWall.defaultProps.gravity,
+        defaultValue: ATMTumbleWall.defaultProps.gravity,
     },
     bounce: {
         type: ControlType.Number,
@@ -481,7 +483,7 @@ addPropertyControls(TumbleWall, {
         min: 0,
         max: 0.9,
         step: 0.05,
-        defaultValue: TumbleWall.defaultProps.bounce,
+        defaultValue: ATMTumbleWall.defaultProps.bounce,
     },
     dropDelay: {
         type: ControlType.Number,
@@ -490,6 +492,6 @@ addPropertyControls(TumbleWall, {
         max: 1,
         step: 0.01,
         unit: "s",
-        defaultValue: TumbleWall.defaultProps.dropDelay,
+        defaultValue: ATMTumbleWall.defaultProps.dropDelay,
     },
 })

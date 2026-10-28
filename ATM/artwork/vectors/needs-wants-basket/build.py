@@ -1,4 +1,4 @@
-"""Builds NeedsWantsBasket.tsx from the owner's "Needs and Wants Baskets.ai".
+"""Builds ATM/ATMNeedsWantsBasket.tsx from the owner's "Needs and Wants Baskets.ai".
 
 The .ai is PDF inside: artboard 1 is Wants, artboard 2 is Needs, 500 x 500.
 Convert each to SVG first (PyMuPDF, text as paths), then run:
@@ -33,8 +33,8 @@ def clean(svg: str, prefix: str) -> str:
 
 wants = clean(Path(sys.argv[1]).read_text(), "w-")
 needs = clean(Path(sys.argv[2]).read_text(), "n-")
-out = (HERE / "NeedsWantsBasket.template.tsx").read_text()
+out = (HERE / "ATMNeedsWantsBasket.template.tsx").read_text()
 out = out.replace("__WANTS_ART__", wants).replace("__NEEDS_ART__", needs)
-dest = HERE.parent / "NeedsWantsBasket.tsx"
+dest = HERE.parents[2] / "ATMNeedsWantsBasket.tsx"
 dest.write_text(out)
 print(dest, len(out))

@@ -711,6 +711,48 @@ Decided so far:
   are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
   Sneakers.
 
+### Needs vs. Wants page (`/atm-lessons/needs-vs-wants`)
+
+The page the owner started in Framer. Code files go in Code → ATM
+Components → ATM Lessons → Needs Vs. Wants, and the components under
+Components in the folder of the same name. The correct and wrong pop-ups
+are still to come: the owner designs them and I animate them.
+
+- `ATMTumbleWall.tsx`: pictures from the Properties panel rain in, land
+  in a pile at the very bottom, and can be grabbed and thrown. It runs
+  on its own small physics loop with no library. Each picture bumps
+  others as a circle `Size` wide and spins as it rolls, and each is set
+  as a Need or a Want. A picture someone threw that falls into a
+  basket's mouth gets sorted: the right basket catches it, and the
+  wrong one makes it bounce back out. A rejected picture has to be
+  grabbed again before it can be sorted, so it can't land in the other
+  basket by itself. The opening rain is never sorted. Put it at the
+  **top of the page's layers**, so pictures fall in front of the text
+  and baskets. Only the pictures take taps, and taps pass through
+  everywhere else, including Framer's wrapper around the component. It
+  holds still while the inactivity overlay is open. On the Framer canvas
+  the pile is drawn settled. With reduced motion it starts settled and
+  stays still until touched. Thrown pictures can fly above the top edge
+  for a moment, because there's no ceiling: the rain-in starts above the
+  frame.
+- `ATMNeedsWantsBasket.tsx`: one basket, chosen with `Basket` (Needs or
+  Wants), as the owner drew it. The owner places both on the page
+  (centred). ATMTumbleWall finds them anywhere on the page by their
+  invisible mouth rect (`data-nw-mouth`), and they talk through DOM
+  events (`nw-catch`, `nw-reject`). A caught picture drops in behind the
+  front wall and stays, peeking over the rim, and the basket squashes.
+  A wrong one makes the basket shake. Reduced motion: the picture just
+  appears and nothing moves. **Generated, don't edit it:** change
+  `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
+  and run its `build.py` (instructions inside). The .ai itself isn't
+  committed. The only changes to the art: Wants' front handle was two
+  embedded flat-navy raster patches, now vector rects of the same
+  colour. A Glossy 3D restyle was tried; the owner kept the drawn look.
+
+These two started out as a tutorial, in `tutorials/needs-wants-tutorial/`
+on the `needs-and-wants` branch, and moved here once the owner said
+they belong on this ATM lesson page.
+
 ### Lesson card animation
 
 **Before animating any new vector, read `artwork/ANIMATING-VECTORS.md`**:
