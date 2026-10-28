@@ -723,7 +723,10 @@ pile goes to its **When Done** link (default
 router like ATMAttract (no reload), or a plain page load without one. On the page the
 link is picked from Framer's page list, so it follows renames; a typed
 path doesn't (Framer saved the first default on the layer, so renaming
-the pages sent it to the old address until the link was re-picked).
+the pages sent it to the old address, and re-picking it in the panel
+didn't change the published value). So a When Done that matches no page,
+or is empty, falls back to the code's default; keep that default on the
+completion page's current address.
 **The completion page** (`/atm-lessons/need-or-want/complete`)
 is set up like the tutorials' Congrats pages: an **ATM Lesson
 Completion** component under Screen Content, with the

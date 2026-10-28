@@ -144,10 +144,21 @@ export default function ATMTumbleWall(props: Props) {
           }
         | undefined
     const goDone = () => {
-        const path = props.doneLink
-        if (!path) return
         const routes = router?.routes ?? {}
-        const id = Object.keys(routes).find((k) => routes[k]?.path === path)
+        const find = (path: string) =>
+            Object.keys(routes).find((k) => routes[k]?.path === path)
+        // A When Done saved on the layer outlives page renames (Framer keeps
+        // the old address), so a link to no page falls back to the default.
+        let path = props.doneLink
+        let id = path ? find(path) : undefined
+        if (!id) {
+            const fallback = ATMTumbleWall.defaultProps.doneLink
+            const fallbackId = find(fallback)
+            if (fallbackId || !path) {
+                path = fallback
+                id = fallbackId
+            }
+        }
         if (id && router?.navigate) router.navigate(id, "")
         else window.location.href = path
     }
