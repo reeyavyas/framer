@@ -751,10 +751,12 @@ are still to come: the owner designs them and I animate them.
   colour. A Glossy 3D restyle was tried; the owner kept the drawn look.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content, all
-1080 × 1920): the two baskets are absolute, 490 × 429 (as big as two fit
-side by side), 807 from the top (the drawings centred between the
-intro text and the top of the resting pile), Needs 40 from the left and Wants 40 from
-the right. The pile's Size is 220. Its six Pictures are grey placeholders
+1080 × 1920): the two baskets are absolute, 530 × 464, 786 from the top (the
+drawings centred between the intro text and the top of the resting
+pile), Needs 13 from the left and Wants 13 from the right. Each box has
+empty margin round its drawing, so the drawings (about 495 px wide) sit
+30 px from the screen edges with a 30 px gap. Both are the same size:
+the navy Wants only looks smaller next to the brighter teal. The pile's Size is 220. Its six Pictures are grey placeholders
 for now (Need, Want, Need, Want, Need, Want); the owner adds real images
 through the component's Pictures property. ATMTumbleWall is
 absolute, pinned on all four sides (full screen) and last in the stack,
