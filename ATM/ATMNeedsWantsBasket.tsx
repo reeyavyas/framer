@@ -266,7 +266,7 @@ const ART: Record<Kind, string> = {
 </g>
 </g>
 </g>
-<text x="205.88" y="300.00" text-anchor="middle" font-family="Area Normal Black, sans-serif" font-weight="900" font-size="30" fill="#082653" transform="rotate(10.75 203.65 289.05)">WANTS</text>`,
+<text x="205.93" y="301.18" text-anchor="middle" font-family="Area Normal Black, sans-serif" font-weight="900" font-size="33" fill="#082653" transform="rotate(10.75 203.65 289.05)">WANTS</text>`,
     need: `<defs>
 <clipPath id="n-clip_1">
 <path transform="matrix(1,0,0,-1,0,500)" d="M0 500H500V0H0Z"/>
@@ -458,7 +458,7 @@ const ART: Record<Kind, string> = {
 </g>
 </g>
 </g>
-<text x="204.79" y="300.00" text-anchor="middle" font-family="Area Normal Black, sans-serif" font-weight="900" font-size="30" fill="#046666" transform="rotate(10.75 203.65 289.05)">NEEDS</text>`,
+<text x="204.74" y="301.18" text-anchor="middle" font-family="Area Normal Black, sans-serif" font-weight="900" font-size="33" fill="#046666" transform="rotate(10.75 203.65 289.05)">NEEDS</text>`,
 }
 
 // Both artboards share one shape. Room above the rim for caught pictures.

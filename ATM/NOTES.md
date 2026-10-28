@@ -763,7 +763,8 @@ are still to come: the owner designs them and I animate them.
   flat-navy raster patches, now vector rects of the same colour; and the
   drawn NEEDS / WANTS lettering is replaced by text in **Area Normal
   Black** (weight 900, the page heading's font, so it's already loaded),
-  size 30, in the old letter colours, tilted 10.75° with the label and
+  size 33 (34 crowds WANTS' corners against the leaning label edges;
+  at 33 no letter comes within 5.4 units of the edge), in the old letter colours, tilted 10.75° with the label and
   centred on the label's light panel to within 0.2 units each way
   (measured with the real font against the panel's real outline; the
   panel is lopsided, so its true middle is 1.67 along and 0.81 above its

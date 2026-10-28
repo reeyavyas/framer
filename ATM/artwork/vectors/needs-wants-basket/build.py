@@ -33,10 +33,11 @@ LABEL_TILT = 10.75
 PANEL_MID = (1.67, -0.81)
 # Area Normal Black, measured at 100px: WANTS inks 0..397, NEEDS 7..352 of
 # advances 400.7 and 355.5; the capitals' middle sits 0.392 of the size above
-# the baseline. At 30, WANTS fills the 134-unit panel with about 8 to spare
-# each side.
+# the baseline. At 33, WANTS (the wider word) fills the panel with about 6
+# to spare each side (its corners come closest to the leaning label edges);
+# NEEDS uses the same size so the labels match.
 FONT = "Area Normal Black, sans-serif"
-SIZE = 30
+SIZE = 33
 INK = {"WANTS": (0, 397, 400.7), "NEEDS": (7, 352, 355.5)}
 CAP_MID = 0.392
 
