@@ -751,9 +751,10 @@ are still to come: the owner designs them and I animate them.
   colour. A Glossy 3D restyle was tried; the owner kept the drawn look.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content, all
-1080 × 1920): the two baskets are absolute, 530 × 464, 786 from the top (the
-drawings centred between the intro text and the top of the resting
-pile), Needs 13 from the left and Wants 13 from the right. Each box has
+1080 × 1920): the two baskets are absolute, 530 × 464, 830 from the top (the
+owner wanted them a bit below the centre of the space between the intro
+text at 644 and the resting pile, whose top settles at 1509 every time;
+exact centre would be 798), Needs 13 from the left and Wants 13 from the right. Each box has
 empty margin round its drawing, so the drawings (about 495 px wide) sit
 30 px from the screen edges with a 30 px gap. Both are the same size:
 the navy Wants only looks smaller next to the brighter teal. The pile's Size is 220. Its six Pictures are grey placeholders
