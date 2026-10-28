@@ -9,7 +9,7 @@ const EXIT_LINK = "/atm-start"
  *
  * The ATM lessons' version of TutorialCongratsAutoRedirect, set up the
  * same way: put it on the ATM Lesson Completion component on a lesson's
- * completion page (e.g. /atm-lessons/need-or-want/need-or-want-complete)
+ * completion page (e.g. /atm-lessons/need-or-want/complete)
  * and the page goes back to /atm-start AUTO_REDIRECT_SECONDS after it
  * opens. It returns no props, so the layer renders exactly as
  * Framer built it. Skipped on the Framer canvas, and it only redirects if

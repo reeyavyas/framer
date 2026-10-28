@@ -742,7 +742,7 @@ ATMTumbleWall.defaultProps = {
     rightWant: "This is a want.",
     wantInNeeds: "🤔 Most people would consider this a WANT.",
     needInWants: "🤔 Most people would consider this a NEED.",
-    doneLink: "/atm-lessons/need-or-want/need-or-want-complete",
+    doneLink: "/atm-lessons/need-or-want/complete",
 }
 
 addPropertyControls(ATMTumbleWall, {

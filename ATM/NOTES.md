@@ -711,16 +711,17 @@ Decided so far:
   are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
   Sneakers.
 
-### Needs vs. Wants page (`/atm-lessons/need-or-want/need-or-want`)
+### Needs vs. Wants page (`/atm-lessons/need-or-want/lesson`)
 
 (It was `/atm-lessons/needs-vs-wants` until 28 Oct, when the owner moved
-it into `/atm-lessons/need-or-want/` with its completion page.)
+it into `/atm-lessons/need-or-want/` with its completion page, then
+renamed them `lesson` and `complete`.)
 
 **When every picture is sorted** the last card plays out (3.2 s) and the
 pile goes to its **When Done** link (default
-`/atm-lessons/need-or-want/need-or-want-complete`), through Framer's
+`/atm-lessons/need-or-want/complete`), through Framer's
 router like ATMAttract (no reload), or a plain page load without one.
-**The completion page** (`/atm-lessons/need-or-want/need-or-want-complete`)
+**The completion page** (`/atm-lessons/need-or-want/complete`)
 is set up like the tutorials' Congrats pages: an **ATM Lesson
 Completion** component under Screen Content, with the
 `ATMLessonCompleteRedirect` override on it (`ATMLessonCompleteRedirect.tsx`,
