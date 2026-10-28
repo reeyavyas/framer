@@ -764,8 +764,8 @@ are still to come: the owner designs them and I animate them.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
   `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
-  and run `smooth.py` then `build.py` (instructions inside). The .ai
-  itself isn't committed. The art (28 Oct): the owner's `Basket.ai`, one
+  and run its `build.py` (instructions inside). The .ai itself isn't
+  committed. The art (28 Oct): the owner's `Basket.ai`, one
   navy basket with a blank label, redrawn from the first
   `Needs and Wants Baskets.ai` (same shape and label; that one had too
   many jagged traced shapes). Navy is Wants; Needs is the same drawing
