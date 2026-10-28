@@ -749,15 +749,17 @@ are still to come: the owner designs them and I animate them.
   invisible drop area (`data-nw-mouth`, the whole drawing), and they
   talk through DOM events (`nw-catch`, `nw-reject`). A caught picture
   drops in behind the front wall and stays, peeking over the rim, and
-  the basket squashes. What's drawn in front of caught pictures: the
-  front wall up to where the dark inside of the basket meets the top
-  surface of the front rim (y 172.4 at x 80 to 212.5 at x 330). Not the
-  rim's light line 5 units lower, which left the rim's top under the
-  pictures, and not 6 units higher, which let the back wall's slots
-  draw over them as teeth. Also both sides of the front handle, and the
-  right side, seen from outside, right of where the inside meets its
-  rim (410.8,172 to 343.2,212, meeting the front edge at 339.7,214.1). The left side is seen from inside and
-  never covers a picture. A
+  the basket squashes. What's drawn in front of caught pictures
+  (`FRONT`, plus `BOLTS`): the front of the basket up to where the rim's
+  top surface meets the dark inside, measured from the brushed-up drawing
+  every half unit along the front and down the right side (round the
+  front-right inner corner), then at the back-right corner the line from
+  the rim's inner corner (397.6,180) to its outer corner (428.5,163.5),
+  so pictures cover only the back rim there. Both handles' bolt rings
+  stand above the rim's inner edge, so each gets its own oval. (The first
+  cutout, hand-traced on the first basket, cut the bolt rings' tops off
+  and ran a flat line across the back-right corner on the new drawing.)
+  The left side is seen from inside and never covers a picture. A
   picture with no image yet shows the pile's grey placeholder circle.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
@@ -775,7 +777,7 @@ are still to come: the owner designs them and I animate them.
   round and gentle bends and small curves become smooth curves; each
   shape gets a 0.8 edge in its own colour so neighbours still meet; 22
   specks under 2.5 units are dropped. The bolts stay exactly as drawn.
-  The cutout (`FRONT`) and drop area still fit unchanged. The words are
+  The drop area still fits unchanged. The words are
   text in **Area Normal
   Black** (weight 900, the page heading's font, so it's already loaded),
   size 33 (34 crowds WANTS' corners against the leaning label edges;

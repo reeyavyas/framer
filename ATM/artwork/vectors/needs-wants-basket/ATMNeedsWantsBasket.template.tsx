@@ -25,21 +25,19 @@ const ART: Record<Kind, string> = {
 
 // Both artboards share one shape. Room above the rim for caught pictures.
 const VIEWBOX = "50 40 400 350"
-// The front wall, the rim's front edge and both sides of the front handle:
-// drawn again on top so caught pictures sit inside the basket.
-const FRONT = [
-    // Top edge: where the dark inside of the basket meets the top surface
-    // of the front rim (y 172.4 at x 80 to 212.5 at x 330, the same in both
-    // drawings), so the whole rim draws over a caught picture and the back
-    // wall's slots never do. Not the rim's light line, which runs 5 below.
-    "64,169.8 339.7,214.1 334,225 316,376 116,339 64,187.5",
-    "135,185 162.5,192.5 90,272.5 62.5,260",
-    "230,205 250,205 360,302.5 420,252.5 437.5,260 432.5,275 367.5,320 340,312.5",
-    // The right side, seen from outside, so it's in front of the inside too:
-    // right of where the inside meets its rim's top surface (410.8,172 to
-    // 343.2,212; it meets the front edge at 339.7,214.1). The left side is
-    // seen from inside and never covers a picture.
-    "339.7,214.1 414.2,170 450,170 450,380 316,376 334,225",
+// What's drawn again on top, so caught pictures sit inside the basket: the
+// front of the basket up to where the rim's top surface meets the dark
+// inside, measured from the drawing (smooth.py's output) every half unit
+// along the front and down the right side, round the inner corner between
+// them; at the back-right corner, the line from the inner corner to the
+// rim's outer corner (above it is the back rim, which pictures cover). The
+// left side is seen from inside and never covers a picture.
+// prettier-ignore
+const FRONT = "40,165.5 64,169.7 108.5,176.8 110.5,177.6 119.5,179.2 170,186.2 192,190.4 213.5,193.9 254.5,199.4 285.5,205 295,206.4 305,207.5 323,211.1 329.5,211.9 334.5,212.1 339.5,211.4 343.5,210.2 354.6,205 367.1,198 385.9,187 397.6,180 428.5,163.5 450,163.5 450,400 40,400"
+// The handles' bolt rings, which stand above the rim's inner edge.
+const BOLTS = [
+    { cx: 153, cy: 195.5, rx: 13.3, ry: 13.2 },
+    { cx: 239.8, cy: 212.9, rx: 10.7, ry: 11.9 },
 ]
 // The drop area: the whole drawing, label and outer shell included.
 const MOUTH = { x: 63, y: 124, width: 374, height: 252 }
@@ -164,8 +162,9 @@ export default function ATMNeedsWantsBasket(props: Props) {
         >
             <defs>
                 <clipPath id={`${uid}-front`}>
-                    {FRONT.map((p) => (
-                        <polygon key={p} points={p} />
+                    <polygon points={FRONT} />
+                    {BOLTS.map((e) => (
+                        <ellipse key={e.cx} {...e} />
                     ))}
                 </clipPath>
             </defs>
