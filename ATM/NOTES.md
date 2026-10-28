@@ -733,7 +733,8 @@ Needs) or "... a NEED." (a Need in Wants). The owner gave the Needs
 wording; the Wants ones mirror it. All five lines are text properties
 on the pile. A card pops in from the basket (a slight overshoot), holds,
 and fades: 3.2 s in all, and the next answer replaces it. Reduced motion:
-it just fades in and out. Taps pass through it. The text is centred both ways: padding
+it just fades in and out. Taps pass through it. Shadow: a soft navy `0 8px 20px` at 10% (it was
+`0 20px 44px` at 22%, which the owner toned down). The text is centred both ways: padding
 30 top, 28 bottom, which leaves 35 to 37 px from the border to the
 capitals' tops and to the baseline on both cards, measured live (Area's
 line boxes carry more room below the letters than above, so even padding

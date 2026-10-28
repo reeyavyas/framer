@@ -567,7 +567,7 @@ export default function ATMTumbleWall(props: Props) {
                             borderRadius: 32,
                             border: `5px solid ${accent}`,
                             background: fill,
-                            boxShadow: "0 20px 44px rgba(0, 44, 68, 0.22)",
+                            boxShadow: "0 8px 20px rgba(0, 44, 68, 0.1)",
                             transformOrigin: `${card.x - cardLeft}px 100%`,
                             textAlign: "center",
                             opacity: 0,
