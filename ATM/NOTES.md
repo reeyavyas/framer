@@ -720,10 +720,10 @@ Components in the folder of the same name.
 pictures): every sorting answer pops a speech-bubble card up over that
 basket, its tail pointing at the basket's middle, and it stays on screen
 at the edges. 580 wide with balanced lines: the wrong-answer line
-fits on two lines at 44 from 560 (at 460 and 36 it left "WANT." alone
+fits on two lines at 44 from 560 (42 now) (at 460 and 36 it left "WANT." alone
 on a third line). Right: teal edge on white, "✅ CORRECT!" (Area Normal
-Black 48, set in capitals, 18 below it) over "This is a necessity." or
-"This is a want." (Area Normal Bold 44, as is the wrong-answer line;
+Black 46, set in capitals, 18 below it) over "This is a necessity." or
+"This is a want." (Area Normal Bold 42, as is the wrong-answer line;
 all card text is Area, as the owner asked, Bold a step under the
 heading's Black). The site declares Area Normal Regular, SemiBold, Bold
 and Black on every page, so any of them loads when the card uses it. Wrong: egg-yolk edge on pale yolk (`#fff6d6`; yolk on white

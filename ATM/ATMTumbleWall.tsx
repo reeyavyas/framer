@@ -573,7 +573,7 @@ export default function ATMTumbleWall(props: Props) {
                                 style={{
                                     fontFamily: `"Area Normal Black", sans-serif`,
                                     fontWeight: 900,
-                                    fontSize: 48,
+                                    fontSize: 46,
                                     lineHeight: 1.15,
                                     letterSpacing: "0.02em",
                                     color: "#11232d",
@@ -588,7 +588,7 @@ export default function ATMTumbleWall(props: Props) {
                             style={{
                                 fontFamily: `"Area Normal Bold", sans-serif`,
                                 fontWeight: 700,
-                                fontSize: 44,
+                                fontSize: 42,
                                 lineHeight: 1.2,
                                 color: "#002c44",
                                 textWrap: "balance",
