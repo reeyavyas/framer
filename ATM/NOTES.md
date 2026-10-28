@@ -711,6 +711,159 @@ Decided so far:
   are Rent, Groceries, Water bill; Wants are iPhone 18, Netflix,
   Sneakers.
 
+### Needs vs. Wants page (`/atm-lessons/need-or-want/lesson`)
+
+(It was `/atm-lessons/needs-vs-wants` until 28 Oct, when the owner moved
+it into `/atm-lessons/need-or-want/` with its completion page, then
+renamed them `lesson` and `complete`.)
+
+**When every picture is sorted** the last one lands and its card pops up,
+and 1 s after the drop (it waited the card's full 3.2 s until the owner
+found that pause too long) the
+pile goes to its **When Done** link (default
+`/atm-lessons/need-or-want/complete`), through Framer's
+router like ATMAttract (no reload), or a plain page load without one. On the page the
+link is picked from Framer's page list, so it follows renames; a typed
+path doesn't (Framer saved the first default on the layer, so renaming
+the pages sent it to the old address, and re-picking it in the panel
+didn't change the published value). So a When Done that matches no page,
+or is empty, falls back to the code's default; keep that default on the
+completion page's current address.
+**The completion page** (`/atm-lessons/need-or-want/complete`)
+is set up like the tutorials' Congrats pages: an **ATM Lesson
+Completion** component under Screen Content, with the
+`ATMLessonCompleteRedirect` override on it (`ATMLessonCompleteRedirect.tsx`,
+in the same Code folder; a copy of `TutorialCongratsAutoRedirect` that
+goes to `/atm-start` after 5 s, skipped on the canvas, and only if the
+page hasn't changed already).
+
+The page the owner started in Framer. Code files go in Code → ATM
+Components → ATM Lessons → Needs Vs. Wants, and the components under
+Components in the folder of the same name. 
+**Answer cards** (28 Oct, in `ATMTumbleWall.tsx`, so they draw above the
+pictures): every sorting answer pops a speech-bubble card up over that
+basket, its tail pointing at the basket's middle, and it stays on screen
+at the edges. 500 wide with balanced lines, and at least 32 from
+the screen's edges (it was 580 and 16, which the owner found too close to
+the edges). At 500 the wrong-answer line fits on two lines at 36 with
+23 px to spare (480 left only 5); at 42 it needed 560. Right: teal edge on white, "✅ CORRECT!" (Area Normal
+Black 42, set in capitals, 18 below it) over "This is a necessity." or
+"This is a want." (Area Normal Bold 36, as is the wrong-answer line;
+all card text is Area, as the owner asked, Bold a step under the
+heading's Black). The site declares Area Normal Regular, SemiBold, Bold
+and Black on every page, so any of them loads when the card uses it. Wrong: egg-yolk edge on pale yolk (`#fff6d6`; yolk on white
+was too faint), "🤔 Most people would consider this a WANT." (a Want in
+Needs) or "... a NEED." (a Need in Wants). The owner gave the Needs
+wording; the Wants ones mirror it. All five lines are text properties
+on the pile. A card pops in from the basket (a slight overshoot), holds,
+and fades: 3.2 s in all, and the next answer replaces it. Reduced motion:
+it just fades in and out. Taps pass through it. Shadow: a soft navy `0 8px 20px` at 10% (it was
+`0 20px 44px` at 22%, which the owner toned down). The text is centred both ways: padding
+30 top, 28 bottom, which leaves 35 to 37 px from the border to the
+capitals' tops and to the baseline on both cards, measured live (Area's
+line boxes carry more room below the letters than above, so even padding
+sits the text high; retune this if the sizes change).
+
+- `ATMTumbleWall.tsx`: pictures from the Properties panel rain in, land
+  in a pile at the very bottom, and can be grabbed and thrown. It runs
+  on its own small physics loop with no library. Each picture bumps
+  others as a circle `Size` wide and spins as it rolls, and each is set
+  as a Need or a Want. A picture let go anywhere over a basket (its
+  opening, label or outer shell) is sorted there and then; one thrown
+  from above that falls onto a basket is sorted too. The right basket
+  catches it, and the wrong one bounces it back out. A rejected picture
+  has to be grabbed again before it can be sorted, so it can't land in
+  the other basket by itself. A picture tossed up from the pile that
+  flies up through a basket can't drop into that basket on the same
+  flight (it went through the basket's bottom), so a light toss never
+  lands in one by accident. The opening rain is never sorted. Put it at the
+  **top of the page's layers**, so pictures fall in front of the text
+  and baskets. Only the pictures take taps, and taps pass through
+  everywhere else, including Framer's wrapper around the component. It
+  holds still while the inactivity overlay is open. A resize (zooming
+  the page) doesn't restart it: the size is read every frame, so the
+  pictures, sorted ones included, stay where they are. On the Framer canvas
+  the pile is drawn settled. With reduced motion it starts settled and
+  stays still until touched. **Top Limit** (35% by default; the
+  page's text ends at 33.5%): once a picture has dropped below that
+  line or been grabbed, it can't be dragged above it, and throws bounce
+  off it, so nothing goes over the text or off the top. The opening
+  rain starts above the frame and falls through it.
+- `ATMNeedsWantsBasket.tsx`: one basket, chosen with `Basket` (Needs or
+  Wants), from the owner's drawing. The owner places both on the page
+  (centred). ATMTumbleWall finds them anywhere on the page by their
+  invisible drop area (`data-nw-mouth`, the whole drawing), and they
+  talk through DOM events (`nw-catch`, `nw-reject`). A caught picture
+  drops in behind the front wall and stays, peeking over the rim, and
+  the basket squashes. What's drawn in front of caught pictures
+  (`FRONT`, plus `BOLTS`): the front of the basket up to where the rim's
+  top surface meets the dark inside, measured from the drawing
+  every half unit along the front and down the right side (round the
+  front-right inner corner), then at the back-right corner the line from
+  the rim's inner corner (397.6,180) to its outer corner (428.5,163.5),
+  so pictures cover only the back rim there. Both handles' bolt rings
+  stand above the rim's inner edge, so each gets its own oval. (The first
+  cutout, hand-traced on the first basket, cut the bolt rings' tops off
+  and ran a flat line across the back-right corner on the new drawing.)
+  The left side is seen from inside and never covers a picture. A
+  picture with no image yet shows the pile's grey placeholder circle.
+  A wrong one makes the basket shake. Reduced motion: the picture just
+  appears and nothing moves. **Generated, don't edit it:** change
+  `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
+  and run its `build.py` (instructions inside). The .ai itself isn't
+  committed. The art (28 Oct): the owner's `Basket.ai`, one
+  navy basket with a blank label, redrawn from the first
+  `Needs and Wants Baskets.ai` (same shape and label; that one had too
+  many jagged traced shapes). Navy is Wants; Needs is the same drawing
+  recoloured to the first Needs basket's teal (`teal` in `build.py`, a
+  value curve sampled from the first two baskets; label white and bolt
+  greys stay). The shapes are exactly as drawn: a code smoothing pass
+  (straightening the traced edges) was tried and the owner asked to go
+  back to the drawing as given. The owner then smoothed the right
+  handle's bend in the drawing (an updated Basket.ai, the same everywhere
+  else, so the cutout and labels still fit); smoothing it in code didn't
+  work well.
+  The drop area still fits unchanged. The words are
+  text in **Area Normal
+  Black** (weight 900, the page heading's font, so it's already loaded),
+  size 33 (34 crowds WANTS' corners against the leaning label edges;
+  at 33 no letter comes within 5.4 units of the edge), in the old letter colours, tilted 10.75° with the label and
+  centred on the label's light panel to within 0.2 units each way
+  (measured with the real font against the panel's real outline; the
+  panel is lopsided, so its true middle is 1.67 along and 0.81 above its
+  bounding-box centre; the new drawing's panel is the same). A Glossy 3D
+  restyle was tried; the owner kept the drawn look.
+
+**On the page** (Kiosk → Screen Content → Scrollable Content; the
+kiosk is 1080 × 1920, and on a wider window the page fills the window):
+the two baskets, 530 × 464 each and relative, sit side by side in a
+horizontal **Stack** (gap 0, fit content, 1060 × 464). The stack is
+absolute, 860 from the top, and pinned to neither side, so the pair stays
+centred however wide the window is. (They used to be pinned 13 from each
+edge, which pushed them to the window's edges on wider screens.) The
+exact centre of the space between the intro text (ends at 644) and the
+resting pile (top settles at 1509) would be 798; the owner put them at
+830, then moved them to 860 (28 Oct) so the answer cards sit clear of
+the text: the tallest card's top is 97 below it. Each box has empty margin
+round its drawing, so at 1080 the drawings (about 495 px wide) sit 27 px
+from the screen edges with 35 px between them. Both are the same size:
+the navy Wants only looks smaller next to the brighter teal.
+ATMTumbleWall is absolute, 100% × 100% from the top left (full window)
+and last in the stack, so it draws on top. Its Size is 220; its six
+Pictures are grey placeholders for now (Need, Want, Need, Want, Need,
+Want), and the owner adds real images through its Pictures property.
+Every picture is cropped to a circle, the shape the physics uses: in the
+pile it fills the circle (`object-fit: cover`, centred), and a caught one
+is clipped to a circle in the basket (`slice`). An SVG upload fills the
+circle in the pile but shows whole inside the circle in the basket (Chrome
+fits SVG images by the file's own setting); PNG, JPG and WebP fill both.
+Its Pictures list started empty: Framer doesn't apply the code's 12
+placeholder items when the component is inserted.
+
+These two started out as a tutorial, in `tutorials/needs-wants-tutorial/`
+on the `needs-and-wants` branch, and moved here once the owner said
+they belong on this ATM lesson page.
+
 ### Lesson card animation
 
 **Before animating any new vector, read `artwork/ANIMATING-VECTORS.md`**:
