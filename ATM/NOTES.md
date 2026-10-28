@@ -748,7 +748,12 @@ are still to come: the owner designs them and I animate them.
   and run its `build.py` (instructions inside). The .ai itself isn't
   committed. The only changes to the art: Wants' front handle was two
   embedded flat-navy raster patches, now vector rects of the same
-  colour. A Glossy 3D restyle was tried; the owner kept the drawn look.
+  colour; and WANTS sat 3.5 units left of centre on its label (measured
+  along the label's 10.75° tilt through the letters: 7.75 clear before the
+  W, 14.75 after the S), so its letters move right along the label. The
+  label's panel had the letters cut out of it as holes, which showed dark
+  once the letters moved, so it keeps only its outer edge. NEEDS was
+  already centred. A Glossy 3D restyle was tried; the owner kept the drawn look.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content, all
 1080 × 1920): the two baskets are absolute, 530 × 464, 830 from the top (the
