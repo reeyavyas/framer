@@ -805,12 +805,13 @@ it just fades in and out. Taps pass through it.
 kiosk is 1080 × 1920, and on a wider window the page fills the window):
 the two baskets, 530 × 464 each and relative, sit side by side in a
 horizontal **Stack** (gap 0, fit content, 1060 × 464). The stack is
-absolute, 830 from the top, and pinned to neither side, so the pair stays
+absolute, 860 from the top, and pinned to neither side, so the pair stays
 centred however wide the window is. (They used to be pinned 13 from each
-edge, which pushed them to the window's edges on wider screens.) 830 is a
-little below the centre of the space between the intro text (ends at
-644) and the resting pile (top settles at 1509); the exact centre would
-be 798, and the owner wanted them a bit lower. Each box has empty margin
+edge, which pushed them to the window's edges on wider screens.) The
+exact centre of the space between the intro text (ends at 644) and the
+resting pile (top settles at 1509) would be 798; the owner put them at
+830, then moved them to 860 (28 Oct) so the answer cards sit clear of
+the text: the tallest card's top is 97 below it. Each box has empty margin
 round its drawing, so at 1080 the drawings (about 495 px wide) sit 27 px
 from the screen edges with 35 px between them. Both are the same size:
 the navy Wants only looks smaller next to the brighter teal.
