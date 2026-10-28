@@ -719,7 +719,8 @@ Components in the folder of the same name.
 **Answer cards** (28 Oct, in `ATMTumbleWall.tsx`, so they draw above the
 pictures): every sorting answer pops a speech-bubble card up over that
 basket, its tail pointing at the basket's middle, and it stays on screen
-at the edges. Right: teal edge on white, "✅ Correct!" (Area Normal
+at the edges. 520 wide with balanced lines: at 460 the wrong-answer
+line left "WANT." alone on a third line; from 500 it fits on two. Right: teal edge on white, "✅ Correct!" (Area Normal
 Black 48) over "This is a necessity." or "This is a want." (P22 Mackinac
 Bold 36). Wrong: egg-yolk edge on pale yolk (`#fff6d6`; yolk on white
 was too faint), "🤔 Most people would consider this a WANT." (a Want in
