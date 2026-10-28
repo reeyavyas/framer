@@ -740,7 +740,8 @@ are still to come: the owner designs them and I animate them.
   (centred). ATMTumbleWall finds them anywhere on the page by their
   invisible mouth rect (`data-nw-mouth`), and they talk through DOM
   events (`nw-catch`, `nw-reject`). A caught picture drops in behind the
-  front wall and stays, peeking over the rim, and the basket squashes.
+  front wall and stays, peeking over the rim, and the basket squashes. A
+  picture with no image yet shows the pile's grey placeholder circle.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
   `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
@@ -751,7 +752,8 @@ are still to come: the owner designs them and I animate them.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content, all
 1080 × 1920): the two baskets are absolute, 490 × 429 (as big as two fit
-side by side), 745 from the top, Needs 40 from the left and Wants 40 from
+side by side), 807 from the top (the drawings centred between the
+intro text and the top of the resting pile), Needs 40 from the left and Wants 40 from
 the right. The pile's Size is 220. Its six Pictures are grey placeholders
 for now (Need, Want, Need, Want, Need, Want); the owner adds real images
 through the component's Pictures property. ATMTumbleWall is

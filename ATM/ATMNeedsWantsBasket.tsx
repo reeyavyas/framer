@@ -623,16 +623,21 @@ export default function ATMNeedsWantsBasket(props: Props) {
                                 key={n}
                                 transform={`translate(${s.x} ${s.y}) rotate(${s.tilt})`}
                             >
-                                <image
-                                    href={c.src}
-                                    x={-PIC / 2}
-                                    y={-PIC / 2}
-                                    width={PIC}
-                                    height={PIC}
-                                    preserveAspectRatio="xMidYMid meet"
-                                >
-                                    <title>{c.alt}</title>
-                                </image>
+                                {c.src ? (
+                                    <image
+                                        href={c.src}
+                                        x={-PIC / 2}
+                                        y={-PIC / 2}
+                                        width={PIC}
+                                        height={PIC}
+                                        preserveAspectRatio="xMidYMid meet"
+                                    >
+                                        <title>{c.alt}</title>
+                                    </image>
+                                ) : (
+                                    // ATMTumbleWall's grey placeholder, for a picture with no image yet
+                                    <circle r={PIC / 2} fill="#D9D9D9" />
+                                )}
                             </g>
                         )
                     })}
