@@ -719,11 +719,12 @@ Components in the folder of the same name.
 **Answer cards** (28 Oct, in `ATMTumbleWall.tsx`, so they draw above the
 pictures): every sorting answer pops a speech-bubble card up over that
 basket, its tail pointing at the basket's middle, and it stays on screen
-at the edges. 580 wide with balanced lines: the wrong-answer line
-fits on two lines at 44 from 560 (42 now) (at 460 and 36 it left "WANT." alone
-on a third line). Right: teal edge on white, "✅ CORRECT!" (Area Normal
-Black 46, set in capitals, 18 below it) over "This is a necessity." or
-"This is a want." (Area Normal Bold 42, as is the wrong-answer line;
+at the edges. 500 wide with balanced lines, and at least 32 from
+the screen's edges (it was 580 and 16, which the owner found too close to
+the edges). At 500 the wrong-answer line fits on two lines at 36 with
+23 px to spare (480 left only 5); at 42 it needed 560. Right: teal edge on white, "✅ CORRECT!" (Area Normal
+Black 42, set in capitals, 18 below it) over "This is a necessity." or
+"This is a want." (Area Normal Bold 36, as is the wrong-answer line;
 all card text is Area, as the owner asked, Bold a step under the
 heading's Black). The site declares Area Normal Regular, SemiBold, Bold
 and Black on every page, so any of them loads when the card uses it. Wrong: egg-yolk edge on pale yolk (`#fff6d6`; yolk on white
@@ -733,9 +734,10 @@ wording; the Wants ones mirror it. All five lines are text properties
 on the pile. A card pops in from the basket (a slight overshoot), holds,
 and fades: 3.2 s in all, and the next answer replaces it. Reduced motion:
 it just fades in and out. Taps pass through it. The text is centred both ways: padding
-31 top, 27 bottom, which leaves 37 to 38 px from the border to the
-capitals' tops and to the baseline on both cards (with even padding it sat
-3 px high, Area's line boxes carrying more room below the letters).
+30 top, 28 bottom, which leaves 35 to 37 px from the border to the
+capitals' tops and to the baseline on both cards, measured live (Area's
+line boxes carry more room below the letters than above, so even padding
+sits the text high; retune this if the sizes change).
 
 - `ATMTumbleWall.tsx`: pictures from the Properties panel rain in, land
   in a pile at the very bottom, and can be grabbed and thrown. It runs

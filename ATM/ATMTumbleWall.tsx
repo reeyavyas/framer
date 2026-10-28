@@ -82,7 +82,8 @@ interface Mouth {
 const STEP = 1 / 120
 const SOLVER_PASSES = 4
 const FRICTION = 0.9
-const CARD_W = 580 // the wrong-answer line fits on two lines from 560
+const CARD_W = 500 // the wrong-answer line fits on two lines, 23 px to spare
+const CARD_EDGE = 32 // least room between a card and the screen's edge
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
@@ -470,7 +471,10 @@ export default function ATMTumbleWall(props: Props) {
     const fill = card?.ok ? "#ffffff" : YOLK_PALE
     // Kept on screen; the tail still points at the basket's middle.
     const cardLeft = card
-        ? Math.min(Math.max(16, card.x - CARD_W / 2), box.w - 16 - CARD_W)
+        ? Math.min(
+              Math.max(CARD_EDGE, card.x - CARD_W / 2),
+              box.w - CARD_EDGE - CARD_W
+          )
         : 0
     return (
         <div
@@ -559,7 +563,7 @@ export default function ATMTumbleWall(props: Props) {
                             position: "relative",
                             boxSizing: "border-box",
                             // centres the capitals-to-baseline span, measured live in Area
-                            padding: "31px 36px 27px",
+                            padding: "30px 36px 28px",
                             borderRadius: 32,
                             border: `5px solid ${accent}`,
                             background: fill,
@@ -574,7 +578,7 @@ export default function ATMTumbleWall(props: Props) {
                                 style={{
                                     fontFamily: `"Area Normal Black", sans-serif`,
                                     fontWeight: 900,
-                                    fontSize: 46,
+                                    fontSize: 42,
                                     lineHeight: 1.15,
                                     letterSpacing: "0.02em",
                                     color: "#11232d",
@@ -589,7 +593,7 @@ export default function ATMTumbleWall(props: Props) {
                             style={{
                                 fontFamily: `"Area Normal Bold", sans-serif`,
                                 fontWeight: 700,
-                                fontSize: 42,
+                                fontSize: 36,
                                 lineHeight: 1.2,
                                 color: "#002c44",
                                 textWrap: "balance",
