@@ -493,7 +493,11 @@ function slot(n: number) {
     const x = 140 + ((n * 83) % 220)
     const rim = 164 + ((x - 64) * 42) / 266
     // Centre a little above the rim: the front wall hides the bottom third.
-    return { x, y: rim - 14 - Math.floor(n / 3) * 18, tilt: ((n * 37) % 30) - 15 }
+    return {
+        x,
+        y: rim - 14 - Math.floor(n / 3) * 18,
+        tilt: ((n * 37) % 30) - 15,
+    }
 }
 
 interface Caught {
@@ -543,7 +547,11 @@ export default function ATMNeedsWantsBasket(props: Props) {
             gsap.fromTo(
                 body,
                 { x: 0 },
-                { keyframes: { x: [-12, 12, -9, 9, -4, 0] }, duration: 0.45, ease: "none" }
+                {
+                    keyframes: { x: [-12, 12, -9, 9, -4, 0] },
+                    duration: 0.45,
+                    ease: "none",
+                }
             )
         }
         mouth.addEventListener("nw-catch", onCatch)
@@ -561,17 +569,37 @@ export default function ATMNeedsWantsBasket(props: Props) {
         const body = bodyRef.current
         const pic = pics?.lastElementChild?.firstElementChild // the image, not its placed group
         if (!pic || !body || reduceMotion) return
-        gsap.fromTo(pic, { y: -150 }, { y: 0, duration: 0.32, ease: "power2.in" })
+        gsap.fromTo(
+            pic,
+            { y: -150 },
+            { y: 0, duration: 0.32, ease: "power2.in" }
+        )
         gsap.timeline({ delay: 0.32 })
-            .to(body, { svgOrigin: BOTTOM, scaleX: 1.05, scaleY: 0.93, duration: 0.08, ease: "power1.out" })
-            .to(body, { scaleX: 1, scaleY: 1, duration: 0.42, ease: "back.out(2)" })
+            .to(body, {
+                svgOrigin: BOTTOM,
+                scaleX: 1.05,
+                scaleY: 0.93,
+                duration: 0.08,
+                ease: "power1.out",
+            })
+            .to(body, {
+                scaleX: 1,
+                scaleY: 1,
+                duration: 0.42,
+                ease: "back.out(2)",
+            })
     }, [caught.length, reduceMotion])
 
     return (
         <svg
             viewBox={VIEWBOX}
             preserveAspectRatio="xMidYMid meet"
-            style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }}
+            style={{
+                width: "100%",
+                height: "100%",
+                display: "block",
+                overflow: "visible",
+            }}
             role="img"
             aria-label={`${kind === "need" ? "Needs" : "Wants"} basket, ${caught.length} sorted`}
         >
@@ -583,12 +611,18 @@ export default function ATMNeedsWantsBasket(props: Props) {
                 </clipPath>
             </defs>
             <g ref={bodyRef}>
-                <g id={`${uid}-art`} dangerouslySetInnerHTML={{ __html: markup }} />
+                <g
+                    id={`${uid}-art`}
+                    dangerouslySetInnerHTML={{ __html: markup }}
+                />
                 <g ref={picsRef}>
                     {caught.map((c, n) => {
                         const s = slot(n)
                         return (
-                            <g key={n} transform={`translate(${s.x} ${s.y}) rotate(${s.tilt})`}>
+                            <g
+                                key={n}
+                                transform={`translate(${s.x} ${s.y}) rotate(${s.tilt})`}
+                            >
                                 <image
                                     href={c.src}
                                     x={-PIC / 2}
@@ -604,7 +638,12 @@ export default function ATMNeedsWantsBasket(props: Props) {
                     })}
                 </g>
                 <use href={`#${uid}-art`} clipPath={`url(#${uid}-front)`} />
-                <rect ref={mouthRef} data-nw-mouth={kind} {...MOUTH} fill="none" />
+                <rect
+                    ref={mouthRef}
+                    data-nw-mouth={kind}
+                    {...MOUTH}
+                    fill="none"
+                />
             </g>
         </svg>
     )

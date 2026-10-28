@@ -118,7 +118,17 @@ export default function ATMTumbleWall(props: Props) {
         const bodies: Body[] = Array.from({ length: count }, (_, i) => {
             const rest = restingSpot(i, w, h, r)
             return reduceMotion
-                ? { ...rest, vx: 0, vy: 0, angle: 0, spin: 0, spawnAt: 0, live: true, touching: false, grabbed: false }
+                ? {
+                      ...rest,
+                      vx: 0,
+                      vy: 0,
+                      angle: 0,
+                      spin: 0,
+                      spawnAt: 0,
+                      live: true,
+                      touching: false,
+                      grabbed: false,
+                  }
                 : {
                       x: spawnX(i, w, r),
                       y: -r - (i % 3) * r,
@@ -148,7 +158,10 @@ export default function ATMTumbleWall(props: Props) {
             const rect = boxRef.current!.getBoundingClientRect()
             // Framer scales frames; map screen pixels back to layout pixels.
             const s = rect.width / w || 1
-            return { x: (e.clientX - rect.left) / s, y: (e.clientY - rect.top) / s }
+            return {
+                x: (e.clientX - rect.left) / s,
+                y: (e.clientY - rect.top) / s,
+            }
         }
         const downs = elRefs.current.map((el, i) => {
             const onDown = (e: PointerEvent) => {
@@ -207,21 +220,28 @@ export default function ATMTumbleWall(props: Props) {
         const findMouths = () => {
             const box = boxRef.current!.getBoundingClientRect()
             const s = box.width / w || 1
-            mouths = Array.from(document.querySelectorAll("[data-nw-mouth]"), (el) => {
-                const m = el.getBoundingClientRect()
-                return {
-                    el,
-                    kind: el.getAttribute("data-nw-mouth") || "",
-                    left: (m.left - box.left) / s,
-                    top: (m.top - box.top) / s,
-                    right: (m.right - box.left) / s,
-                    bottom: (m.bottom - box.top) / s,
+            mouths = Array.from(
+                document.querySelectorAll("[data-nw-mouth]"),
+                (el) => {
+                    const m = el.getBoundingClientRect()
+                    return {
+                        el,
+                        kind: el.getAttribute("data-nw-mouth") || "",
+                        left: (m.left - box.left) / s,
+                        top: (m.top - box.top) / s,
+                        right: (m.right - box.left) / s,
+                        bottom: (m.bottom - box.top) / s,
+                    }
                 }
-            })
+            )
         }
         const sort = (b: Body, i: number) => {
             const m = mouths.find(
-                (m) => b.x > m.left && b.x < m.right && b.y > m.top && b.y < m.bottom
+                (m) =>
+                    b.x > m.left &&
+                    b.x < m.right &&
+                    b.y > m.top &&
+                    b.y < m.bottom
             )
             if (!m || b.vy <= 0) return
             const item = itemsRef.current[i] || {}
@@ -230,7 +250,10 @@ export default function ATMTumbleWall(props: Props) {
                 b.spawnAt = Infinity // never comes back
                 m.el.dispatchEvent(
                     new CustomEvent("nw-catch", {
-                        detail: { src: item.image?.src || "", alt: item.image?.alt || "" },
+                        detail: {
+                            src: item.image?.src || "",
+                            alt: item.image?.alt || "",
+                        },
                     })
                 )
             } else {
@@ -274,7 +297,8 @@ export default function ATMTumbleWall(props: Props) {
                     }
                 }
                 for (let i = 0; i < bodies.length; i++) {
-                    if (bodies[i].live && i !== held) walls(bodies[i], w, h, r, bounce)
+                    if (bodies[i].live && i !== held)
+                        walls(bodies[i], w, h, r, bounce)
                 }
             }
             // Anything touching the floor or another picture eases toward
@@ -319,7 +343,16 @@ export default function ATMTumbleWall(props: Props) {
         }
         // Keyed on the count, not the array: Framer hands over a fresh array
         // on every render, which would restart the drop.
-    }, [box, isCanvas, reduceMotion, count, itemSize, gravity, bounce, dropDelay])
+    }, [
+        box,
+        isCanvas,
+        reduceMotion,
+        count,
+        itemSize,
+        gravity,
+        bounce,
+        dropDelay,
+    ])
 
     const r = itemSize / 2
     return (
@@ -390,7 +423,14 @@ export default function ATMTumbleWall(props: Props) {
 
 // Pushes two overlapping pictures apart and trades their velocity along
 // the line between them. A held picture acts as immovable.
-function collide(a: Body, c: Body, aHeld: boolean, cHeld: boolean, r: number, e: number) {
+function collide(
+    a: Body,
+    c: Body,
+    aHeld: boolean,
+    cHeld: boolean,
+    r: number,
+    e: number
+) {
     const dx = c.x - a.x
     const dy = c.y - a.y
     const d2 = dx * dx + dy * dy
