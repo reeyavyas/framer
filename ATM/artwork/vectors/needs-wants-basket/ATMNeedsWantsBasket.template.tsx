@@ -4,7 +4,7 @@ import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 // ATM lesson Needs vs. Wants: the Needs or the Wants basket, as the owner drew
-// it (Needs recoloured teal). ATMTumbleWall finds it on the page by its drop area (the
+// it (Needs recoloured teal, the right handle's outer edge smoothed). ATMTumbleWall finds it on the page by its drop area (the
 // `data-nw-mouth` rect, the whole drawing) and sends it "nw-catch" when the
 // right picture is dropped or thrown in, or "nw-reject" when the wrong one is. A caught picture drops in behind the
 // front wall and stays there, peeking over the rim, and the basket squashes
@@ -12,8 +12,8 @@ import { gsap } from "gsap"
 // picture back out). Reduced motion: the picture just appears in the basket
 // and nothing moves.
 //
-// Built by artwork/vectors/needs-wants-basket/build.py from the owner's
-// Basket.ai; edit the template, not ATM/ATMNeedsWantsBasket.tsx.
+// Built by artwork/vectors/needs-wants-basket/handle.py and build.py from the
+// owner's Basket.ai; edit the template, not ATM/ATMNeedsWantsBasket.tsx.
 
 type Kind = "need" | "want"
 

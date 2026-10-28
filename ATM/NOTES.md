@@ -764,8 +764,8 @@ are still to come: the owner designs them and I animate them.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
   `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
-  and run its `build.py` (instructions inside). The .ai itself isn't
-  committed. The art (28 Oct): the owner's `Basket.ai`, one
+  and run `handle.py` then `build.py` (instructions inside). The .ai
+  itself isn't committed. The art (28 Oct): the owner's `Basket.ai`, one
   navy basket with a blank label, redrawn from the first
   `Needs and Wants Baskets.ai` (same shape and label; that one had too
   many jagged traced shapes). Navy is Wants; Needs is the same drawing
@@ -773,7 +773,13 @@ are still to come: the owner designs them and I animate them.
   value curve sampled from the first two baskets; label white and bolt
   greys stay). The shapes are exactly as drawn: a code smoothing pass
   (straightening the traced edges) was tried and the owner asked to go
-  back to the drawing as given.
+  back to the drawing as given. The one exception, asked for after: the
+  right handle's outer edge, which stepped in and out. `handle.py`
+  writes the drawing exactly except that edge, smoothing the points of
+  the handle's three shapes along it (x 404 to 440, y 222 to 300, within
+  1 unit) with a 1.4 hairline in each shape's own colour so they still
+  meet (without it white gaps opened; it makes the handle's outline about
+  0.7 units bolder). Nothing outside the handle changed.
   The drop area still fits unchanged. The words are
   text in **Area Normal
   Black** (weight 900, the page heading's font, so it's already loaded),
