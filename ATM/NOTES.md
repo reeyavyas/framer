@@ -749,6 +749,14 @@ are still to come: the owner designs them and I animate them.
   embedded flat-navy raster patches, now vector rects of the same
   colour. A Glossy 3D restyle was tried; the owner kept the drawn look.
 
+**On the page** (Kiosk → Screen Content → Scrollable Content, all
+1080 × 1920): the two baskets are absolute, 440 × 385, 767 from the top,
+Needs 80 from the left and Wants 80 from the right. ATMTumbleWall is
+absolute, pinned on all four sides (full screen) and last in the stack,
+so it draws on top. Its Pictures list starts empty: Framer doesn't apply
+the code's 12 placeholder items when the component is inserted. The page
+is still a Draft, so it isn't on the live site yet.
+
 These two started out as a tutorial, in `tutorials/needs-wants-tutorial/`
 on the `needs-and-wants` branch, and moved here once the owner said
 they belong on this ATM lesson page.
