@@ -2,8 +2,7 @@
 
 The .ai is PDF inside: one navy basket with a blank label, 500 x 500, the
 same shape as the first "Needs and Wants Baskets.ai" with cleaner edges.
-Convert it to SVG with handle.py first (exact, except the right handle's
-outer edge, smoothed on request), then run:
+Convert it to SVG first (PyMuPDF, text as paths), then run:
 
     python3 build.py <basket.svg>
 
