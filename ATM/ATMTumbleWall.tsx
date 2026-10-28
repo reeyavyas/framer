@@ -22,8 +22,9 @@ import { useReducedMotion } from "framer-motion"
 // Each sorting answer pops up a card over that basket: right (Correct!,
 // then what the picture is) or wrong (what most people would call it). The
 // pile draws it so it sits above everything; only one shows at a time.
-// Once every picture is in its basket, the last card plays out and the
-// page goes to When Done (the lesson's completion page).
+// Once every picture is in its basket, the last one lands, its card pops
+// up, and a moment later the page goes to When Done (the lesson's
+// completion page).
 //
 // Put it at the top of the page's layers, so pictures fall in front of the
 // text and baskets. Only the pictures take taps; the rest passes through.
@@ -89,6 +90,7 @@ const FRICTION = 0.9
 const CARD_W = 500 // the wrong-answer line fits on two lines, 23 px to spare
 const CARD_EDGE = 32 // least room between a card and the screen's edge
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
+const DONE_MS = 1000 // last picture lands and its card pops up, then on
 
 // Framer's router, read from the module so a Framer version without it can't break the file.
 const useRouter: () => unknown =
@@ -400,7 +402,7 @@ export default function ATMTumbleWall(props: Props) {
                 if (sorted === count)
                     doneTimer = window.setTimeout(
                         () => goDoneRef.current(),
-                        CARD_MS
+                        DONE_MS
                     )
                 m.el.dispatchEvent(
                     new CustomEvent("nw-catch", {

@@ -717,7 +717,9 @@ Decided so far:
 it into `/atm-lessons/need-or-want/` with its completion page, then
 renamed them `lesson` and `complete`.)
 
-**When every picture is sorted** the last card plays out (3.2 s) and the
+**When every picture is sorted** the last one lands and its card pops up,
+and 1 s after the drop (it waited the card's full 3.2 s until the owner
+found that pause too long) the
 pile goes to its **When Done** link (default
 `/atm-lessons/need-or-want/complete`), through Framer's
 router like ATMAttract (no reload), or a plain page load without one. On the page the
