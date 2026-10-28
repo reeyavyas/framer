@@ -82,7 +82,7 @@ interface Mouth {
 const STEP = 1 / 120
 const SOLVER_PASSES = 4
 const FRICTION = 0.9
-const CARD_W = 520 // the wrong-answer line fits on two lines from 500
+const CARD_W = 580 // the wrong-answer line fits on two lines from 560
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
@@ -577,7 +577,8 @@ export default function ATMTumbleWall(props: Props) {
                                     lineHeight: 1.15,
                                     letterSpacing: "0.02em",
                                     color: "#11232d",
-                                    marginBottom: 8,
+                                    textTransform: "uppercase",
+                                    marginBottom: 18,
                                 }}
                             >
                                 {props.correct}
@@ -587,7 +588,7 @@ export default function ATMTumbleWall(props: Props) {
                             style={{
                                 fontFamily: `"P22 Mackinac Bold", serif`,
                                 fontWeight: 700,
-                                fontSize: 36,
+                                fontSize: 44,
                                 lineHeight: 1.2,
                                 color: "#002c44",
                                 textWrap: "balance",
