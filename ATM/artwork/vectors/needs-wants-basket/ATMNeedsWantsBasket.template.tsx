@@ -167,6 +167,10 @@ export default function ATMNeedsWantsBasket(props: Props) {
                         <ellipse key={e.cx} {...e} />
                     ))}
                 </clipPath>
+                {/* a caught picture is cropped to a circle, as in the pile */}
+                <clipPath id={`${uid}-pic`}>
+                    <circle r={PIC / 2} />
+                </clipPath>
             </defs>
             <g ref={bodyRef}>
                 <g
@@ -188,7 +192,8 @@ export default function ATMNeedsWantsBasket(props: Props) {
                                         y={-PIC / 2}
                                         width={PIC}
                                         height={PIC}
-                                        preserveAspectRatio="xMidYMid meet"
+                                        preserveAspectRatio="xMidYMid slice"
+                                        clipPath={`url(#${uid}-pic)`}
                                     >
                                         <title>{c.alt}</title>
                                     </image>

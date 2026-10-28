@@ -436,10 +436,13 @@ export default function ATMTumbleWall(props: Props) {
                                 src={item.image.src}
                                 alt={item.image.alt || ""}
                                 draggable={false}
+                                // cropped to the circle the physics uses, like the placeholder
                                 style={{
+                                    display: "block",
                                     width: "100%",
                                     height: "100%",
-                                    objectFit: "contain",
+                                    objectFit: "cover",
+                                    borderRadius: "50%",
                                     pointerEvents: "none",
                                 }}
                             />

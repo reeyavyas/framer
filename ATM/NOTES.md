@@ -805,6 +805,11 @@ ATMTumbleWall is absolute, 100% × 100% from the top left (full window)
 and last in the stack, so it draws on top. Its Size is 220; its six
 Pictures are grey placeholders for now (Need, Want, Need, Want, Need,
 Want), and the owner adds real images through its Pictures property.
+Every picture is cropped to a circle, the shape the physics uses: in the
+pile it fills the circle (`object-fit: cover`, centred), and a caught one
+is clipped to a circle in the basket (`slice`). An SVG upload fills the
+circle in the pile but shows whole inside the circle in the basket (Chrome
+fits SVG images by the file's own setting); PNG, JPG and WebP fill both.
 Its Pictures list started empty: Framer doesn't apply the code's 12
 placeholder items when the component is inserted.
 
