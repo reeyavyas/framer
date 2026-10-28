@@ -3,8 +3,8 @@ import { addPropertyControls, ControlType } from "framer"
 import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
-// ATM lesson Needs vs. Wants: the Needs or the Wants basket, from the owner's
-// drawing with its traced edges smoothed (Needs recoloured teal). ATMTumbleWall finds it on the page by its drop area (the
+// ATM lesson Needs vs. Wants: the Needs or the Wants basket, as the owner drew
+// it (Needs recoloured teal). ATMTumbleWall finds it on the page by its drop area (the
 // `data-nw-mouth` rect, the whole drawing) and sends it "nw-catch" when the
 // right picture is dropped or thrown in, or "nw-reject" when the wrong one is. A caught picture drops in behind the
 // front wall and stays there, peeking over the rim, and the basket squashes
@@ -12,8 +12,8 @@ import { gsap } from "gsap"
 // picture back out). Reduced motion: the picture just appears in the basket
 // and nothing moves.
 //
-// Built by artwork/vectors/needs-wants-basket/smooth.py and build.py from the
-// owner's Basket.ai; edit the template, not ATM/ATMNeedsWantsBasket.tsx.
+// Built by artwork/vectors/needs-wants-basket/build.py from the owner's
+// Basket.ai; edit the template, not ATM/ATMNeedsWantsBasket.tsx.
 
 type Kind = "need" | "want"
 
@@ -27,13 +27,13 @@ const ART: Record<Kind, string> = {
 const VIEWBOX = "50 40 400 350"
 // What's drawn again on top, so caught pictures sit inside the basket: the
 // front of the basket up to where the rim's top surface meets the dark
-// inside, measured from the drawing (smooth.py's output) every half unit
+// inside, measured from the drawing every half unit
 // along the front and down the right side, round the inner corner between
 // them; at the back-right corner, the line from the inner corner to the
 // rim's outer corner (above it is the back rim, which pictures cover). The
 // left side is seen from inside and never covers a picture.
 // prettier-ignore
-const FRONT = "40,165.5 64,169.7 108.5,176.8 110.5,177.6 119.5,179.2 170,186.2 192,190.4 213.5,193.9 254.5,199.4 285.5,205 295,206.4 305,207.5 323,211.1 329.5,211.9 334.5,212.1 339.5,211.4 343.5,210.2 354.6,205 367.1,198 385.9,187 397.6,180 428.5,163.5 450,163.5 450,400 40,400"
+const FRONT = "40,165.5 108.5,177.2 119,178.4 170,186.7 180,188.4 182.5,189.1 184,189 188.5,190.4 195,191.5 211,193.9 213.5,193.9 215,194.4 222,195.2 225,195.9 255,200.2 256.5,200.1 258.5,201.1 260.5,200.9 267,202.3 268,201.7 269.5,202.5 274.5,203.3 278.5,204.3 280.5,204 283.5,204.9 289,205.5 290,206.4 290.5,206.1 303.5,208.2 304.5,207.8 311.5,209.8 312.5,209.8 313.5,209.4 314,209.9 315.5,210.2 323.5,211.5 325.5,212.2 327,211.9 329.5,212.4 333.5,212.7 334.5,212.4 335.5,212.8 338.5,213 342,212.4 345,211.2 356.3,204.5 361.4,202 369.1,197.5 375.1,193.5 390.4,184.5 395.8,181 395.9,180.5 428.5,163.5 450,163.5 450,400 40,400"
 // The handles' bolt rings, which stand above the rim's inner edge.
 const BOLTS = [
     { cx: 153, cy: 195.5, rx: 13.3, ry: 13.2 },

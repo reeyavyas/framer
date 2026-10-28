@@ -751,7 +751,7 @@ are still to come: the owner designs them and I animate them.
   drops in behind the front wall and stays, peeking over the rim, and
   the basket squashes. What's drawn in front of caught pictures
   (`FRONT`, plus `BOLTS`): the front of the basket up to where the rim's
-  top surface meets the dark inside, measured from the brushed-up drawing
+  top surface meets the dark inside, measured from the drawing
   every half unit along the front and down the right side (round the
   front-right inner corner), then at the back-right corner the line from
   the rim's inner corner (397.6,180) to its outer corner (428.5,163.5),
@@ -771,12 +771,9 @@ are still to come: the owner designs them and I animate them.
   many jagged traced shapes). Navy is Wants; Needs is the same drawing
   recoloured to the first Needs basket's teal (`teal` in `build.py`, a
   value curve sampled from the first two baskets; label white and bolt
-  greys stay). On request it's also brushed up in code (`smooth.py`):
-  every outline is thinned to its key points (within 0.8 units), so
-  wobbly straight runs become straight lines; sharp corners get a 1.2
-  round and gentle bends and small curves become smooth curves; each
-  shape gets a 0.8 edge in its own colour so neighbours still meet; 22
-  specks under 2.5 units are dropped. The bolts stay exactly as drawn.
+  greys stay). The shapes are exactly as drawn: a code smoothing pass
+  (straightening the traced edges) was tried and the owner asked to go
+  back to the drawing as given.
   The drop area still fits unchanged. The words are
   text in **Area Normal
   Black** (weight 900, the page heading's font, so it's already loaded),
