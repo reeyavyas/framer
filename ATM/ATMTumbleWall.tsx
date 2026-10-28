@@ -1,4 +1,5 @@
 import * as React from "react"
+import * as Framer from "framer"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { useReducedMotion } from "framer-motion"
 
@@ -21,6 +22,8 @@ import { useReducedMotion } from "framer-motion"
 // Each sorting answer pops up a card over that basket: right (Correct!,
 // then what the picture is) or wrong (what most people would call it). The
 // pile draws it so it sits above everything; only one shows at a time.
+// Once every picture is in its basket, the last card plays out and the
+// page goes to When Done (the lesson's completion page).
 //
 // Put it at the top of the page's layers, so pictures fall in front of the
 // text and baskets. Only the pictures take taps; the rest passes through.
@@ -44,6 +47,7 @@ interface Props {
     rightWant: string
     wantInNeeds: string
     needInWants: string
+    doneLink: string
 }
 
 // The card shown for the latest sorting answer, over the basket at (x, y).
@@ -85,6 +89,10 @@ const FRICTION = 0.9
 const CARD_W = 500 // the wrong-answer line fits on two lines, 23 px to spare
 const CARD_EDGE = 32 // least room between a card and the screen's edge
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
+
+// Framer's router, read from the module so a Framer version without it can't break the file.
+const useRouter: () => unknown =
+    (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const YOLK_PALE = "#fff6d6" // so the yolk edge reads against the card
@@ -127,6 +135,24 @@ export default function ATMTumbleWall(props: Props) {
     const count = items.length
     const itemsRef = React.useRef(items)
     itemsRef.current = items
+    // Framer's own page switch (no reload, so no blank flash); a plain page
+    // load if this Framer version has no router to ask.
+    const router = useRouter() as
+        | {
+              navigate?: (id: string, hash?: string) => void
+              routes?: Record<string, { path?: string }>
+          }
+        | undefined
+    const goDone = () => {
+        const path = props.doneLink
+        if (!path) return
+        const routes = router?.routes ?? {}
+        const id = Object.keys(routes).find((k) => routes[k]?.path === path)
+        if (id && router?.navigate) router.navigate(id, "")
+        else window.location.href = path
+    }
+    const goDoneRef = React.useRef(goDone)
+    goDoneRef.current = goDone
     const [card, setCard] = React.useState<Card | null>(null)
     const cardRef = React.useRef<HTMLDivElement>(null)
 
@@ -235,6 +261,8 @@ export default function ATMTumbleWall(props: Props) {
         // The opening rain lands right side up: nothing rolls until someone
         // first grabs a picture.
         let stirred = false
+        let sorted = 0
+        let doneTimer = 0
         let grabDX = 0
         let grabDY = 0
         let lastPX = 0
@@ -357,6 +385,12 @@ export default function ATMTumbleWall(props: Props) {
             if (ok) {
                 b.live = false
                 b.spawnAt = Infinity // never comes back
+                sorted++
+                if (sorted === count)
+                    doneTimer = window.setTimeout(
+                        () => goDoneRef.current(),
+                        CARD_MS
+                    )
                 m.el.dispatchEvent(
                     new CustomEvent("nw-catch", {
                         detail: {
@@ -450,6 +484,7 @@ export default function ATMTumbleWall(props: Props) {
         raf = requestAnimationFrame(frame)
         return () => {
             cancelAnimationFrame(raf)
+            window.clearTimeout(doneTimer)
             downs.forEach((off) => off())
         }
         // Keyed on the count, not the array: Framer hands over a fresh array
@@ -707,6 +742,7 @@ ATMTumbleWall.defaultProps = {
     rightWant: "This is a want.",
     wantInNeeds: "🤔 Most people would consider this a WANT.",
     needInWants: "🤔 Most people would consider this a NEED.",
+    doneLink: "/atm-lessons/need-or-want/need-or-want-complete",
 }
 
 addPropertyControls(ATMTumbleWall, {
@@ -797,5 +833,11 @@ addPropertyControls(ATMTumbleWall, {
         type: ControlType.String,
         title: "Need in Wants",
         defaultValue: ATMTumbleWall.defaultProps.needInWants,
+    },
+    doneLink: {
+        type: ControlType.Link,
+        title: "When Done",
+        description: "The page to go to once every picture is in its basket.",
+        defaultValue: ATMTumbleWall.defaultProps.doneLink,
     },
 })
