@@ -18,6 +18,10 @@ import { useReducedMotion } from "framer-motion"
 // through the basket's bottom): it has to come down from above, after being
 // dragged or thrown from up there.
 //
+// Each sorting answer pops up a card over that basket: right (Correct!,
+// then what the picture is) or wrong (what most people would call it). The
+// pile draws it so it sits above everything; only one shows at a time.
+//
 // Put it at the top of the page's layers, so pictures fall in front of the
 // text and baskets. Only the pictures take taps; the rest passes through.
 
@@ -35,6 +39,20 @@ interface Props {
     bounce: number
     dropDelay: number
     topLimit: number
+    correct: string
+    rightNeed: string
+    rightWant: string
+    wantInNeeds: string
+    needInWants: string
+}
+
+// The card shown for the latest sorting answer, over the basket at (x, y).
+interface Card {
+    n: number // counts up, so the same answer twice still replays
+    ok: boolean
+    kind: Kind // the picture's
+    x: number
+    y: number
 }
 
 interface Body {
@@ -64,6 +82,11 @@ interface Mouth {
 const STEP = 1 / 120
 const SOLVER_PASSES = 4
 const FRICTION = 0.9
+const CARD_W = 460
+const CARD_MS = 3200 // pop in, hold long enough to read, fade
+const TEAL = "#059390"
+const YOLK = "#ffcc40"
+const YOLK_PALE = "#fff6d6" // so the yolk edge reads against the card
 
 function spawnX(i: number, w: number, r: number) {
     // Golden-ratio spread so drops don't line up in columns.
@@ -103,6 +126,44 @@ export default function ATMTumbleWall(props: Props) {
     const count = items.length
     const itemsRef = React.useRef(items)
     itemsRef.current = items
+    const [card, setCard] = React.useState<Card | null>(null)
+    const cardRef = React.useRef<HTMLDivElement>(null)
+
+    React.useLayoutEffect(() => {
+        const el = cardRef.current
+        if (!card || !el) return
+        const n = card.n
+        const anim = el.animate(
+            reduceMotion
+                ? [
+                      { opacity: 0 },
+                      { opacity: 1, offset: 0.05 },
+                      { opacity: 1, offset: 0.95 },
+                      { opacity: 0 },
+                  ]
+                : [
+                      {
+                          opacity: 0,
+                          transform: "translateY(24px) scale(0.85)",
+                          easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      },
+                      { opacity: 1, transform: "none", offset: 0.13 },
+                      {
+                          opacity: 1,
+                          transform: "none",
+                          offset: 0.9,
+                          easing: "ease-in",
+                      },
+                      {
+                          opacity: 0,
+                          transform: "translateY(-10px) scale(0.97)",
+                      },
+                  ],
+            { duration: CARD_MS, fill: "both" }
+        )
+        anim.onfinish = () => setCard((c) => (c && c.n === n ? null : c))
+        return () => anim.cancel()
+    }, [card, reduceMotion])
 
     React.useEffect(() => {
         const el = boxRef.current
@@ -283,7 +344,16 @@ export default function ATMTumbleWall(props: Props) {
             )
             if (!m || (!dropped && (b.vy <= 0 || m.el === b.rose))) return
             const item = itemsRef.current[i] || {}
-            if ((item.kind || "need") === m.kind) {
+            const kind = item.kind || "need"
+            const ok = kind === m.kind
+            setCard((c) => ({
+                n: (c?.n ?? 0) + 1,
+                ok,
+                kind,
+                x: (m.left + m.right) / 2,
+                y: m.top,
+            }))
+            if (ok) {
                 b.live = false
                 b.spawnAt = Infinity // never comes back
                 m.el.dispatchEvent(
@@ -396,6 +466,12 @@ export default function ATMTumbleWall(props: Props) {
     ])
 
     const r = itemSize / 2
+    const accent = card?.ok ? TEAL : YOLK
+    const fill = card?.ok ? "#ffffff" : YOLK_PALE
+    // Kept on screen; the tail still points at the basket's middle.
+    const cardLeft = card
+        ? Math.min(Math.max(16, card.x - CARD_W / 2), box.w - 16 - CARD_W)
+        : 0
     return (
         <div
             ref={boxRef}
@@ -463,6 +539,85 @@ export default function ATMTumbleWall(props: Props) {
                     </div>
                 )
             })}
+            {card && (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: cardLeft,
+                        // bottom edge (tail included) just above the basket
+                        top: card.y - 36,
+                        width: CARD_W,
+                        transform: "translateY(-100%)",
+                        pointerEvents: "none",
+                    }}
+                >
+                    <div
+                        key={card.n}
+                        ref={cardRef}
+                        role="status"
+                        style={{
+                            position: "relative",
+                            boxSizing: "border-box",
+                            padding: "28px 36px 30px",
+                            borderRadius: 32,
+                            border: `5px solid ${accent}`,
+                            background: fill,
+                            boxShadow: "0 20px 44px rgba(0, 44, 68, 0.22)",
+                            transformOrigin: `${card.x - cardLeft}px 100%`,
+                            textAlign: "center",
+                            opacity: 0,
+                        }}
+                    >
+                        {card.ok && (
+                            <div
+                                style={{
+                                    fontFamily: `"Area Normal Black", sans-serif`,
+                                    fontWeight: 900,
+                                    fontSize: 48,
+                                    lineHeight: 1.15,
+                                    letterSpacing: "0.02em",
+                                    color: "#11232d",
+                                    marginBottom: 8,
+                                }}
+                            >
+                                {props.correct}
+                            </div>
+                        )}
+                        <div
+                            style={{
+                                fontFamily: `"P22 Mackinac Bold", serif`,
+                                fontWeight: 700,
+                                fontSize: 36,
+                                lineHeight: 1.2,
+                                color: "#002c44",
+                            }}
+                        >
+                            {card.ok
+                                ? card.kind === "need"
+                                    ? props.rightNeed
+                                    : props.rightWant
+                                : card.kind === "want"
+                                  ? props.wantInNeeds
+                                  : props.needInWants}
+                        </div>
+                        {/* the tail, pointing down at the basket */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                left: card.x - cardLeft - 17,
+                                bottom: -19,
+                                width: 34,
+                                height: 34,
+                                background: fill,
+                                borderRight: `5px solid ${accent}`,
+                                borderBottom: `5px solid ${accent}`,
+                                borderBottomRightRadius: 6,
+                                transform: "rotate(45deg)",
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -540,6 +695,11 @@ ATMTumbleWall.defaultProps = {
     dropDelay: 0.12,
     // The page's text ends at 33.5% of the kiosk screen.
     topLimit: 35,
+    correct: "✅ Correct!",
+    rightNeed: "This is a necessity.",
+    rightWant: "This is a want.",
+    wantInNeeds: "🤔 Most people would consider this a WANT.",
+    needInWants: "🤔 Most people would consider this a NEED.",
 }
 
 addPropertyControls(ATMTumbleWall, {
@@ -605,5 +765,30 @@ addPropertyControls(ATMTumbleWall, {
         description:
             "Pictures can't be dragged or thrown above this much of the frame's height.",
         defaultValue: ATMTumbleWall.defaultProps.topLimit,
+    },
+    correct: {
+        type: ControlType.String,
+        title: "Correct",
+        defaultValue: ATMTumbleWall.defaultProps.correct,
+    },
+    rightNeed: {
+        type: ControlType.String,
+        title: "Need Sorted",
+        defaultValue: ATMTumbleWall.defaultProps.rightNeed,
+    },
+    rightWant: {
+        type: ControlType.String,
+        title: "Want Sorted",
+        defaultValue: ATMTumbleWall.defaultProps.rightWant,
+    },
+    wantInNeeds: {
+        type: ControlType.String,
+        title: "Want in Needs",
+        defaultValue: ATMTumbleWall.defaultProps.wantInNeeds,
+    },
+    needInWants: {
+        type: ControlType.String,
+        title: "Need in Wants",
+        defaultValue: ATMTumbleWall.defaultProps.needInWants,
     },
 })

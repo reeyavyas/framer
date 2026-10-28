@@ -715,8 +715,19 @@ Decided so far:
 
 The page the owner started in Framer. Code files go in Code → ATM
 Components → ATM Lessons → Needs Vs. Wants, and the components under
-Components in the folder of the same name. The correct and wrong pop-ups
-are still to come: the owner designs them and I animate them.
+Components in the folder of the same name. 
+**Answer cards** (28 Oct, in `ATMTumbleWall.tsx`, so they draw above the
+pictures): every sorting answer pops a speech-bubble card up over that
+basket, its tail pointing at the basket's middle, and it stays on screen
+at the edges. Right: teal edge on white, "✅ Correct!" (Area Normal
+Black 48) over "This is a necessity." or "This is a want." (P22 Mackinac
+Bold 36). Wrong: egg-yolk edge on pale yolk (`#fff6d6`; yolk on white
+was too faint), "🤔 Most people would consider this a WANT." (a Want in
+Needs) or "... a NEED." (a Need in Wants). The owner gave the Needs
+wording; the Wants ones mirror it. All five lines are text properties
+on the pile. A card pops in from the basket (a slight overshoot), holds,
+and fades: 3.2 s in all, and the next answer replaces it. Reduced motion:
+it just fades in and out. Taps pass through it.
 
 - `ATMTumbleWall.tsx`: pictures from the Properties panel rain in, land
   in a pile at the very bottom, and can be grabbed and thrown. It runs
