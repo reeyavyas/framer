@@ -776,19 +776,25 @@ are still to come: the owner designs them and I animate them.
   holes, so it keeps only its outer edge. A Glossy 3D restyle was tried;
   the owner kept the drawn look.
 
-**On the page** (Kiosk → Screen Content → Scrollable Content, all
-1080 × 1920): the two baskets are absolute, 530 × 464, 830 from the top (the
-owner wanted them a bit below the centre of the space between the intro
-text at 644 and the resting pile, whose top settles at 1509 every time;
-exact centre would be 798), Needs 13 from the left and Wants 13 from the right. Each box has
-empty margin round its drawing, so the drawings (about 495 px wide) sit
-30 px from the screen edges with a 30 px gap. Both are the same size:
-the navy Wants only looks smaller next to the brighter teal. The pile's Size is 220. Its six Pictures are grey placeholders
-for now (Need, Want, Need, Want, Need, Want); the owner adds real images
-through the component's Pictures property. ATMTumbleWall is
-absolute, pinned on all four sides (full screen) and last in the stack,
-so it draws on top. Its Pictures list started empty: Framer doesn't apply
-the code's 12 placeholder items when the component is inserted.
+**On the page** (Kiosk → Screen Content → Scrollable Content; the
+kiosk is 1080 × 1920, and on a wider window the page fills the window):
+the two baskets, 530 × 464 each and relative, sit side by side in a
+horizontal **Stack** (gap 0, fit content, 1060 × 464). The stack is
+absolute, 830 from the top, and pinned to neither side, so the pair stays
+centred however wide the window is. (They used to be pinned 13 from each
+edge, which pushed them to the window's edges on wider screens.) 830 is a
+little below the centre of the space between the intro text (ends at
+644) and the resting pile (top settles at 1509); the exact centre would
+be 798, and the owner wanted them a bit lower. Each box has empty margin
+round its drawing, so at 1080 the drawings (about 495 px wide) sit 27 px
+from the screen edges with 35 px between them. Both are the same size:
+the navy Wants only looks smaller next to the brighter teal.
+ATMTumbleWall is absolute, 100% × 100% from the top left (full window)
+and last in the stack, so it draws on top. Its Size is 220; its six
+Pictures are grey placeholders for now (Need, Want, Need, Want, Need,
+Want), and the owner adds real images through its Pictures property.
+Its Pictures list started empty: Framer doesn't apply the code's 12
+placeholder items when the component is inserted.
 
 These two started out as a tutorial, in `tutorials/needs-wants-tutorial/`
 on the `needs-and-wants` branch, and moved here once the owner said
