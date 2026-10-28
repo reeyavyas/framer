@@ -586,7 +586,7 @@ export default function ATMTumbleWall(props: Props) {
                         )}
                         <div
                             style={{
-                                fontFamily: `"P22 Mackinac Bold", serif`,
+                                fontFamily: `"Area Normal Bold", sans-serif`,
                                 fontWeight: 700,
                                 fontSize: 44,
                                 lineHeight: 1.2,
