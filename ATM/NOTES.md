@@ -722,38 +722,54 @@ are still to come: the owner designs them and I animate them.
   in a pile at the very bottom, and can be grabbed and thrown. It runs
   on its own small physics loop with no library. Each picture bumps
   others as a circle `Size` wide and spins as it rolls, and each is set
-  as a Need or a Want. A picture someone threw that falls into a
-  basket's mouth gets sorted: the right basket catches it, and the
-  wrong one makes it bounce back out. A rejected picture has to be
-  grabbed again before it can be sorted, so it can't land in the other
-  basket by itself. The opening rain is never sorted. Put it at the
+  as a Need or a Want. A picture let go anywhere over a basket (its
+  opening, label or outer shell) is sorted there and then; one thrown
+  from above that falls onto a basket is sorted too. The right basket
+  catches it, and the wrong one bounces it back out. A rejected picture
+  has to be grabbed again before it can be sorted, so it can't land in
+  the other basket by itself. A picture tossed up from the pile that
+  flies up through a basket can't drop into that basket on the same
+  flight (it went through the basket's bottom), so a light toss never
+  lands in one by accident. The opening rain is never sorted. Put it at the
   **top of the page's layers**, so pictures fall in front of the text
   and baskets. Only the pictures take taps, and taps pass through
   everywhere else, including Framer's wrapper around the component. It
   holds still while the inactivity overlay is open. On the Framer canvas
   the pile is drawn settled. With reduced motion it starts settled and
-  stays still until touched. Thrown pictures can fly above the top edge
-  for a moment, because there's no ceiling: the rain-in starts above the
-  frame.
+  stays still until touched. **Top Limit** (35% by default; the
+  page's text ends at 33.5%): once a picture has dropped below that
+  line or been grabbed, it can't be dragged above it, and throws bounce
+  off it, so nothing goes over the text or off the top. The opening
+  rain starts above the frame and falls through it.
 - `ATMNeedsWantsBasket.tsx`: one basket, chosen with `Basket` (Needs or
   Wants), as the owner drew it. The owner places both on the page
   (centred). ATMTumbleWall finds them anywhere on the page by their
-  invisible mouth rect (`data-nw-mouth`), and they talk through DOM
-  events (`nw-catch`, `nw-reject`). A caught picture drops in behind the
-  front wall and stays, peeking over the rim, and the basket squashes. A
+  invisible drop area (`data-nw-mouth`, the whole drawing), and they
+  talk through DOM events (`nw-catch`, `nw-reject`). A caught picture
+  drops in behind the front wall and stays, peeking over the rim, and
+  the basket squashes. What's drawn in front of caught pictures: the
+  front wall up to the front rim's inner edge (its light line, y 175.7
+  at x 70 to 220.25 at x 330; an earlier, higher edge let the back wall's
+  slots draw over pictures as teeth), both sides of the front handle,
+  and the right side, which is seen from outside (right of its rim's
+  inner edge, 347,220 to 428,170). The left side is seen from inside and
+  never covers a picture. A
   picture with no image yet shows the pile's grey placeholder circle.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
   `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
   and run its `build.py` (instructions inside). The .ai itself isn't
-  committed. The only changes to the art: Wants' front handle was two
-  embedded flat-navy raster patches, now vector rects of the same
-  colour; and WANTS sat 3.5 units left of centre on its label (measured
-  along the label's 10.75° tilt through the letters: 7.75 clear before the
-  W, 14.75 after the S), so its letters move right along the label. The
-  label's panel had the letters cut out of it as holes, which showed dark
-  once the letters moved, so it keeps only its outer edge. NEEDS was
-  already centred. A Glossy 3D restyle was tried; the owner kept the drawn look.
+  committed. Changes to the art: Wants' front handle was two embedded
+  flat-navy raster patches, now vector rects of the same colour; and the
+  drawn NEEDS / WANTS lettering is replaced by text in **Area Normal
+  Black** (weight 900, the page heading's font, so it's already loaded),
+  size 30, in the old letter colours, tilted 10.75° with the label and
+  centred on the label's light panel to within 0.2 units each way
+  (measured with the real font against the panel's real outline; the
+  panel is lopsided, so its true middle is 1.67 along and 0.81 above its
+  bounding-box centre). Wants' panel had the letters cut out of it as
+  holes, so it keeps only its outer edge. A Glossy 3D restyle was tried;
+  the owner kept the drawn look.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content, all
 1080 × 1920): the two baskets are absolute, 530 × 464, 830 from the top (the

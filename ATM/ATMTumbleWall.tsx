@@ -8,11 +8,15 @@ import { useReducedMotion } from "framer-motion"
 // so no physics library is needed. On the Framer canvas the pile is drawn
 // settled and nothing runs.
 //
-// Sorting: a picture someone has grabbed that falls into a basket's mouth
-// (ATMNeedsWantsBasket's `data-nw-mouth` rect, anywhere on the page) is sent
+// Sorting: a picture someone has grabbed that is let go over a basket, or
+// falls onto one (ATMNeedsWantsBasket's `data-nw-mouth` rect: the whole
+// drawing, label and shell included, anywhere on the page) is sent
 // to that basket with "nw-catch" if its kind matches, and leaves the pile.
 // If not, the basket gets "nw-reject" and the picture is tossed back out.
-// The opening rain is never sorted, so it falls past the baskets.
+// The opening rain is never sorted, so it falls past the baskets. Nor is a
+// picture that flew up through a basket from below (it would have gone
+// through the basket's bottom): it has to come down from above, after being
+// dragged or thrown from up there.
 //
 // Put it at the top of the page's layers, so pictures fall in front of the
 // text and baskets. Only the pictures take taps; the rest passes through.
@@ -30,6 +34,7 @@ interface Props {
     gravity: number
     bounce: number
     dropDelay: number
+    topLimit: number
 }
 
 interface Body {
@@ -43,6 +48,8 @@ interface Body {
     live: boolean
     touching: boolean
     grabbed: boolean // only pictures someone threw get sorted
+    below: boolean // under the top limit, so it can't go back above it
+    rose: Element | null // a basket it flew up through since it was grabbed
 }
 
 interface Mouth {
@@ -82,7 +89,7 @@ function restingSpot(i: number, w: number, h: number, r: number) {
  * @framerIntrinsicHeight 900
  */
 export default function ATMTumbleWall(props: Props) {
-    const { items, itemSize, gravity, bounce, dropDelay } = props
+    const { items, itemSize, gravity, bounce, dropDelay, topLimit } = props
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const reduceMotion = useReducedMotion()
     const boxRef = React.useRef<HTMLDivElement>(null)
@@ -115,6 +122,10 @@ export default function ATMTumbleWall(props: Props) {
         const { w, h } = box
         if (isCanvas || !w || !h) return
         const r = itemSize / 2
+        // Pictures stay below this line once they've dropped under it or
+        // been grabbed: no throwing them off the top, no dragging them over
+        // the text. The rain starts above the frame, so it falls through.
+        const top = (h * topLimit) / 100
         const bodies: Body[] = Array.from({ length: count }, (_, i) => {
             const rest = restingSpot(i, w, h, r)
             return reduceMotion
@@ -128,6 +139,8 @@ export default function ATMTumbleWall(props: Props) {
                       live: true,
                       touching: false,
                       grabbed: false,
+                      below: true,
+                      rose: null,
                   }
                 : {
                       x: spawnX(i, w, r),
@@ -140,6 +153,8 @@ export default function ATMTumbleWall(props: Props) {
                       live: false,
                       touching: false,
                       grabbed: false,
+                      below: false,
+                      rose: null,
                   }
         })
 
@@ -173,6 +188,8 @@ export default function ATMTumbleWall(props: Props) {
                 held = i
                 awake = true
                 b.grabbed = true
+                b.below = true
+                b.rose = null
                 grabDX = b.x - p.x
                 grabDY = b.y - p.y
                 lastPX = p.x
@@ -190,7 +207,7 @@ export default function ATMTumbleWall(props: Props) {
                 b.vx = b.vx * 0.5 + ((p.x - lastPX) / dt) * 0.5
                 b.vy = b.vy * 0.5 + ((p.y - lastPY) / dt) * 0.5
                 b.x = Math.min(w - r, Math.max(r, p.x + grabDX))
-                b.y = Math.min(h - r, p.y + grabDY)
+                b.y = Math.min(h - r, Math.max(top + r, p.y + grabDY))
                 lastPX = p.x
                 lastPY = p.y
                 lastPT = now
@@ -201,6 +218,8 @@ export default function ATMTumbleWall(props: Props) {
                 const b = bodies[i]
                 // A finger resting still before release drops, not throws.
                 if (performance.now() - lastPT > 80) b.vx = b.vy = 0
+                // Let go over a basket: sorted there and then, however it moved.
+                sort(b, i, true)
             }
             el?.addEventListener("pointerdown", onDown)
             el?.addEventListener("pointermove", onMove)
@@ -235,7 +254,16 @@ export default function ATMTumbleWall(props: Props) {
                 }
             )
         }
-        const sort = (b: Body, i: number) => {
+        const sort = (b: Body, i: number, dropped = false) => {
+            // Rising past a basket means it went up through the basket, so
+            // it can't drop into that one on the same flight: a light toss up
+            // from the pile shouldn't land in whichever basket is above it.
+            if (!dropped && b.vy < 0) {
+                const under = mouths.find(
+                    (m) => b.x > m.left && b.x < m.right && b.y > m.top
+                )
+                if (under) b.rose = under.el
+            }
             const m = mouths.find(
                 (m) =>
                     b.x > m.left &&
@@ -243,7 +271,7 @@ export default function ATMTumbleWall(props: Props) {
                     b.y > m.top &&
                     b.y < m.bottom
             )
-            if (!m || b.vy <= 0) return
+            if (!m || (!dropped && (b.vy <= 0 || m.el === b.rose))) return
             const item = itemsRef.current[i] || {}
             if ((item.kind || "need") === m.kind) {
                 b.live = false
@@ -298,7 +326,7 @@ export default function ATMTumbleWall(props: Props) {
                 }
                 for (let i = 0; i < bodies.length; i++) {
                     if (bodies[i].live && i !== held)
-                        walls(bodies[i], w, h, r, bounce)
+                        walls(bodies[i], w, h, top, r, bounce)
                 }
             }
             // Anything touching the floor or another picture eases toward
@@ -352,6 +380,7 @@ export default function ATMTumbleWall(props: Props) {
         gravity,
         bounce,
         dropDelay,
+        topLimit,
     ])
 
     const r = itemSize / 2
@@ -456,7 +485,20 @@ function collide(
     c.vy += ny * j * wc
 }
 
-function walls(b: Body, w: number, h: number, r: number, e: number) {
+function walls(
+    b: Body,
+    w: number,
+    h: number,
+    top: number,
+    r: number,
+    e: number
+) {
+    if (!b.below) {
+        if (b.y >= top + r) b.below = true
+    } else if (b.y < top + r) {
+        b.y = top + r
+        if (b.vy < 0) b.vy = b.vy * -e
+    }
     if (b.y > h - r) {
         b.y = h - r
         if (b.vy > 0) b.vy = b.vy * -e
@@ -479,6 +521,8 @@ ATMTumbleWall.defaultProps = {
     gravity: 2400,
     bounce: 0.3,
     dropDelay: 0.12,
+    // The page's text ends at 33.5% of the kiosk screen.
+    topLimit: 35,
 }
 
 addPropertyControls(ATMTumbleWall, {
@@ -533,5 +577,16 @@ addPropertyControls(ATMTumbleWall, {
         step: 0.01,
         unit: "s",
         defaultValue: ATMTumbleWall.defaultProps.dropDelay,
+    },
+    topLimit: {
+        type: ControlType.Number,
+        title: "Top Limit",
+        min: 0,
+        max: 90,
+        step: 1,
+        unit: "%",
+        description:
+            "Pictures can't be dragged or thrown above this much of the frame's height.",
+        defaultValue: ATMTumbleWall.defaultProps.topLimit,
     },
 })

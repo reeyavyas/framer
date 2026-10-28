@@ -4,9 +4,9 @@ import { useReducedMotion } from "framer-motion"
 import { gsap } from "gsap"
 
 // ATM lesson Needs vs. Wants: the Needs or the Wants basket, as the owner drew
-// it. ATMTumbleWall finds it on the page by its mouth (the `data-nw-mouth`
-// rect) and sends it "nw-catch" when the right picture is thrown in, or
-// "nw-reject" when the wrong one is. A caught picture drops in behind the
+// it. ATMTumbleWall finds it on the page by its drop area (the
+// `data-nw-mouth` rect, the whole drawing) and sends it "nw-catch" when the
+// right picture is dropped or thrown in, or "nw-reject" when the wrong one is. A caught picture drops in behind the
 // front wall and stays there, peeking over the rim, and the basket squashes
 // and bounces. A rejected one makes the basket shake (ATMTumbleWall tosses the
 // picture back out). Reduced motion: the picture just appears in the basket
@@ -28,11 +28,19 @@ const VIEWBOX = "50 40 400 350"
 // The front wall, the rim's front edge and both sides of the front handle:
 // drawn again on top so caught pictures sit inside the basket.
 const FRONT = [
-    "64,164 330,206 334,225 316,376 116,339 64,187.5",
+    // Top edge: the front rim's inner edge (its light line, y 175.7 at x 70
+    // to 220.25 at x 330, the same in both drawings), so the back wall's
+    // slots behind it never draw over a caught picture.
+    "64,174 331,219.7 334,225 316,376 116,339 64,187.5",
     "135,185 162.5,192.5 90,272.5 62.5,260",
     "230,205 250,205 360,302.5 420,252.5 437.5,260 432.5,275 367.5,320 340,312.5",
+    // The right side, seen from outside, so it's in front of the inside too:
+    // right of its rim's inner edge (from 347,220 at the front corner to
+    // 428,170 at the back). The left side is seen from inside and never is.
+    "331,219.7 346.9,219.7 428.3,170 450,170 450,380 316,376 334,225",
 ]
-const MOUTH = { x: 85, y: 120, width: 330, height: 95 }
+// The drop area: the whole drawing, label and outer shell included.
+const MOUTH = { x: 63, y: 124, width: 374, height: 252 }
 const BOTTOM = "220 378" // the basket squashes toward its base here
 const PIC = 96 // a caught picture's size, in drawing units
 
