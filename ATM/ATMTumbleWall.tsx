@@ -95,6 +95,11 @@ export default function ATMTumbleWall(props: Props) {
     const boxRef = React.useRef<HTMLDivElement>(null)
     const elRefs = React.useRef<(HTMLDivElement | null)[]>([])
     const [box, setBox] = React.useState({ w: 0, h: 0 })
+    // The live size, read every frame. Resizing (zooming the page, say) must
+    // not restart the pile: that rained every picture in again, sorted ones
+    // included.
+    const sizeRef = React.useRef({ w: 0, h: 0 })
+    const ready = box.w > 0 && box.h > 0
     const count = items.length
     const itemsRef = React.useRef(items)
     itemsRef.current = items
@@ -102,9 +107,10 @@ export default function ATMTumbleWall(props: Props) {
     React.useEffect(() => {
         const el = boxRef.current
         if (!el) return
-        const ro = new ResizeObserver(() =>
-            setBox({ w: el.clientWidth, h: el.clientHeight })
-        )
+        const ro = new ResizeObserver(() => {
+            sizeRef.current = { w: el.clientWidth, h: el.clientHeight }
+            setBox(sizeRef.current)
+        })
         ro.observe(el)
         // Framer's own wrapper around the component would still catch taps
         // meant for the page underneath, so it lets them through too.
@@ -119,13 +125,13 @@ export default function ATMTumbleWall(props: Props) {
     }, [])
 
     React.useEffect(() => {
-        const { w, h } = box
-        if (isCanvas || !w || !h) return
+        if (isCanvas || !ready) return
+        let { w, h } = sizeRef.current
         const r = itemSize / 2
         // Pictures stay below this line once they've dropped under it or
         // been grabbed: no throwing them off the top, no dragging them over
         // the text. The rain starts above the frame, so it falls through.
-        const top = (h * topLimit) / 100
+        let top = (h * topLimit) / 100
         const bodies: Body[] = Array.from({ length: count }, (_, i) => {
             const rest = restingSpot(i, w, h, r)
             return reduceMotion
@@ -348,6 +354,8 @@ export default function ATMTumbleWall(props: Props) {
             // Capped so a backgrounded tab doesn't come back in one huge jump.
             acc += Math.min(0.05, (now - prev) / 1000)
             prev = now
+            ;({ w, h } = sizeRef.current)
+            top = (h * topLimit) / 100
             // Holds still while ATMInactivityOverlay's box is open.
             if ((window as any).__systemOverlayOpen) acc = 0
             findMouths()
@@ -372,7 +380,7 @@ export default function ATMTumbleWall(props: Props) {
         // Keyed on the count, not the array: Framer hands over a fresh array
         // on every render, which would restart the drop.
     }, [
-        box,
+        ready,
         isCanvas,
         reduceMotion,
         count,
@@ -415,9 +423,11 @@ export default function ATMTumbleWall(props: Props) {
                             cursor: "grab",
                             pointerEvents: "auto",
                             touchAction: "none",
-                            // Running pages place these every frame; this is
-                            // the canvas pose and the first paint.
-                            transform: `translate(${rest.x - r}px, ${rest.y - r}px)`,
+                            // The canvas pose. Running pages place these every
+                            // frame, so a re-render (a resize) mustn't move them.
+                            transform: isCanvas
+                                ? `translate(${rest.x - r}px, ${rest.y - r}px)`
+                                : undefined,
                             visibility: isCanvas ? "visible" : "hidden",
                         }}
                     >

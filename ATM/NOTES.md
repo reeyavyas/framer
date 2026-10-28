@@ -734,7 +734,9 @@ are still to come: the owner designs them and I animate them.
   **top of the page's layers**, so pictures fall in front of the text
   and baskets. Only the pictures take taps, and taps pass through
   everywhere else, including Framer's wrapper around the component. It
-  holds still while the inactivity overlay is open. On the Framer canvas
+  holds still while the inactivity overlay is open. A resize (zooming
+  the page) doesn't restart it: the size is read every frame, so the
+  pictures, sorted ones included, stay where they are. On the Framer canvas
   the pile is drawn settled. With reduced motion it starts settled and
   stays still until touched. **Top Limit** (35% by default; the
   page's text ends at 33.5%): once a picture has dropped below that
@@ -748,11 +750,13 @@ are still to come: the owner designs them and I animate them.
   talk through DOM events (`nw-catch`, `nw-reject`). A caught picture
   drops in behind the front wall and stays, peeking over the rim, and
   the basket squashes. What's drawn in front of caught pictures: the
-  front wall up to the front rim's inner edge (its light line, y 175.7
-  at x 70 to 220.25 at x 330; an earlier, higher edge let the back wall's
-  slots draw over pictures as teeth), both sides of the front handle,
-  and the right side, which is seen from outside (right of its rim's
-  inner edge, 347,220 to 428,170). The left side is seen from inside and
+  front wall up to where the dark inside of the basket meets the top
+  surface of the front rim (y 172.4 at x 80 to 212.5 at x 330). Not the
+  rim's light line 5 units lower, which left the rim's top under the
+  pictures, and not 6 units higher, which let the back wall's slots
+  draw over them as teeth. Also both sides of the front handle, and the
+  right side, seen from outside, right of where the inside meets its
+  rim (410.8,172 to 343.2,212, meeting the front edge at 339.7,214.1). The left side is seen from inside and
   never covers a picture. A
   picture with no image yet shows the pile's grey placeholder circle.
   A wrong one makes the basket shake. Reduced motion: the picture just

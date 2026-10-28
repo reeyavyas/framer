@@ -28,16 +28,18 @@ const VIEWBOX = "50 40 400 350"
 // The front wall, the rim's front edge and both sides of the front handle:
 // drawn again on top so caught pictures sit inside the basket.
 const FRONT = [
-    // Top edge: the front rim's inner edge (its light line, y 175.7 at x 70
-    // to 220.25 at x 330, the same in both drawings), so the back wall's
-    // slots behind it never draw over a caught picture.
-    "64,174 331,219.7 334,225 316,376 116,339 64,187.5",
+    // Top edge: where the dark inside of the basket meets the top surface
+    // of the front rim (y 172.4 at x 80 to 212.5 at x 330, the same in both
+    // drawings), so the whole rim draws over a caught picture and the back
+    // wall's slots never do. Not the rim's light line, which runs 5 below.
+    "64,169.8 339.7,214.1 334,225 316,376 116,339 64,187.5",
     "135,185 162.5,192.5 90,272.5 62.5,260",
     "230,205 250,205 360,302.5 420,252.5 437.5,260 432.5,275 367.5,320 340,312.5",
     // The right side, seen from outside, so it's in front of the inside too:
-    // right of its rim's inner edge (from 347,220 at the front corner to
-    // 428,170 at the back). The left side is seen from inside and never is.
-    "331,219.7 346.9,219.7 428.3,170 450,170 450,380 316,376 334,225",
+    // right of where the inside meets its rim's top surface (410.8,172 to
+    // 343.2,212; it meets the front edge at 339.7,214.1). The left side is
+    // seen from inside and never covers a picture.
+    "339.7,214.1 414.2,170 450,170 450,380 316,376 334,225",
 ]
 // The drop area: the whole drawing, label and outer shell included.
 const MOUTH = { x: 63, y: 124, width: 374, height: 252 }
