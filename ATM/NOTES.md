@@ -732,7 +732,10 @@ Needs) or "... a NEED." (a Need in Wants). The owner gave the Needs
 wording; the Wants ones mirror it. All five lines are text properties
 on the pile. A card pops in from the basket (a slight overshoot), holds,
 and fades: 3.2 s in all, and the next answer replaces it. Reduced motion:
-it just fades in and out. Taps pass through it.
+it just fades in and out. Taps pass through it. The text is centred both ways: padding
+31 top, 27 bottom, which leaves 37 to 38 px from the border to the
+capitals' tops and to the baseline on both cards (with even padding it sat
+3 px high, Area's line boxes carrying more room below the letters).
 
 - `ATMTumbleWall.tsx`: pictures from the Properties panel rain in, land
   in a pile at the very bottom, and can be grabbed and thrown. It runs

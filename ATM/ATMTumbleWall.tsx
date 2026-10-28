@@ -558,7 +558,8 @@ export default function ATMTumbleWall(props: Props) {
                         style={{
                             position: "relative",
                             boxSizing: "border-box",
-                            padding: "28px 36px 30px",
+                            // centres the capitals-to-baseline span, measured live in Area
+                            padding: "31px 36px 27px",
                             borderRadius: 32,
                             border: `5px solid ${accent}`,
                             background: fill,
