@@ -1,28 +1,23 @@
-"""Builds ATM/ATMNeedsWantsBasket.tsx from the owner's "Needs and Wants Baskets.ai".
+"""Builds ATM/ATMNeedsWantsBasket.tsx from the owner's "Basket.ai".
 
-The .ai is PDF inside: artboard 1 is Wants, artboard 2 is Needs, 500 x 500.
-Convert each to SVG first (PyMuPDF, text as paths), then run:
+The .ai is PDF inside: one navy basket with a blank label, 500 x 500, the
+same shape as the first "Needs and Wants Baskets.ai" with cleaner edges.
+Brush it up into an SVG first with smooth.py, then run:
 
-    python3 build.py <wants.svg> <needs.svg>
+    python3 build.py <basket.svg>
 
-The art stays as drawn, with these changes: Wants' front handle was filled by
-two clipped raster patches of flat navy, swapped here for rects of the same
-colour so it stays sharp; the drawn NEEDS / WANTS lettering is replaced by
-real text in the brand font (Area Normal Black, as the page's heading),
-centred on the label (Wants' label panel had the letters cut out of it as
-holes, so it keeps only its outer edge); and numbers are rounded to keep the
-file small. The source art is never committed, only this script and the
-template.
+The navy drawing is the Wants basket. The Needs basket is the same drawing
+recoloured teal to match the first Needs basket (`teal`). Each gets its word
+in real text in the brand font (Area Normal Black, as the page's heading),
+centred on the label, and numbers are rounded to keep the file small. The
+source art is never committed, only this script and the template.
 """
+import colorsys
 import re
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-
-# The drawn WANTS letters (navy) and the light piece inside the A, by position.
-WANTS_LETTERS = ["163.0994,299.3544", "222.4394,272.95069", "185.3405,289.09083", "254.6417,317.3898", "233.0635,313.2261"]
-LETTER_FILLS = {"#082653", "#082652", "#eef5f8"}
 
 # The label's light panel: its tilt, the point the text turns about, and the
 # panel's true middle from there, measured along and across the tilt (its
@@ -56,45 +51,26 @@ def label_text(word: str, fill: str) -> str:
     )
 
 
-def strip_wants_letters(svg: str) -> str:
-    removed = 0
-    filled = 0
-
-    def strip(m: re.Match) -> str:
-        nonlocal removed, filled
-        el = m.group(0)
-        t = re.search(r'transform="matrix\(1,0,0,-1,([\d.]+),([\d.]+)\)"', el)
-        f = re.search(r'fill="(#[0-9a-f]{6})"', el)
-        if t and f and f.group(1) == "#e4eef4" and f"{t.group(1)},{t.group(2)}" == WANTS_LETTERS[3]:
-            # The label's panel: five letter holes, then its outer edge. Keep the edge.
-            d = re.search(r' d="([^"]*)"', el).group(1)
-            subs = [x for x in re.split(r"(?=M)", d) if x.strip()]
-            assert len(subs) == 6, f"label panel has {len(subs)} outlines, expected 6"
-            filled += 1
-            return el.replace(d, subs[-1])
-        if not t or not f or f"{t.group(1)},{t.group(2)}" not in WANTS_LETTERS or f.group(1) not in LETTER_FILLS:
-            return el
-        removed += 1
-        return ""
-
-    svg = re.sub(r"<path [^>]*/>", strip, svg, flags=re.S)
-    assert removed == 6, f"expected the 5 WANTS letters and the A's inside, removed {removed}"
-    assert filled == 1, "label panel not found"
-    return svg
+# Navy to teal: the same light and dark, on the first Needs basket's teal.
+# The teal's value for each navy value, sampled from the first two baskets
+# (the same drawing in both colours) where each navy shade showed.
+TEAL_V = [(0, 0.29), (0.15, 0.34), (0.27, 0.40), (0.33, 0.52), (0.45, 0.57), (0.6, 0.64), (0.7, 0.70), (0.8, 0.76), (0.9, 0.85), (1, 0.93)]
 
 
-def strip_needs_letters(svg: str) -> str:
-    # NEEDS is five glyphs laid on a plain panel; drop them and their outlines.
-    svg, n = re.subn(r'<use data-text="[A-Z]"[^>]*/>', "", svg)
-    assert n == 5, f"expected the 5 NEEDS glyphs, found {n}"
-    svg = re.sub(r'<path id="font_[^"]*" d="[^"]*"/>', "", svg)
-    return svg
+def teal(hex_: str) -> str:
+    h, s, v = colorsys.rgb_to_hsv(*(int(hex_[k : k + 2], 16) / 255 for k in (1, 3, 5)))
+    if s < 0.18:
+        return hex_  # the label's white and the bolts' greys stay
+    for (v0, t0), (v1, t1) in zip(TEAL_V, TEAL_V[1:]):
+        if v <= v1:
+            tv = t0 + (t1 - t0) * (v - v0) / (v1 - v0)
+            break
+    th = (181 + max(0, tv - 0.8) / 0.12 * 9) / 360  # the lightest lean a little blue, as drawn
+    return "#%02x%02x%02x" % tuple(round(c * 255) for c in colorsys.hsv_to_rgb(th, min(0.95, s * 1.1), tv))
 
 
 def clean(svg: str, prefix: str, text: str) -> str:
     svg = re.sub(r' inkscape:[a-z]+="[^"]*"', "", svg)
-    # Wants' handle patches average #0c3668; a flat rect looks the same.
-    svg = re.sub(r'<image([^>]*?)xlink:href="[^"]*"([^>]*)/>', r'<rect\1 fill="#0c3668"\2/>', svg, flags=re.S)
     body = svg[svg.index(">", svg.index("<svg")) + 1 : svg.rindex("</svg>")]
     body = re.sub(r"(\d+\.\d{3})\d+", r"\1", body)
     body = re.sub(r"\s*\n\s*", "\n", body).strip()
@@ -106,8 +82,9 @@ def clean(svg: str, prefix: str, text: str) -> str:
     return body
 
 
-wants = clean(strip_wants_letters(Path(sys.argv[1]).read_text()), "w-", label_text("WANTS", "#082653"))
-needs = clean(strip_needs_letters(Path(sys.argv[2]).read_text()), "n-", label_text("NEEDS", "#046666"))
+src = Path(sys.argv[1]).read_text()
+wants = clean(src, "w-", label_text("WANTS", "#082653"))
+needs = clean(re.sub(r'(fill|stroke)="(#[0-9a-f]{6})"', lambda m: f'{m.group(1)}="{teal(m.group(2))}"', src), "n-", label_text("NEEDS", "#046666"))
 out = (HERE / "ATMNeedsWantsBasket.template.tsx").read_text()
 out = out.replace("__WANTS_ART__", wants).replace("__NEEDS_ART__", needs)
 dest = HERE.parents[2] / "ATMNeedsWantsBasket.tsx"

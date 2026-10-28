@@ -744,7 +744,7 @@ are still to come: the owner designs them and I animate them.
   off it, so nothing goes over the text or off the top. The opening
   rain starts above the frame and falls through it.
 - `ATMNeedsWantsBasket.tsx`: one basket, chosen with `Basket` (Needs or
-  Wants), as the owner drew it. The owner places both on the page
+  Wants), from the owner's drawing. The owner places both on the page
   (centred). ATMTumbleWall finds them anywhere on the page by their
   invisible drop area (`data-nw-mouth`, the whole drawing), and they
   talk through DOM events (`nw-catch`, `nw-reject`). A caught picture
@@ -762,19 +762,29 @@ are still to come: the owner designs them and I animate them.
   A wrong one makes the basket shake. Reduced motion: the picture just
   appears and nothing moves. **Generated, don't edit it:** change
   `artwork/vectors/needs-wants-basket/ATMNeedsWantsBasket.template.tsx`
-  and run its `build.py` (instructions inside). The .ai itself isn't
-  committed. Changes to the art: Wants' front handle was two embedded
-  flat-navy raster patches, now vector rects of the same colour; and the
-  drawn NEEDS / WANTS lettering is replaced by text in **Area Normal
+  and run `smooth.py` then `build.py` (instructions inside). The .ai
+  itself isn't committed. The art (28 Oct): the owner's `Basket.ai`, one
+  navy basket with a blank label, redrawn from the first
+  `Needs and Wants Baskets.ai` (same shape and label; that one had too
+  many jagged traced shapes). Navy is Wants; Needs is the same drawing
+  recoloured to the first Needs basket's teal (`teal` in `build.py`, a
+  value curve sampled from the first two baskets; label white and bolt
+  greys stay). On request it's also brushed up in code (`smooth.py`):
+  every outline is thinned to its key points (within 0.8 units), so
+  wobbly straight runs become straight lines; sharp corners get a 1.2
+  round and gentle bends and small curves become smooth curves; each
+  shape gets a 0.8 edge in its own colour so neighbours still meet; 22
+  specks under 2.5 units are dropped. The bolts stay exactly as drawn.
+  The cutout (`FRONT`) and drop area still fit unchanged. The words are
+  text in **Area Normal
   Black** (weight 900, the page heading's font, so it's already loaded),
   size 33 (34 crowds WANTS' corners against the leaning label edges;
   at 33 no letter comes within 5.4 units of the edge), in the old letter colours, tilted 10.75° with the label and
   centred on the label's light panel to within 0.2 units each way
   (measured with the real font against the panel's real outline; the
   panel is lopsided, so its true middle is 1.67 along and 0.81 above its
-  bounding-box centre). Wants' panel had the letters cut out of it as
-  holes, so it keeps only its outer edge. A Glossy 3D restyle was tried;
-  the owner kept the drawn look.
+  bounding-box centre; the new drawing's panel is the same). A Glossy 3D
+  restyle was tried; the owner kept the drawn look.
 
 **On the page** (Kiosk → Screen Content → Scrollable Content; the
 kiosk is 1080 × 1920, and on a wider window the page fills the window):
