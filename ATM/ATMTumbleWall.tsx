@@ -153,7 +153,7 @@ export default function ATMTumbleWall(props: Props) {
                       y: -r - (i % 3) * r,
                       vx: 0,
                       vy: 0,
-                      angle: (i * 47) % 360,
+                      angle: 0,
                       spin: 0,
                       spawnAt: i * dropDelay,
                       live: false,
@@ -170,6 +170,9 @@ export default function ATMTumbleWall(props: Props) {
         // With reduced motion the pile starts settled and holds still
         // until someone grabs a picture.
         let awake = !reduceMotion
+        // The opening rain lands right side up: nothing rolls until someone
+        // first grabs a picture.
+        let stirred = false
         let grabDX = 0
         let grabDY = 0
         let lastPX = 0
@@ -193,6 +196,7 @@ export default function ATMTumbleWall(props: Props) {
                 const p = toLocal(e)
                 held = i
                 awake = true
+                stirred = true
                 b.grabbed = true
                 b.below = true
                 b.rose = null
@@ -341,7 +345,7 @@ export default function ATMTumbleWall(props: Props) {
             for (const b of bodies) {
                 // Below 20px/s it's contact jitter, not rolling.
                 const roll = Math.abs(b.vx) < 20 ? 0 : (b.vx / r) * 57.3
-                if (b.touching) b.spin += (roll - b.spin) * 0.2
+                if (b.touching && stirred) b.spin += (roll - b.spin) * 0.2
             }
         }
 
