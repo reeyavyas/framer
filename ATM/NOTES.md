@@ -1212,7 +1212,8 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 
 - **Race restyle (29 Oct, owner's list):** the week number and Earned so far figure are the same size, in Midnight
   and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
-  Midnight. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 31 px and two lines
+  Midnight, on a yolk tab as wide as the picked lane, flush on top of it (tab's top corners round, the lane's
+  top corners square). Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 31 px and two lines
   tall so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box is at

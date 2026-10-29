@@ -345,7 +345,7 @@ export default function ATMCoinRace(props: Props) {
                     display: "grid",
                     gridTemplateColumns: "repeat(4, 1fr)",
                     gap: "2.4cqw",
-                    marginTop: "2cqw",
+                    marginTop: "4.6cqw", // room for the YOUR PICK tab
                 }}
             >
                 {PICKS.map((k, i) => {
@@ -360,7 +360,8 @@ export default function ATMCoinRace(props: Props) {
                                 flexDirection: "column",
                                 alignItems: "center",
                                 gap: "0.6cqw",
-                                borderRadius: "4cqw",
+                                // the picked lane's top corners are square, so its tab sits flush on top
+                                borderRadius: mine ? "0 0 4cqw 4cqw" : "4cqw",
                                 padding: "2.2cqw 1cqw 2cqw",
                                 background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                 boxShadow: mine
@@ -373,17 +374,21 @@ export default function ATMCoinRace(props: Props) {
                                 <span
                                     style={{
                                         position: "absolute",
-                                        top: "-2.8cqw",
-                                        left: "50%",
-                                        transform: "translateX(-50%)",
+                                        bottom: "100%",
+                                        left: 0,
+                                        right: 0,
+                                        height: "4.6cqw",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
                                         whiteSpace: "nowrap",
                                         background: YOLK,
-                                        borderRadius: 999,
-                                        padding: "0.6cqw 2.2cqw",
+                                        borderRadius: "2.4cqw 2.4cqw 0 0",
                                         fontFamily:
                                             '"Area Normal Black", sans-serif',
-                                        fontSize: "2.8cqw",
-                                        letterSpacing: "0.08em",
+                                        fontSize: "2.6cqw",
+                                        lineHeight: 1,
+                                        letterSpacing: "0.04em",
                                         textTransform: "uppercase",
                                         color: MIDNIGHT,
                                     }}
