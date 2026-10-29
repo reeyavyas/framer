@@ -727,7 +727,7 @@ export default function ATMMoneyDouble(props: Props) {
                 <div
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "1fr auto auto",
+                        gridTemplateColumns: "auto auto 1fr", // the spare width goes to the money, the widest figure
                         alignItems: "end",
                         columnGap: "3cqw",
                     }}
