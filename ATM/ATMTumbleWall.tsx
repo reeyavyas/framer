@@ -638,14 +638,16 @@ export default function ATMTumbleWall(props: Props) {
                             </div>
                         )}
                         <div
-                            style={{
-                                fontFamily: `"Area Normal Bold", sans-serif`,
-                                fontWeight: 700,
-                                fontSize: 36,
-                                lineHeight: 1.2,
-                                color: "#002c44",
-                                textWrap: "balance",
-                            }}
+                            style={
+                                {
+                                    fontFamily: `"Area Normal Bold", sans-serif`,
+                                    fontWeight: 700,
+                                    fontSize: 36,
+                                    lineHeight: 1.2,
+                                    color: "#002c44",
+                                    textWrap: "balance", // Framer's CSS types don't list it yet, hence the cast
+                                } as React.CSSProperties
+                            }
                         >
                             {card.ok
                                 ? card.kind === "need"
