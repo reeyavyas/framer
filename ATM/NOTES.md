@@ -1227,7 +1227,10 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 - **Quick taps (fixed after that test):** Pick Again and Done sit where Fast-forward was, so a fast second tap
   landed on Done and jumped to the completion page. The race ignores taps on them for 0.6 s after it starts, and
   Fast-forward reads the pick when tapped (a tap straight after picking a card used to be ignored). Done's idle
-  timer is 10 s. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  timer is 10 s. Live test after that publish: a tap straight after a card starts the race, and double taps on
+  either half of Fast-forward keep the race (no jump to the completion page, no flicker back to the cards). The
+  idle strip still ran 20 s although every panel showed 10: the primary variant's Coin Race held a stale saved 20
+  the panel didn't show, so Idle was set to 10 on that layer by hand (needs a publish to check). Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if
