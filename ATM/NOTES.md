@@ -1214,7 +1214,9 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
   Midnight, on a yolk tab as wide as the picked lane, flush on top of it (the tab's top corners round; the lane
   keeps its rounded corners, and the tab reaches 4cqw down behind it to fill them). The reveal box has 24px/28px padding and is at least 22cqw tall, its text 35.6px and the compare line 30px;
-  lanes have equal top and bottom padding. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  lanes have 37px padding top and bottom (the coins' spare room), and
+  the reveal has 15px more space above and below than the other gaps. The Coin Race layer is 1154 px tall in Variants
+  6-9 (the most the screen allows; set in each variant), and the lanes take any extra height. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if

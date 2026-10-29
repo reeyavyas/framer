@@ -396,7 +396,7 @@ export default function ATMCoinRace(props: Props) {
                                     alignItems: "center",
                                     gap: "0.6cqw",
                                     borderRadius: "4cqw",
-                                    padding: "2.2cqw 1cqw",
+                                    padding: "4cqw 1cqw", // the coins' spare room goes to the top and bottom of the lane
                                     background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                     boxShadow: mine
                                         ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
@@ -506,6 +506,7 @@ export default function ATMCoinRace(props: Props) {
                         padding: "2.6cqw 3cqw",
                         minHeight: "22cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
                         flex: "none",
+                        margin: "1.6cqw 0", // more room above and below the reveal than the other gaps
                         boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "column",
