@@ -8,9 +8,9 @@ import { gsap } from "gsap"
 // "72 ÷ 8% = 9 years" changes the moment the thumb snaps to a stop. Letting go plays 36 years: the hourglass
 // drains once per doubling and flips, and at each flip the $1,000 doubles and a burst of coins drops onto the
 // stacks (1 coin = $1,000, so 2 coins at 2% and 64 at 12%). Under each stop the slider shows its years to double. At year 36 the reveal
-// for that rate shows and Done appears; it stays from then on. Dragging again stops the run and resets it, so quick
-// taps never stack two runs. With no tap for Idle (s) after a run, an orange strip fills along Done's bottom edge
-// and then it goes to When Done. Runs and the idle strip hold while the inactivity overlay is open. On the Framer
+// for that rate shows. Done shows the whole time. Dragging again stops the run and resets it, so quick
+// taps never stack two runs. Done has no idle timer (the owner wants kids free to drag as long as they like; the
+// page's inactivity overlay covers a walked-away kiosk). Runs hold while that overlay is open. On the Framer
 // canvas it shows a finished run; with reduced motion a run finishes at once. No background of its own.
 //
 // The hourglass is ATMHourglass's art (ATM/artwork/vectors/hourglass/build.py, export_anim) without its clock and
@@ -27,9 +27,7 @@ const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const LIGHT_TEAL = "#3bbfc0"
 const DEEP = "#003b5c"
-const GLACIER = "#d9eeff"
 const MINT = "#bce2d7"
-const ORANGE = "#f6a11d" // Done's idle timer
 const money = (n: number) => "$" + n.toLocaleString("en-US")
 // "$1,300" and the like in bold, the rest as written
 const bold = (s: string) =>
@@ -300,7 +298,6 @@ interface Props {
     compare8: string
     compare12: string
     done: string
-    idle: number
     doneLink: string
 }
 
@@ -334,12 +331,10 @@ export default function ATMMoneyDouble(props: Props) {
         isCanvas ? RATES[startAt] / 2 : 0
     )
     const [finished, setFinished] = React.useState(isCanvas)
-    const [ranOnce, setRanOnce] = React.useState(isCanvas)
     const svgRef = React.useRef<SVGSVGElement | null>(null)
     const trackRef = React.useRef<HTMLDivElement>(null)
     const thumbRef = React.useRef<HTMLDivElement>(null)
     const shineRef = React.useRef<HTMLSpanElement>(null)
-    const fillRef = React.useRef<HTMLSpanElement>(null)
     const totalRef = React.useRef<HTMLDivElement>(null)
     const runs = React.useRef(0)
 
@@ -387,7 +382,6 @@ export default function ATMMoneyDouble(props: Props) {
             setYear(SPAN)
             setDoubled(n)
             setFinished(true)
-            setRanOnce(true)
         }
         if (reduceMotion) return end()
         let tl: gsap.core.Timeline | undefined
@@ -411,29 +405,6 @@ export default function ATMMoneyDouble(props: Props) {
         }
     }, [run, markup])
 
-    // After a run, Done's strip fills over Idle (s) and then goes, unless someone taps first; held while the overlay is open.
-    React.useEffect(() => {
-        const el = fillRef.current
-        if (!finished || isCanvas || !el || props.idle <= 0) return
-        const anim = el.animate(
-            [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
-            {
-                duration: props.idle * 1000,
-                easing: "linear",
-                fill: "forwards",
-            }
-        )
-        anim.onfinish = () => goDoneRef.current()
-        const sync = () =>
-            (window as any).__systemOverlayOpen ? anim.pause() : anim.play()
-        sync()
-        window.addEventListener("system-overlay-change", sync)
-        return () => {
-            window.removeEventListener("system-overlay-change", sync)
-            anim.cancel()
-        }
-    }, [finished, isCanvas, props.idle])
-
     // Until the first touch the thumb nudges side to side, so kids know to drag it.
     React.useEffect(() => {
         const el = thumbRef.current
@@ -450,10 +421,10 @@ export default function ATMMoneyDouble(props: Props) {
         return () => anim.cancel()
     }, [touched, reduceMotion])
 
-    // A sheen sweeps along the track, as on the splash screen's progress bar.
+    // Until the first drag a sheen sweeps along the track, as on the splash screen's progress bar.
     React.useEffect(() => {
         const el = shineRef.current
-        if (reduceMotion || isCanvas || !el) return
+        if (reduceMotion || isCanvas || touched || !el) return
         const anim = el.animate(
             [
                 { transform: "translateX(-100%)" },
@@ -462,7 +433,7 @@ export default function ATMMoneyDouble(props: Props) {
             { duration: 1600, iterations: Infinity, easing: "linear" }
         )
         return () => anim.cancel()
-    }, [reduceMotion, isCanvas])
+    }, [reduceMotion, isCanvas, touched])
 
     const at = (i: number) => i / (RATES.length - 1) // stops evenly spaced along the track
     const snap = (clientX: number) => {
@@ -517,7 +488,7 @@ export default function ATMMoneyDouble(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2cqw",
+                    gap: "3.6cqw", // the same space above and below the hourglass and above Done
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -541,8 +512,10 @@ export default function ATMMoneyDouble(props: Props) {
             <div
                 style={{
                     flex: "none",
+                    position: "relative",
+                    zIndex: 1, // in front of coins dropping in from above
                     borderRadius: "4cqw",
-                    padding: "3.6cqw 5cqw 4cqw",
+                    padding: "3cqw 5cqw 3.4cqw",
                     background: `linear-gradient(160deg, #0e5577, ${DEEP} 70%)`, // Save or Spend's blue lane glass
                     boxShadow:
                         "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
@@ -615,7 +588,7 @@ export default function ATMMoneyDouble(props: Props) {
                                 height: "2.4cqw",
                                 marginTop: "-1.2cqw",
                                 borderRadius: 999,
-                                background: GLACIER,
+                                background: LIGHT_TEAL,
                             }}
                         >
                             <span
@@ -626,28 +599,21 @@ export default function ATMMoneyDouble(props: Props) {
                                     overflow: "hidden",
                                 }}
                             >
-                                <span
-                                    ref={shineRef}
-                                    style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        bottom: 0,
-                                        width: "25%",
-                                        background:
-                                            "linear-gradient(75deg, transparent 0%, rgba(255,255,255,0.65) 50%, transparent 100%)",
-                                        transform: "translateX(-100%)",
-                                    }}
-                                />
+                                {!touched && (
+                                    <span
+                                        ref={shineRef}
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            bottom: 0,
+                                            width: "25%",
+                                            background:
+                                                "linear-gradient(75deg, transparent 0%, rgba(255,255,255,0.65) 50%, transparent 100%)",
+                                            transform: "translateX(-100%)",
+                                        }}
+                                    />
+                                )}
                             </span>
-                            <div
-                                style={{
-                                    position: "relative",
-                                    height: "100%",
-                                    width: `${at(r) * 100}%`,
-                                    borderRadius: 999,
-                                    background: LIGHT_TEAL,
-                                }}
-                            />
                             {RATES.map((_, i) => (
                                 <span
                                     key={i}
@@ -655,14 +621,13 @@ export default function ATMMoneyDouble(props: Props) {
                                         position: "absolute",
                                         top: "50%",
                                         left: `calc(${at(i) * 100}% + ${(0.5 - at(i)) * 2.4}cqw)`, // the end dots sit inside the rounded caps
-                                        width: "1.6cqw",
-                                        height: "1.6cqw",
-                                        margin: "-0.8cqw 0 0 -0.8cqw",
+                                        width: "2.4cqw",
+                                        height: "2.4cqw",
+                                        margin: "-1.2cqw 0 0 -1.2cqw",
+                                        boxSizing: "border-box",
                                         borderRadius: 999,
-                                        background:
-                                            i <= r
-                                                ? "rgba(255,255,255,.85)"
-                                                : "rgba(0,59,92,.3)",
+                                        border: "0.45cqw solid #ffffff", // marks each stop on the teal
+                                        background: i <= r ? "#ffffff" : DEEP,
                                     }}
                                 />
                             ))}
@@ -723,7 +688,7 @@ export default function ATMMoneyDouble(props: Props) {
                         style={{
                             position: "relative",
                             height: "8.4cqw",
-                            margin: "0 7cqw",
+                            margin: "2.6cqw 7cqw 0",
                         }}
                     >
                         {RATES.map((v, i) => (
@@ -755,7 +720,7 @@ export default function ATMMoneyDouble(props: Props) {
                 <div
                     style={{
                         height: 1,
-                        margin: "3cqw 0 3.2cqw",
+                        margin: "2.4cqw 0",
                         background: "rgba(217,238,255,.22)",
                     }}
                 />
@@ -767,7 +732,7 @@ export default function ATMMoneyDouble(props: Props) {
                         columnGap: "3cqw",
                     }}
                 >
-                    <div>
+                    <div style={{ whiteSpace: "nowrap" }}>
                         <div
                             style={{
                                 fontSize: "3.2cqw",
@@ -777,7 +742,7 @@ export default function ATMMoneyDouble(props: Props) {
                                 whiteSpace: "nowrap",
                             }}
                         >
-                            Rule of 72: years to double
+                            Years to double
                         </div>
                         <div
                             style={{
@@ -791,10 +756,9 @@ export default function ATMMoneyDouble(props: Props) {
                         <div
                             style={{
                                 ...big,
-                                fontSize: "6.2cqw",
+                                fontSize: "6.6cqw",
                                 color: YOLK,
                                 marginTop: "0.8cqw",
-                                whiteSpace: "nowrap",
                             }}
                         >
                             {per} years
@@ -804,6 +768,7 @@ export default function ATMMoneyDouble(props: Props) {
                         style={{
                             paddingLeft: "3cqw",
                             borderLeft: "1px solid rgba(217,238,255,.22)",
+                            whiteSpace: "nowrap",
                         }}
                     >
                         <div
@@ -818,12 +783,7 @@ export default function ATMMoneyDouble(props: Props) {
                             Year
                         </div>
                         <div
-                            style={{
-                                ...big,
-                                fontSize: "6.2cqw",
-                                color: "#ffffff",
-                                whiteSpace: "nowrap",
-                            }}
+                            style={{ ...big, fontSize: "6.6cqw", color: YOLK }}
                         >
                             {year}
                             <span
@@ -843,6 +803,7 @@ export default function ATMMoneyDouble(props: Props) {
                         style={{
                             paddingLeft: "3cqw",
                             borderLeft: "1px solid rgba(217,238,255,.22)",
+                            whiteSpace: "nowrap",
                             textAlign: "right",
                         }}
                     >
@@ -861,9 +822,8 @@ export default function ATMMoneyDouble(props: Props) {
                             ref={totalRef}
                             style={{
                                 ...big,
-                                fontSize: "6.2cqw",
+                                fontSize: "6.6cqw",
                                 color: YOLK,
-                                whiteSpace: "nowrap",
                                 transformOrigin: "right bottom",
                             }}
                         >
@@ -878,7 +838,6 @@ export default function ATMMoneyDouble(props: Props) {
                     flex: 1,
                     minHeight: 0,
                     position: "relative",
-                    margin: "3cqw 0 1cqw",
                 }}
             >
                 <svg
@@ -962,12 +921,12 @@ export default function ATMMoneyDouble(props: Props) {
                 style={
                     {
                         padding: "0 1cqw",
-                        minHeight: "15cqw",
+                        minHeight: "13.4cqw", // the reveal's height, so the hourglass keeps its size as the text changes
                         flex: "none",
                         boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "column",
-                        justifyContent: "center",
+                        justifyContent: "flex-start",
                         fontSize: "3.7cqw",
                         lineHeight: 1.35,
                         textWrap: "pretty",
@@ -1007,8 +966,6 @@ export default function ATMMoneyDouble(props: Props) {
                 style={{
                     all: "unset",
                     cursor: "pointer",
-                    position: "relative",
-                    overflow: "hidden",
                     flex: "none",
                     display: "flex",
                     alignItems: "center",
@@ -1022,23 +979,9 @@ export default function ATMMoneyDouble(props: Props) {
                     fontSize: "4.2cqw",
                     lineHeight: 1,
                     color: NAVY,
-                    visibility: ranOnce ? "visible" : "hidden", // keeps its room, so nothing moves when it appears
                 }}
             >
-                <span
-                    ref={fillRef}
-                    style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: "1.2cqw", // a strip along the bottom, so yolk stays the button's colour
-                        background: ORANGE,
-                        transformOrigin: "left",
-                        transform: "scaleX(0)",
-                    }}
-                />
-                <span style={{ position: "relative" }}>{props.done}</span>
+                {props.done}
             </button>
         </div>
     )
@@ -1068,7 +1011,6 @@ ATMMoneyDouble.defaultProps = {
     compare8: "Four doubles in 36 years. Can you go higher?",
     compare12: "That's 64 times what you started with!",
     done: "Done",
-    idle: 10,
     doneLink: "/atm-lessons/can-your-money-double/complete",
 }
 
@@ -1132,16 +1074,6 @@ addPropertyControls(ATMMoneyDouble, {
         type: ControlType.String,
         title: "Done",
         defaultValue: ATMMoneyDouble.defaultProps.done,
-    },
-    idle: {
-        type: ControlType.Number,
-        title: "Idle (s)",
-        description:
-            "With no tap after a run, Done's orange strip fills over this long and then it goes. 0 turns it off.",
-        min: 0,
-        max: 120,
-        step: 1,
-        defaultValue: ATMMoneyDouble.defaultProps.idle,
     },
     doneLink: {
         type: ControlType.Link,

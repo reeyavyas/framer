@@ -1263,8 +1263,8 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 
 A simplified Rule of 72 with $1,000. The kid drags an interest-rate slider; "72 ÷ 8% = 9 years" changes the moment
 the thumb snaps to a stop, and letting go plays 36 years: the hourglass drains once per doubling and flips, the total
-doubles at each flip and a burst of coins drops onto the stacks. At year 36 the reveal for that rate shows and Done
-appears (same orange idle strip as Save or Spend, 10 s). The owner will restyle; code changes come by prompt after.
+doubles at each flip and a burst of coins drops onto the stacks. At year 36 the reveal for that rate shows. Done
+shows the whole time, with no idle timer. The owner will restyle; code changes come by prompt after.
 
 - **Rates are 2, 4, 6, 8 and 12% only.** Each divides 72 into whole years that go into 36 a whole number of times
   (1, 2, 3, 4 and 6 doubles: $2,000 to $64,000). 3% and 9% would give half a double. The stops are evenly spaced
@@ -1274,16 +1274,19 @@ appears (same orange idle strip as Save or Spend, 10 s). The owner will restyle;
   runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
   sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
   it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
-- **Look (owner's asks, in order):** one full-width blue card (Save or Spend's lane glass, taller, with 5cqw padding
-  either side) right under the heading holds the slider and, under a hairline, the numbers: "Rule of 72: years to
-  double" in mint, "72 ÷ 8% =" in white, "9 years" and Your money in yolk (the one accent, matching the coins), Year in
-  white. The slider uses the splash screen's progress bar colours (SplashProgressBar on Phone Lock & Splash's splash
-  variant: Light teal `#3bbfc0` fill on a Glacier blue `#d9eeff` track, a white sheen sweeping at 1.6 s); its end dots
-  sit inside the track's rounded caps. The thumb stays plain yolk with midnight text. Under the card, the hourglass
-  (original colours, no shadow) and the coins share one drawing: the hourglass is exactly as tall as a full 16-coin
-  stack, so the tallest stack matches it; 1 coin = $1,000, and the key sits under them, centred on the page. The tip
-  and reveal are plain text, no card. Turned down along the way: the panel beside the hourglass, the panel between
-  the hourglass and the tip, a teal card, and a teal hourglass.
+- **Look (owner's asks, in order):** one full-width blue card (Save or Spend's lane glass, 5cqw padding either side)
+  right under the heading holds the slider and, under a hairline, one row of numbers: "Years to double" in mint over
+  "72 ÷ 8% =" in white and "9 years" in yolk on its own line (one line was tried, but the card grew and the hourglass
+  shrank too far); then Year (yolk, "/ 36" in mint) and Your money (yolk), each behind a hairline divider. The card sits
+  in front of coins dropping in. The slider track is all Light teal `#3bbfc0` (no glacier blue), with the splash
+  progress bar's white sheen sweeping until the first drag, then still. Each stop is a 2.4cqw dot with a white ring
+  (white when passed, deep blue ahead), the end dots inside the rounded caps. The percent labels sit 2.6cqw under the
+  track. The thumb stays plain yolk with midnight text. Under the card, the hourglass (original colours, no shadow)
+  and the coins share one drawing: the hourglass is as tall as a full 16-coin stack; 1 coin = $1,000, with the key
+  under them centred on the page. The tip and reveal are plain text. One gap (3.6cqw) sits above and below the
+  hourglass and above Done. Done shows the whole time and has no idle timer (the owner wants kids to drag as much as
+  they like; the page's inactivity overlay still covers a walked-away kiosk). Turned down along the way: the panel
+  beside the hourglass, the panel between the hourglass and the tip, a teal card, and a teal hourglass.
 - **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without
   its clock and side stacks, same flip; the coin is ATMCoinRace's. Year (ms) sets the speed (160: 36 years in about
   6 s, plus 0.8 s per flip). Every text is a property; Label is only the slider's screen-reader name now.
