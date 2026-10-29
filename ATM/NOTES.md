@@ -1274,7 +1274,8 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
   runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
   sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
   it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
-- **Look (owner's asks, in order):** one full-width blue card (Save or Spend's lane glass, 5cqw padding either side)
+- **Look (owner's asks, in order):** one full-width card (navy through its top third, turning diagonally to midnight
+  toward the bottom, for contrast; 5cqw padding either side)
   right under the heading holds the slider and, under a hairline, one row of numbers: "Years to double" in mint over
   "72 ÷ 8% =" in white and "9 years" in yolk on its own line (one line was tried, but the card grew and the hourglass
   shrank too far); then Year (yolk, "/ 36" in mint) and Your money (yolk), each behind a hairline divider. The card sits
@@ -1283,8 +1284,9 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
   (white when passed, deep blue ahead), the end dots inside the rounded caps. The percent labels sit 2.6cqw under the
   track. The thumb stays plain yolk with midnight text. Under the card, the hourglass (original colours, no shadow)
   and the coins share one drawing: the hourglass is as tall as a full 16-coin stack; 1 coin = $1,000, with the key
-  under them centred on the page. The tip and reveal are plain text. One gap (3.6cqw) sits above and below the
-  hourglass and above Done. Done shows the whole time and has no idle timer (the owner wants kids to drag as much as
+  under them centred on the page. The tip and reveal are plain text. One gap (3cqw) sits above and below the
+  hourglass and above Done. Done is a slim teal button with white text (7.6cqw tall, so the hourglass gets the room)
+  and shows the whole time and has no idle timer (the owner wants kids to drag as much as
   they like; the page's inactivity overlay still covers a walked-away kiosk). Turned down along the way: the panel
   beside the hourglass, the panel between the hourglass and the tip, a teal card, and a teal hourglass.
 - **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without

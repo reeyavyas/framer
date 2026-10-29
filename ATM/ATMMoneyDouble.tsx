@@ -210,7 +210,7 @@ const COIN_H = (COIN_W * 254.8) / 490
 const COIN_T = (COIN_W * 78.4) / 490
 const STACKS_H = COIN_H + (PER_STACK - 1) * COIN_T + 4
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
-const KEY_H = 22 // the coin key's row under the stacks, in the coins' units
+const KEY_H = 19 // the coin key's row under the stacks, in the coins' units
 // The hourglass is drawn in the coins' units, as tall as a full stack, just left of the first stack (its box has
 // room either side for the flip, hence the negative gap)
 const HG_W = ((STACKS_H - 4) * 1720) / 2178
@@ -488,7 +488,7 @@ export default function ATMMoneyDouble(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "3.6cqw", // the same space above and below the hourglass and above Done
+                    gap: "3cqw", // the same space above and below the hourglass and above Done
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -516,7 +516,7 @@ export default function ATMMoneyDouble(props: Props) {
                     zIndex: 1, // in front of coins dropping in from above
                     borderRadius: "4cqw",
                     padding: "3cqw 5cqw 3.4cqw",
-                    background: `linear-gradient(160deg, #0e5577, ${DEEP} 70%)`, // Save or Spend's blue lane glass
+                    background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`, // navy, turning midnight toward the bottom
                     boxShadow:
                         "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
                     color: "#ffffff",
@@ -970,15 +970,15 @@ export default function ATMMoneyDouble(props: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    height: "10cqw",
+                    height: "7.6cqw",
                     boxSizing: "border-box",
                     paddingBottom: "0.22cqw", // the font sits low, so this centres the label
                     borderRadius: 999,
-                    background: YOLK,
+                    background: TEAL,
                     fontFamily: black,
-                    fontSize: "4.2cqw",
+                    fontSize: "3.8cqw",
                     lineHeight: 1,
-                    color: NAVY,
+                    color: "#ffffff",
                 }}
             >
                 {props.done}
