@@ -450,7 +450,7 @@ export default function ATMCoinRace(props: Props) {
                     {
                         borderRadius: "4cqw",
                         padding: "3.6cqw 4cqw",
-                        height: "24cqw", // fixed, so the lanes keep their size when the reveal replaces the callouts
+                        height: "28cqw", // fixed, so the lanes keep their size when the reveal replaces the callouts
                         boxSizing: "border-box",
                         background: finished
                             ? "#ffffff"

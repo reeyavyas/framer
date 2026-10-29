@@ -1203,6 +1203,30 @@ the session had not loaded them).
   `artwork/ANIMATING-VECTORS.md`, plus `artwork/cart/preview/` (build
   script, preview page, frame capture, outline measuring).
 
+## Lesson 2: Save or Spend? (`/atm-lessons/save-or-spend/lesson`, first draft 29 Oct)
+
+"You just got $100. What do you do?" Four options: A spend it all, B save $10, C save $25, D save $50. Tapping a
+card picks it; **Fast-forward a year** runs a coin race of all four over 52 weeks ($100 a week, $5,200 earned), and
+the reveal for the pick reads "Someone saving $25 from every $100 can save $1,300 after earning $5,200." Pick again
+returns to the cards (pick kept); Done goes to the completion page. The owner will restyle colours, fonts and buttons.
+
+- **Page:** the owner's Question stack (heading, subheading) stays native; under it the **Save or Spend Lesson**
+  component (Assets root). Variant 1 is the cards with nothing picked (button dimmed, "Tap a card to choose."),
+  Variants 2-5 are A-D picked (yellow 8 px border and badge on that card, the pick line, button lit), Variants 6-9
+  are the races for A-D (cards hidden, Coin Race shown with Pick A-D). Cards, pick line, key and button are native
+  layers; only the coin stacks and the race are code. Coins don't hop on pick yet (ATMCoinStack's Hop is wired, just
+  not turned on in Variants 2-5).
+- **Wiring:** Framer interactions couldn't be added from Claude in Chrome, so `ATMSaveOrSpendOverrides.tsx` switches
+  the variants: withLesson on the instance, withCardA-D on the cards, withFastForward on the button, withPickAgain on
+  Coin Race. It names the variants "Variant 1"-"Variant 9"; renaming them in Framer means renaming them there too.
+- **Code:** `ATMCoinStack.tsx` (the jar's coins in stacks: trays at 1 coin = $5, the key's coin), `ATMCoinRace.tsx`
+  (lanes, counters, callouts at weeks 4 and 26, reveal and compare text as properties, Done with a 20 s idle fill).
+  All three are in Code → ATM Components → ATM Lessons (no lesson subfolder, by the no-new-folders rule).
+- **Completion page:** `/atm-lessons/save-or-spend/complete`, a duplicate of Need or Want's (logo, ATM Lesson
+  Completion with ATMLessonCompleteRedirect, back to /atm-start after 5 s). The lesson page is still a Draft.
+- **Fits the kiosk:** the cards were tightened (coin trays 112 tall, 40 px corners) so the button sits above the 1920
+  bottom edge under the owner's heading.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
