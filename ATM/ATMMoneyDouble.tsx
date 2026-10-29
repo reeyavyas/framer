@@ -532,204 +532,338 @@ export default function ATMMoneyDouble(props: Props) {
                 />
             </svg>
 
-            <div style={{ flex: "none" }}>
-                <div
-                    role="slider"
-                    tabIndex={0}
-                    aria-label={props.label}
-                    aria-valuemin={RATES[0]}
-                    aria-valuemax={RATES[RATES.length - 1]}
-                    aria-valuenow={rate}
-                    aria-valuetext={`${rate}%`}
-                    onPointerDown={(e) => {
-                        e.currentTarget.setPointerCapture(e.pointerId)
-                        setDragging(true)
-                        stop()
-                        snap(e.clientX)
-                    }}
-                    onPointerMove={(e) => {
-                        if (dragging) snap(e.clientX)
-                    }}
-                    onPointerUp={() => {
-                        if (!dragging) return
-                        setDragging(false)
-                        go()
-                    }}
-                    onPointerCancel={() => {
-                        if (!dragging) return
-                        setDragging(false)
-                        go()
-                    }}
-                    onKeyDown={(e) => {
-                        const d =
-                            e.key === "ArrowRight" || e.key === "ArrowUp"
-                                ? 1
-                                : e.key === "ArrowLeft" || e.key === "ArrowDown"
-                                  ? -1
-                                  : 0
-                        const next = Math.min(
-                            RATES.length - 1,
-                            Math.max(0, r + d)
-                        )
-                        if (!d || next === r) return
-                        e.preventDefault()
-                        stop()
-                        rRef.current = next
-                        setR(next)
-                        go()
-                    }}
-                    style={{
-                        position: "relative",
-                        padding: "0 7cqw",
-                        height: "14cqw",
-                        cursor: "pointer",
-                        touchAction: "none",
-                        outline: "none",
-                    }}
-                >
+            <div
+                style={{
+                    flex: "none",
+                    borderRadius: "4cqw",
+                    padding: "2.4cqw 3cqw 2.8cqw",
+                    background: `linear-gradient(160deg, #0e5577, ${DEEP} 70%)`, // Save or Spend's blue lane glass
+                    boxShadow:
+                        "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
+                    color: "#ffffff",
+                }}
+            >
+                <div style={{ flex: "none" }}>
                     <div
-                        ref={trackRef}
+                        role="slider"
+                        tabIndex={0}
+                        aria-label={props.label}
+                        aria-valuemin={RATES[0]}
+                        aria-valuemax={RATES[RATES.length - 1]}
+                        aria-valuenow={rate}
+                        aria-valuetext={`${rate}%`}
+                        onPointerDown={(e) => {
+                            e.currentTarget.setPointerCapture(e.pointerId)
+                            setDragging(true)
+                            stop()
+                            snap(e.clientX)
+                        }}
+                        onPointerMove={(e) => {
+                            if (dragging) snap(e.clientX)
+                        }}
+                        onPointerUp={() => {
+                            if (!dragging) return
+                            setDragging(false)
+                            go()
+                        }}
+                        onPointerCancel={() => {
+                            if (!dragging) return
+                            setDragging(false)
+                            go()
+                        }}
+                        onKeyDown={(e) => {
+                            const d =
+                                e.key === "ArrowRight" || e.key === "ArrowUp"
+                                    ? 1
+                                    : e.key === "ArrowLeft" ||
+                                        e.key === "ArrowDown"
+                                      ? -1
+                                      : 0
+                            const next = Math.min(
+                                RATES.length - 1,
+                                Math.max(0, r + d)
+                            )
+                            if (!d || next === r) return
+                            e.preventDefault()
+                            stop()
+                            rRef.current = next
+                            setR(next)
+                            go()
+                        }}
                         style={{
-                            position: "absolute",
-                            left: "7cqw",
-                            right: "7cqw",
-                            top: "50%",
-                            height: "2.4cqw",
-                            marginTop: "-1.2cqw",
-                            borderRadius: 999,
-                            background: "rgba(0,44,68,.12)",
+                            position: "relative",
+                            padding: "0 7cqw",
+                            height: "14cqw",
+                            cursor: "pointer",
+                            touchAction: "none",
+                            outline: "none",
                         }}
                     >
-                        <span
+                        <div
+                            ref={trackRef}
                             style={{
                                 position: "absolute",
-                                inset: 0,
+                                left: "7cqw",
+                                right: "7cqw",
+                                top: "50%",
+                                height: "2.4cqw",
+                                marginTop: "-1.2cqw",
                                 borderRadius: 999,
-                                overflow: "hidden",
+                                background: "rgba(255,255,255,.16)",
                             }}
                         >
                             <span
-                                ref={shineRef}
                                 style={{
                                     position: "absolute",
-                                    top: 0,
-                                    bottom: 0,
-                                    width: "25%",
-                                    background:
-                                        "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0))",
-                                    transform: "translateX(-100%)",
+                                    inset: 0,
+                                    borderRadius: 999,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <span
+                                    ref={shineRef}
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        bottom: 0,
+                                        width: "25%",
+                                        background:
+                                            "linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0))",
+                                        transform: "translateX(-100%)",
+                                    }}
+                                />
+                            </span>
+                            <div
+                                style={{
+                                    position: "relative",
+                                    height: "100%",
+                                    width: `${at(r) * 100}%`,
+                                    borderRadius: 999,
+                                    background: `linear-gradient(90deg, #3bbfc0, ${MINT})`,
                                 }}
                             />
-                        </span>
-                        <div
-                            style={{
-                                position: "relative",
-                                height: "100%",
-                                width: `${at(r) * 100}%`,
-                                borderRadius: 999,
-                                background: `linear-gradient(90deg, ${TEAL}, #3bbfc0)`,
-                            }}
-                        />
-                        {RATES.map((_, i) => (
-                            <span
-                                key={i}
+                            {RATES.map((_, i) => (
+                                <span
+                                    key={i}
+                                    style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: `${at(i) * 100}%`,
+                                        width: "1.6cqw",
+                                        height: "1.6cqw",
+                                        margin: "-0.8cqw 0 0 -0.8cqw",
+                                        borderRadius: 999,
+                                        background:
+                                            i <= r
+                                                ? "rgba(0,59,92,.55)"
+                                                : "rgba(255,255,255,.4)",
+                                    }}
+                                />
+                            ))}
+                            <div
                                 style={{
                                     position: "absolute",
                                     top: "50%",
-                                    left: `${at(i) * 100}%`,
-                                    width: "1.6cqw",
-                                    height: "1.6cqw",
-                                    margin: "-0.8cqw 0 0 -0.8cqw",
-                                    borderRadius: 999,
-                                    background:
-                                        i <= r ? "#ffffff" : "rgba(0,44,68,.3)",
-                                }}
-                            />
-                        ))}
-                        <div
-                            style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: `${at(r) * 100}%`,
-                                width: 0,
-                                height: 0,
-                            }}
-                        >
-                            <div
-                                ref={thumbRef}
-                                style={{
-                                    position: "absolute",
-                                    left: "-7cqw",
-                                    top: "-7cqw",
-                                    width: "14cqw",
-                                    height: "14cqw",
-                                    borderRadius: 999,
-                                    background: YOLK,
-                                    boxShadow:
-                                        "inset 0 -0.5cqw 0 rgba(246,161,29,.35), 0 1cqw 2.4cqw rgba(0,44,68,.25)", // a touch of the coins' orange underneath
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontFamily: black,
-                                    fontSize: "5cqw",
-                                    lineHeight: 1,
-                                    color: MIDNIGHT,
+                                    left: `${at(r) * 100}%`,
+                                    width: 0,
+                                    height: 0,
                                 }}
                             >
-                                {rate}%
-                                {!touched && (
-                                    <span
-                                        style={{
-                                            position: "absolute",
-                                            left: "calc(100% + 2cqw)", // beside the thumb, clear of the label above
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            whiteSpace: "nowrap",
-                                            padding: "1.2cqw 2.4cqw",
-                                            borderRadius: 999,
-                                            background: MIDNIGHT,
-                                            color: "#ffffff",
-                                            fontSize: "3.6cqw",
-                                        }}
-                                    >
-                                        {props.nudge}
-                                    </span>
-                                )}
+                                <div
+                                    ref={thumbRef}
+                                    style={{
+                                        position: "absolute",
+                                        left: "-7cqw",
+                                        top: "-7cqw",
+                                        width: "14cqw",
+                                        height: "14cqw",
+                                        borderRadius: 999,
+                                        background: YOLK,
+                                        boxShadow:
+                                            "inset 0 -0.5cqw 0 rgba(246,161,29,.35), 0 1cqw 2.4cqw rgba(0,44,68,.25)", // a touch of the coins' orange underneath
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontFamily: black,
+                                        fontSize: "5cqw",
+                                        lineHeight: 1,
+                                        color: MIDNIGHT,
+                                    }}
+                                >
+                                    {rate}%
+                                    {!touched && (
+                                        <span
+                                            style={{
+                                                position: "absolute",
+                                                left: "calc(100% + 2cqw)", // beside the thumb, clear of the label above
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                whiteSpace: "nowrap",
+                                                padding: "1.2cqw 2.4cqw",
+                                                borderRadius: 999,
+                                                background: "#ffffff",
+                                                color: MIDNIGHT,
+                                                fontSize: "3.6cqw",
+                                            }}
+                                        >
+                                            {props.nudge}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    <div
+                        style={{
+                            position: "relative",
+                            height: "8.4cqw",
+                            margin: "0 7cqw",
+                        }}
+                    >
+                        {RATES.map((v, i) => (
+                            <span
+                                key={v}
+                                style={{
+                                    position: "absolute",
+                                    left: `${at(i) * 100}%`,
+                                    transform: "translateX(-50%)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "0.8cqw",
+                                    whiteSpace: "nowrap",
+                                    fontFamily: i === r ? black : undefined,
+                                    fontSize: "4.4cqw",
+                                    lineHeight: 1,
+                                    color: i === r ? "#ffffff" : MINT,
+                                }}
+                            >
+                                {v}%
+                                <span style={{ fontSize: "3.4cqw" }}>
+                                    {72 / v} yrs
+                                </span>
+                            </span>
+                        ))}
                     </div>
                 </div>
                 <div
                     style={{
-                        position: "relative",
-                        height: "8.4cqw",
-                        margin: "0 7cqw",
+                        height: 1,
+                        margin: "2.2cqw 0 2.4cqw",
+                        background: "rgba(217,238,255,.22)",
+                    }}
+                />
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto auto",
+                        alignItems: "end",
+                        columnGap: "3cqw",
                     }}
                 >
-                    {RATES.map((v, i) => (
-                        <span
-                            key={v}
+                    <div>
+                        <div
                             style={{
-                                position: "absolute",
-                                left: `${at(i) * 100}%`,
-                                transform: "translateX(-50%)",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: "0.8cqw",
-                                whiteSpace: "nowrap",
-                                fontFamily: i === r ? black : undefined,
-                                fontSize: "4.4cqw",
+                                fontSize: "3.2cqw",
                                 lineHeight: 1,
-                                color: i === r ? MIDNIGHT : TEAL,
+                                color: MINT,
+                                marginBottom: "1.2cqw",
+                                whiteSpace: "nowrap",
                             }}
                         >
-                            {v}%
-                            <span style={{ fontSize: "3.4cqw" }}>
-                                {72 / v} yrs
+                            Rule of 72: years to double
+                        </div>
+                        <div
+                            style={{
+                                ...big,
+                                fontSize: "4.6cqw",
+                                color: "#ffffff",
+                            }}
+                        >
+                            72 ÷ {rate}% =
+                        </div>
+                        <div
+                            style={{
+                                ...big,
+                                fontSize: "6.6cqw",
+                                color: YOLK,
+                                marginTop: "0.8cqw",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {per} years
+                        </div>
+                    </div>
+                    <div
+                        style={{
+                            paddingLeft: "3cqw",
+                            borderLeft: "1px solid rgba(217,238,255,.22)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: "3.2cqw",
+                                lineHeight: 1,
+                                color: MINT,
+                                marginBottom: "1.2cqw",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            Year
+                        </div>
+                        <div
+                            style={{
+                                ...big,
+                                fontSize: "6.6cqw",
+                                color: "#ffffff",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {year}
+                            <span
+                                style={{
+                                    fontFamily:
+                                        '"Area Normal Bold", sans-serif',
+                                    fontSize: "3.4cqw",
+                                    color: MINT,
+                                }}
+                            >
+                                {" "}
+                                / {SPAN}
                             </span>
-                        </span>
-                    ))}
+                        </div>
+                    </div>
+                    <div
+                        style={{
+                            paddingLeft: "3cqw",
+                            borderLeft: "1px solid rgba(217,238,255,.22)",
+                            textAlign: "right",
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: "3.2cqw",
+                                lineHeight: 1,
+                                color: MINT,
+                                marginBottom: "1.2cqw",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            Your money
+                        </div>
+                        <div
+                            ref={totalRef}
+                            style={{
+                                ...big,
+                                fontSize: "6.6cqw",
+                                color: YOLK,
+                                whiteSpace: "nowrap",
+                                transformOrigin: "right bottom",
+                            }}
+                        >
+                            {money(START * coins)}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -757,161 +891,40 @@ export default function ATMMoneyDouble(props: Props) {
                         minHeight: 0,
                         display: "flex",
                         flexDirection: "column",
-                        gap: "2.4cqw",
+                        gap: "1.6cqw",
                     }}
                 >
                     <div
                         style={{
                             flex: "none",
-                            borderRadius: "4cqw",
-                            padding: "2.6cqw 3cqw",
-                            background: `linear-gradient(160deg, #0e5577, ${DEEP} 70%)`, // Save or Spend's blue lane glass
-                            boxShadow:
-                                "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
-                            color: "#ffffff",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1.2cqw",
+                            fontFamily: black,
+                            fontSize: "3.6cqw",
+                            lineHeight: 1,
+                            color: MIDNIGHT,
                         }}
                     >
-                        <div
+                        <svg
+                            viewBox="-250 -90 500 258"
                             style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                gap: "2cqw",
-                                fontSize: "3.4cqw",
-                                lineHeight: 1,
-                                color: MINT,
+                                width: "5cqw",
+                                height: "auto",
+                                display: "block",
                             }}
+                            aria-hidden="true"
                         >
-                            Rule of 72
-                            <span
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "1cqw",
+                            <g
+                                dangerouslySetInnerHTML={{
+                                    __html: COIN.replace(
+                                        /url\(#/g,
+                                        `url(#${uid}`
+                                    ),
                                 }}
-                            >
-                                <svg
-                                    viewBox="-250 -90 500 258"
-                                    style={{
-                                        width: "4.4cqw",
-                                        height: "auto",
-                                        display: "block",
-                                    }}
-                                    aria-hidden="true"
-                                >
-                                    <g
-                                        dangerouslySetInnerHTML={{
-                                            __html: COIN.replace(
-                                                /url\(#/g,
-                                                `url(#${uid}`
-                                            ),
-                                        }}
-                                    />
-                                </svg>
-                                = {money(START)}
-                            </span>
-                        </div>
-                        <div
-                            style={{
-                                ...big,
-                                fontSize: "4.6cqw",
-                                color: "#ffffff",
-                                marginTop: "1.6cqw",
-                            }}
-                        >
-                            72 ÷ {rate}% =
-                        </div>
-                        <div
-                            style={{
-                                ...big,
-                                fontSize: "8cqw",
-                                color: YOLK,
-                                marginTop: "1cqw",
-                            }}
-                        >
-                            {per} years{" "}
-                            <span
-                                style={{
-                                    fontFamily:
-                                        '"Area Normal Bold", sans-serif',
-                                    fontSize: "3.6cqw",
-                                    color: MINT,
-                                }}
-                            >
-                                to double
-                            </span>
-                        </div>
-                        <div
-                            style={{
-                                height: 1,
-                                margin: "2.2cqw 0",
-                                background: "rgba(217,238,255,.22)",
-                            }}
-                        />
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "flex-end",
-                                justifyContent: "space-between",
-                                gap: "2cqw",
-                            }}
-                        >
-                            <div>
-                                <div
-                                    style={{
-                                        fontSize: "3.2cqw",
-                                        lineHeight: 1,
-                                        color: MINT,
-                                        marginBottom: "1cqw",
-                                    }}
-                                >
-                                    Year
-                                </div>
-                                <div
-                                    style={{
-                                        ...big,
-                                        fontSize: "7cqw",
-                                        color: "#ffffff",
-                                    }}
-                                >
-                                    {year}
-                                    <span
-                                        style={{
-                                            fontFamily:
-                                                '"Area Normal Bold", sans-serif',
-                                            fontSize: "3.6cqw",
-                                            color: MINT,
-                                        }}
-                                    >
-                                        {" "}
-                                        / {SPAN}
-                                    </span>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                                <div
-                                    style={{
-                                        fontSize: "3.2cqw",
-                                        lineHeight: 1,
-                                        color: MINT,
-                                        marginBottom: "1cqw",
-                                    }}
-                                >
-                                    Your money
-                                </div>
-                                <div
-                                    ref={totalRef}
-                                    style={{
-                                        ...big,
-                                        fontSize: "8.4cqw",
-                                        color: YOLK,
-                                        transformOrigin: "right bottom",
-                                    }}
-                                >
-                                    {money(START * coins)}
-                                </div>
-                            </div>
-                        </div>
+                            />
+                        </svg>
+                        = {money(START)}
                     </div>
                     <svg
                         viewBox={`0 0 ${STACKS_W} ${STACKS_H}`}
@@ -946,20 +959,13 @@ export default function ATMMoneyDouble(props: Props) {
                 aria-live="polite"
                 style={
                     {
-                        borderRadius: "4cqw",
-                        padding: "2.2cqw 3cqw",
-                        minHeight: "17cqw",
+                        padding: "0 1cqw",
+                        minHeight: "15cqw",
                         flex: "none",
                         boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
-                        background: finished
-                            ? "#ffffff"
-                            : "rgba(255,255,255,.45)",
-                        boxShadow: finished
-                            ? `inset 0 0 0 0.5cqw ${TEAL}`
-                            : "none",
                         fontSize: "3.7cqw",
                         lineHeight: 1.35,
                         textWrap: "pretty",
