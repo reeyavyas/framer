@@ -26,9 +26,17 @@ const MIDNIGHT = "#11232d"
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const LIGHT_TEAL = "#3bbfc0"
-const DEEP = "#003b5c"
 const MINT = "#bce2d7"
 const money = (n: number) => "$" + n.toLocaleString("en-US")
+// A value in a box as wide as its widest value, centred, so the row's spacing holds still as the numbers change
+const fit = (value: React.ReactNode, widest: string) => (
+    <span style={{ display: "inline-grid", justifyItems: "center" }}>
+        <span style={{ gridArea: "1 / 1", visibility: "hidden" }}>
+            {widest}
+        </span>
+        <span style={{ gridArea: "1 / 1" }}>{value}</span>
+    </span>
+)
 // "$1,300" and the like in bold, the rest as written
 const bold = (s: string) =>
     s.split(/(\$[\d,]+)/).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p))
@@ -211,6 +219,7 @@ const COIN_T = (COIN_W * 78.4) / 490
 const STACKS_H = COIN_H + (PER_STACK - 1) * COIN_T + 4
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
 const KEY_H = 19 // the coin key's row under the stacks, in the coins' units
+const KEY_AIR = (KEY_H - 12) / 2 + 2 // as much air above the hourglass as shows under the key (its centred text plus the tip's leading)
 // The hourglass is drawn in the coins' units, as tall as a full stack, just left of the first stack (its box has
 // room either side for the flip, hence the negative gap)
 const HG_W = ((STACKS_H - 4) * 1720) / 2178
@@ -626,8 +635,8 @@ export default function ATMMoneyDouble(props: Props) {
                                         margin: "-1.2cqw 0 0 -1.2cqw",
                                         boxSizing: "border-box",
                                         borderRadius: 999,
-                                        border: "0.45cqw solid #ffffff", // marks each stop on the teal
-                                        background: i <= r ? "#ffffff" : DEEP,
+                                        border: `0.45cqw solid ${i <= r ? YOLK : "#ffffff"}`, // stops dragged over are yolk, the rest white
+                                        background: i <= r ? YOLK : "#ffffff",
                                     }}
                                 />
                             ))}
@@ -726,20 +735,20 @@ export default function ATMMoneyDouble(props: Props) {
                 />
                 <div
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: "auto auto 1fr", // the spare width goes to the money, the widest figure
-                        alignItems: "end",
-                        columnGap: "3cqw",
+                        display: "flex",
+                        alignItems: "flex-end",
+                        justifyContent: "space-between", // even gaps either side of each divider
+                        textAlign: "center",
+                        whiteSpace: "nowrap",
                     }}
                 >
-                    <div style={{ whiteSpace: "nowrap" }}>
+                    <div>
                         <div
                             style={{
                                 fontSize: "3.2cqw",
                                 lineHeight: 1,
                                 color: MINT,
                                 marginBottom: "1.2cqw",
-                                whiteSpace: "nowrap",
                             }}
                         >
                             Years to double
@@ -751,7 +760,7 @@ export default function ATMMoneyDouble(props: Props) {
                                 color: "#ffffff",
                             }}
                         >
-                            72 ÷ {rate}% =
+                            {fit(`72 ÷ ${rate}% =`, "72 ÷ 12% =")}
                         </div>
                         <div
                             style={{
@@ -761,23 +770,23 @@ export default function ATMMoneyDouble(props: Props) {
                                 marginTop: "0.8cqw",
                             }}
                         >
-                            {per} years
+                            {fit(`${per} years`, "36 years")}
                         </div>
                     </div>
-                    <div
+                    <span
                         style={{
-                            paddingLeft: "3cqw",
-                            borderLeft: "1px solid rgba(217,238,255,.22)",
-                            whiteSpace: "nowrap",
+                            alignSelf: "stretch",
+                            width: 1,
+                            background: "rgba(217,238,255,.22)",
                         }}
-                    >
+                    />
+                    <div>
                         <div
                             style={{
                                 fontSize: "3.2cqw",
                                 lineHeight: 1,
                                 color: MINT,
                                 marginBottom: "1.2cqw",
-                                whiteSpace: "nowrap",
                             }}
                         >
                             Year
@@ -785,7 +794,7 @@ export default function ATMMoneyDouble(props: Props) {
                         <div
                             style={{ ...big, fontSize: "6.6cqw", color: YOLK }}
                         >
-                            {year}
+                            {fit(year, "36")}
                             <span
                                 style={{
                                     fontFamily:
@@ -799,21 +808,20 @@ export default function ATMMoneyDouble(props: Props) {
                             </span>
                         </div>
                     </div>
-                    <div
+                    <span
                         style={{
-                            paddingLeft: "3cqw",
-                            borderLeft: "1px solid rgba(217,238,255,.22)",
-                            whiteSpace: "nowrap",
-                            textAlign: "right",
+                            alignSelf: "stretch",
+                            width: 1,
+                            background: "rgba(217,238,255,.22)",
                         }}
-                    >
+                    />
+                    <div>
                         <div
                             style={{
                                 fontSize: "3.2cqw",
                                 lineHeight: 1,
                                 color: MINT,
                                 marginBottom: "1.2cqw",
-                                whiteSpace: "nowrap",
                             }}
                         >
                             Your money
@@ -824,10 +832,10 @@ export default function ATMMoneyDouble(props: Props) {
                                 ...big,
                                 fontSize: "6.6cqw",
                                 color: YOLK,
-                                transformOrigin: "right bottom",
+                                transformOrigin: "center bottom",
                             }}
                         >
-                            {money(START * coins)}
+                            {fit(money(START * coins), money(START * 64))}
                         </div>
                     </div>
                 </div>
@@ -841,7 +849,7 @@ export default function ATMMoneyDouble(props: Props) {
                 }}
             >
                 <svg
-                    viewBox={`${-HG_W - HG_GAP} 2 ${HG_W + HG_GAP + 4 * STACK_GAP} ${STACKS_H - 4 + KEY_H}`}
+                    viewBox={`${-HG_W - HG_GAP} ${2 - KEY_AIR} ${HG_W + HG_GAP + 4 * STACK_GAP} ${STACKS_H - 4 + KEY_H + KEY_AIR}`}
                     preserveAspectRatio="xMidYMax meet"
                     style={{
                         position: "absolute",
