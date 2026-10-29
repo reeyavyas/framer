@@ -1217,7 +1217,13 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   lanes have 37px padding top and bottom (the coins' spare room), and
   the reveal has 15px more space above and below than the other gaps; the key gets the same above it, so it
   sits centred between the lanes and the reveal. The Coin Race layer is 1154 px tall in Variants
-  6-9 (the most the screen allows; set in each variant), and the lanes take any extra height. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  6-9 (the most the screen allows; set in each variant), and the lanes take any extra height.
+- **Live test (29 Oct, after the restyle publish, 1080 x 1920):** Fast-forward does nothing before a pick; cards
+  A-D highlight; every race runs in 5.7 s with the right reveal and comparison; Pick Again and Done show and work
+  mid-race; Pick Again keeps the pick; idle Done fills its orange strip and leaves after 20.0 s; Done and X go to
+  the completion page and `/atm-start`; the race ends at 1830 px, inside the screen. P22 Mackinac ExtraBold
+  loads on the live page. Need or Want (tumble wall cast) still sorts and shows its card. Seen but not changed:
+  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`). Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if
