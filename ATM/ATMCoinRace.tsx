@@ -354,29 +354,18 @@ export default function ATMCoinRace(props: Props) {
                     return (
                         <div
                             key={k}
-                            style={{
-                                position: "relative",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: "0.6cqw",
-                                borderRadius: "4cqw",
-                                padding: "2.2cqw 1cqw 2cqw",
-                                background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
-                                boxShadow: mine
-                                    ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
-                                    : "inset 0 0 0 1px rgba(217,238,255,.22)",
-                                color: "#ffffff",
-                            }}
+                            style={{ position: "relative", display: "flex" }}
                         >
                             {mine && (
                                 <span
                                     style={{
                                         position: "absolute",
-                                        bottom: "100%",
+                                        bottom: "calc(100% - 4cqw)", // reaches down behind the lane's rounded top corners
                                         left: 0,
                                         right: 0,
-                                        height: "4.6cqw",
+                                        height: "8.6cqw",
+                                        paddingBottom: "4cqw", // keeps the text in the part above the lane
+                                        boxSizing: "border-box",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -395,61 +384,80 @@ export default function ATMCoinRace(props: Props) {
                                     Your pick
                                 </span>
                             )}
-                            <span
+                            <div
                                 style={{
-                                    fontFamily:
-                                        '"Area Normal Black", sans-serif',
-                                    fontSize: "4cqw",
-                                }}
-                            >
-                                {k}
-                            </span>
-                            <svg
-                                viewBox={`0 0 100 ${LANE_H}`}
-                                preserveAspectRatio="xMidYMax meet"
-                                style={{
-                                    width: "100%",
+                                    position: "relative",
+                                    zIndex: 1, // in front of the tab
                                     flex: 1,
-                                    minHeight: "10cqw", // keeps the coins a good size, so the lane grows instead
-                                    overflow: "visible",
-                                }}
-                                aria-hidden="true"
-                            >
-                                {Array.from({ length: coins }, (_, c) => (
-                                    <LaneCoin
-                                        key={c}
-                                        i={c}
-                                        stacks={Math.ceil(
-                                            Math.floor(
-                                                (WEEKS * SAVE[i]) / 100
-                                            ) / PER_STACK
-                                        )}
-                                        uid={uid}
-                                        drop={!still}
-                                    />
-                                ))}
-                            </svg>
-                            <span
-                                style={{
-                                    fontFamily:
-                                        '"Area Normal Black", sans-serif',
-                                    fontSize: "4.6cqw",
-                                    marginBottom: "1cqw",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "0.6cqw",
+                                    borderRadius: "4cqw",
+                                    padding: "2.2cqw 1cqw 2cqw",
+                                    background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
+                                    boxShadow: mine
+                                        ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
+                                        : "inset 0 0 0 1px rgba(217,238,255,.22)",
+                                    color: "#ffffff",
                                 }}
                             >
-                                {money(week * SAVE[i])}
-                            </span>
-                            <span
-                                style={{
-                                    fontSize: "3.37cqw", // 31px at the race's 920px width
-                                    color: MINT,
-                                    textAlign: "center",
-                                    lineHeight: 1.2,
-                                    minHeight: "2.4em", // two lines, so the lanes' dollar figures line up
-                                }}
-                            >
-                                {WHO[i]}
-                            </span>
+                                <span
+                                    style={{
+                                        fontFamily:
+                                            '"Area Normal Black", sans-serif',
+                                        fontSize: "4cqw",
+                                    }}
+                                >
+                                    {k}
+                                </span>
+                                <svg
+                                    viewBox={`0 0 100 ${LANE_H}`}
+                                    preserveAspectRatio="xMidYMax meet"
+                                    style={{
+                                        width: "100%",
+                                        flex: 1,
+                                        minHeight: "10cqw", // keeps the coins a good size, so the lane grows instead
+                                        overflow: "visible",
+                                    }}
+                                    aria-hidden="true"
+                                >
+                                    {Array.from({ length: coins }, (_, c) => (
+                                        <LaneCoin
+                                            key={c}
+                                            i={c}
+                                            stacks={Math.ceil(
+                                                Math.floor(
+                                                    (WEEKS * SAVE[i]) / 100
+                                                ) / PER_STACK
+                                            )}
+                                            uid={uid}
+                                            drop={!still}
+                                        />
+                                    ))}
+                                </svg>
+                                <span
+                                    style={{
+                                        fontFamily:
+                                            '"Area Normal Black", sans-serif',
+                                        fontSize: "4.6cqw",
+                                        marginBottom: "1cqw",
+                                    }}
+                                >
+                                    {money(week * SAVE[i])}
+                                </span>
+                                <span
+                                    style={{
+                                        fontSize: "3.37cqw", // 31px at the race's 920px width
+                                        color: MINT,
+                                        textAlign: "center",
+                                        lineHeight: 1.2,
+                                        minHeight: "2.4em", // two lines, so the lanes' dollar figures line up
+                                    }}
+                                >
+                                    {WHO[i]}
+                                </span>
+                            </div>
                         </div>
                     )
                 })}
