@@ -24,8 +24,12 @@ const YOLK = "#ffcc40"
 const DEEP = "#003b5c" // the lanes: the same blue glass as the option cards
 const MINT = "#bce2d7"
 const AMBER = "#c98612" // the yolk button's edge
-const LANE_H = 300 // a lane's drawing is 100 wide and this tall
-const COIN_W = 52 // 26 coins (lane D) reach 240 of 300, clear of the lane's letter
+// A lane's coins stand in stacks of 10, filled left to right and centred on the lane's final number of stacks (lane
+// D's 26 coins make three), so nothing shifts mid-race; three stacks leave 10 of the lane's 100 free at each edge.
+const LANE_H = 52 // a lane's drawing is 100 wide and this tall
+const COIN_W = 24
+const PER_STACK = 10
+const STACK_GAP = 28 // stack centre to centre
 const COIN_H = (COIN_W * 254.8) / 490
 const COIN_T = (COIN_W * 78.4) / 490
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
@@ -71,13 +75,23 @@ interface Props {
 }
 
 // One coin on a lane's stack; it drops in when it first appears during the race.
-function LaneCoin({ i, uid, drop }: { i: number; uid: string; drop: boolean }) {
+function LaneCoin({
+    i,
+    stacks,
+    uid,
+    drop,
+}: {
+    i: number
+    stacks: number
+    uid: string
+    drop: boolean
+}) {
     const ref = React.useRef<SVGGElement>(null)
     React.useLayoutEffect(() => {
         if (drop)
             ref.current?.animate(
                 [
-                    { transform: "translateY(-90px)", opacity: 0 },
+                    { transform: "translateY(-30px)", opacity: 0 },
                     {
                         transform: "none",
                         opacity: 1,
@@ -90,8 +104,12 @@ function LaneCoin({ i, uid, drop }: { i: number; uid: string; drop: boolean }) {
                 { duration: 420, easing: "cubic-bezier(.5,0,.75,0)" }
             )
     }, [])
-    const x = 50 - COIN_W / 2 + (JIT[i % JIT.length] * COIN_W) / 64 + COIN_W / 2
-    const y = LANE_H - 6 - COIN_H - i * COIN_T + (88.2 * COIN_W) / 490
+    const r = i % PER_STACK
+    const x =
+        50 +
+        (Math.floor(i / PER_STACK) - (stacks - 1) / 2) * STACK_GAP +
+        (JIT[r % JIT.length] * COIN_W) / 64
+    const y = LANE_H - 2 - COIN_H - r * COIN_T + (88.2 * COIN_W) / 490
     return (
         <g ref={ref}>
             <g
@@ -373,6 +391,7 @@ export default function ATMCoinRace(props: Props) {
                             </span>
                             <svg
                                 viewBox={`0 0 100 ${LANE_H}`}
+                                preserveAspectRatio="xMidYMax meet"
                                 style={{
                                     width: "100%",
                                     flex: 1,
@@ -385,6 +404,11 @@ export default function ATMCoinRace(props: Props) {
                                     <LaneCoin
                                         key={c}
                                         i={c}
+                                        stacks={Math.ceil(
+                                            Math.floor(
+                                                (WEEKS * SAVE[i]) / 100
+                                            ) / PER_STACK
+                                        )}
                                         uid={uid}
                                         drop={!still}
                                     />
