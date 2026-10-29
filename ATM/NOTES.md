@@ -1274,9 +1274,12 @@ appears (same orange idle strip as Save or Spend, 10 s). The owner will restyle;
   runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
   sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
   it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
-- **Look (owner's asks):** slider above the hourglass; thumb plain yolk with midnight text; the equation card is
-  Save or Spend's blue lane glass with white numbers and a mint label; coins right beside the hourglass and big (stacks
-  of 16, filled from the hourglass side; 1 coin = $1,000). Numbers sized to read on the canvas.
+- **Look (owner's asks):** the slider comes first, right under the heading; thumb plain yolk with midnight text (a
+  faint orange edge underneath), fill in Save or Spend's teal gradient. One blue panel (Save or Spend's lane glass)
+  sits beside the hourglass and holds everything numeric: "Rule of 72" and the coin key in mint, "72 ÷ 8% =" in white,
+  "9 years to double" and Your money in yolk (the one accent, matching the coins), Year in white. Coins grow under the
+  panel, right against the hourglass, big (stacks of 16, filled from the hourglass side; 1 coin = $1,000). Numbers
+  sized to read on the canvas.
 - **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without
   its clock and side stacks, same flip; the coin is ATMCoinRace's. Year (ms) sets the speed (160: 36 years in about
   6 s, plus 0.8 s per flip). Every text is a property; Label is only the slider's screen-reader name now.

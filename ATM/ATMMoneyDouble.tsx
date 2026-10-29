@@ -532,31 +532,6 @@ export default function ATMMoneyDouble(props: Props) {
                 />
             </svg>
 
-            <div
-                style={{
-                    borderRadius: "4cqw",
-                    padding: "2.4cqw 3cqw",
-                    background: `linear-gradient(180deg, #0b4a6e, ${DEEP})`, // the blue glass of Save or Spend's lanes
-                    boxShadow: "inset 0 0 0 1px rgba(217,238,255,.22)",
-                    textAlign: "center",
-                    color: "#ffffff",
-                }}
-            >
-                <div
-                    style={{
-                        fontSize: "3.6cqw",
-                        lineHeight: 1,
-                        color: MINT,
-                        marginBottom: "1cqw",
-                    }}
-                >
-                    Rule of 72: years to double
-                </div>
-                <div style={{ ...big, fontSize: "8cqw", color: "#ffffff" }}>
-                    72 ÷ {rate}% = {per} years
-                </div>
-            </div>
-
             <div style={{ flex: "none" }}>
                 <div
                     role="slider"
@@ -622,7 +597,7 @@ export default function ATMMoneyDouble(props: Props) {
                             height: "2.4cqw",
                             marginTop: "-1.2cqw",
                             borderRadius: 999,
-                            background: "rgba(0,44,68,.15)",
+                            background: "rgba(0,44,68,.12)",
                         }}
                     >
                         <span
@@ -652,7 +627,7 @@ export default function ATMMoneyDouble(props: Props) {
                                 height: "100%",
                                 width: `${at(r) * 100}%`,
                                 borderRadius: 999,
-                                background: TEAL,
+                                background: `linear-gradient(90deg, ${TEAL}, #3bbfc0)`,
                             }}
                         />
                         {RATES.map((_, i) => (
@@ -691,7 +666,7 @@ export default function ATMMoneyDouble(props: Props) {
                                     borderRadius: 999,
                                     background: YOLK,
                                     boxShadow:
-                                        "0 1cqw 2.4cqw rgba(0,44,68,.25)",
+                                        "inset 0 -0.5cqw 0 rgba(246,161,29,.35), 0 1cqw 2.4cqw rgba(0,44,68,.25)", // a touch of the coins' orange underneath
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -760,129 +735,211 @@ export default function ATMMoneyDouble(props: Props) {
 
             <div
                 style={{
-                    flex: "none",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    justifyContent: "space-between",
-                    gap: "3cqw",
-                }}
-            >
-                <div>
-                    <div
-                        style={{
-                            fontFamily: display,
-                            fontSize: "7cqw",
-                            lineHeight: 1,
-                            color: MIDNIGHT,
-                        }}
-                    >
-                        Year {year}
-                        <span
-                            style={{
-                                fontFamily: '"Area Normal Bold", sans-serif',
-                                fontSize: "4.4cqw",
-                                color: TEAL,
-                            }}
-                        >
-                            {" "}
-                            / {SPAN}
-                        </span>
-                    </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "1.5cqw",
-                            marginTop: "1.6cqw",
-                            fontFamily: black,
-                            fontSize: "3.6cqw",
-                            lineHeight: 1,
-                            color: MIDNIGHT,
-                        }}
-                    >
-                        <svg
-                            viewBox="-250 -90 500 258"
-                            style={{
-                                width: "5cqw",
-                                height: "auto",
-                                display: "block",
-                                flex: "none",
-                            }}
-                            aria-hidden="true"
-                        >
-                            <g
-                                dangerouslySetInnerHTML={{
-                                    __html: COIN.replace(
-                                        /url\(#/g,
-                                        `url(#${uid}`
-                                    ),
-                                }}
-                            />
-                        </svg>
-                        <span>= {money(START)}</span>
-                    </div>
-                </div>
-                <div
-                    ref={totalRef}
-                    style={{
-                        ...big,
-                        fontSize: "10cqw",
-                        transformOrigin: "right bottom",
-                        color: doubled ? TEAL : MIDNIGHT,
-                    }}
-                >
-                    {money(START * coins)}
-                </div>
-            </div>
-
-            <div
-                style={{
                     flex: 1,
                     minHeight: 0,
-                    display: "flex",
-                    alignItems: "flex-end",
+                    display: "grid",
+                    gridTemplateColumns: "34% 1fr",
                     gap: "3cqw",
+                    alignItems: "end",
                 }}
             >
                 <svg
                     ref={svgRef}
                     viewBox={VIEWBOX}
                     preserveAspectRatio="xMaxYMax meet" // against the coins
-                    style={{
-                        width: "38%",
-                        height: "100%",
-                        flex: "none",
-                        display: "block",
-                    }}
+                    style={{ width: "100%", height: "100%", display: "block" }}
                     aria-hidden="true"
                     dangerouslySetInnerHTML={{ __html: markup }}
                 />
-                <svg
-                    viewBox={`0 0 ${STACKS_W} ${STACKS_H}`}
-                    preserveAspectRatio="xMinYMax meet" // hugs the hourglass
+                <div
                     style={{
-                        flex: 1,
-                        minWidth: 0,
                         height: "100%",
-                        display: "block",
-                        overflow: "visible",
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "2.4cqw",
                     }}
-                    aria-hidden="true"
                 >
-                    {Array.from({ length: coins }, (_, c) => (
-                        <StackCoin
-                            key={c}
-                            i={c}
-                            uid={uid}
-                            delay={
-                                c >= fresh && run && !reduceMotion
-                                    ? ((c - fresh) * 700) /
-                                      Math.max(1, coins - fresh)
-                                    : -1
-                            }
+                    <div
+                        style={{
+                            flex: "none",
+                            borderRadius: "4cqw",
+                            padding: "2.6cqw 3cqw",
+                            background: `linear-gradient(160deg, #0e5577, ${DEEP} 70%)`, // Save or Spend's blue lane glass
+                            boxShadow:
+                                "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
+                            color: "#ffffff",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: "2cqw",
+                                fontSize: "3.4cqw",
+                                lineHeight: 1,
+                                color: MINT,
+                            }}
+                        >
+                            Rule of 72
+                            <span
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "1cqw",
+                                }}
+                            >
+                                <svg
+                                    viewBox="-250 -90 500 258"
+                                    style={{
+                                        width: "4.4cqw",
+                                        height: "auto",
+                                        display: "block",
+                                    }}
+                                    aria-hidden="true"
+                                >
+                                    <g
+                                        dangerouslySetInnerHTML={{
+                                            __html: COIN.replace(
+                                                /url\(#/g,
+                                                `url(#${uid}`
+                                            ),
+                                        }}
+                                    />
+                                </svg>
+                                = {money(START)}
+                            </span>
+                        </div>
+                        <div
+                            style={{
+                                ...big,
+                                fontSize: "4.6cqw",
+                                color: "#ffffff",
+                                marginTop: "1.6cqw",
+                            }}
+                        >
+                            72 ÷ {rate}% =
+                        </div>
+                        <div
+                            style={{
+                                ...big,
+                                fontSize: "8cqw",
+                                color: YOLK,
+                                marginTop: "1cqw",
+                            }}
+                        >
+                            {per} years{" "}
+                            <span
+                                style={{
+                                    fontFamily:
+                                        '"Area Normal Bold", sans-serif',
+                                    fontSize: "3.6cqw",
+                                    color: MINT,
+                                }}
+                            >
+                                to double
+                            </span>
+                        </div>
+                        <div
+                            style={{
+                                height: 1,
+                                margin: "2.2cqw 0",
+                                background: "rgba(217,238,255,.22)",
+                            }}
                         />
-                    ))}
-                </svg>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "flex-end",
+                                justifyContent: "space-between",
+                                gap: "2cqw",
+                            }}
+                        >
+                            <div>
+                                <div
+                                    style={{
+                                        fontSize: "3.2cqw",
+                                        lineHeight: 1,
+                                        color: MINT,
+                                        marginBottom: "1cqw",
+                                    }}
+                                >
+                                    Year
+                                </div>
+                                <div
+                                    style={{
+                                        ...big,
+                                        fontSize: "7cqw",
+                                        color: "#ffffff",
+                                    }}
+                                >
+                                    {year}
+                                    <span
+                                        style={{
+                                            fontFamily:
+                                                '"Area Normal Bold", sans-serif',
+                                            fontSize: "3.6cqw",
+                                            color: MINT,
+                                        }}
+                                    >
+                                        {" "}
+                                        / {SPAN}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                                <div
+                                    style={{
+                                        fontSize: "3.2cqw",
+                                        lineHeight: 1,
+                                        color: MINT,
+                                        marginBottom: "1cqw",
+                                    }}
+                                >
+                                    Your money
+                                </div>
+                                <div
+                                    ref={totalRef}
+                                    style={{
+                                        ...big,
+                                        fontSize: "8.4cqw",
+                                        color: YOLK,
+                                        transformOrigin: "right bottom",
+                                    }}
+                                >
+                                    {money(START * coins)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <svg
+                        viewBox={`0 0 ${STACKS_W} ${STACKS_H}`}
+                        preserveAspectRatio="xMinYMax meet" // hugs the hourglass
+                        style={{
+                            flex: 1,
+                            minHeight: 0,
+                            width: "100%",
+                            display: "block",
+                            overflow: "visible",
+                        }}
+                        aria-hidden="true"
+                    >
+                        {Array.from({ length: coins }, (_, c) => (
+                            <StackCoin
+                                key={c}
+                                i={c}
+                                uid={uid}
+                                delay={
+                                    c >= fresh && run && !reduceMotion
+                                        ? ((c - fresh) * 700) /
+                                          Math.max(1, coins - fresh)
+                                        : -1
+                                }
+                            />
+                        ))}
+                    </svg>
+                </div>
             </div>
 
             <div
