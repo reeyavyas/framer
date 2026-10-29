@@ -7,23 +7,29 @@ import { useReducedMotion } from "framer-motion"
 // every $100). A week counter runs 1 to 52 while "Earned so far" climbs $100 a week, and each lane's stack grows by
 // one of the savings jar's coins every time it passes another $100 saved, so the stacks pull apart week by week.
 // The kid's Pick is ringed. Callouts at weeks 4 and 26 keep it talking; at week 52 their reveal line and a
-// comparison appear with Pick Again and Done. Pick Again fires its interaction (set the lesson's variant back to
-// the cards); Done goes to When Done, the lesson's completion page. With no tap for Idle (s), Done fills up and
-// goes for them. It holds still while the inactivity overlay is open. On the Framer canvas it shows the finished
+// comparison appear. Pick Again and Done show the whole time: Pick Again fires its interaction (set the lesson's
+// variant back to the cards); Done goes to When Done, the lesson's completion page. After the reveal, with no tap
+// for Idle (s), an orange strip fills along Done's bottom edge and then it goes for them. It holds still while the inactivity overlay is open. On the Framer canvas it shows the finished
 // race; with reduced motion it starts finished. No background of its own.
 
 type Pick = "A" | "B" | "C" | "D"
 const PICKS: Pick[] = ["A", "B", "C", "D"]
 const SAVE = [0, 10, 25, 50] // dollars saved from every $100
-const WHO = ["Spends it all", "Saves $10", "Saves $25", "Saves $50"]
+const WHO = [
+    "Spent it all",
+    "Saved $10 per Week",
+    "Saved $25 per Week",
+    "Saved $50 per Week",
+]
 const WEEKS = 52
 const HALF = 26
 const NAVY = "#002c44"
+const MIDNIGHT = "#11232d"
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const DEEP = "#003b5c" // the lanes: the same blue glass as the option cards
 const MINT = "#bce2d7"
-const AMBER = "#c98612" // the yolk button's edge
+const ORANGE = "#f6a11d" // Done's idle timer
 // A lane's coins stand in stacks of 10, filled left to right and centred on the lane's final number of stacks (lane
 // D's 26 coins make three), so nothing shifts mid-race; three stacks leave 10 of the lane's 100 free at each edge.
 const LANE_H = 52 // a lane's drawing is 100 wide and this tall
@@ -183,7 +189,7 @@ export default function ATMCoinRace(props: Props) {
         return () => clearInterval(t)
     }, [props.pick, props.weekMs, still])
 
-    // At the end, Done fills up over Idle (s) and then goes, unless someone taps first; held while the overlay is open.
+    // At the end, Done's strip fills over Idle (s) and then goes, unless someone taps first; held while the overlay is open.
     React.useEffect(() => {
         const el = fillRef.current
         if (!finished || isCanvas || !el || props.idle <= 0) return
@@ -222,7 +228,7 @@ export default function ATMCoinRace(props: Props) {
             : week >= 4
               ? props.every
               : props.watch
-    const display = '"P22 Mackinac Bold", serif'
+    const display = '"P22 Mackinac ExtraBold", "P22 Mackinac Bold", serif'
     const button: React.CSSProperties = {
         all: "unset",
         cursor: "pointer",
@@ -244,10 +250,9 @@ export default function ATMCoinRace(props: Props) {
                 containerType: "inline-size",
                 display: "flex",
                 flexDirection: "column",
-                gap: "3cqw",
+                gap: "2cqw",
                 color: NAVY,
                 fontFamily: '"Area Normal Bold", sans-serif',
-                fontVariantNumeric: "tabular-nums",
             }}
         >
             <svg
@@ -276,6 +281,7 @@ export default function ATMCoinRace(props: Props) {
                         fontFamily: display,
                         fontSize: "10cqw",
                         lineHeight: 1,
+                        color: MIDNIGHT,
                     }}
                 >
                     {week}
@@ -294,15 +300,17 @@ export default function ATMCoinRace(props: Props) {
                     style={{
                         textAlign: "right",
                         fontSize: "3.4cqw",
+                        lineHeight: 1,
                         color: TEAL,
                     }}
                 >
                     Earned so far
                     <div
                         style={{
-                            fontFamily: '"Area Normal Black", sans-serif',
-                            fontSize: "5.6cqw",
-                            color: NAVY,
+                            fontFamily: display,
+                            fontSize: "10cqw",
+                            lineHeight: 1,
+                            color: MIDNIGHT,
                         }}
                     >
                         {money(week * 100)}
@@ -312,6 +320,7 @@ export default function ATMCoinRace(props: Props) {
             <div
                 style={{
                     height: "1.4cqw",
+                    flex: "none",
                     borderRadius: 999,
                     background: "rgba(0,44,68,.12)",
                     overflow: "hidden",
@@ -330,7 +339,6 @@ export default function ATMCoinRace(props: Props) {
             <div
                 style={{
                     flex: 1,
-                    minHeight: 0,
                     display: "grid",
                     gridTemplateColumns: "repeat(4, 1fr)",
                     gap: "2.4cqw",
@@ -345,13 +353,12 @@ export default function ATMCoinRace(props: Props) {
                             key={k}
                             style={{
                                 position: "relative",
-                                minHeight: 0,
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
-                                gap: "1cqw",
+                                gap: "0.6cqw",
                                 borderRadius: "4cqw",
-                                padding: "2.6cqw 1cqw 2.4cqw",
+                                padding: "2.2cqw 1cqw 2cqw",
                                 background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                 boxShadow: mine
                                     ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
@@ -375,6 +382,7 @@ export default function ATMCoinRace(props: Props) {
                                         fontSize: "2.8cqw",
                                         letterSpacing: "0.08em",
                                         textTransform: "uppercase",
+                                        color: MIDNIGHT,
                                     }}
                                 >
                                     Your pick
@@ -395,7 +403,7 @@ export default function ATMCoinRace(props: Props) {
                                 style={{
                                     width: "100%",
                                     flex: 1,
-                                    minHeight: 0,
+                                    minHeight: "10cqw", // keeps the coins a good size, so the lane grows instead
                                     overflow: "visible",
                                 }}
                                 aria-hidden="true"
@@ -425,10 +433,11 @@ export default function ATMCoinRace(props: Props) {
                             </span>
                             <span
                                 style={{
-                                    fontSize: "2.9cqw",
+                                    fontSize: "3.37cqw", // 31px at the race's 920px width
                                     color: MINT,
                                     textAlign: "center",
                                     lineHeight: 1.2,
+                                    minHeight: "2.4em", // two lines, so the lanes' dollar figures line up
                                 }}
                             >
                                 {WHO[i]}
@@ -443,16 +452,17 @@ export default function ATMCoinRace(props: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "1.8cqw",
-                    fontSize: "3.4cqw",
-                    lineHeight: 1,
-                    color: TEAL,
+                    gap: "1.5cqw",
+                    fontFamily: '"Area Normal Black", sans-serif',
+                    fontSize: "4.2cqw",
+                    lineHeight: 1.2,
+                    color: MIDNIGHT,
                 }}
             >
                 <svg
                     viewBox="-250 -90 500 258"
                     style={{
-                        width: "6.6cqw",
+                        width: "8.5cqw",
                         height: "auto",
                         display: "block",
                         flex: "none",
@@ -476,6 +486,9 @@ export default function ATMCoinRace(props: Props) {
                         padding: "3.6cqw 4cqw",
                         height: "28cqw", // fixed, so the lanes keep their size when the reveal replaces the callouts
                         boxSizing: "border-box",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
                         background: finished
                             ? "#ffffff"
                             : "rgba(255,255,255,.45)",
@@ -490,7 +503,7 @@ export default function ATMCoinRace(props: Props) {
             >
                 {finished ? (
                     <>
-                        {bold(reveal)}
+                        <span>{bold(reveal)}</span>
                         <span
                             style={{
                                 display: "block",
@@ -503,7 +516,7 @@ export default function ATMCoinRace(props: Props) {
                         </span>
                     </>
                 ) : (
-                    bold(callout)
+                    <span>{bold(callout)}</span>
                 )}
             </div>
 
@@ -512,7 +525,6 @@ export default function ATMCoinRace(props: Props) {
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
                     gap: "3cqw",
-                    visibility: finished ? "visible" : "hidden",
                 }}
             >
                 <button
@@ -530,7 +542,6 @@ export default function ATMCoinRace(props: Props) {
                     style={{
                         ...button,
                         background: YOLK,
-                        boxShadow: `0 1.2cqw 0 ${AMBER}`,
                     }}
                     onClick={() => goDoneRef.current()}
                 >
@@ -538,8 +549,11 @@ export default function ATMCoinRace(props: Props) {
                         ref={fillRef}
                         style={{
                             position: "absolute",
-                            inset: 0,
-                            background: "rgba(255,255,255,.5)",
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: "1.2cqw", // a strip along the bottom, so yolk stays the button's colour
+                            background: ORANGE,
                             transformOrigin: "left",
                             transform: "scaleX(0)",
                         }}
@@ -553,7 +567,7 @@ export default function ATMCoinRace(props: Props) {
 
 ATMCoinRace.defaultProps = {
     pick: "C" as Pick,
-    weekMs: 150,
+    weekMs: 110,
     watch: "Watch the coins stack up…",
     every: "Every week is the same choice. Watch the stacks.",
     halfway: "Halfway!",
@@ -570,7 +584,7 @@ ATMCoinRace.defaultProps = {
     compareC: "Saving $50 instead would have made $2,600.",
     compareD:
         "That's half of everything you earned, and you still spent $2,600!",
-    pickAgain: "Pick again",
+    pickAgain: "Pick Again",
     done: "Done",
     idle: 20,
     doneLink: "/atm-lessons/save-or-spend/complete",
@@ -600,7 +614,7 @@ addPropertyControls(ATMCoinRace, {
         type: ControlType.Number,
         title: "Week (ms)",
         description:
-            "How long each week takes; 150 runs the year in about 8 s.",
+            "How long each week takes; 110 runs the year in about 6 s.",
         min: 40,
         max: 600,
         step: 10,
@@ -631,7 +645,7 @@ addPropertyControls(ATMCoinRace, {
         type: ControlType.Number,
         title: "Idle (s)",
         description:
-            "With no tap after the reveal, Done fills up over this long and then goes. 0 turns it off.",
+            "With no tap after the reveal, Done's orange strip fills over this long and then it goes. 0 turns it off.",
         min: 0,
         max: 120,
         step: 1,

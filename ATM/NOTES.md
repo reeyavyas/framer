@@ -1210,6 +1210,15 @@ card picks it; **Fast-forward a year** runs a coin race of all four over 52 week
 the reveal for the pick reads "Someone saving $25 from every $100 can save $1,300 after earning $5,200." Pick again
 returns to the cards (pick kept); Done goes to the completion page. The owner will restyle colours, fonts and buttons.
 
+- **Race restyle (29 Oct, owner's list):** the week number and Earned so far figure are the same size, in Midnight
+  and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
+  Midnight. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 31 px and two lines
+  tall so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
+  matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap). Reveal text is vertically centred.
+  No space between "$" and the figure (no tabular numbers). Pick Again and Done show the whole race; Done has no
+  shadow, and its idle timer is an orange (`#f6a11d`, the art's orange; there's no orange colour style) strip
+  along its bottom so yolk stays the button's colour. A week takes 110 ms (about 6 s for the year).
+
 - **Page:** the owner's Question stack (heading, subheading) stays native; under it the **Save or Spend Lesson**
   component (Assets root). Variant 1 is the cards with nothing picked (button dimmed, "Tap a card to choose."),
   Variants 2-5 are A-D picked (yellow 8 px border and badge on that card, the pick line, button lit), Variants 6-9
