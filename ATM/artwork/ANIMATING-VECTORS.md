@@ -50,8 +50,10 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Savings jar: keep the original jar and lid shapes (a redrawn geometric jar was rejected), clean only the lid's
   jagged sides. (Round 3: clipping the lid to a plain cylinder and painting a band round it read as a stroke
   hiding the jagged sides, and cut off the thread bulge. Fixed by redrawing the lid's side faces and grooves from
-  curves fitted to the trace, with no band or rim: see `LID_CLEAN` in `savings-jar/build.py`. Clean the shape
-  itself; never cover an uneven edge with a stroke.) Colours from cart version 2: glass = the sky basket, lid = the teal handle and wheels, arrow = the
+  curves fitted to the trace, with no band or rim: see `LID_CLEAN` in `savings-jar/build.py`. Round 4: the jar's
+  outline went too: its open ends beside the lid read as a stroke with a gap. The neck glass now reaches the
+  outline's ends, and the neck bands are sampled evenly in angle so their steep ends have no facets. Clean the
+  shape itself; never cover an uneven edge with a stroke or outline.) Colours from cart version 2: glass = the sky basket, lid = the teal handle and wheels, arrow = the
   mint and teal boxes. No yellow beyond the coins. Arrow as tall as the jar's body. The coin that drops in lands
   inside. Coin stacks start short and coins pile on one by one (shown at full strength as they drop: a half-faded
   coin shows its own shading as a dark ghost).

@@ -281,15 +281,24 @@ NECK_DROP = {191, 192, 195, 197, 199, 201, 214, 215, 252, 253, 278,
              1, 250}  # and the traced outline ring and right-side shade line, which kinked at the shoulders
 NECK_CX, NECK_W, NECK_RY = 1625.5, 640, 173
 # The jar's traced outline is open across the neck (the lid hid it), so its glass is that outline plus the neck
-# (between the neck's sides, x 1030-2220 at y 860-900, down into the body), as one path wound the same way.
+# (out to the inside edges of the outline's two ends, which tuck under the lid, then x 1030-2220 down into the
+# body), as one path wound the same way. The clean lid curves in at the bottom as the traced one did, so the glass
+# must reach those edges or the card shows between the outline and the glass.
 _jc = flatten(outer(PATHS[1][1]), 8)
 _cw = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(_jc, _jc[1:] + _jc[:1])) > 0
-JAR_GLASS = closed(outer(PATHS[1][1])) + (" M 1030,820 L 2220,820 L 2220,1100 L 1030,1100 Z" if _cw else " M 1030,820 L 1030,1100 L 2220,1100 L 2220,820 Z")
+def _neck_inner(y):  # the inside edges of the outline's two ends at height y (left, right)
+    xs = sorted(x0 + (y - y0) * (x1 - x0) / (y1 - y0) for (x0, y0), (x1, y1) in zip(_jc, _jc[1:] + _jc[:1]) if (y0 > y) != (y1 > y))
+    assert len(xs) >= 4, (y, xs)
+    return xs[1] - 4, xs[-2] + 4  # 4 under the outline (about 20 wide), so no sliver shows between them
+_ny = list(range(812, 881, 2))
+_neck = ([(_neck_inner(812)[0], 800)] + [(_neck_inner(y)[0], y) for y in _ny] + [(1030, 880), (1030, 1100), (2220, 1100), (2220, 880)]
+         + [(_neck_inner(y)[1], y) for y in reversed(_ny)] + [(_neck_inner(812)[1], 800)])  # down the left, up the right
+JAR_GLASS = closed(outer(PATHS[1][1])) + " M " + " L ".join(f"{x:.1f},{y}" for x, y in (_neck[::-1] if _cw else _neck)) + " Z"
 NECK_N = 96  # points per arc (the animated export uses fewer)
 def neck_arc(ymid, ry=NECK_RY, n=None):
     n = n or NECK_N
-    top = ymid - ry
-    return [(NECK_CX - NECK_W + 2 * NECK_W * k / n, top + ry * max(0.0, 1 - ((2 * k / n - 1)) ** 2) ** .5) for k in range(n + 1)]
+    top = ymid - ry  # evenly spaced in angle, so the steep ends get as many points as the flat middle (no facets)
+    return [(NECK_CX - NECK_W * math.cos(math.pi * k / n), top + ry * math.sin(math.pi * k / n)) for k in range(n + 1)]
 def neck_band(y0, y1, lens=False):  # between the arcs through y0 and y1 mid-jar; a lens when its ends meet
     upper, lower = neck_arc(y0), neck_arc(y1, NECK_RY + (y1 - y0) if lens else NECK_RY)
     return "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in upper + lower[::-1]) + " Z"
@@ -438,14 +447,14 @@ def build_gloss(key, anim=False):
                        f'fill="none" stroke="{WHITE}" stroke-opacity=".45" stroke-width="{w * .012:.0f}" stroke-linecap="round"/>'
                        f'<path d="M {x0 + w * .9:.0f},{y0 + h * .35:.0f} C {x0 + w * .93:.0f},{y0 + h * .5:.0f} {x0 + w * .93:.0f},{y0 + h * .65:.0f} {x0 + w * .9:.0f},{y0 + h * .8:.0f}" '
                        f'fill="none" stroke="{WHITE}" stroke-opacity=".4" stroke-width="{w * .012:.0f}" stroke-linecap="round"/></g>')
-        # the edge, no outline: a band lit top-left and deep bottom-right, plus a bright rim (neither on the lid: designer)
+        # the edge, no outline: a band lit top-left and deep bottom-right, plus a bright rim (only on the arrow: designer)
         lit = dict(jar=ramp(sc["glass"], .6), lid=ramp(sc["lid"], .8), arrow=ramp(sc["arrow"], .5))[obj]
         stroke = lin([(0, lit, 1), (.45, lit, 1), (1, core["glass" if obj == "jar" else obj], 1)], x0, y0, x1, y1, units=True)
-        if obj != "lid":
+        if obj not in ("lid", "jar"):
             out.append(f'<g{msk} fill="none" stroke="{stroke}" stroke-linejoin="round">'
                        + (f'<path d="{C}" stroke-width="{2 * o_w:.1f}"/>' if o_w else "")
                        + f'<path d="{C}" stroke-width="{2 * i_w:.1f}" clip-path="{cp}"/></g>')
-        if obj == "lid": return "".join(out)
+        if obj in ("lid", "jar"): return "".join(out)
         rim = lin([(0, WHITE, st["rim"]), (.35, LTEAL_T, st["rim"] * .8), (.6, LTEAL_T, 0), (1, LTEAL_T, 0)], x0, y0, x1, y1, units=True)
         out.append(f'<path d="{C}" fill="none" stroke="{rim}" stroke-width="{7 * 2 * K:.1f}" clip-path="{cp}"{msk}/>')
         return "".join(out)
