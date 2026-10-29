@@ -1282,13 +1282,14 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
   evenly across the card, text centred, each column as wide as its widest value ("72 ÷ 12% =", "36 years", "36",
   "$64,000"), so the spacing is even at the top amount and nothing shifts while the numbers count. The card sits
   in front of coins dropping in. The slider track is all Light teal `#3bbfc0` (no glacier blue), with the splash
-  progress bar's white sheen sweeping until the first drag, then still. Each stop is a solid 2.4cqw dot (yolk once
+  progress bar's white sheen sweeping until the first drag, then still. Each stop is a solid 2.4cqw dot (navy once
   dragged over, white ahead), the end dots inside the rounded caps. The percent labels sit 2.6cqw under the
-  track. The thumb stays plain yolk with midnight text. Under the card, the hourglass (original colours, no shadow)
+  track. The thumb is plain yolk with midnight text, 13.35cqw with a 4.35cqw number (6px under the first build). Under the card, the hourglass (original colours, no shadow)
   and the coins share one drawing: the hourglass is as tall as a full 16-coin stack; 1 coin = $1,000, with the key
-  under them centred on the page. The three move as one group, with as much air above the hourglass as shows under
-  the key. The tip and reveal are plain text. One gap (3cqw) sits above and below the
-  hourglass and above Done. Done is a slim teal button with white text (7.6cqw tall, so the hourglass gets the room)
+  under them centred on the page. The key is a little smaller (10.5 units) with more air above it, sitting at the foot of its row; the three move as
+  one group, with as much air above the hourglass as shows under the key. The tip and reveal are plain text. One gap (3cqw) sits above and below the
+  hourglass and above Done. Done is a teal button with white text (8.6cqw tall), with 1.6cqw extra above it so its gap
+  matches the others
   and shows the whole time and has no idle timer (the owner wants kids to drag as much as
   they like; the page's inactivity overlay still covers a walked-away kiosk). Turned down along the way: the panel
   beside the hourglass, the panel between the hourglass and the tip, a teal card, and a teal hourglass.

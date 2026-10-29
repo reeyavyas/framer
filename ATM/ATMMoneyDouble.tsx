@@ -218,8 +218,9 @@ const COIN_H = (COIN_W * 254.8) / 490
 const COIN_T = (COIN_W * 78.4) / 490
 const STACKS_H = COIN_H + (PER_STACK - 1) * COIN_T + 4
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
-const KEY_H = 19 // the coin key's row under the stacks, in the coins' units
-const KEY_AIR = (KEY_H - 12) / 2 + 2 // as much air above the hourglass as shows under the key (its centred text plus the tip's leading)
+const KEY_H = 21 // the coin key's row under the stacks, in the coins' units; the key sits at its foot, with air above
+const KEY_PAD = 2.5 // under the key's text
+const KEY_AIR = KEY_PAD + 2 // as much air above the hourglass as shows under the key (its padding plus the tip's leading)
 // The hourglass is drawn in the coins' units, as tall as a full stack, just left of the first stack (its box has
 // room either side for the flip, hence the negative gap)
 const HG_W = ((STACKS_H - 4) * 1720) / 2178
@@ -635,8 +636,8 @@ export default function ATMMoneyDouble(props: Props) {
                                         margin: "-1.2cqw 0 0 -1.2cqw",
                                         boxSizing: "border-box",
                                         borderRadius: 999,
-                                        border: `0.45cqw solid ${i <= r ? YOLK : "#ffffff"}`, // stops dragged over are yolk, the rest white
-                                        background: i <= r ? YOLK : "#ffffff",
+                                        border: `0.45cqw solid ${i <= r ? NAVY : "#ffffff"}`, // stops dragged over are navy, the rest white
+                                        background: i <= r ? NAVY : "#ffffff",
                                     }}
                                 />
                             ))}
@@ -653,10 +654,10 @@ export default function ATMMoneyDouble(props: Props) {
                                     ref={thumbRef}
                                     style={{
                                         position: "absolute",
-                                        left: "-7cqw",
-                                        top: "-7cqw",
-                                        width: "14cqw",
-                                        height: "14cqw",
+                                        left: "-6.675cqw",
+                                        top: "-6.675cqw",
+                                        width: "13.35cqw", // 6px smaller than before at the 920px width
+                                        height: "13.35cqw",
                                         borderRadius: 999,
                                         background: YOLK,
                                         boxShadow:
@@ -665,7 +666,7 @@ export default function ATMMoneyDouble(props: Props) {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         fontFamily: black,
-                                        fontSize: "5cqw",
+                                        fontSize: "4.35cqw",
                                         lineHeight: 1,
                                         color: MIDNIGHT,
                                     }}
@@ -892,21 +893,23 @@ export default function ATMMoneyDouble(props: Props) {
                         <div
                             style={{
                                 height: "100%",
+                                boxSizing: "border-box",
+                                paddingBottom: KEY_PAD,
                                 display: "flex",
-                                alignItems: "center",
+                                alignItems: "flex-end",
                                 justifyContent: "center", // centred on the page, whatever the font's width
                                 gap: 3,
                                 whiteSpace: "nowrap",
                                 fontFamily: black,
-                                fontSize: 12,
+                                fontSize: 10.5,
                                 lineHeight: 1,
                                 color: MIDNIGHT,
                             }}
                         >
                             <svg
                                 viewBox="-250 -90 500 258"
-                                width={18}
-                                height={9.3}
+                                width={16}
+                                height={8.3}
                                 aria-hidden="true"
                             >
                                 <g
@@ -978,7 +981,8 @@ export default function ATMMoneyDouble(props: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    height: "7.6cqw",
+                    height: "8.6cqw",
+                    marginTop: "1.6cqw", // with the page gap, matches the space above the hourglass and under the key
                     boxSizing: "border-box",
                     paddingBottom: "0.22cqw", // the font sits low, so this centres the label
                     borderRadius: 999,
