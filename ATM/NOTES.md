@@ -1259,6 +1259,33 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 - **Fits the kiosk:** the cards were tightened (coin trays 112 tall, 40 px corners) so the button sits above the 1920
   bottom edge under the owner's heading.
 
+## Lesson 3: Can Your Money Double? (`/atm-lessons/can-your-money-double/lesson`, first draft 29 Oct)
+
+A simplified Rule of 72 with $1,000. The kid drags an interest-rate slider; "72 ÷ 8% = 9 years" changes the moment
+the thumb snaps to a stop, and letting go plays 36 years: the hourglass drains once per doubling and flips, the total
+doubles at each flip and a burst of coins drops onto the stacks. At year 36 the reveal for that rate shows and Done
+appears (same orange idle strip as Save or Spend, 10 s). The owner will restyle; code changes come by prompt after.
+
+- **Rates are 2, 4, 6, 8 and 12% only.** Each divides 72 into whole years that go into 36 a whole number of times
+  (1, 2, 3, 4 and 6 doubles: $2,000 to $64,000). 3% and 9% would give half a double. The stops are evenly spaced
+  (owner), each with its years to double under it ("8%" / "9 yrs"); there's no separate year bar (the owner said it
+  read as a second slider). The reveals say "about": real compounding at 12% gives about $59,000, not $64,000.
+- **Plays on release, no Go button** (owner). Dragging again stops and resets the run, so quick taps never stack two
+  runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
+  sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
+  it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
+- **Look (owner's asks):** slider above the hourglass; thumb plain yolk with midnight text; the equation card is
+  Save or Spend's blue lane glass with white numbers and a mint label; coins right beside the hourglass and big (stacks
+  of 16, filled from the hourglass side; 1 coin = $1,000). Numbers sized to read on the canvas.
+- **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without
+  its clock and side stacks, same flip; the coin is ATMCoinRace's. Year (ms) sets the speed (160: 36 years in about
+  6 s, plus 0.8 s per flip). Every text is a property; Label is only the slider's screen-reader name now.
+- **Page:** the owner's Question stack (heading, subheading) stays native; the component sits under it in Scrollable
+  Content, 920 x 1200 (40 px clear of the 1920 bottom). `/complete` already existed as a Draft; When Done defaults to
+  `/atm-lessons/can-your-money-double/complete`. Both pages are still Drafts.
+- **Tested so far:** in a local preview only (every rate, quick taps, a drag mid-run, the idle hand-off, no console
+  errors) and on the Framer canvas. Not yet tested live.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
