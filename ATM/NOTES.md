@@ -1220,10 +1220,14 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   6-9 (the most the screen allows; set in each variant), and the lanes take any extra height.
 - **Live test (29 Oct, after the restyle publish, 1080 x 1920):** Fast-forward does nothing before a pick; cards
   A-D highlight; every race runs in 5.7 s with the right reveal and comparison; Pick Again and Done show and work
-  mid-race; Pick Again keeps the pick; idle Done fills its orange strip and leaves after 20.0 s; Done and X go to
+  mid-race; Pick Again keeps the pick; idle Done fills its orange strip and leaves after 20.0 s (now 10 s); Done and X go to
   the completion page and `/atm-start`; the race ends at 1830 px, inside the screen. P22 Mackinac ExtraBold
   loads on the live page. Need or Want (tumble wall cast) still sorts and shows its card. Seen but not changed:
-  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`). Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`).
+- **Quick taps (fixed after that test):** Pick Again and Done sit where Fast-forward was, so a fast second tap
+  landed on Done and jumped to the completion page. The race ignores taps on them for 0.6 s after it starts, and
+  Fast-forward reads the pick when tapped (a tap straight after picking a card used to be ignored). Done's idle
+  timer is 10 s. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if

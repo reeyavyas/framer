@@ -79,7 +79,8 @@ export function withCardD(Component: ComponentType<any>): ComponentType<any> {
     return card("D")(Component)
 }
 
-// Does nothing until a card is picked (the button is dimmed then).
+// Does nothing until a card is picked (the button is dimmed then). It reads the pick when tapped, not from its last
+// render, so a tap straight after picking a card still counts.
 export function withFastForward(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -88,7 +89,7 @@ export function withFastForward(
         return (
             <Component
                 {...props}
-                onTap={() => s.pick && set({ racing: true })}
+                onTap={() => state.pick && set({ racing: true })}
                 style={{
                     ...props.style,
                     cursor: s.pick ? "pointer" : "default",

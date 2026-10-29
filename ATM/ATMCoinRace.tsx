@@ -171,11 +171,20 @@ export default function ATMCoinRace(props: Props) {
     }
     const goDoneRef = React.useRef(goDone)
     goDoneRef.current = goDone
+    // Pick Again and Done appear right where Fast-forward was, so for a moment after the race starts a quick second
+    // tap (or the end of the tap that started it) would land on them; they ignore taps until then.
+    const armedAt = React.useRef(
+        typeof performance === "undefined" ? 0 : performance.now() + 600
+    )
+    const armed = (fn: () => void) => () => {
+        if (performance.now() >= armedAt.current) fn()
+    }
 
     // The race: one week per Week (ms), held while the inactivity overlay is open. A new Pick runs it again.
     React.useEffect(() => {
         if (still) return setWeek(WEEKS)
         setWeek(0)
+        armedAt.current = performance.now() + 600
         const t = setInterval(
             () => {
                 if ((window as any).__systemOverlayOpen) return
@@ -558,7 +567,7 @@ export default function ATMCoinRace(props: Props) {
                         ...button,
                         boxShadow: `inset 0 0 0 0.5cqw ${NAVY}`,
                     }}
-                    onClick={() => props.onPickAgain?.()}
+                    onClick={armed(() => props.onPickAgain?.())}
                 >
                     {props.pickAgain}
                 </button>
@@ -568,7 +577,7 @@ export default function ATMCoinRace(props: Props) {
                         ...button,
                         background: YOLK,
                     }}
-                    onClick={() => goDoneRef.current()}
+                    onClick={armed(() => goDoneRef.current())}
                 >
                     <span
                         ref={fillRef}
@@ -611,7 +620,7 @@ ATMCoinRace.defaultProps = {
         "That's half of everything you earned, and you still spent $2,600!",
     pickAgain: "Pick Again",
     done: "Done",
-    idle: 20,
+    idle: 10,
     doneLink: "/atm-lessons/save-or-spend/complete",
 }
 
