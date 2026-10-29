@@ -360,8 +360,7 @@ export default function ATMCoinRace(props: Props) {
                                 flexDirection: "column",
                                 alignItems: "center",
                                 gap: "0.6cqw",
-                                // the picked lane's top corners are square, so its tab sits flush on top
-                                borderRadius: mine ? "0 0 4cqw 4cqw" : "4cqw",
+                                borderRadius: "4cqw",
                                 padding: "2.2cqw 1cqw 2cqw",
                                 background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                 boxShadow: mine
@@ -492,7 +491,7 @@ export default function ATMCoinRace(props: Props) {
                 style={
                     {
                         borderRadius: "4cqw",
-                        padding: "3.6cqw 4cqw",
+                        padding: "2.6cqw 3cqw",
                         minHeight: "28cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
                         flex: "none",
                         boxSizing: "border-box",
@@ -505,7 +504,7 @@ export default function ATMCoinRace(props: Props) {
                         boxShadow: finished
                             ? `inset 0 0 0 0.5cqw ${TEAL}`
                             : "none",
-                        fontSize: "4.3cqw",
+                        fontSize: "4.09cqw", // 37.6px at the race's 920px width
                         lineHeight: 1.35,
                         textWrap: "pretty",
                     } as React.CSSProperties
@@ -518,7 +517,7 @@ export default function ATMCoinRace(props: Props) {
                             style={{
                                 display: "block",
                                 marginTop: "1.6cqw",
-                                fontSize: "3.7cqw",
+                                fontSize: "3.48cqw", // 32px
                                 color: TEAL,
                             }}
                         >
