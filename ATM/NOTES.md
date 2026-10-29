@@ -1299,8 +1299,15 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
 - **Page:** the owner's Question stack (heading, subheading) stays native; the component sits under it in Scrollable
   Content, 920 x 1200 (40 px clear of the 1920 bottom). `/complete` already existed as a Draft; When Done defaults to
   `/atm-lessons/can-your-money-double/complete`. Both pages are still Drafts.
-- **Tested so far:** in a local preview only (every rate, quick taps, a drag mid-run, the idle hand-off, no console
-  errors) and on the Framer canvas. Not yet tested live.
+- **Live test (29 Oct, 1080 x 1920, partial; the owner stopped for the day):** every rate ends right (2% $2,000 /
+  2 coins, 4% $4,000 / 4, 6% $8,000 / 8, 8% $16,000 / 16, 12% $64,000 / 64, each with its reveal); quick taps 4% then
+  8% run only 8%; a drag from 12% to 6% mid-run restarts at 6%; the shimmer keeps running after drags; all stops stay
+  white; Done shows the whole time and stayed put through 30 s idle; Done goes to `/complete` ("Nicely done!..."),
+  which goes on to `/atm-start` after 5 s. $64,000 fits; the tallest stack matches the hourglass; Done ends at 1871 of
+  1920. No console errors.
+- **Still to do (next session):** fix the gap in "0 / 36" before a run (the year sits centred in a box sized for
+  "36"; right-align it so "0" hugs "/ 36"); test the X button, the inactivity overlay on this page, and that the
+  other two lessons still work; reduced motion can't be checked from the browser.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
