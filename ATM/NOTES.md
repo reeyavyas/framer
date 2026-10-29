@@ -1213,11 +1213,12 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 - **Race restyle (29 Oct, owner's list):** the week number and Earned so far figure are the same size, in Midnight
   and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
   Midnight, on a yolk tab as wide as the picked lane, flush on top of it (the tab's top corners round; the lane
-  keeps its rounded corners, and the tab reaches 4cqw down behind it to fill them). The reveal box has 24px/28px padding, its text 37.6px and the compare line 32px. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 31 px and two lines
-  tall so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
+  keeps its rounded corners, and the tab reaches 4cqw down behind it to fill them). The reveal box has 24px/28px padding and is at least 22cqw tall, its text 35.6px and the compare line 30px;
+  lanes have equal top and bottom padding. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
-  side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box is at
-  least 28cqw and grows if its text needs more. Buttons are a set 10cqw tall with their labels centred.
+  side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if
+  its text needs more. Buttons are a set 10cqw tall with 2px bottom padding so their labels sit centred.
   No space between "$" and the figure (no tabular numbers). Pick Again and Done show the whole race; Done has no
   shadow, and its idle timer is an orange (`#f6a11d`, the art's orange; there's no orange colour style) strip
   along its bottom so yolk stays the button's colour. A week takes 110 ms (about 6 s for the year).

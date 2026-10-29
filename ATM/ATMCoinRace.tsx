@@ -17,9 +17,9 @@ const PICKS: Pick[] = ["A", "B", "C", "D"]
 const SAVE = [0, 10, 25, 50] // dollars saved from every $100
 const WHO = [
     "Spent it all",
-    "Saved $10 per Week",
-    "Saved $25 per Week",
-    "Saved $50 per Week",
+    "Saved $10\nper Week",
+    "Saved $25\nper Week",
+    "Saved $50\nper Week",
 ]
 const WEEKS = 52
 const HALF = 26
@@ -238,6 +238,8 @@ export default function ATMCoinRace(props: Props) {
         alignItems: "center",
         justifyContent: "center",
         height: "10cqw",
+        boxSizing: "border-box",
+        paddingBottom: "0.22cqw", // 2px: the font sits low, so this centres the label
         borderRadius: 999,
         fontFamily: '"Area Normal Black", sans-serif',
         fontSize: "4.2cqw",
@@ -394,7 +396,7 @@ export default function ATMCoinRace(props: Props) {
                                     alignItems: "center",
                                     gap: "0.6cqw",
                                     borderRadius: "4cqw",
-                                    padding: "2.2cqw 1cqw 2cqw",
+                                    padding: "2.2cqw 1cqw",
                                     background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                     boxShadow: mine
                                         ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
@@ -407,6 +409,7 @@ export default function ATMCoinRace(props: Props) {
                                         fontFamily:
                                             '"Area Normal Black", sans-serif',
                                         fontSize: "4cqw",
+                                        lineHeight: 1, // no leading above the letter, so the top padding matches the bottom
                                     }}
                                 >
                                     {k}
@@ -448,11 +451,12 @@ export default function ATMCoinRace(props: Props) {
                                 </span>
                                 <span
                                     style={{
-                                        fontSize: "3.37cqw", // 31px at the race's 920px width
+                                        fontSize: "3.15cqw", // 29px at the race's 920px width
                                         color: MINT,
                                         textAlign: "center",
                                         lineHeight: 1.2,
                                         minHeight: "2.4em", // two lines, so the lanes' dollar figures line up
+                                        whiteSpace: "pre-line", // "per Week" always starts the second line
                                     }}
                                 >
                                     {WHO[i]}
@@ -500,7 +504,7 @@ export default function ATMCoinRace(props: Props) {
                     {
                         borderRadius: "4cqw",
                         padding: "2.6cqw 3cqw",
-                        minHeight: "28cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
+                        minHeight: "22cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
                         flex: "none",
                         boxSizing: "border-box",
                         display: "flex",
@@ -512,7 +516,7 @@ export default function ATMCoinRace(props: Props) {
                         boxShadow: finished
                             ? `inset 0 0 0 0.5cqw ${TEAL}`
                             : "none",
-                        fontSize: "4.09cqw", // 37.6px at the race's 920px width
+                        fontSize: "3.87cqw", // 35.6px at the race's 920px width
                         lineHeight: 1.35,
                         textWrap: "pretty",
                     } as React.CSSProperties
@@ -525,7 +529,7 @@ export default function ATMCoinRace(props: Props) {
                             style={{
                                 display: "block",
                                 marginTop: "1.6cqw",
-                                fontSize: "3.48cqw", // 32px
+                                fontSize: "3.26cqw", // 30px
                                 color: TEAL,
                             }}
                         >
