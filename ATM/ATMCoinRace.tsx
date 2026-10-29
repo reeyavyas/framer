@@ -249,16 +249,18 @@ export default function ATMCoinRace(props: Props) {
 
     return (
         <div
-            style={{
-                width: "100%",
-                height: "100%",
-                containerType: "inline-size",
-                display: "flex",
-                flexDirection: "column",
-                gap: "2cqw",
-                color: NAVY,
-                fontFamily: '"Area Normal Bold", sans-serif',
-            }}
+            style={
+                {
+                    width: "100%",
+                    height: "100%",
+                    containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2cqw",
+                    color: NAVY,
+                    fontFamily: '"Area Normal Bold", sans-serif',
+                } as React.CSSProperties
+            }
         >
             <svg
                 width="0"
@@ -496,7 +498,7 @@ export default function ATMCoinRace(props: Props) {
                         }}
                     />
                 </svg>
-                <span>= $100 saved</span>
+                <span>= $100 Saved</span>
             </div>
 
             <div

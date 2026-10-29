@@ -42,6 +42,9 @@ in a file you touch.
   `ref={(el) => { ref.current = el }}`, not `(el) => (ref.current = el)`.
 - **`defaultProps` with a union type**: mark the literal,
   `transition: "ABE" as Transition`, or it reads as a plain string.
+- **Newer CSS properties** (`containerType`, `textWrap`, and the like)
+  aren't in Framer's CSS types, though the local type-check passes them.
+  Cast the style object: `style={{ ...styles } as React.CSSProperties}`.
 
 Before every push that changes a `.tsx` file, type-check each changed
 file in a scratch folder with
