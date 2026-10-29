@@ -1230,7 +1230,9 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   timer is 10 s. Live test after that publish: a tap straight after a card starts the race, and double taps on
   either half of Fast-forward keep the race (no jump to the completion page, no flicker back to the cards). The
   idle strip still ran 20 s although every panel showed 10: the primary variant's Coin Race held a stale saved 20
-  the panel didn't show, so Idle was set to 10 on that layer by hand (needs a publish to check). Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  the panel didn't show, so Idle was set to 10 on that layer by hand; live it now leaves after 10.0 s.
+- **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
+  each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
   matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
   side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if
