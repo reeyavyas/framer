@@ -1223,7 +1223,8 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   mid-race; Pick Again keeps the pick; idle Done fills its orange strip and leaves after 20.0 s (now 10 s); Done and X go to
   the completion page and `/atm-start`; the race ends at 1830 px, inside the screen. P22 Mackinac ExtraBold
   loads on the live page. Need or Want (tumble wall cast) still sorts and shows its card. Seen but not changed:
-  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`).
+  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`);
+  the owner is happy with it as is, so leave it.
 - **Quick taps (fixed after that test):** Pick Again and Done sit where Fast-forward was, so a fast second tap
   landed on Done and jumped to the completion page. The race ignores taps on them for 0.6 s after it starts, and
   Fast-forward reads the pick when tapped (a tap straight after picking a card used to be ignored). Done's idle
