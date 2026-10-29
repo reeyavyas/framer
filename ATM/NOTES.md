@@ -1274,14 +1274,16 @@ appears (same orange idle strip as Save or Spend, 10 s). The owner will restyle;
   runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
   sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
   it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
-- **Look (owner's asks, in order):** one full-width blue card (Save or Spend's lane glass) right under the heading
-  holds the slider and, under a hairline, the numbers: "Rule of 72: years to double" in mint, "72 ÷ 8% =" in white,
-  "9 years" and Your money in yolk (the one accent, matching the coins), Year in white. On the blue, the track is
-  translucent white with a teal-to-mint fill, unselected stops are mint, and the "Drag me!" bubble is white. The thumb
-  is plain yolk with midnight text (a faint orange edge underneath). Under the card the hourglass sits with the coins
-  right against it, big (stacks of 16, filled from the hourglass side; 1 coin = $1,000, key above the coins). The tip
-  and reveal under them are plain text, no card. Numbers sized to read on the canvas. Earlier tries the owner turned
-  down: the panel beside the hourglass, and the panel between the hourglass and the tip.
+- **Look (owner's asks, in order):** one full-width blue card (Save or Spend's lane glass, taller, with 5cqw padding
+  either side) right under the heading holds the slider and, under a hairline, the numbers: "Rule of 72: years to
+  double" in mint, "72 ÷ 8% =" in white, "9 years" and Your money in yolk (the one accent, matching the coins), Year in
+  white. The slider uses the splash screen's progress bar colours (SplashProgressBar on Phone Lock & Splash's splash
+  variant: Light teal `#3bbfc0` fill on a Glacier blue `#d9eeff` track, a white sheen sweeping at 1.6 s); its end dots
+  sit inside the track's rounded caps. The thumb stays plain yolk with midnight text. Under the card, the hourglass
+  (original colours, no shadow) and the coins share one drawing: the hourglass is exactly as tall as a full 16-coin
+  stack, so the tallest stack matches it; 1 coin = $1,000, and the key sits under them, centred on the page. The tip
+  and reveal are plain text, no card. Turned down along the way: the panel beside the hourglass, the panel between
+  the hourglass and the tip, a teal card, and a teal hourglass.
 - **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without
   its clock and side stacks, same flip; the coin is ATMCoinRace's. Year (ms) sets the speed (160: 36 years in about
   6 s, plus 0.8 s per flip). Every text is a property; Label is only the slider's screen-reader name now.
