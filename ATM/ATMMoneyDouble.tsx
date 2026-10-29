@@ -219,7 +219,7 @@ const COIN_T = (COIN_W * 78.4) / 490
 const STACKS_H = COIN_H + (PER_STACK - 1) * COIN_T + 4
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
 const KEY_H = 21 // the coin key's row under the stacks, in the coins' units; the key sits at its foot, with air above
-const KEY_PAD = 2.5 // under the key's text
+const KEY_PAD = 1.5 // under the key's text
 const KEY_AIR = KEY_PAD + 2 // as much air above the hourglass as shows under the key (its padding plus the tip's leading)
 // The hourglass is drawn in the coins' units, as tall as a full stack, just left of the first stack (its box has
 // room either side for the flip, hence the negative gap)
@@ -498,7 +498,7 @@ export default function ATMMoneyDouble(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "3cqw", // the same space above and below the hourglass and above Done
+                    gap: "1.6cqw", // the same space above and below the hourglass and above Done
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -982,7 +982,7 @@ export default function ATMMoneyDouble(props: Props) {
                     alignItems: "center",
                     justifyContent: "center",
                     height: "8.6cqw",
-                    marginTop: "1.6cqw", // with the page gap, matches the space above the hourglass and under the key
+                    marginTop: "1cqw", // with the page gap, matches the space above the hourglass and under the key
                     boxSizing: "border-box",
                     paddingBottom: "0.22cqw", // the font sits low, so this centres the label
                     borderRadius: 999,
