@@ -219,7 +219,7 @@ const COIN_T = (COIN_W * 78.4) / 490
 const STACKS_H = COIN_H + (PER_STACK - 1) * COIN_T + 4
 const JIT = [0, 3, -2, 4, 1, -3, 3, -1]
 const KEY_H = 21 // the coin key's row under the stacks, in the coins' units; the key sits at its foot, with air above
-const KEY_PAD = 1.5 // under the key's text
+const KEY_PAD = 2 // under the key's text
 const KEY_AIR = KEY_PAD + 2 // as much air above the hourglass as shows under the key (its padding plus the tip's leading)
 // The hourglass is drawn in the coins' units, as tall as a full stack, just left of the first stack (its box has
 // room either side for the flip, hence the negative gap)
@@ -431,10 +431,10 @@ export default function ATMMoneyDouble(props: Props) {
         return () => anim.cancel()
     }, [touched, reduceMotion])
 
-    // Until the first drag a sheen sweeps along the track, as on the splash screen's progress bar.
+    // A sheen sweeps along the track the whole time, as on the splash screen's progress bar.
     React.useEffect(() => {
         const el = shineRef.current
-        if (reduceMotion || isCanvas || touched || !el) return
+        if (reduceMotion || isCanvas || !el) return
         const anim = el.animate(
             [
                 { transform: "translateX(-100%)" },
@@ -443,7 +443,7 @@ export default function ATMMoneyDouble(props: Props) {
             { duration: 1600, iterations: Infinity, easing: "linear" }
         )
         return () => anim.cancel()
-    }, [reduceMotion, isCanvas, touched])
+    }, [reduceMotion, isCanvas])
 
     const at = (i: number) => i / (RATES.length - 1) // stops evenly spaced along the track
     const snap = (clientX: number) => {
@@ -498,7 +498,7 @@ export default function ATMMoneyDouble(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "1.6cqw", // the same space above and below the hourglass and above Done
+                    gap: "2.4cqw", // the same space above and below the hourglass and above Done
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -609,20 +609,18 @@ export default function ATMMoneyDouble(props: Props) {
                                     overflow: "hidden",
                                 }}
                             >
-                                {!touched && (
-                                    <span
-                                        ref={shineRef}
-                                        style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            bottom: 0,
-                                            width: "25%",
-                                            background:
-                                                "linear-gradient(75deg, transparent 0%, rgba(255,255,255,0.65) 50%, transparent 100%)",
-                                            transform: "translateX(-100%)",
-                                        }}
-                                    />
-                                )}
+                                <span
+                                    ref={shineRef}
+                                    style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        bottom: 0,
+                                        width: "25%",
+                                        background:
+                                            "linear-gradient(75deg, transparent 0%, rgba(255,255,255,0.65) 50%, transparent 100%)",
+                                        transform: "translateX(-100%)",
+                                    }}
+                                />
                             </span>
                             {RATES.map((_, i) => (
                                 <span
@@ -636,8 +634,8 @@ export default function ATMMoneyDouble(props: Props) {
                                         margin: "-1.2cqw 0 0 -1.2cqw",
                                         boxSizing: "border-box",
                                         borderRadius: 999,
-                                        border: `0.45cqw solid ${i <= r ? NAVY : "#ffffff"}`, // stops dragged over are navy, the rest white
-                                        background: i <= r ? NAVY : "#ffffff",
+                                        border: "0.45cqw solid #ffffff", // every stop white, passed or not
+                                        background: "#ffffff",
                                     }}
                                 />
                             ))}
@@ -982,7 +980,7 @@ export default function ATMMoneyDouble(props: Props) {
                     alignItems: "center",
                     justifyContent: "center",
                     height: "8.6cqw",
-                    marginTop: "1cqw", // with the page gap, matches the space above the hourglass and under the key
+                    marginTop: "1.4cqw", // with the page gap, matches the space above the hourglass and under the key
                     boxSizing: "border-box",
                     paddingBottom: "0.22cqw", // the font sits low, so this centres the label
                     borderRadius: 999,
