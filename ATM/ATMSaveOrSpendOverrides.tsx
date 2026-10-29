@@ -21,7 +21,8 @@ const RACE = { A: "Variant 6", B: "Variant 7", C: "Variant 8", D: "Variant 9" }
 type Pick = keyof typeof PICKED
 type State = { pick: Pick | null; racing: boolean }
 
-let state: State = { pick: null, racing: false }
+const START: State = { pick: null, racing: false }
+let state = START
 const listeners = new Set<() => void>()
 const set = (next: Partial<State>) => {
     state = { ...state, ...next }
@@ -33,7 +34,13 @@ const subscribe = (l: () => void) => {
         listeners.delete(l)
     }
 }
-const useLesson = () => React.useSyncExternalStore(subscribe, () => state)
+// The third argument is what Framer's server render sees (it needs one, or the page fails to pre-render).
+const useLesson = () =>
+    React.useSyncExternalStore(
+        subscribe,
+        () => state,
+        () => START
+    )
 
 export function withLesson(Component: ComponentType<any>): ComponentType<any> {
     return (props) => {
