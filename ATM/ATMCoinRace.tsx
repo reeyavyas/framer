@@ -477,6 +477,7 @@ export default function ATMCoinRace(props: Props) {
                     fontSize: "4.2cqw",
                     lineHeight: 1, // no leading under the text, so the gaps either side of the reveal look even
                     color: MIDNIGHT,
+                    marginTop: "1.6cqw", // matches the reveal's margins, so the key sits centred between the lanes and the reveal
                 }}
             >
                 <svg
