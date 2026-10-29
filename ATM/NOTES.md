@@ -1214,7 +1214,9 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
   Midnight. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 31 px and two lines
   tall so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
-  matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap). Reveal text is vertically centred.
+  matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
+  side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box is at
+  least 28cqw and grows if its text needs more. Buttons are a set 10cqw tall with their labels centred.
   No space between "$" and the figure (no tabular numbers). Pick Again and Done show the whole race; Done has no
   shadow, and its idle timer is an orange (`#f6a11d`, the art's orange; there's no orange colour style) strip
   along its bottom so yolk stays the button's colour. A week takes 110 ms (about 6 s for the year).

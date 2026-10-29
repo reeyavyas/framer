@@ -234,11 +234,14 @@ export default function ATMCoinRace(props: Props) {
         cursor: "pointer",
         position: "relative",
         overflow: "hidden",
-        textAlign: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "10cqw",
         borderRadius: 999,
-        padding: "3.4cqw 0",
         fontFamily: '"Area Normal Black", sans-serif',
         fontSize: "4.2cqw",
+        lineHeight: 1,
         color: NAVY,
     }
 
@@ -427,6 +430,7 @@ export default function ATMCoinRace(props: Props) {
                                     fontFamily:
                                         '"Area Normal Black", sans-serif',
                                     fontSize: "4.6cqw",
+                                    marginBottom: "1cqw",
                                 }}
                             >
                                 {money(week * SAVE[i])}
@@ -455,7 +459,7 @@ export default function ATMCoinRace(props: Props) {
                     gap: "1.5cqw",
                     fontFamily: '"Area Normal Black", sans-serif',
                     fontSize: "4.2cqw",
-                    lineHeight: 1.2,
+                    lineHeight: 1, // no leading under the text, so the gaps either side of the reveal look even
                     color: MIDNIGHT,
                 }}
             >
@@ -484,7 +488,8 @@ export default function ATMCoinRace(props: Props) {
                     {
                         borderRadius: "4cqw",
                         padding: "3.6cqw 4cqw",
-                        height: "28cqw", // fixed, so the lanes keep their size when the reveal replaces the callouts
+                        minHeight: "28cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
+                        flex: "none",
                         boxSizing: "border-box",
                         display: "flex",
                         flexDirection: "column",
@@ -497,7 +502,7 @@ export default function ATMCoinRace(props: Props) {
                             : "none",
                         fontSize: "4.3cqw",
                         lineHeight: 1.35,
-                        textWrap: "balance",
+                        textWrap: "pretty",
                     } as React.CSSProperties
                 }
             >
