@@ -26,6 +26,9 @@ const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const MINT = "#bce2d7"
 const CORAL = "#D04848" // Cancel coral, for the chip of a score drop only (owner asked for red drop chips)
+const DARK_TEAL = "#046b68" // Done's timer strip: brand teal, deeper (no colour style)
+const DONE_SECONDS = 10 // with no tap, Done's strip fills over this long and then it goes (owner)
+const DONE_SHOWS = 1300 // ms after the finale starts that Done fades in
 
 // The bands, one per gauge segment, left to right
 const BANDS = [
@@ -285,6 +288,7 @@ function Challenge(props: Props) {
     const hudRef = React.useRef<HTMLDivElement>(null)
     const cardRef = React.useRef<HTMLDivElement>(null)
     const chipRef = React.useRef<HTMLSpanElement>(null)
+    const doneFillRef = React.useRef<HTMLSpanElement>(null)
     const labelRefs = React.useRef<(HTMLSpanElement | null)[]>([])
     const drag = React.useRef<{ x: number; dx: number; id: number } | null>(
         null
@@ -304,6 +308,7 @@ function Challenge(props: Props) {
               routes?: Record<string, { path?: string }>
           }
         | undefined
+    const goDoneRef = React.useRef(() => {})
     const goDone = () => {
         const routes = router?.routes ?? {}
         const find = (path: string) =>
@@ -322,6 +327,7 @@ function Challenge(props: Props) {
         if (id && router?.navigate) router.navigate(id, "")
         else window.location.href = path
     }
+    goDoneRef.current = goDone
 
     // The needle springs to the score (with a little wobble on a drop), the number counts, and the segment it
     // lands on pops. Crossing into a new band also sweeps the glint across the segments.
@@ -464,6 +470,31 @@ function Challenge(props: Props) {
             { duration: 320, easing: "cubic-bezier(.2,.9,.3,1.15)" }
         )
     }, [deck])
+
+    // Once Done shows, its strip fills over DONE_SECONDS and then it goes, unless someone taps first; held while
+    // the inactivity overlay is open (as Save or Spend's was).
+    React.useEffect(() => {
+        const el = doneFillRef.current
+        if (!finished || isCanvas || !el) return
+        const anim = el.animate(
+            [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
+            {
+                duration: DONE_SECONDS * 1000,
+                delay: reduceMotion ? 0 : DONE_SHOWS,
+                easing: "linear",
+                fill: "both",
+            }
+        )
+        anim.onfinish = () => goDoneRef.current()
+        const sync = () =>
+            (window as any).__systemOverlayOpen ? anim.pause() : anim.play()
+        sync()
+        window.addEventListener("system-overlay-change", sync)
+        return () => {
+            window.removeEventListener("system-overlay-change", sync)
+            anim.cancel()
+        }
+    }, [finished])
 
     // The finale: the cards clear and the gauge glides down to the middle, with the finale line and Done under it.
     React.useLayoutEffect(() => {
@@ -982,11 +1013,29 @@ function Challenge(props: Props) {
                                 ...pill,
                                 flex: "none",
                                 width: "60cqw",
+                                position: "relative",
+                                overflow: "hidden", // keeps the strip inside the rounded ends
                                 background: TEAL,
                                 color: "#ffffff",
                             }}
                         >
-                            {props.done}
+                            <span
+                                ref={doneFillRef}
+                                aria-hidden="true"
+                                style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    height: "1.2cqw", // a strip along the bottom, so teal stays the button's colour
+                                    background: DARK_TEAL,
+                                    transformOrigin: "left",
+                                    transform: "scaleX(0)",
+                                }}
+                            />
+                            <span style={{ position: "relative" }}>
+                                {props.done}
+                            </span>
                         </button>
                     </FadeIn>
                 </div>

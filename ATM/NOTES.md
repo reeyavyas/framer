@@ -1405,7 +1405,12 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   (owner; the card stack sits a layer above it, and at the finale the faded stack still lets Done take taps).
 - **Finale (owner, no confetti):** the cards and buttons fade, the gauge glides to the middle, then
   "Congratulations, your score is now {score}!" and Done fade in under it. Done goes to
-  `/atm-lessons/credit-score-challenge/complete`, which has the confetti.
+  `/atm-lessons/credit-score-challenge/complete`, which has the confetti. Done is timed (owner, like Save or
+  Spend's old orange strip): once it shows, a dark teal strip (`#046b68`, the brand teal deeper; no colour style)
+  fills along its bottom over 10 s and then it goes on its own; a tap goes straight away; the strip holds while the
+  inactivity overlay is open. The 10 s is in code (`DONE_SECONDS`), not a layer property, so no stale saved value
+  can override it. Checked locally: 44% filled 6.1 s after the last answer (1.3 s before Done shows), then it went
+  to the completion path.
 - **Code:** `ATMCreditScoreChallenge.tsx`. Canvas (Start / Finale) picks what the Framer canvas shows (it remounts on a
   change); the live page always starts at the first card. Hint, No, Yes, Finale ({score} is the final score), Done and When Done are
   properties (renamed from the first draft's Do / Skip, so the layer's saved first-draft values don't stick).
