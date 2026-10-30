@@ -1378,12 +1378,14 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   card. A measured left shift was tried first and dropped for this. Vertically, the space above Good matches the space
   from the bottom of the blocks to the hairline (owner; the drawing's empty room under the blocks is taken out of
   the hairline's top margin). Every band name sits the same
-  110 gauge units (about 23 px) from its block (owner): Poor and Excellent centred on their block's
+  distance from its block (owner): about 21 px to the painted edge beside, 23 px above Good (owner moved the side ones 2 px in): Poor and Excellent centred on their block's
   height (its bounding box, side face included) and out from its outer edge, Good centred over its block. Fair
   and Very Good sit beside the upper part of their tilted block's outer side (owner, raised three times from its middle;
   `BESIDE` y -890): centred on the block's whole height they lined up with the gap below it. Measured
   in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
-  are Area Normal Black caps (owner), in two equal halves with the divider in the card's middle (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
+  are Area Normal Black caps (owner), in two equal halves with the divider in the card's middle (owner). Caps
+  text gets 0.15cqw of left padding to match the letter spacing CSS adds after the last letter, so the letters are
+  centred exactly (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
