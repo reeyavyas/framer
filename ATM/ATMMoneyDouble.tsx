@@ -460,6 +460,10 @@ export default function ATMMoneyDouble(props: Props) {
     const stop = () => {
         setTouched(true)
         setRun(0)
+        // cleared with the new rate, so its reveal never shows for a frame before the run resets
+        setFinished(false)
+        setYear(0)
+        setDoubled(0)
     }
     const go = () => setRun(++runs.current)
 

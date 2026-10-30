@@ -1262,8 +1262,10 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   → 36 / 36, $16,000), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
   Live after publishing: all five rates held a 145px tip and 400px drawing from start to reveal; the tip is
   centred and fills the full 920px width (same as the card and Done). Return Home on the inactivity panel went
-  to /atm. Seen once at the start of a new run: for one sample (under 100 ms) the new rate's reveal showed
-  before "Watch your $1,000 grow…".
+  to /atm. Seen once at the start of a new run: for one frame the new rate's reveal showed before "Watch your
+  $1,000 grow…" (the rate changed on touch, but the run's finished flag only cleared after render). Fixed: a touch
+  clears finished, year and doubled together with the new rate; checked locally frame by frame (12% reveal →
+  "Watch…" with nothing between). Not yet seen live.
   Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
   reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
   once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
