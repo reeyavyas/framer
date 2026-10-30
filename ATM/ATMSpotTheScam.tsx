@@ -40,7 +40,7 @@ const OPEN_R = 365 // the opening, inside the ring
 const K = R / OPEN_R // cqw per art unit
 const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
-const LENS_ART = `<defs><linearGradient id="g57" x1="0.1" y1="0" x2="0.35" y2="1"><stop offset="0.00" stop-color="#8fe0e0"/><stop offset="0.33" stop-color="#3bbfc0"/><stop offset="0.67" stop-color="#1fa9a8"/><stop offset="1.00" stop-color="#059390"/></linearGradient><linearGradient id="g60" x1="0" y1="0" x2="0.75" y2="0.75"><stop offset="0.00" stop-color="#8fe0e0" stop-opacity="0.6"/><stop offset="0.50" stop-color="#8fe0e0" stop-opacity="0.15"/><stop offset="1.00" stop-color="#8fe0e0" stop-opacity="0"/></linearGradient><radialGradient id="s63"><stop offset="0" stop-color="#5fbfa6" stop-opacity="0.700"/><stop offset="0.25" stop-color="#5fbfa6" stop-opacity="0.560"/><stop offset="0.45" stop-color="#5fbfa6" stop-opacity="0.329"/><stop offset="0.6" stop-color="#5fbfa6" stop-opacity="0.175"/><stop offset="0.72" stop-color="#5fbfa6" stop-opacity="0.084"/><stop offset="0.83" stop-color="#5fbfa6" stop-opacity="0.028"/><stop offset="0.92" stop-color="#5fbfa6" stop-opacity="0.008"/><stop offset="1" stop-color="#5fbfa6" stop-opacity="0.000"/></radialGradient><linearGradient id="g64" x1="0" y1="0" x2="0.12" y2="1"><stop offset="0.00" stop-color="#ffcc40"/><stop offset="0.33" stop-color="#f6a11d"/><stop offset="0.67" stop-color="#e08a12"/><stop offset="1.00" stop-color="#c97a0c"/></linearGradient><linearGradient id="g65" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#c97a0c" stop-opacity="0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.9"/></linearGradient><linearGradient id="g66" x1="0" y1="0" x2="1" y2="0"><stop offset="0.00" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="0.50" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.45"/></linearGradient></defs><g pointer-events="visiblePainted"><g transform="translate(50 -70)"><g transform="translate(3061 2145) rotate(50.4)"><rect x="-648" y="-62" width="300" height="124" fill="url(#g57)"/><path d="M-618,-26 H-388" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity=".9"/></g><circle cx="2349" cy="1283" r="365" fill="url(#g60)"/><path d="M2100,1323 A281,268 0 0 1 2289,1057" transform="rotate(-20 2349 1283)" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" opacity=".75"/><circle cx="2479" cy="1073" r="23" fill="#ffffff" opacity=".75"/><circle cx="2349" cy="1283" r="427" fill="none" stroke="url(#g57)" stroke-width="124"/><ellipse cx="2080" cy="1000" rx="22" ry="13" transform="rotate(-40 2080 1000)" fill="#ffffff" opacity=".95"/><g transform="translate(3061 2145) rotate(50.4)"><ellipse cx="-358" cy="10" rx="70" ry="123" fill="url(#s63)"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g64)" stroke="url(#g65)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g66)"/><path d="M-248,-84 H218" stroke="#ffffff" stroke-width="46" stroke-linecap="round" opacity="0.9"/><ellipse cx="-228" cy="-92" rx="30" ry="16" fill="#ffffff" opacity=".95"/></g></g></g>`
+const LENS_ART = `<defs><linearGradient id="g57" x1="0.1" y1="0" x2="0.35" y2="1"><stop offset="0.00" stop-color="#8fe0e0"/><stop offset="0.33" stop-color="#3bbfc0"/><stop offset="0.67" stop-color="#1fa9a8"/><stop offset="1.00" stop-color="#059390"/></linearGradient><linearGradient id="g60" x1="0" y1="0" x2="0.75" y2="0.75"><stop offset="0.00" stop-color="#8fe0e0" stop-opacity="0.6"/><stop offset="0.50" stop-color="#8fe0e0" stop-opacity="0.15"/><stop offset="1.00" stop-color="#8fe0e0" stop-opacity="0"/></linearGradient><radialGradient id="s63"><stop offset="0" stop-color="#5fbfa6" stop-opacity="0.700"/><stop offset="0.25" stop-color="#5fbfa6" stop-opacity="0.560"/><stop offset="0.45" stop-color="#5fbfa6" stop-opacity="0.329"/><stop offset="0.6" stop-color="#5fbfa6" stop-opacity="0.175"/><stop offset="0.72" stop-color="#5fbfa6" stop-opacity="0.084"/><stop offset="0.83" stop-color="#5fbfa6" stop-opacity="0.028"/><stop offset="0.92" stop-color="#5fbfa6" stop-opacity="0.008"/><stop offset="1" stop-color="#5fbfa6" stop-opacity="0.000"/></radialGradient><linearGradient id="g64" x1="0" y1="0" x2="0.12" y2="1"><stop offset="0.00" stop-color="#ffcc40"/><stop offset="0.33" stop-color="#f6a11d"/><stop offset="0.67" stop-color="#e08a12"/><stop offset="1.00" stop-color="#c97a0c"/></linearGradient><linearGradient id="g65" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#c97a0c" stop-opacity="0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.9"/></linearGradient><linearGradient id="g66" x1="0" y1="0" x2="1" y2="0"><stop offset="0.00" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="0.50" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.45"/></linearGradient></defs><g pointer-events="visiblePainted"><g transform="translate(50 -70)"><g transform="translate(3061 2145) rotate(50.4)"><rect x="-648" y="-62" width="300" height="124" fill="url(#g57)"/><path d="M-618,-26 H-388" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity=".9"/></g><circle cx="2349" cy="1283" r="365" fill="url(#g60)"/><path d="M2100,1323 A281,268 0 0 1 2289,1057" transform="rotate(-20 2349 1283)" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" opacity=".75"/><circle cx="2479" cy="1073" r="23" fill="#ffffff" opacity=".75"/><circle cx="2349" cy="1283" r="427" fill="none" stroke="url(#g57)" stroke-width="124"/><g transform="translate(3061 2145) rotate(50.4)"><ellipse cx="-358" cy="10" rx="70" ry="123" fill="url(#s63)"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g64)" stroke="url(#g65)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g66)"/><path d="M-248,-84 H218" stroke="#ffffff" stroke-width="46" stroke-linecap="round" opacity="0.9"/><ellipse cx="-228" cy="-92" rx="30" ry="16" fill="#ffffff" opacity=".95"/></g></g></g>`
 
 type Clue = { name: string; why: string }
 type ClueFn = (i: number, text: string, truth?: string) => React.ReactNode
@@ -103,7 +103,7 @@ const ROUNDS: Round[] = [
             },
             {
                 name: "Unknown sender",
-                why: "The name says Your Bank, but the real sender is a number you don’t know.",
+                why: "Your bank’s texts come from a number you know. This one is a random number.",
             },
             {
                 name: "Unknown link",
@@ -125,7 +125,8 @@ const ROUNDS: Round[] = [
                         marginBottom: "3cqw",
                     }}
                 >
-                    <Avatar letter="Y" />
+                    <Avatar letter="?" />{" "}
+                    {/* an unknown number has no name to show */}
                     <div>
                         <div
                             style={{
@@ -134,7 +135,7 @@ const ROUNDS: Round[] = [
                                 lineHeight: 1.6,
                             }}
                         >
-                            {c(1, "Your Bank", "+1 555-014-2290")}
+                            {c(1, "+1 555-014-2290")}
                         </div>
                         <div style={{ fontSize: "3cqw", color: MINT }}>
                             Text message · now
@@ -242,7 +243,7 @@ const ROUNDS: Round[] = [
             },
             {
                 name: "Asks for your card number",
-                why: "A real prize never needs your card number. They’d use it to take your money.",
+                why: "A real prize never asks for your card number.",
             },
         ],
         end: "Never give a pop\u2011up your card number. Delete it.", // \u2011: a hyphen that never breaks
@@ -962,8 +963,8 @@ function Lesson(props: Props) {
                     flex: "none",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2.4cqw",
-                    marginTop: 4, // the counts' big figures sit low in their line, so this evens the gap above (owner: even spacing)
+                    gap: "1.8cqw",
+                    marginTop: 4, // 4 px more space under the card than between the other parts (owner)
                 }}
             >
                 <div
@@ -986,7 +987,7 @@ function Lesson(props: Props) {
                     style={{
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
-                        gap: "2.4cqw",
+                        gap: "1.8cqw",
                     }}
                 >
                     {clues.map((_, k) => {
@@ -996,10 +997,10 @@ function Lesson(props: Props) {
                             <div
                                 key={k}
                                 style={{
-                                    minHeight: "10.6cqw",
+                                    height: "11cqw", // fixed (room for a two-line name), so nothing below moves as clues fill in (owner)
                                     boxSizing: "border-box",
                                     borderRadius: "4cqw",
-                                    padding: "1.6cqw 2.6cqw",
+                                    padding: "1cqw 2.6cqw",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "2.4cqw",
@@ -1057,22 +1058,30 @@ function Lesson(props: Props) {
                 style={
                     {
                         flex: "none",
-                        minHeight: "12cqw", // two lines
+                        height: "10.8cqw", // fixed (two lines; every text fits in two), so nothing moves as the text changes (owner)
+                        margin: "1cqw 0", // a little more room above and below the text (owner)
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
                         padding: "0 3cqw",
                         textAlign: "center",
-                        fontSize: "4.4cqw",
-                        lineHeight: 1.35,
+                        fontSize: "4.1cqw",
+                        lineHeight: 1.3,
                         color: MIDNIGHT,
                         textWrap: "balance",
                     } as React.CSSProperties
                 }
             >
-                {lead && (
-                    <span style={{ fontFamily: display, fontSize: "4.8cqw" }}>
-                        {lead}{" "}
-                    </span>
-                )}
-                {line}
+                <div>
+                    {lead && (
+                        <span
+                            style={{ fontFamily: display, fontSize: "4.4cqw" }}
+                        >
+                            {lead}{" "}
+                        </span>
+                    )}
+                    {line}
+                </div>
             </div>
 
             <div
@@ -1123,7 +1132,7 @@ function Count({ label, value }: { label: string; value: string }) {
             <span
                 style={{
                     fontFamily: display,
-                    fontSize: "7.6cqw",
+                    fontSize: "7cqw",
                     lineHeight: 1,
                     color: MIDNIGHT,
                 }}
