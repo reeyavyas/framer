@@ -262,7 +262,7 @@ const ROUNDS: Round[] = [
                             alignItems: "center",
                             gap: "1.4cqw",
                             padding: "2.6cqw 4.4cqw", // lined up with the other messages' insets
-                            background: "#0079a9", // brand light blue, so the teal glass stands out on it (owner)
+                            background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`, // the navy card's colours, so the teal glass stands out on it (owner)
                         }}
                     >
                         {[YOLK, MINT, GLACIER].map((col) => (
