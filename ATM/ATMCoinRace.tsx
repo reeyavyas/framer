@@ -303,7 +303,7 @@ export default function ATMCoinRace(props: Props) {
                     {week}
                     <span
                         style={{
-                            fontFamily: '"Area Normal Bold", sans-serif',
+                            fontFamily: '"Area Normal Black", sans-serif',
                             fontSize: "3.8cqw",
                             color: TEAL,
                         }}
@@ -315,6 +315,7 @@ export default function ATMCoinRace(props: Props) {
                 <div
                     style={{
                         textAlign: "right",
+                        fontFamily: '"Area Normal Black", sans-serif',
                         fontSize: "3.4cqw",
                         lineHeight: 1,
                         color: TEAL,
