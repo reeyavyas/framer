@@ -1364,13 +1364,13 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 "you" voice, light mint background); the component sits under the Question stack.
 
 - **Scoring (owner):** +15 for a right choice, −40 for a missed or late payment, −30 for a maxed-out card or high
-  balance. All six cards are played, so a perfect run ends at **790**; the goal is "at least 760". If the deck ends
-  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more; past
-  the first round the lesson ends the moment the score gets there (one miss ends at 765 after 8 cards, not 840
-  after 13). Never
+  balance. The lesson ends the moment the score reaches 760 (owner, 30 Oct; it used to play all six first and a
+  perfect run ended at 790): a perfect run is four cards and always ends at exactly 760, so the last two cards
+  (pay down the balance, don't skip a payment) only show after a mistake. If the deck ends
+  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more. Never
   the same question twice (owner): each card has four scenarios and takes its next unused one each time it's dealt,
   24 in all. Missing all six first-round cards (490) and then answering everything right uses exactly all 24 to
-  reach 760 (checked locally, along with one miss: 765, and a perfect run: 790); only a run with even more misses would see a card's scenarios start over. 790 stays inside Very Good (740–799), so every finish lands in the same band.
+  reach 760 (checked locally; a perfect run ends at 760 after four cards); only a run with even more misses would see a card's scenarios start over. Every finish is 760–774 (the last step is +15), inside Very Good (740–799).
 - **The cards** alternate right answers (yes, no, yes, no, yes, no) so swiping one way can't win. They cover the
   four actions: pay on time, keep balances low, don't miss a payment, don't max out. The texts are in code
   (`CARDS`, four scenarios each), not layer properties; change them by prompt. The autopay card's chip is "Payment
@@ -1420,7 +1420,8 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 - **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1174 (owner shortened the
   sub-header to "…Make choices that help it grow."; after trying 1214 the owner wanted the buttons further from the
   bottom: they now end about 80 px clear of 1920). Gaps between the gauge, hint, card and buttons are 3cqw; the hint
-  sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
+  has 2.7cqw more above it, so the space above its text matches the space under the question card (58 px each,
+  owner), and sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
   instructions (owner). The card takes any spare height.
 - **Live test (30 Oct, 1080 × 1920, before the spacing change):** real fonts load (Area Normal, P22 Mackinac);
   all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. After the 24-scenario

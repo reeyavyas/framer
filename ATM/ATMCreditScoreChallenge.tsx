@@ -8,10 +8,10 @@ import { gsap } from "gsap"
 // about a money choice as a yes/no question; swipe right (or tap Yes) for yes, left (or No) for no. A right choice adds 15,
 // a wrong one costs 40 (a missed payment) or 30 (a maxed-out card). The gauge at the top is the heads-up display:
 // its needle springs to the score, the band names round its arc light up as the score crosses into a band, and a
-// chip by the score says what happened ("Paid on time +15"). The hint line above the card then says why. The whole deck
-// is played (a perfect run ends at 790); if it ends under 760, the cards they got wrong come back as new questions,
-// and so on until the score is 760 or more (past the first round, the lesson ends the moment it gets there). Then the cards clear, the gauge glides to the middle and the finale line and
-// Done show. No background of its own.
+// chip by the score says what happened ("Paid on time +15"). The hint line above the card then says why. The lesson
+// ends the moment the score reaches 760 (a perfect run takes four cards); if the deck runs out first, the cards they
+// got wrong come back as new questions, and so on. Then the cards clear, the gauge glides to the middle and the
+// finale line and Done show. No background of its own.
 //
 // The gauge is ATMGauge's art (ATM/artwork/vectors/gauge/build.py, export_anim): five 36° segments, one per band,
 // so the needle sits at the score's place within its band. Transforms and opacity only; no blur, filters or CSS
@@ -268,12 +268,11 @@ function Challenge(props: Props) {
             ),
         [uid]
     )
-    const [score, setScore] = React.useState(showFinale ? 790 : START)
-    const [shown, setShown] = React.useState(showFinale ? 790 : START) // the number as it counts
+    const [score, setScore] = React.useState(showFinale ? GOAL : START)
+    const [shown, setShown] = React.useState(showFinale ? GOAL : START) // the number as it counts
     const [deck, setDeck] = React.useState<Turn[]>(FIRST_DECK)
     const [missed, setMissed] = React.useState<number[]>([])
     const dealt = React.useRef(CARDS.map(() => 1)) // scenarios each card has used so far
-    const comeback = React.useRef(false) // past the first round, which is always played in full
     const [chip, setChip] = React.useState<{
         id: number
         text: string
@@ -539,8 +538,8 @@ function Challenge(props: Props) {
             const next = score + (ok ? GAIN : -card.cost)
             const nowMissed = ok ? missed : [...missed, turn.c]
             let rest = deck.slice(1)
-            // Past the first round, reaching the goal ends the lesson there and then
-            if (comeback.current && next >= GOAL) rest = []
+            // Reaching the goal ends the lesson there and then (owner)
+            if (next >= GOAL) rest = []
             // The deck's done: under the goal, the cards they got wrong come back (all of them if none were), each
             // with a scenario not shown yet
             if (!rest.length && next < GOAL) {
@@ -552,7 +551,6 @@ function Challenge(props: Props) {
                     v: dealt.current[c]++ % CARDS[c].versions.length,
                 }))
                 setMissed([])
-                comeback.current = true
             } else setMissed(nowMissed)
             setScore(next)
             setDeck(rest)
@@ -808,6 +806,7 @@ function Challenge(props: Props) {
                         ...fade,
                         flex: "none",
                         minHeight: "10cqw", // room for two lines, so the cards keep one size
+                        marginTop: "2.7cqw", // as much space above the hint as under the question card (owner)
                         marginBottom: "-2.2cqw", // clearly closer to its card than the other gaps (owner)
                         display: "flex", // a one-line why sits at the foot, by the card
                         flexDirection: "column",
