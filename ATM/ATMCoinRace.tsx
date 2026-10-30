@@ -51,6 +51,8 @@ const COIN_DEFS = `<linearGradient id="l19" x1="0" y1="0" x2="1" y2="0"><stop of
 <radialGradient id="r54" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#cf7a0c" stop-opacity="0.5"/><stop offset="0.275" stop-color="#cf7a0c" stop-opacity="0.4"/><stop offset="0.55" stop-color="#cf7a0c" stop-opacity="0.225"/><stop offset="0.75" stop-color="#cf7a0c" stop-opacity="0.075"/><stop offset="0.9" stop-color="#cf7a0c" stop-opacity="0.02"/><stop offset="1" stop-color="#cf7a0c" stop-opacity="0"/></radialGradient>`
 const COIN = `<path d="M-245,0 -245,78.4 A245,88.2 0 0 0 245,78.4 L245,0 A245,88.2 0 0 1 -245,0 Z" fill="url(#l19)"/><path d="M-245,0 -245,78.4 A245,88.2 0 0 0 245,78.4 L245,0 A245,88.2 0 0 1 -245,0 Z" fill="url(#l20)"/><ellipse rx="245" ry="88.2" fill="url(#l21)"/><ellipse rx="205.8" ry="74.1" fill="url(#l22)"/><ellipse rx="191.1" ry="68.8" fill="url(#r23)"/><g transform="scale(1 0.36) scale(183.8)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M.30,-.30 C.22,-.44 -.30,-.44 -.30,-.18 C-.30,.02 .30,-.02 .30,.20 C.30,.44 -.24,.44 -.32,.28 M0,-.54 V-.40 M0,.40 V.54" stroke="#cf7a0c" stroke-width=".13" transform="translate(.035 .045)"/><path d="M.30,-.30 C.22,-.44 -.30,-.44 -.30,-.18 C-.30,.02 .30,-.02 .30,.20 C.30,.44 -.24,.44 -.32,.28 M0,-.54 V-.40 M0,.40 V.54" stroke="#ffe07a" stroke-width=".13"/><path d="M.30,-.30 C.22,-.44 -.30,-.44 -.30,-.18 C-.30,.02 .30,-.02 .30,.20 C.30,.44 -.24,.44 -.32,.28 M0,-.54 V-.40 M0,.40 V.54" stroke="#ffffff" stroke-opacity=".7" stroke-width=".035" transform="translate(-.025 -.03)"/></g><ellipse cx="-102.9" cy="-39.7" rx="73.5" ry="20.1" transform="rotate(-25 -102.9 -39.7)" fill="url(#r24)"/><circle cx="-134.8" cy="-22.1" r="14.7" fill="url(#r25)"/><ellipse cx="122.5" cy="30.9" rx="34.3" ry="10.1" transform="rotate(-25 122.5 30.9)" fill="url(#r26)"/><ellipse cx="0" cy="96" rx="245" ry="92.6" fill="url(#r54)"/>`
 const money = (n: number) => "$" + n.toLocaleString("en-US")
+// Cuts the line spacing above a line's capitals and below its baseline, so gaps around text are exactly the margins set
+const trim = { textBox: "trim-both cap alphabetic" } as React.CSSProperties
 // "$1,300" and the like in bold, the rest as written
 const bold = (s: string) =>
     s.split(/(\$[\d,]+)/).map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p))
@@ -546,8 +548,9 @@ export default function ATMCoinRace(props: Props) {
                         <>
                             <span
                                 style={{
+                                    ...trim,
                                     display: "block",
-                                    marginBottom: "1cqw",
+                                    marginBottom: "2cqw",
                                     fontFamily:
                                         '"Area Normal Black", sans-serif',
                                     fontSize: "3.26cqw",
@@ -557,11 +560,14 @@ export default function ATMCoinRace(props: Props) {
                             >
                                 AFTER ONE YEAR ({WEEKS} WEEKS)
                             </span>
-                            <span>{bold(reveal)}</span>
+                            <span style={{ ...trim, display: "block" }}>
+                                {bold(reveal)}
+                            </span>
                             <span
                                 style={{
+                                    ...trim,
                                     display: "block",
-                                    marginTop: "1.6cqw",
+                                    marginTop: "2cqw",
                                     fontSize: "3.26cqw", // 30px
                                     color: TEAL,
                                 }}
