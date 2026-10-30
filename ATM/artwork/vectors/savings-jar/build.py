@@ -281,15 +281,24 @@ NECK_DROP = {191, 192, 195, 197, 199, 201, 214, 215, 252, 253, 278,
              1, 250}  # and the traced outline ring and right-side shade line, which kinked at the shoulders
 NECK_CX, NECK_W, NECK_RY = 1625.5, 640, 173
 # The jar's traced outline is open across the neck (the lid hid it), so its glass is that outline plus the neck
-# (between the neck's sides, x 1030-2220 at y 860-900, down into the body), as one path wound the same way.
+# (out to the inside edges of the outline's two ends, which tuck under the lid, then x 1030-2220 down into the
+# body), as one path wound the same way. The clean lid curves in at the bottom as the traced one did, so the glass
+# must reach those edges or the card shows between the outline and the glass.
 _jc = flatten(outer(PATHS[1][1]), 8)
 _cw = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(_jc, _jc[1:] + _jc[:1])) > 0
-JAR_GLASS = closed(outer(PATHS[1][1])) + (" M 1030,820 L 2220,820 L 2220,1100 L 1030,1100 Z" if _cw else " M 1030,820 L 1030,1100 L 2220,1100 L 2220,820 Z")
+def _neck_inner(y):  # the inside edges of the outline's two ends at height y (left, right)
+    xs = sorted(x0 + (y - y0) * (x1 - x0) / (y1 - y0) for (x0, y0), (x1, y1) in zip(_jc, _jc[1:] + _jc[:1]) if (y0 > y) != (y1 > y))
+    assert len(xs) >= 4, (y, xs)
+    return xs[1] - 4, xs[-2] + 4  # 4 under the outline (about 20 wide), so no sliver shows between them
+_ny = list(range(812, 881, 2))
+_neck = ([(_neck_inner(812)[0], 800)] + [(_neck_inner(y)[0], y) for y in _ny] + [(1030, 880), (1030, 1100), (2220, 1100), (2220, 880)]
+         + [(_neck_inner(y)[1], y) for y in reversed(_ny)] + [(_neck_inner(812)[1], 800)])  # down the left, up the right
+JAR_GLASS = closed(outer(PATHS[1][1])) + " M " + " L ".join(f"{x:.1f},{y}" for x, y in (_neck[::-1] if _cw else _neck)) + " Z"
 NECK_N = 96  # points per arc (the animated export uses fewer)
 def neck_arc(ymid, ry=NECK_RY, n=None):
     n = n or NECK_N
-    top = ymid - ry
-    return [(NECK_CX - NECK_W + 2 * NECK_W * k / n, top + ry * max(0.0, 1 - ((2 * k / n - 1)) ** 2) ** .5) for k in range(n + 1)]
+    top = ymid - ry  # evenly spaced in angle, so the steep ends get as many points as the flat middle (no facets)
+    return [(NECK_CX - NECK_W * math.cos(math.pi * k / n), top + ry * math.sin(math.pi * k / n)) for k in range(n + 1)]
 def neck_band(y0, y1, lens=False):  # between the arcs through y0 and y1 mid-jar; a lens when its ends meet
     upper, lower = neck_arc(y0), neck_arc(y1, NECK_RY + (y1 - y0) if lens else NECK_RY)
     return "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in upper + lower[::-1]) + " Z"
@@ -331,8 +340,9 @@ def build_gloss(key, anim=False):
     pre = f"{SLUG}-{key}-gloss"
     defs, n_id = [], [0]
     def nid(tag): n_id[0] += 1; return f"{pre}-{tag}{n_id[0]}"
-    def lin(stops, x1=0, y1=0, x2=1, y2=1, units=""):
-        gid = nid("l"); u = f' gradientUnits="userSpaceOnUse"' if units else ""
+    def lin(stops, x1=0, y1=0, x2=1, y2=1, units="", box=None):  # box: bounding-box units of that box, on any shape
+        gid = nid("l"); u = f' gradientUnits="userSpaceOnUse"' if units or box else ""
+        if box: u += f' gradientTransform="matrix({box[2] - box[0]:.1f} 0 0 {box[3] - box[1]:.1f} {box[0]:.1f} {box[1]:.1f})"'
         defs.append(f'<linearGradient id="{gid}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}"{u}>' + "".join(
             f'<stop offset="{o}" stop-color="{c}"' + (f' stop-opacity="{a}"' if a != 1 else "") + "/>" for o, c, a in stops) + "</linearGradient>")
         return f"url(#{gid})"
@@ -352,11 +362,11 @@ def build_gloss(key, anim=False):
 
     # ---- face fills for source paths ----
     face_cache = {}
-    def face(base, tint, shade):
-        k = (base, tint, shade)
+    def face(base, tint, shade, box=None):
+        k = (base, tint, shade, box)
         if k not in face_cache:
             # a lit top, a reflection band, a deep base
-            face_cache[k] = lin([(0, mix(tint, WHITE, .3), 1), (.3, base, 1), (.45, tint, 1), (.7, base, 1), (1, shade, 1)], 0, 0, .35, 1)
+            face_cache[k] = lin([(0, mix(tint, WHITE, .3), 1), (.3, base, 1), (.45, tint, 1), (.7, base, 1), (1, shade, 1)], 0, 0, .35, 1, box=box)
         return face_cache[k]
     def paint(i):
         o, r = ROLES[i]
@@ -419,12 +429,12 @@ def build_gloss(key, anim=False):
         msk = ""
         if front:
             msk = f' mask="{full_mask(f"<rect x=\"{VBs[0] - 500}\" y=\"{VBs[1] - 500}\" width=\"{VBs[2] + 1000}\" height=\"{VBs[3] + 1000}\" fill=\"#fff\"/>" + "".join(f"<path d=\"{closed(contour[f])}\" fill=\"#000\"/>" for f in front))}"'
-        # grow the faces over the traced line along the contour, so the edge reads even
+        # grow the faces over the traced line along the contour, so the edge reads even (the lid's sides are redrawn clean)
         ring = full_mask(f'<path d="{C}" fill="none" stroke="#fff" stroke-width="{2 * RING:.1f}"/>')
         grown = "".join(f'<path d="{closed(PATHS[i][1])}" fill="{f}" stroke="{f}" stroke-width="{2 * GROW:.1f}" stroke-linejoin="round"/>'
                         for i, f in fills.items() if ROLES[i][0] == obj and i not in NO_GROW | LID_TOP_PIECES and (lambda b: (b[2] - b[0]) * (b[3] - b[1]))(bbox(PATHS[i][1])) > BIG)
         op = f' opacity="{st["glass"]}"' if obj == "jar" else ""
-        out.append(f'<g{msk}{op}><g clip-path="{cp}"><g mask="{ring}">{grown}</g></g></g>')
+        if obj != "lid": out.append(f'<g{msk}{op}><g clip-path="{cp}"><g mask="{ring}">{grown}</g></g></g>')
         # light: a soft highlight top-left and a deeper core shade bottom-right, inside the part
         hl, cs = .6, .55
         out.append(f'<g clip-path="{cp}"{msk}>'
@@ -437,12 +447,14 @@ def build_gloss(key, anim=False):
                        f'fill="none" stroke="{WHITE}" stroke-opacity=".45" stroke-width="{w * .012:.0f}" stroke-linecap="round"/>'
                        f'<path d="M {x0 + w * .9:.0f},{y0 + h * .35:.0f} C {x0 + w * .93:.0f},{y0 + h * .5:.0f} {x0 + w * .93:.0f},{y0 + h * .65:.0f} {x0 + w * .9:.0f},{y0 + h * .8:.0f}" '
                        f'fill="none" stroke="{WHITE}" stroke-opacity=".4" stroke-width="{w * .012:.0f}" stroke-linecap="round"/></g>')
-        # the edge, no outline: a band lit top-left and deep bottom-right, plus a bright rim
+        # the edge, no outline: a band lit top-left and deep bottom-right, plus a bright rim (only on the arrow: designer)
         lit = dict(jar=ramp(sc["glass"], .6), lid=ramp(sc["lid"], .8), arrow=ramp(sc["arrow"], .5))[obj]
         stroke = lin([(0, lit, 1), (.45, lit, 1), (1, core["glass" if obj == "jar" else obj], 1)], x0, y0, x1, y1, units=True)
-        out.append(f'<g{msk} fill="none" stroke="{stroke}" stroke-linejoin="round">'
-                   + (f'<path d="{C}" stroke-width="{2 * o_w:.1f}"/>' if o_w else "")
-                   + f'<path d="{C}" stroke-width="{2 * i_w:.1f}" clip-path="{cp}"/></g>')
+        if obj not in ("lid", "jar"):
+            out.append(f'<g{msk} fill="none" stroke="{stroke}" stroke-linejoin="round">'
+                       + (f'<path d="{C}" stroke-width="{2 * o_w:.1f}"/>' if o_w else "")
+                       + f'<path d="{C}" stroke-width="{2 * i_w:.1f}" clip-path="{cp}"/></g>')
+        if obj in ("lid", "jar"): return "".join(out)
         rim = lin([(0, WHITE, st["rim"]), (.35, LTEAL_T, st["rim"] * .8), (.6, LTEAL_T, 0), (1, LTEAL_T, 0)], x0, y0, x1, y1, units=True)
         out.append(f'<path d="{C}" fill="none" stroke="{rim}" stroke-width="{7 * 2 * K:.1f}" clip-path="{cp}"{msk}/>')
         return "".join(out)
@@ -451,7 +463,7 @@ def build_gloss(key, anim=False):
     body, lid, arrow, fills, body_ix = [], [], [], {}, []
     for i, (c, d) in enumerate(PATHS):
         o, r = ROLES[i]
-        if o in ("stack", "coin") or jar_coin_path(i) or i in GLASS_DROP | NECK_DROP: continue
+        if o in ("stack", "coin") or jar_coin_path(i) or i in GLASS_DROP | NECK_DROP | LID_SIDE: continue  # the lid's sides: redrawn clean
         f = paint(i)
         if r != "line": fills[i] = f
         el = f'<path d="{closed(d)}" fill="{f}"/>'
@@ -484,7 +496,25 @@ def build_gloss(key, anim=False):
     ell = lambda e, **kw: f'<ellipse cx="{e[0]:.1f}" cy="{e[1]:.1f}" rx="{e[2]:.1f}" ry="{e[3]:.1f}"' + "".join(f' {k.replace("_", "-")}="{v}"' for k, v in kw.items()) + "/>"
     assert lid[-1].startswith(f'<path d="{closed(PATHS[312][1])[:20]}')  # the slot, the last lid shape, stays on top
     # the rim runs out to the outline (as the grown faces do elsewhere), then the recess wall and floor
-    lid_top = (ell(LID_E, fill=fills[210]) + ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
+    # the lid's sides (see LID_CLEAN): each band runs from its groove down to the silhouette, in its traced face's
+    # colours (the gradient laid over that face's box, as before), the grooves on top
+    below = lambda rx, cy, ry: (f"M {_lcx - 800:.1f},{cy} L {_lcx - rx:.1f},{cy} A {rx},{ry} 0 0 0 {_lcx + rx:.1f},{cy} "
+                                f"L {_lcx + 800:.1f},{cy} L {_lcx + 800:.1f},1100 L {_lcx - 800:.1f},1100 Z")
+    side_fill = lambda i: face(colour(i, sc), colour(i, sc, st["tint"]), colour(i, sc, st["shade"]), bbox(PATHS[i][1]))
+    # some cap ticks are notches in the traced cap face (209): away from the sides and clear of the first groove, that
+    # face shows over the traced outline again
+    zone, above = nid("c"), nid("c")
+    (rx, cy, ry), cy = LID_GROOVES[0], LID_GROOVES[0][1] - 14
+    defs.append(f'<clipPath id="{zone}"><rect x="1100" y="300" width="1100" height="500"/></clipPath>'
+                f'<clipPath id="{above}"><path d="M {_lcx - 800:.1f},300 L {_lcx - 800:.1f},{cy} L {_lcx - rx:.1f},{cy} A {rx},{ry} 0 0 0 '
+                f'{_lcx + rx:.1f},{cy} L {_lcx + 800:.1f},{cy} L {_lcx + 800:.1f},300 Z"/></clipPath>')
+    lid_side = (f'<path d="{LID_CLEAN}" fill="{side_fill(209)}"/>'
+                + "".join(f'<path d="{below(*g_)}" fill="{side_fill(i)}"/>' for g_, i in zip(LID_GROOVES, (209, 211, 213)))
+                + f'<g clip-path="url(#{zone})"><g clip-path="url(#{above})"><path d="{closed(PATHS[2][1])}" fill="{edge_of(2, sc)}"/>'
+                f'<path d="{closed(PATHS[209][1])}" fill="{side_fill(209)}"/></g></g>'
+                + "".join(f'<path d="M {_lcx - rx:.1f},{cy} A {rx},{ry} 0 0 0 {_lcx + rx:.1f},{cy}" fill="none" stroke="{edge_of(2, sc)}" '
+                          f'stroke-width="11"/>' for rx, cy, ry in LID_GROOVES))
+    lid_top = (ell((LID_E[0], LID_E[1], LID_R, LID_E[3]), fill=fills[210]) + ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
                + ell(TOP_E, fill=fills[219]))
     # ---- the arrow: one solid (back face, side quads, front face), then its white border and gloss ----
     pts = lambda P: "M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in P) + " Z"
@@ -546,7 +576,7 @@ def build_gloss(key, anim=False):
            f'<defs>{{DEFS}}</defs>{shadows}'
            + g("jar", f'<g{glass_op}>{base_glass}{"".join(body)}{neck_bands}</g>{lid_shadow}'
                + part_layers("jar", "jar", fills, front=("lid",)) + g("inner", f'<g clip-path="{clip("jar")}">{jar_coins}</g>')  # coins over the glass's lighting, so it never tints them
-               + f'<g clip-path="{clip("lid")}">{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills)
+               + f'<g clip-path="{clip("lid")}">{lid_side}{"".join(lid[:-1])}{lid_top}{lid[-1]}</g>' + part_layers("lid", "lid", fills)
                + g("coinShadow", fall_shadow))
            + fallen()
            + stack + glint
@@ -563,12 +593,22 @@ def build_gloss(key, anim=False):
 # The slot's front lip, from the traced slot (312): the falling coin is clipped below this line, so it slips in.
 SLOT_LIP = ((1415, 577), (1860, 524))
 
-# The lid's sides were jagged where the traced thread ridges stuck out past the top ellipse: the glossy lid is
-# clipped to, and edged along, a clean cylinder silhouette: the top ellipse (LID_E), straight sides, and a bottom arc
-# through the traced lid's lowest point (921.5).
-_lcx, _lcy, _lrx, _lry = LID_E
-LID_CLEAN = (f"M {_lcx - _lrx:.1f},{_lcy:.1f} A {_lrx:.1f},{_lry:.1f} 0 0 1 {_lcx + _lrx:.1f},{_lcy:.1f} L {_lcx + _lrx:.1f},800 "
-             f"A {_lrx:.1f},121.5 0 0 1 {_lcx - _lrx:.1f},800 Z")
+# The lid's sides, brushed up (designer: keep the original lid, clean its jagged sides, no stroke around it). The
+# traced outline wobbles where the bands meet the sides, so its side faces (209: the cap and the first thread band,
+# 211: the second, 213: the lip) and the outline with its grooves (2) are redrawn from curves fitted to the trace:
+# the silhouette (rms 1.6 units from the traced outline's outer edge, made symmetric) is the top ellipse, straight
+# cap sides, the thread bulge and the round bottom; each groove is its traced arc (within 3 units), 11 wide as traced,
+# a little wider than the silhouette so it runs off the side instead of ending on it.
+_lcx, _lcy, _lry = LID_E[0], LID_E[1], LID_E[3]
+LID_R, LID_CAP, LID_BULGE, LID_LOW = 628.8, 705.8, (654.0, 762.5), 921.5  # side half-width, cap side's foot, bulge, lowest point
+LID_GROOVES = ((643.0, 656.8, 128.2), (643.0, 704.5, 134.8), (655.0, 716.6, 168.0))  # (rx, cy, ry) about the lid's axis
+LID_SIDE = {2, 209, 211, 213}
+assert abs(LID_BULGE[0] - (bbox(PATHS[2][1])[2] - bbox(PATHS[2][1])[0]) / 2) < 6 and abs(LID_LOW - bbox(PATHS[2][1])[3]) < 6
+_p = lambda dx, y: f"{_lcx + dx:.1f},{y:.1f}"
+_hx, _hy = LID_BULGE
+LID_CLEAN = (f"M {_p(-LID_R, _lcy)} A {LID_R},{_lry:.1f} 0 0 1 {_p(LID_R, _lcy)} L {_p(LID_R, LID_CAP)} "  # top, right cap side
+             f"C {_p(LID_R, LID_CAP + 14.2)} {_p(_hx, _hy - 40.9)} {_p(_hx, _hy)} C {_p(_hx, _hy + 39.7)} {_p(530.9, LID_LOW)} {_p(0, LID_LOW)} "
+             f"C {_p(-530.9, LID_LOW)} {_p(-_hx, _hy + 39.7)} {_p(-_hx, _hy)} C {_p(-_hx, _hy - 40.9)} {_p(-LID_R, LID_CAP + 14.2)} {_p(-LID_R, LID_CAP)} Z")
 # designer: the arrow as tall as the jar's body (neck 965 to the base 2459), scaled evenly, still centred on the
 # jar-stack gap and standing on the ground line
 ARROW_S2 = (2459 - 965) / (SOLID_BOX[3] - SOLID_BOX[1])

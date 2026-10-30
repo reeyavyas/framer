@@ -1203,6 +1203,344 @@ the session had not loaded them).
   `artwork/ANIMATING-VECTORS.md`, plus `artwork/cart/preview/` (build
   script, preview page, frame capture, outline measuring).
 
+## Lesson 2: Save or Spend? (`/atm-lessons/save-or-spend/lesson`, first draft 29 Oct)
+
+"You just got $100. What do you do?" Four options: A spend it all, B save $10, C save $25, D save $50. Tapping a
+card picks it; **Fast-forward a year** runs a coin race of all four over 52 weeks ($100 a week, $5,200 earned), and
+the reveal for the pick reads "Someone saving $25 from every $100 can save $1,300 after earning $5,200." Pick again
+returns to the cards (pick kept); Done goes to the completion page. The owner will restyle colours, fonts and buttons.
+
+- **Race restyle (29 Oct, owner's list):** the week number and Earned so far figure are the same size, in Midnight
+  and P22 Mackinac ExtraBold (falls back to Bold); "Earned so far" sits on top of the figure. YOUR PICK is
+  Midnight, on a yolk tab as wide as the picked lane, flush on top of it (the tab's top corners round; the lane
+  keeps its rounded corners, and the tab reaches 4cqw down behind it to fill them). The reveal box has 24px/28px padding and is at least 22cqw tall, its text 35.6px and the compare line 30px;
+  lanes have 37px padding top and bottom (the coins' spare room), and
+  the reveal has 15px more space above and below than the other gaps; the key gets the same above it, so it
+  sits centred between the lanes and the reveal. The Coin Race layer is 1154 px tall in Variants
+  6-9 (the most the screen allows; set in each variant), and the lanes take any extra height.
+- **Live test (29 Oct, after the restyle publish, 1080 x 1920):** Fast-forward does nothing before a pick; cards
+  A-D highlight; every race runs in 5.7 s with the right reveal and comparison; Pick Again and Done show and work
+  mid-race; Pick Again keeps the pick; idle Done fills its orange strip and leaves after 20.0 s (now 10 s); Done and X go to
+  the completion page and `/atm-start`; the race ends at 1830 px, inside the screen. P22 Mackinac ExtraBold
+  loads on the live page. Need or Want (tumble wall cast) still sorts and shows its card. Seen but not changed:
+  the bold dollar figures in the reveal barely look bold (Area Normal Bold has no heavier weight behind `<b>`);
+  the owner is happy with it as is, so leave it.
+- **Quick taps (fixed after that test):** Pick Again and Done sit where Fast-forward was, so a fast second tap
+  landed on Done and jumped to the completion page. The race ignores taps on them for 0.6 s after it starts, and
+  Fast-forward reads the pick when tapped (a tap straight after picking a card used to be ignored). Done's idle
+  timer is 10 s. Live test after that publish: a tap straight after a card starts the race, and double taps on
+  either half of Fast-forward keep the race (no jump to the completion page, no flicker back to the cards). The
+  idle strip still ran 20 s although every panel showed 10: the primary variant's Coin Race held a stale saved 20
+  the panel didn't show, so Idle was set to 10 on that layer by hand; live it now leaves after 10.0 s.
+- **A year is 52 weeks (30 Oct, owner):** to tie the race to "Fast-forward a year", the counter reads "12 / 52 weeks
+  in a year", and when the year ends the white box opens with "AFTER ONE YEAR (52 WEEKS)" (caps, owner) in teal above the
+  reveal. The box's spacing is as it was before (tried evening it with a top nudge and with text-box trimming; the
+  owner asked for it back as it was and doesn't want line-height tweaks chased).
+  Both are in code, not layer properties, so all four race variants get them and the owner's reveal texts are untouched.
+  The owner then set the heading's gap below to 1.6cqw and the lanes' side padding to 2cqw in Framer.
+- **No layout shift mid-race (30 Oct, owner):** the lanes used to shrink when the taller reveal replaced the callouts.
+  The reveal is now always laid out in the white box (hidden during the race, the callout stacked over it), so the box
+  starts at its finished height and the lanes keep one size. Checked locally: box 244px and lanes 453px through every
+  callout and the reveal, for all four picks. Live (30 Oct): picks A and B held 244px box / 447px lanes through
+  every callout and the reveal; counter read "52 / 52 weeks in a year" and the reveal opened with the caps heading.
+- **Race box outline (30 Oct, owner):** the half-white callout box blended into the background, so it now has the
+  reveal's teal outline the whole race, and the callouts sit at the top of the box instead of the middle.
+- **Bolder labels (30 Oct, owner):** "/ 52 weeks in a year" and "Earned so far" are in Area Normal Black (the
+  page already loads it for the reveal heading); checked on the canvas.
+- **Same lane size for every pick (30 Oct):** live, A-C held a 244px box / 447px lanes but D's longer reveal made a
+  284px box / 407px lanes (steady within each run, but different between picks). All four reveals are now laid out
+  hidden in the box, so it takes the tallest (D's) for every pick. Live checks after that publish: C and D runs,
+  teal outline (4.6px) through the race, callouts 24px from the box top, Pick Again back to the cards with the pick
+  kept, Done's idle redirect to /complete then /atm-start, both labels in Area Normal Black. Money Double's "0 / 36"
+  now hugs (0 ends where "/ 36" starts).
+- **Money Double holds still (30 Oct, owner):** every tip (hint, "Watch…", "Doubled! $64,000" and all five reveals)
+  is laid out in one cell, all hidden but the current one, so the tip area takes the tallest and the hourglass,
+  coins and key keep one size. Checked locally: a 12% run held a 170px tip and 579px drawing throughout. The tip
+  text is centred. Inactivity panel, live: it appeared at about 176 s idle ("Are you still there?", counting down
+  from 30); Yes, I'm Here closed it and left the lesson as it was; left alone it counted down and went to /atm.
+  Return Home not pressed yet. Reduced motion, checked locally with it forced on: a rate finishes at once (8%
+  → 36 / 36, $16,000), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
+  Live after publishing: all five rates held a 145px tip and 400px drawing from start to reveal; the tip is
+  centred and fills the full 920px width (same as the card and Done). Return Home on the inactivity panel went
+  to /atm. Seen once at the start of a new run: for one frame the new rate's reveal showed before "Watch your
+  $1,000 grow…" (the rate changed on touch, but the run's finished flag only cleared after render). Fixed: a touch
+  clears finished, year and doubled together with the new rate; checked locally frame by frame (12% reveal →
+  "Watch…" with nothing between). Live, frame by frame: 12% → 8% and 8% → 4% went straight to "Watch…".
+  Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
+  reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
+  once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
+- **Year-end text centred, Done timer gone (30 Oct, owner):** a shorter reveal now sits in the middle of the box
+  (the tallest reveal sets the box's height); the race callouts stay at the top. Done no longer has an idle timer
+  or orange strip: it goes to the completion page only on a tap. The Idle (s) control is removed.
+  Live: every pick's reveal centred (A-C 44px above and below, D 24px, the box's padding); the page stayed put
+  16 s after the reveal and Done went to /complete on a tap.
+- **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
+  each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
+  tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
+  matches the cards' key (Area Normal Black, Midnight, coin 78 px, 14 px gap; no leading, so the gaps either
+  side of the reveal look even). Reveal text is vertically centred and wraps with `text-wrap: pretty`; the box grows if
+  its text needs more. Buttons are a set 10cqw tall with 2px bottom padding so their labels sit centred.
+  No space between "$" and the figure (no tabular numbers). Pick Again and Done show the whole race; Done has no
+  shadow, and its idle timer is an orange (`#f6a11d`, the art's orange; there's no orange colour style) strip
+  along its bottom so yolk stays the button's colour. A week takes 110 ms (about 6 s for the year).
+
+- **Page:** the owner's Question stack (heading, subheading) stays native; under it the **Save or Spend Lesson**
+  component (Assets root). Variant 1 is the cards with nothing picked (button dimmed, "Tap a card to choose."),
+  Variants 2-5 are A-D picked (yellow 8 px border and badge on that card, the pick line, button lit), Variants 6-9
+  are the races for A-D (cards hidden, Coin Race shown with Pick A-D). Cards, pick line, key and button are native
+  layers; only the coin stacks and the race are code. Coins don't hop on pick yet (ATMCoinStack's Hop is wired, just
+  not turned on in Variants 2-5).
+- **Wiring:** Framer interactions couldn't be added from Claude in Chrome, so `ATMSaveOrSpendOverrides.tsx` switches
+  the variants: withLesson on the instance, withCardA-D on the cards, withFastForward on the button, withPickAgain on
+  Coin Race. It names the variants "Variant 1"-"Variant 9"; renaming them in Framer means renaming them there too.
+- **Code:** `ATMCoinStack.tsx` (the jar's coins in stacks: trays at 1 coin = $5, the key's coin), `ATMCoinRace.tsx`
+  (lanes, counters, callouts at weeks 4 and 26, reveal and compare text as properties, Done with a 20 s idle fill).
+  All three are in Code → ATM Components → ATM Lessons (no lesson subfolder, by the no-new-folders rule).
+- **Completion page:** `/atm-lessons/save-or-spend/complete`, a duplicate of Need or Want's (logo, ATM Lesson
+  Completion with ATMLessonCompleteRedirect, back to /atm-start after 5 s). The lesson page is still a Draft.
+- **Fits the kiosk:** the cards were tightened (coin trays 112 tall, 40 px corners) so the button sits above the 1920
+  bottom edge under the owner's heading.
+
+## Lesson 3: Can Your Money Double? (`/atm-lessons/can-your-money-double/lesson`, first draft 29 Oct)
+
+A simplified Rule of 72 with $1,000. The kid drags an interest-rate slider; "72 ÷ 8% = 9 years" changes the moment
+the thumb snaps to a stop, and letting go plays 36 years: the hourglass drains once per doubling and flips, the total
+doubles at each flip and a burst of coins drops onto the stacks. At year 36 the reveal for that rate shows. Done
+shows the whole time, with no idle timer. The owner will restyle; code changes come by prompt after.
+
+- **Rates are 2, 4, 6, 8 and 12% only.** Each divides 72 into whole years that go into 36 a whole number of times
+  (1, 2, 3, 4 and 6 doubles: $2,000 to $64,000). 3% and 9% would give half a double. The stops are evenly spaced
+  (owner), each with its years to double under it ("8%" / "9 yrs"); there's no separate year bar (the owner said it
+  read as a second slider). The reveals say "about": real compounding at 12% gives about $59,000, not $64,000.
+- **Plays on release, no Go button** (owner). Dragging again stops and resets the run, so quick taps never stack two
+  runs; tapping a stop also plays it. Until the first touch the thumb nudges with a "Drag me!" bubble, and a sheen
+  sweeps the track like slide to unlock. The owner mentioned a shimmering lock slider on a lock screen variant to match;
+  it wasn't found (not in the repo, Lock_Screen.tsx, Phone Lock & Splash or Phone Lock & Unlock), so the sheen is new.
+- **Look (owner's asks, in order):** one full-width card (navy through its top third, turning diagonally to midnight
+  toward the bottom, for contrast; 5cqw padding either side)
+  right under the heading holds the slider and, under a hairline, one row of numbers: "Years to double" in mint over
+  "72 ÷ 8% =" in white and "9 years" in yolk on its own line (one line was tried, but the card grew and the hourglass
+  shrank too far); then Year (yolk, "/ 36" in mint) and Your money (yolk). The three columns and their two dividers are spread
+  evenly across the card, text centred, each column as wide as its widest value ("72 ÷ 12% =", "36 years", "36",
+  "$64,000"), so the spacing is even at the top amount and nothing shifts while the numbers count. The card sits
+  in front of coins dropping in. The slider track is all Light teal `#3bbfc0` (no glacier blue), with the splash
+  progress bar's white sheen sweeping the whole time (the owner wants it to keep going after a drag). Each stop is a solid white 2.4cqw dot,
+  passed or not, the end dots inside the rounded caps. The percent labels sit 2.6cqw under the
+  track. The thumb is plain yolk with midnight text, 13.35cqw with a 4.35cqw number (6px under the first build). Under the card, the hourglass (original colours, no shadow)
+  and the coins share one drawing: the hourglass is as tall as a full 16-coin stack; 1 coin = $1,000, with the key
+  under them centred on the page. The key is a little smaller (10.5 units) with more air above it, sitting at the foot of its row; the three move as
+  one group, with as much air above the hourglass as shows under the key. The tip and reveal are plain text. One gap (2.4cqw) sits above and below the
+  hourglass and above Done. Done is a teal button with white text (8.6cqw tall), with 1.4cqw extra above it so its gap
+  matches the others
+  and shows the whole time and has no idle timer (the owner wants kids to drag as much as
+  they like; the page's inactivity overlay still covers a walked-away kiosk). Turned down along the way: the panel
+  beside the hourglass, the panel between the hourglass and the tip, a teal card, and a teal hourglass.
+- **Code:** `ATMMoneyDouble.tsx` in Code → ATM Components → ATM Lessons. The hourglass is ATMHourglass's art without
+  its clock and side stacks, same flip; the coin is ATMCoinRace's. Year (ms) sets the speed (160: 36 years in about
+  6 s, plus 0.8 s per flip). Every text is a property; Label is only the slider's screen-reader name now.
+- **Page:** the owner's Question stack (heading, subheading) stays native; the component sits under it in Scrollable
+  Content, 920 x 1200 (40 px clear of the 1920 bottom). `/complete` already existed as a Draft; When Done defaults to
+  `/atm-lessons/can-your-money-double/complete`. Both pages are still Drafts.
+- **Live test (29 Oct, 1080 x 1920, partial; the owner stopped for the day):** every rate ends right (2% $2,000 /
+  2 coins, 4% $4,000 / 4, 6% $8,000 / 8, 8% $16,000 / 16, 12% $64,000 / 64, each with its reveal); quick taps 4% then
+  8% run only 8%; a drag from 12% to 6% mid-run restarts at 6%; the shimmer keeps running after drags; all stops stay
+  white; Done shows the whole time and stayed put through 30 s idle; Done goes to `/complete` ("Nicely done!..."),
+  which goes on to `/atm-start` after 5 s. $64,000 fits; the tallest stack matches the hourglass; Done ends at 1871 of
+  1920. No console errors.
+- **Live test, part 2 (30 Oct):** the X goes to `/atm-start`; after about 3.5 min with no touches the page went home
+  to `/atm` (the countdown panel itself wasn't caught on screen between checks); Need or Want still sorts (right
+  and wrong drops both give their hint); Save or Spend still picks, races to week 52 and shows Pick Again and Done.
+  No console errors. The year now sits flush right in its box so "0 / 36" has no gap (needs a live look; the canvas
+  only shows 36 / 36). Reduced motion can't be checked from the browser.
+
+## Lesson 4: Credit Score Challenge (`/atm-lessons/credit-score-challenge/lesson`, first draft 30 Oct)
+
+"Can You Reach 760?" The score starts at 700 (Good). One card at a time asks a yes/no question about a money
+choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are plain Yes and No, with no icons
+(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); there are no stamps on the card while dragging (owner took the YES / NO stamps out). Above the card, the hint says what to swipe, as one paragraph: 'Swipe the question
+card right for “Yes” or left for “No.” You can also tap a button below.' (owner's wording; the hint keeps any line
+break typed in it). Order (owner): gauge, hint, question card, No / Yes buttons. (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
+the layer's saved old text doesn't stick). The owner laid out the page (heading, sub-heading, intro in
+"you" voice, light mint background); the component sits under the Question stack.
+
+- **Scoring (owner):** +15 for a right choice, −40 for a missed or late payment, −30 for a maxed-out card or high
+  balance. The lesson ends the moment the score reaches 760 (owner, 30 Oct; it used to play all six first and a
+  perfect run ended at 790): a perfect run is four cards and always ends at exactly 760, so the last two cards
+  (pay down the balance, don't skip a payment) only show after a mistake. If the deck ends
+  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more. Never
+  the same question twice (owner): each card has four scenarios and takes its next unused one each time it's dealt,
+  24 in all. Missing all six first-round cards (490) and then answering everything right uses exactly all 24 to
+  reach 760 (checked locally; a perfect run ends at 760 after four cards); only a run with even more misses would see a card's scenarios start over. Every finish is 760–774 (the last step is +15), inside Very Good (740–799).
+- **The cards** alternate right answers (yes, no, yes, no, yes, no) so swiping one way can't win. They cover the
+  four actions: pay on time, keep balances low, don't miss a payment, don't max out. The texts are in code
+  (`CARDS`, four scenarios each), not layer properties; change them by prompt. The autopay card's chip is "Payment
+  on time" and the balance card's "Paid down your balance", so they fit every scenario.
+- **Gauge heads-up display (owner):** ATMGauge's art on a navy card (the Money Double card's look) at the top. Each
+  of its five segments is one band (Poor 300–579, Fair 580–669, Good 670–739, Very Good 740–799, Excellent 800+),
+  and the needle sits at the score's place within its band. Band names sit round the arc (owner asked for them as
+  labels above the gauge): Area Normal Black caps in pill frames, mint text and a mint edge at full strength (owner:
+  bolder, caps, not faded, further from the arc), the current band a yolk pill with midnight text. They stay
+  straight: curved text along the arc was offered, but at 24 px "VERY GOOD" and "EXCELLENT" are each longer than
+  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Every band pill is as wide as the widest name (owner;
+  all five names sit in one grid cell, only the pill's own visible), so the group is symmetric and centred in the
+  card. A measured left shift was tried first and dropped for this. Vertically, the space above Good matches the space
+  from the bottom of the blocks to the hairline (owner; the drawing's empty room under the blocks is taken out of
+  the hairline's top margin). Every band name sits the same
+  distance from its block (owner): about 21 px to the painted edge beside, 23 px above Good (owner moved the side ones 2 px in): Poor and Excellent centred on their block's
+  height (its bounding box, side face included) and out from its outer edge, Good centred over its block. Fair
+  and Very Good sit beside the upper part of their tilted block's outer side (owner, raised three times from its middle;
+  `BESIDE` y -890): centred on the block's whole height they lined up with the gap below it. Measured
+  in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
+  are Area Normal Black caps (owner), in two equal halves with the divider in the card's middle (owner). Caps
+  text gets 0.15cqw of left padding to match the letter spacing CSS adds after the last letter, so the letters are
+  centred exactly (owner). The navy card has no drop shadow, only its light rim (owner). The question card has a teal 0.5cqw stroke, 1.4cqw
+  between the statement and the question (owner: tighter), and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
+  Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
+  counts) and Goal 760.
+- **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
+  segment it lands on pops; crossing into a band sweeps the glint and pops that band's name. A chip floats up from
+  the score and fades: teal for a gain ("Paid on time +15"), Cancel coral for a drop ("Missed a payment −40"; the
+  owner asked for red drop chips). The hint line above the card then says why. Until the first touch the card nudges right
+  and back. A drag under a quarter of the card's width springs back. A card being swiped passes over the navy card, not under it
+  (owner; the card stack sits a layer above it, and at the finale the faded stack still lets Done take taps).
+- **Finale (owner, no confetti):** the cards and buttons fade, the gauge glides to the middle, then
+  "Congratulations, your score is now {score}!" and Done fade in under it. Done goes to
+  `/atm-lessons/credit-score-challenge/complete`, which has the confetti. Done is timed (owner, like Save or
+  Spend's old orange strip): once it shows, a dark teal strip (`#046b68`, the brand teal deeper; no colour style)
+  fills along its bottom over 10 s and then it goes on its own; a tap goes straight away; the strip holds while the
+  inactivity overlay is open. The 10 s is in code (`DONE_SECONDS`), not a layer property, so no stale saved value
+  can override it. Checked locally: 44% filled 6.1 s after the last answer (1.3 s before Done shows), then it went
+  to the completion path. Live (30 Oct): the strip is `rgb(4, 107, 104)` along Done's bottom; left alone it went to `/complete`
+  ("Nicely done!…"); a tap with the strip part-filled goes at once. The live run took about 14 s from the last answer,
+  not 11.3, because the test browser only draws frames on screenshots and the strip only advances on drawn frames;
+  a kiosk screen draws continuously.
+- **Code:** `ATMCreditScoreChallenge.tsx`. Canvas (Start / Finale) picks what the Framer canvas shows (it remounts on a
+  change); the live page always starts at the first card. Hint, No, Yes, Finale ({score} is the final score), Done and When Done are
+  properties (renamed from the first draft's Do / Skip, so the layer's saved first-draft values don't stick).
+- **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1174 (owner shortened the
+  sub-header to "…Make choices that help it grow."; after trying 1214 the owner wanted the buttons further from the
+  bottom: they now end about 80 px clear of 1920). Gaps between the gauge, hint, card and buttons are 3cqw; the hint
+  has 3cqw more above it, so the space above its text matches the space under the question card (owner; live at
+  2.7cqw it measured 57 above vs 60 below in the real font, so it went to 3cqw), and sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
+  instructions (owner). The card takes any spare height.
+- **Live test (30 Oct, 1080 × 1920, before the spacing change):** real fonts load (Area Normal, P22 Mackinac);
+  all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. After the 24-scenario
+  publish (card 336 px tall), all 24 fit; the bike and new-game questions were shortened to one line ("Use most of
+  your limit on it?", "Max out your card on them?") after measuring 9 px spare, now 73. A real swipe right on
+  card 1 scores 700 → 715 with the teal chip and its why line; a short drag springs back with no choice; Yes on the
+  headphones card drops to 685 with a coral chip; the rest of the deck ends at 745 with Very Good lit and the
+  console card back; a swipe left on it reaches 760 and the finale (cards and buttons fade and can't be tapped,
+  gauge to the middle, "Congratulations, your score is now 760!", Done 182 px above the bottom). A perfect run ends
+  at 790. A double tap on Yes counts once. Done goes to `/complete` ("Nicely done! You've successfully completed
+  CREDIT SCORE CHALLENGE"), which goes to `/atm-start` after 5 s; the X goes to `/atm-start`. Not checked: the
+  inactivity overlay on this page (it's the shared component), reduced motion. Test-browser quirk: when the pane
+  draws no frames between actions, the card's fly-off animation never finishes and the next card waits; a kiosk
+  screen always draws, so this only matters for automated tests (use real taps with screenshots between).
+- **Live test 2 (30 Oct, after the 24 scenarios, comeback fix and spacing):** buttons end 78 px above the bottom; the
+  hint's text sits 12 px above the card and 33 px below the gauge; the longest questions fit with at least 61 px
+  spare. One-miss run with real taps: 700 → 735 after the deck, the missed phone-bill card returns as "Your car
+  payment is due on Friday." (750), then "Your internet bill is due today." takes it to 765 and the finale shows:
+  8 cards, no repeats, no extra round. No drag stamps.
+- **Live test 3 (30 Oct, end-at-760 publish):** a perfect run ends after four cards at 760 ("Congratulations, your
+  score is now 760!", Very Good lit, Done's strip filling). All card texts fit (tightest 36 px spare, card 311 px).
+- **Local check (30 Oct, before Framer):** rendered at 920 × 1150 with a stand-in for Framer's module: a swipe right
+  scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
+  the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.
+
+## Lesson 5: Spot the Scam (`/atm-lessons/spot-the-scam/lesson`, first draft 30 Oct)
+
+Users drag a magnifying glass over a scam message to find its suspicious parts, then learn why each one is a
+scam. The key lesson is fake urgency: scammers rush you so you don't stop to think. The owner wrote the
+header, sub-header and other page copy in Framer.
+
+- **Three rounds (owner picked):**
+  1. **Bank text message:** "URGENT! Your account has been locked. Click here immediately…", a link and "Reply
+     with your PIN to unlock." Clues: fake urgency, unknown link, asks for PIN, unknown sender.
+  2. **Delivery email:** a small redelivery fee (made-up amount) "within 24 hours or it will be returned" and a
+     Pay now button. Clues: fake urgency, small fee as bait, fake button link, odd sender address.
+  3. **Prize pop-up on a website:** a gift card "you've been selected" for, "enter your card number to cover
+     shipping". Clues: too good to be true, asks for card number, pop-up you didn't ask for. The browser-search
+     artwork can be the scene.
+- **Magnifying glass (owner picked these four):** the glass is the one from `ATMBrowserSearch`.
+  1. It shows how first: at the start of round 1 it scans on its own, settles on the first clue, then hands over
+     ("Your turn").
+  2. It shows the truth: under the lens a link shows its real address and a friendly sender name shows the
+     random number behind it.
+  3. Found clues keep a small yellow tag naming the clue ("Fake urgency", "Asks for your PIN").
+  4. Guided tour at the end of each round: the glass moves from tag to tag with a one-line "why" at each.
+  Tapping a clue also works (jumps the lens there) for users who find dragging hard.
+- **Look (owner):** messages on the navy / teal glass card; suspicious parts glow Egg Yolk. **No red. No
+  countdown**: urgency comes only from the wording.
+- **End of each round (owner):** a single Delete button (no "tap the link" choice). After round 3, the usual
+  lesson-complete page.
+- **Split:** page copy is native Framer (the owner's header and sub-header in the Question stack); the three
+  messages, glass, clues, reveals, tour and Delete are one code component, `ATMSpotTheScam.tsx` (Framer: Assets →
+  ATM Components → ATM Lessons), placed after the Question stack at 920 × 1174 like the Credit Score Challenge.
+
+**How the draft works (`ATMSpotTheScam.tsx`):**
+- **The glass (owner, 30 Oct round 2):** one teal ring, not the browser-search magnifier's several rims. The ring
+  keeps that magnifier's rim gradient (`g57`) and is as thick as its neck (124 art units); the neck now shares the
+  ring's gradient (it was mint); the glass inside keeps its shine (the light-teal glass fill, the white highlight
+  arc and spot; the old outer rim's white specular spot was dropped, since it sat on the new ring and read as a
+  hole, owner). The orange handle is unchanged. Under the glass a second copy of the message, drawn 1.45× and
+  clipped to the round opening, magnifies the text; in that copy every disguised link or name shows its truth
+  (`c(i, text, truth)` in `ROUNDS`). Once found, the truth also replaces it on the card.
+- **Message frames are mint** (the paragraph bubble, the email panel and the prize pop-up; owner), all four corners
+  rounded alike (3cqw), lines at 1.5 (owner disliked the wide spacing), body text 4.1cqw (smaller, owner, to make
+  room under Delete; From and Subject unchanged), links in dark teal `#046b68` so they read on mint.
+- **Round 3's browser (owner):** the top bar has the navy card's colours (navy to midnight; it was light teal, then
+  light blue; the teal glass blended into light teal); the page behind the pop-up is dark teal `#046b68`; the browser is the whole card (no navy frame
+  around it, owner: no frame inside a frame), its bar and page lined up with the other messages' insets; the mint
+  pop-up is centred and fills the page with room on all four sides; the card-number field is white. The bar's three dots are egg yolk, light teal and glacier (owner).
+- **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
+  doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
+  glass still sends it). It rests at the card's top right, 31cqw in from the right edge, so its whole handle stays
+  on the card (owner: the handle was cut off at the screen's right edge; checked 17 px inside the card).
+- **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
+  in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal Area Normal Black label,
+  owner asked for bolder, beside a big P22 Mackinac figure).
+- **Attention wiggle (owner):** while it's the user's turn, after 3 s with no touch anywhere on the lesson
+  (`NUDGE_IDLE`) the glass tilts to and fro about its lens with a small lift (0.9 s), again every 3.5 s
+  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not while the last
+  clue's why shows or at the end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
+  after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
+- **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
+  on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
+  gradient, a 6.2cqw glacier circle with a 3.6cqw number, the clue's name in white Area Normal Black 3.8cqw,
+  centred; owner asked for smaller numbers and names). Empty cards are faint with their number. These replaced the yellow tags above each clue, which needed the wide line spacing.
+- **No demo (owner, 30 Oct):** every round starts on the user's turn. (The first draft had the glass find round 1's
+  first clue on its own, the "shows how first" idea; the owner asked why it did that, so it's gone.)
+- **Why, straight away (owner, replacing the end-of-round tour):** the moment a clue is found, the line under
+  the board shows its name in bold and why it's a scam, and its card gets an egg-yolk outline; it stays until the
+  next clue is found. The moment the last clue is found Delete shows (owner: it took too long, sometimes a tap);
+  its why stays 2 s (`LAST_READ`; a tap moves on sooner), then "It's a scam." and the round's tip. Delete drops the card away and the next round
+  slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
+  fallback as Credit Score).
+- **Even spacing, nothing moves (owner):** the clue cards are a fixed height (11cqw + 4 px: room for a two-line
+  name with 2 px more padding, owner) and the text line a fixed 11.1cqw, exactly the longest text (two lines with
+  the bigger "It's a scam." lead in front; the earlier 10.8cqw clipped it by 3 px; every text fits in two; round 3's
+  card-number why was shortened to "A real prize never asks for your card number."), so nothing under the message
+  card moves as clues are found (checked through every state of every round). The parts are spread with
+  `space-between`; the text line has 1cqw + 6 px above and below, the board 6 px on top, the card rows 1.8cqw + 2 px
+  apart (owner: more room under the card and around "It's a scam…", never less between the cards). The owner
+  said not to give up any gap to make room, so the **layer is 1197 px tall** (was 1174, then 1187; set on the
+  page's layer and as the component's default height). Measured gaps card → board / board → text / text → Delete:
+  36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
+  height). Delete sits 3cqw + 4 px from the layer's bottom; on the page the layer still ends well above the Kiosk
+  frame's bottom (about 146 px at 1187). The "Message" and "Clues found" labels are 3.8cqw + 2 px (owner).
+- **Round 1's sender (owner):** the phone number shows from the start (no "Your Bank" to uncover); the avatar
+  shows "?"; its why reads "Your bank's texts come from a number you know. This one is a random number."
+- **Fits 920 × 1187** in every round with the end text and Delete showing;
+  round 3's clue is "Surprise pop-up" and its tip says pop-up with a non-breaking hyphen, to keep it to two lines.
+- All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
+- Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message. Hint and Delete label
+  are layer properties; message texts are in code (`ROUNDS`).
+- **Local check (30 Oct, first draft; rerun after the round-2 restyle, all passing):** headless Chrome at 1000 × 1300 with a stand-in for Framer's module:
+  demo hands over after about 5 s, every clue in all three rounds found by tapping, a drag from the glass onto a
+  clue and holding finds it, the tour plays alone and taps through, Delete moves rounds 1 → 2 → 3, and round 3's
+  Delete goes to `/complete`. No console errors (only the local 404 for the Framer page). Framer's saved copy
+  matches the repo byte for byte. **Not yet checked on the live site.**
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
