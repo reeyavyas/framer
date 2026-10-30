@@ -6,10 +6,11 @@ import { gsap } from "gsap"
 
 // ATM lesson Spot the Scam: three scam messages (a bank text, a delivery email, a prize pop-up), one per round.
 // Drag the magnifying glass over the message, or tap a spot to send it there. Under the glass the message shows
-// magnified, and a disguised link or sender name shows what it really is. Each clue the glass passes over glows
-// egg yolk and keeps a small tag naming it. In round 1 the glass first finds a clue on its own, then hands over.
-// Once every clue is found, the glass tours them with a line on why each one is a scam, and Delete shows. Delete
-// on the last round goes to the completion page. No background of its own; no red and no countdowns (owner).
+// magnified, and a disguised link or sender name shows what it really is. A clue the glass rests on glows egg
+// yolk, gets a numbered badge and a card on the clue board, and the line under the board says straight away why
+// it's a scam (owner). In round 1 the glass first finds a clue on its own, then hands over. After the last clue's
+// why, Delete shows; on the last round it goes to the completion page. No background of its own; no red and no
+// countdowns (owner).
 //
 // The glass is a single teal ring with ATMBrowserSearch's magnifier shine and handle.
 // Transforms and opacity only; no blur, filters or CSS transitions.
@@ -24,7 +25,8 @@ const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
 const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
-const TOUR_STOP = 4500 // ms the tour rests on each clue (a tap moves on sooner)
+const DEMO_READ = 4500 // ms the demo's first clue and its why stay up before "Your turn!"
+const LAST_READ = 4500 // ms the last clue's why stays up before Delete shows (a tap moves on sooner)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
 const NUDGE_IDLE = 3000 // ms with no touch, while it's the user's turn, before the glass wiggles for attention
@@ -56,9 +58,9 @@ const display = '"P22 Mackinac ExtraBold", "P22 Mackinac Bold", serif'
 const bubble: React.CSSProperties = {
     background: MINT,
     color: NAVY,
-    borderRadius: "1cqw 4cqw 4cqw 4cqw",
+    borderRadius: "3cqw",
     padding: "3cqw 4cqw",
-    fontSize: "4.5cqw",
+    fontSize: "4.1cqw",
     lineHeight: 1.5,
 }
 // The numbered badge on a found clue in the message (its number matches its card on the clue board)
@@ -200,7 +202,7 @@ const ROUNDS: Round[] = [
                             margin: "1.6cqw 0 1cqw",
                         }}
                     />
-                    <div style={{ fontSize: "4.5cqw", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: "4.1cqw", lineHeight: 1.5 }}>
                         We couldn’t deliver your package. Pay a{" "}
                         {c(2, "$2.49 redelivery fee")} {c(0, "within 24 hours")}{" "}
                         or it will go back to the sender.
@@ -248,7 +250,7 @@ const ROUNDS: Round[] = [
             <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
                 <div
                     style={{
-                        background: "rgba(217,238,255,.14)",
+                        background: DARK_TEAL, // the browser page behind the pop-up (owner)
                         borderRadius: "3cqw",
                         overflow: "hidden",
                     }}
@@ -259,7 +261,7 @@ const ROUNDS: Round[] = [
                             alignItems: "center",
                             gap: "1.4cqw",
                             padding: "2cqw 3cqw",
-                            background: "#3bbfc0",
+                            background: "#0079a9", // brand light blue, so the teal glass stands out on it (owner)
                         }}
                     >
                         {[YOLK, MINT, GLACIER].map((col) => (
@@ -287,34 +289,14 @@ const ROUNDS: Round[] = [
                             www.daily-recipes.com
                         </span>
                     </div>
-                    <div
-                        style={{
-                            position: "relative",
-                            padding: "3cqw 15cqw 3cqw 3cqw",
-                        }}
-                    >
-                        {/* the page behind the pop-up */}
-                        {[70, 90, 55, 80, 65, 85].map((w, k) => (
-                            <div
-                                key={k}
-                                style={{
-                                    position: "absolute",
-                                    left: "4cqw",
-                                    top: `${4 + k * 7}cqw`,
-                                    width: `${w * 0.86}%`,
-                                    height: "2.4cqw",
-                                    borderRadius: 999,
-                                    background: "rgba(217,238,255,.25)",
-                                }}
-                            />
-                        ))}
+                    {/* the pop-up fills the page, centred, with the same room on all four sides (owner) */}
+                    <div style={{ padding: "2.8cqw" }}>
                         <div
                             style={{
-                                position: "relative", // over the page lines, and clear of the resting glass
-                                background: "#ffffff",
+                                background: MINT, // like the other messages (owner)
                                 color: NAVY,
                                 borderRadius: "3cqw",
-                                padding: "2.4cqw 3cqw 2.6cqw",
+                                padding: "2cqw 3cqw",
                                 boxShadow: "0 1.6cqw 4cqw rgba(0,0,0,.35)",
                                 textAlign: "center",
                             }}
@@ -322,7 +304,7 @@ const ROUNDS: Round[] = [
                             <div
                                 style={{
                                     fontFamily: display,
-                                    fontSize: "4.8cqw",
+                                    fontSize: "4.4cqw",
                                     lineHeight: 1.4,
                                 }}
                             >
@@ -340,10 +322,10 @@ const ROUNDS: Round[] = [
                             </div>
                             <div
                                 style={{
-                                    margin: "1.2cqw 0 1.2cqw",
+                                    margin: "0.8cqw 0",
                                     padding: "1.2cqw",
                                     borderRadius: "1.6cqw",
-                                    boxShadow: `inset 0 0 0 0.3cqw ${MINT}`,
+                                    background: "#ffffff", // a field on the mint card
                                     fontSize: "3.6cqw",
                                     letterSpacing: "0.6cqw",
                                     color: "rgba(0,44,68,.45)",
@@ -372,7 +354,7 @@ const ROUNDS: Round[] = [
 const useRouter: () => unknown =
     (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
 
-type Phase = "demo" | "hunt" | "tour" | "end" | "leaving"
+type Phase = "demo" | "hunt" | "last" | "end" | "leaving"
 type CanvasRound = "Round 1" | "Round 2" | "Round 3"
 
 interface Props {
@@ -418,7 +400,7 @@ function Lesson(props: Props) {
     const [phase, setPhaseState] = React.useState<Phase>(
         isCanvas ? (props.canvasFound ? "end" : "hunt") : "demo"
     )
-    const [tourAt, setTourAt] = React.useState(-1)
+    const [explain, setExplain] = React.useState(-1) // the clue whose why shows: the last one found
     const [size, setSize] = React.useState<{ w: number; h: number } | null>(
         null
     )
@@ -443,7 +425,7 @@ function Lesson(props: Props) {
     } | null>(null)
     const tween = React.useRef<gsap.core.Tween | null>(null)
     const run = React.useRef(0) // bumped to cancel a running sequence
-    const skip = React.useRef(false) // a tap during the tour moves on
+    const skip = React.useRef(false) // a tap while the last clue's why shows moves on
     const dwell = React.useRef({ i: -1, t: 0 }) // the clue under the glass and its timer
     const ready = size !== null
 
@@ -510,6 +492,7 @@ function Lesson(props: Props) {
         if (foundRef.current.includes(i)) return
         foundRef.current = [...foundRef.current, i]
         setFound(foundRef.current)
+        setExplain(i) // why it's a scam shows straight away
         if (!reduceMotion)
             popRef.current?.animate(
                 [
@@ -523,7 +506,7 @@ function Lesson(props: Props) {
             phaseRef.current === "hunt" &&
             foundRef.current.length === clues.length
         )
-            tour(run.current)
+            lastClue(run.current)
     }
 
     // Moves the glass (its centre, in card pixels) and the magnified copy under it; while hunting, a clue counts
@@ -597,20 +580,11 @@ function Lesson(props: Props) {
             }, 50)
         })
 
-    // Every clue found: the glass visits each, in the order found, with its why; then it goes back and Delete shows
-    async function tour(token: number) {
-        setPhase("tour")
-        await wait(700, token)
-        for (const i of foundRef.current) {
-            if (run.current !== token) return
-            setTourAt(i)
-            await glide(centreOf(i), 0.9)
-            skip.current = false // only a tap after it arrives moves it on
-            await wait(TOUR_STOP, token, true)
-        }
-        if (run.current !== token) return
-        setTourAt(-1)
-        await glide(rest(), 0.9)
+    // Every clue found: the last one's why stays up to be read (a tap moves on), then Delete shows
+    async function lastClue(token: number) {
+        setPhase("last")
+        skip.current = false
+        await wait(LAST_READ, token, true)
         if (run.current === token) setPhase("end")
     }
 
@@ -659,9 +633,10 @@ function Lesson(props: Props) {
                 await glide(centreOf(0), 1.4)
                 if (run.current !== token) return
                 markFound(0)
-                await wait(1600, token)
+                await wait(DEMO_READ, token) // its why, read before the user's turn
                 if (run.current !== token) return
                 await glide(rest(), 1.1)
+                setExplain(-1)
             }
             if (run.current === token) setPhase("hunt")
         })()
@@ -775,6 +750,7 @@ function Lesson(props: Props) {
             if (round === ROUNDS.length - 1) return goDone()
             foundRef.current = []
             setFound([])
+            setExplain(-1)
             setRound(round + 1)
         }
         const wrap = wrapRef.current
@@ -881,20 +857,23 @@ function Lesson(props: Props) {
         )
     }
 
-    let line = props.hint
-    if (phase === "demo")
-        line = "Watch the magnifying glass find the first clue."
-    else if (phase === "hunt" && round === 0) line = "Your turn! " + props.hint
-    else if (phase === "tour")
-        line =
-            tourAt >= 0 ? clues[tourAt].why : "You found them all! Here’s why."
-    else line = ROUNDS[round].end
     const ended = phase === "end" || phase === "leaving"
+    let line = props.hint
+    let lead = "" // in bold before the line: the clue's name, or "It's a scam."
+    if (ended) {
+        lead = "It’s a scam."
+        line = ROUNDS[round].end
+    } else if (explain >= 0) {
+        lead = clues[explain].name + "."
+        line = clues[explain].why
+    } else if (phase === "demo")
+        line = "Watch the magnifying glass find the first clue."
+    else if (round === 0) line = "Your turn! " + props.hint
 
     return (
         <div
             onPointerDown={() => {
-                if (phaseRef.current === "tour") skip.current = true // a tap anywhere moves the tour on
+                if (phaseRef.current === "last") skip.current = true // a tap anywhere moves on to Delete
                 touched.current = performance.now() // any touch holds off the wiggle...
                 nudgeRef.current?.getAnimations().forEach((a) => a.cancel()) // ...and stops one at once
             }}
@@ -906,7 +885,9 @@ function Lesson(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2cqw",
+                    gap: "1.8cqw",
+                    paddingBottom: "5cqw", // room between Delete and the screen's bottom edge (owner)
+                    boxSizing: "border-box",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -987,7 +968,7 @@ function Lesson(props: Props) {
             </div>
 
             {/* the clue board: the two counts (styled like Money Double's "Your money"), then a card per clue,
-                filled in the order found, styled like Save or Spend's A-D options; the tour lights up the one it's on */}
+                filled in the order found, styled like Save or Spend's A-D options; the one being explained is outlined */}
             <div
                 style={{
                     flex: "none",
@@ -1021,12 +1002,12 @@ function Lesson(props: Props) {
                 >
                     {clues.map((_, k) => {
                         const i = found[k]
-                        const on = i !== undefined && i === tourAt
+                        const on = i !== undefined && i === explain && !ended
                         return (
                             <div
                                 key={k}
                                 style={{
-                                    minHeight: "11.6cqw",
+                                    minHeight: "10.6cqw",
                                     boxSizing: "border-box",
                                     borderRadius: "4cqw",
                                     padding: "1.6cqw 2.6cqw",
@@ -1096,9 +1077,9 @@ function Lesson(props: Props) {
                     } as React.CSSProperties
                 }
             >
-                {ended && (
+                {lead && (
                     <span style={{ fontFamily: display, fontSize: "4.8cqw" }}>
-                        It’s a scam.{" "}
+                        {lead}{" "}
                     </span>
                 )}
                 {line}

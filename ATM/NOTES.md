@@ -1484,8 +1484,12 @@ header, sub-header and other page copy in Framer.
   arc and spot). The orange handle is unchanged. Under the glass a second copy of the message, drawn 1.45× and
   clipped to the round opening, magnifies the text; in that copy every disguised link or name shows its truth
   (`c(i, text, truth)` in `ROUNDS`). Once found, the truth also replaces it on the card.
-- **Message frames are mint** (the paragraph bubble and the email panel; owner), lines at 1.5 (owner disliked the
-  wide spacing), links in dark teal `#046b68` so they read on mint.
+- **Message frames are mint** (the paragraph bubble, the email panel and the prize pop-up; owner), all four corners
+  rounded alike (3cqw), lines at 1.5 (owner disliked the wide spacing), body text 4.1cqw (smaller, owner, to make
+  room under Delete; From and Subject unchanged), links in dark teal `#046b68` so they read on mint.
+- **Round 3's browser (owner):** the top bar is brand light blue `#0079a9` (it was light teal, and the glass blended
+  into it); the page behind the pop-up is dark teal `#046b68`; the mint pop-up is centred and fills the page with
+  2.8cqw on all four sides; the card-number field is white.
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, with its handle on the page.
@@ -1494,21 +1498,24 @@ header, sub-header and other page copy in Framer.
   owner asked for bolder, beside a big P22 Mackinac figure).
 - **Attention wiggle (owner):** while it's the user's turn, after 3 s with no touch anywhere on the lesson
   (`NUDGE_IDLE`) the glass tilts to and fro about its lens with a small lift (0.9 s), again every 3.5 s
-  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not during the demo, tour or
-  end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
+  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not during the demo, the last
+  clue's why or the end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
   on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
   gradient, a glacier circle with the number, the clue's name in white Area Normal Black). Empty cards are faint
   with their number. These replaced the yellow tags above each clue, which needed the wide line spacing.
-- **Round 1 demo:** the glass glides to "URGENT!", finds it, glides back, then "Your turn!". Rounds 2 and 3 start
-  straight away.
-- **Tour:** after the last clue, the glass visits each clue in the order found; its card gets an egg-yolk outline
-  and the line under the board says why. 4.5 s per stop (`TOUR_STOP`); a tap anywhere after it arrives moves on.
-  Then "It's a scam." and the round's tip, with Delete at the foot. Delete drops the card away and the next round
+- **Round 1 demo** (the "shows how first" idea the owner picked): the glass glides to "URGENT!", finds it, its why
+  shows, it glides back, then "Your turn!". Rounds 2 and 3 start straight away.
+- **Why, straight away (owner, replacing the end-of-round tour):** the moment a clue is found, the line under
+  the board shows its name in bold and why it's a scam, and its card gets an egg-yolk outline; it stays until the
+  next clue is found. After the last clue its why stays 4.5 s (`LAST_READ`; a tap anywhere moves on), then "It's a
+  scam." and the round's tip, with Delete at the foot. In round 1 the demo's clue and its why stay 4.5 s
+  (`DEMO_READ`) before "Your turn!". Delete drops the card away and the next round
   slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
   fallback as Credit Score).
-- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing;
+- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing, and
+  5cqw under Delete (owner: it was too close to the screen's bottom edge);
   round 3's clue is "Surprise pop-up" and its tip says pop-up with a non-breaking hyphen, to keep it to two lines.
 - All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
 - Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message. Hint and Delete label
