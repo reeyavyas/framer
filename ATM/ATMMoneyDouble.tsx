@@ -476,10 +476,7 @@ export default function ATMMoneyDouble(props: Props) {
     const prevCoins = React.useRef(1)
     const fresh = prevCoins.current // coins from here on drop in now
     prevCoins.current = coins
-    const reveal = (props as unknown as Record<string, string>)[`reveal${rate}`]
-    const compare = (props as unknown as Record<string, string>)[
-        `compare${rate}`
-    ]
+    const tips = props as unknown as Record<string, string>
     const display = '"P22 Mackinac ExtraBold", "P22 Mackinac Bold", serif'
     const black = '"Area Normal Black", sans-serif'
     const big: React.CSSProperties = {
@@ -930,21 +927,27 @@ export default function ATMMoneyDouble(props: Props) {
                 style={
                     {
                         padding: "0 1cqw",
-                        minHeight: "13.4cqw", // the reveal's height, so the hourglass keeps its size as the text changes
                         flex: "none",
                         boxSizing: "border-box",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
+                        display: "grid", // every tip is laid out in one cell (all but the current one hidden), so the tip area takes the tallest and the hourglass keeps one size
+                        alignItems: "start",
+                        textAlign: "center",
                         fontSize: "3.7cqw",
                         lineHeight: 1.35,
                         textWrap: "pretty",
                     } as React.CSSProperties
                 }
             >
-                {finished ? (
-                    <>
-                        <span>{bold(reveal)}</span>
+                {RATES.map((r) => (
+                    <div
+                        key={r}
+                        style={{
+                            gridArea: "1 / 1",
+                            visibility:
+                                finished && r === rate ? "visible" : "hidden",
+                        }}
+                    >
+                        <span>{bold(tips[`reveal${r}`])}</span>
                         <span
                             style={{
                                 display: "block",
@@ -953,11 +956,24 @@ export default function ATMMoneyDouble(props: Props) {
                                 color: TEAL,
                             }}
                         >
-                            {compare}
+                            {tips[`compare${r}`]}
                         </span>
-                    </>
-                ) : (
-                    <span>
+                    </div>
+                ))}
+                {[
+                    props.hint,
+                    props.watch,
+                    `${props.doubled} ${money(START * 2 ** 6)}`, // the most coins, at 12%
+                ].map((s, i) => (
+                    <span
+                        key={i}
+                        style={{ gridArea: "1 / 1", visibility: "hidden" }}
+                    >
+                        {bold(s)}
+                    </span>
+                ))}
+                {!finished && (
+                    <span style={{ gridArea: "1 / 1" }}>
                         {bold(
                             run && doubled
                                 ? `${props.doubled} ${money(START * coins)}`

@@ -8,9 +8,8 @@ import { useReducedMotion } from "framer-motion"
 // one of the savings jar's coins every time it passes another $100 saved, so the stacks pull apart week by week.
 // The kid's Pick is ringed. Callouts at weeks 4 and 26 keep it talking; at week 52 their reveal line and a
 // comparison appear. Pick Again and Done show the whole time: Pick Again fires its interaction (set the lesson's
-// variant back to the cards); Done goes to When Done, the lesson's completion page. After the reveal, with no tap
-// for Idle (s), an orange strip fills along Done's bottom edge and then it goes for them. It holds still while the inactivity overlay is open. On the Framer canvas it shows the finished
-// race; with reduced motion it starts finished. No background of its own.
+// variant back to the cards); Done goes to When Done, the lesson's completion page (only on a tap; it has no
+// timer). On the Framer canvas it shows the finished race; with reduced motion it starts finished. No background of its own.
 
 type Pick = "A" | "B" | "C" | "D"
 const PICKS: Pick[] = ["A", "B", "C", "D"]
@@ -29,7 +28,6 @@ const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const DEEP = "#003b5c" // the lanes: the same blue glass as the option cards
 const MINT = "#bce2d7"
-const ORANGE = "#f6a11d" // Done's idle timer
 // A lane's coins stand in stacks of 10, filled left to right and centred on the lane's final number of stacks (lane
 // D's 26 coins make three), so nothing shifts mid-race; three stacks leave 10 of the lane's 100 free at each edge.
 const LANE_H = 52 // a lane's drawing is 100 wide and this tall
@@ -75,7 +73,6 @@ interface Props {
     compareD: string
     pickAgain: string
     done: string
-    idle: number
     doneLink: string
     onPickAgain?: () => void
 }
@@ -141,7 +138,6 @@ export default function ATMCoinRace(props: Props) {
     const still = isCanvas || !!reduceMotion
     const uid = "cr" + React.useId().replace(/[^a-zA-Z0-9]/g, "")
     const [week, setWeek] = React.useState(still ? WEEKS : 0)
-    const fillRef = React.useRef<HTMLSpanElement>(null)
     const finished = week >= WEEKS
 
     // Framer's own page switch (no reload); a plain page load if this Framer version has no router to ask.
@@ -197,29 +193,6 @@ export default function ATMCoinRace(props: Props) {
         )
         return () => clearInterval(t)
     }, [props.pick, props.weekMs, still])
-
-    // At the end, Done's strip fills over Idle (s) and then goes, unless someone taps first; held while the overlay is open.
-    React.useEffect(() => {
-        const el = fillRef.current
-        if (!finished || isCanvas || !el || props.idle <= 0) return
-        const anim = el.animate(
-            [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
-            {
-                duration: props.idle * 1000,
-                easing: "linear",
-                fill: "forwards",
-            }
-        )
-        anim.onfinish = () => goDoneRef.current()
-        const sync = () =>
-            (window as any).__systemOverlayOpen ? anim.pause() : anim.play()
-        sync()
-        window.addEventListener("system-overlay-change", sync)
-        return () => {
-            window.removeEventListener("system-overlay-change", sync)
-            anim.cancel()
-        }
-    }, [finished, isCanvas, props.idle])
 
     const reveals = [props.revealA, props.revealB, props.revealC, props.revealD]
     const compares = [
@@ -539,6 +512,7 @@ export default function ATMCoinRace(props: Props) {
                             key={i}
                             style={{
                                 gridArea: "1 / 1",
+                                alignSelf: "center", // a shorter reveal sits in the middle of the tallest one's room
                                 visibility:
                                     finished && i === p ? "visible" : "hidden",
                             }}
@@ -602,20 +576,7 @@ export default function ATMCoinRace(props: Props) {
                     }}
                     onClick={armed(() => goDoneRef.current())}
                 >
-                    <span
-                        ref={fillRef}
-                        style={{
-                            position: "absolute",
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: "1.2cqw", // a strip along the bottom, so yolk stays the button's colour
-                            background: ORANGE,
-                            transformOrigin: "left",
-                            transform: "scaleX(0)",
-                        }}
-                    />
-                    <span style={{ position: "relative" }}>{props.done}</span>
+                    {props.done}
                 </button>
             </div>
         </div>
@@ -643,7 +604,6 @@ ATMCoinRace.defaultProps = {
         "That's half of everything you earned, and you still spent $2,600!",
     pickAgain: "Pick Again",
     done: "Done",
-    idle: 10,
     doneLink: "/atm-lessons/save-or-spend/complete",
 }
 
@@ -697,16 +657,6 @@ addPropertyControls(ATMCoinRace, {
         type: ControlType.String,
         title: "Done",
         defaultValue: ATMCoinRace.defaultProps.done,
-    },
-    idle: {
-        type: ControlType.Number,
-        title: "Idle (s)",
-        description:
-            "With no tap after the reveal, Done's orange strip fills over this long and then it goes. 0 turns it off.",
-        min: 0,
-        max: 120,
-        step: 1,
-        defaultValue: ATMCoinRace.defaultProps.idle,
     },
     doneLink: {
         type: ControlType.Link,

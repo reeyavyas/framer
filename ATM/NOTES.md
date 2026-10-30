@@ -1253,9 +1253,19 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   teal outline (4.6px) through the race, callouts 24px from the box top, Pick Again back to the cards with the pick
   kept, Done's idle redirect to /complete then /atm-start, both labels in Area Normal Black. Money Double's "0 / 36"
   now hugs (0 ends where "/ 36" starts).
+- **Money Double holds still (30 Oct, owner):** every tip (hint, "Watch…", "Doubled! $64,000" and all five reveals)
+  is laid out in one cell, all hidden but the current one, so the tip area takes the tallest and the hourglass,
+  coins and key keep one size. Checked locally: a 12% run held a 170px tip and 579px drawing throughout. The tip
+  text is centred. Inactivity panel, live: it appeared at about 176 s idle ("Are you still there?", counting down
+  from 30); Yes, I'm Here closed it and left the lesson as it was; left alone it counted down and went to /atm.
+  Return Home not pressed yet. Reduced motion, checked locally with it forced on: a rate finishes at once (12%
+  → 36 / 36, $16,000 at 8%), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
   Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
   reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
   once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
+- **Year-end text centred, Done timer gone (30 Oct, owner):** a shorter reveal now sits in the middle of the box
+  (the tallest reveal sets the box's height); the race callouts stay at the top. Done no longer has an idle timer
+  or orange strip: it goes to the completion page only on a tap. The Idle (s) control is removed.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
