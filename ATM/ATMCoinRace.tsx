@@ -535,36 +535,44 @@ export default function ATMCoinRace(props: Props) {
                     } as React.CSSProperties
                 }
             >
-                {finished ? (
-                    <>
-                        <span
-                            style={{
-                                display: "block",
-                                marginTop: "0.65cqw", // evens the box's top and bottom space (the last line's leading sits below it)
-                                marginBottom: "1cqw",
-                                fontFamily: '"Area Normal Black", sans-serif',
-                                fontSize: "3.26cqw",
-                                lineHeight: 1,
-                                color: TEAL,
-                            }}
-                        >
-                            AFTER ONE YEAR ({WEEKS} WEEKS)
-                        </span>
-                        <span>{bold(reveal)}</span>
-                        <span
-                            style={{
-                                display: "block",
-                                marginTop: "1.6cqw",
-                                fontSize: "3.26cqw", // 30px
-                                color: TEAL,
-                            }}
-                        >
-                            {compare}
-                        </span>
-                    </>
-                ) : (
-                    <span>{bold(callout)}</span>
-                )}
+                <div
+                    style={
+                        {
+                            textBox: "trim-both cap alphabetic", // no line spacing above the first line or below the last, so the box's space is even
+                        } as React.CSSProperties
+                    }
+                >
+                    {finished ? (
+                        <>
+                            <span
+                                style={{
+                                    display: "block",
+                                    marginBottom: "1cqw",
+                                    fontFamily:
+                                        '"Area Normal Black", sans-serif',
+                                    fontSize: "3.26cqw",
+                                    lineHeight: 1,
+                                    color: TEAL,
+                                }}
+                            >
+                                AFTER ONE YEAR ({WEEKS} WEEKS)
+                            </span>
+                            <span>{bold(reveal)}</span>
+                            <span
+                                style={{
+                                    display: "block",
+                                    marginTop: "1.6cqw",
+                                    fontSize: "3.26cqw", // 30px
+                                    color: TEAL,
+                                }}
+                            >
+                                {compare}
+                            </span>
+                        </>
+                    ) : (
+                        <span>{bold(callout)}</span>
+                    )}
+                </div>
             </div>
 
             <div
