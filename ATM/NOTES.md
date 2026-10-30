@@ -1253,6 +1253,9 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   teal outline (4.6px) through the race, callouts 24px from the box top, Pick Again back to the cards with the pick
   kept, Done's idle redirect to /complete then /atm-start, both labels in Area Normal Black. Money Double's "0 / 36"
   now hugs (0 ends where "/ 36" starts).
+  Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
+  reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
+  once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
