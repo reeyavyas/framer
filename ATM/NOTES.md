@@ -1426,6 +1426,11 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   inactivity overlay on this page (it's the shared component), reduced motion. Test-browser quirk: when the pane
   draws no frames between actions, the card's fly-off animation never finishes and the next card waits; a kiosk
   screen always draws, so this only matters for automated tests (use real taps with screenshots between).
+- **Live test 2 (30 Oct, after the 24 scenarios, comeback fix and spacing):** buttons end 78 px above the bottom; the
+  hint's text sits 12 px above the card and 33 px below the gauge; the longest questions fit with at least 61 px
+  spare. One-miss run with real taps: 700 → 735 after the deck, the missed phone-bill card returns as "Your car
+  payment is due on Friday." (750), then "Your internet bill is due today." takes it to 765 and the finale shows:
+  8 cards, no repeats, no extra round. No drag stamps.
 - **Local check (30 Oct, before Framer):** rendered at 920 × 1150 with a stand-in for Framer's module: a swipe right
   scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
   the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.
