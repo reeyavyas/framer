@@ -1447,7 +1447,7 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
   the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.
 
-## Lesson 5: Spot the Scam (plan agreed 30 Oct, not built yet)
+## Lesson 5: Spot the Scam (`/atm-lessons/spot-the-scam/lesson`, first draft 30 Oct)
 
 Users drag a magnifying glass over a scam message to find its suspicious parts, then learn why each one is a
 scam. The key lesson is fake urgency: scammers rush you so you don't stop to think. The owner wrote the
@@ -1473,10 +1473,35 @@ header, sub-header and other page copy in Framer.
   countdown**: urgency comes only from the wording.
 - **End of each round (owner):** a single Delete button (no "tap the link" choice). After round 3, the usual
   lesson-complete page.
-- **Split:** page copy, lesson cards and buttons are native Framer; the message, draggable lens, clues, reveals
-  and tour are one code component with the round as a property.
-- **Open:** the glass is drawn inside the browser-search artwork, so it may need pulling out as its own piece to
-  drag.
+- **Split:** page copy is native Framer (the owner's header and sub-header in the Question stack); the three
+  messages, glass, clues, reveals, tour and Delete are one code component, `ATMSpotTheScam.tsx` (Framer: Assets →
+  ATM Components → ATM Lessons), placed after the Question stack at 920 × 1174 like the Credit Score Challenge.
+
+**How the draft works (`ATMSpotTheScam.tsx`):**
+- **The glass** is ATMBrowserSearch's `mag` group and only the defs it uses, copied into `LENS_ART` (build.py
+  can't be rerun without the stock source). Its opening (an ellipse turned 70°) clips a second copy of the
+  message, drawn 1.45× and kept under the lens, so the text magnifies; in that copy every disguised link or name
+  shows its truth (`c(i, text, truth)` in `ROUNDS`). Once found, the truth also replaces it on the card.
+- **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
+  doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
+  glass still sends it). It rests at the card's top right, where no clue is, with its handle on the page.
+- **Round 1 demo:** the glass glides to "URGENT!", finds it, glides back, then "Your turn!". Rounds 2 and 3 start
+  straight away.
+- **Tour:** after the last clue, the glass visits each clue in order; the line under the card shows the clue's
+  name (yolk pill) and why. 4.5 s per stop (`TOUR_STOP`), and a tap anywhere after it arrives moves on. Then "It's
+  a scam", the round's last line and Delete. Delete drops the card away and the next round slides in; on round 3
+  it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path fallback as Credit Score).
+- Progress dots above the card (done teal, current egg yolk, next faint), per design.md. Clue tags use Area Normal
+  Black at 2.6cqw (24 px at 920). Message lines have extra height (2.3) so tags fit between lines; round 3 puts
+  one clue per line and its pop-up sits left, clear of the resting glass.
+- All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
+- Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message with its tags. Hint and
+  Delete label are layer properties; message texts are in code (`ROUNDS`).
+- **Local check (30 Oct, before Framer):** headless Chrome at 1000 × 1300 with a stand-in for Framer's module:
+  demo hands over after about 5 s, every clue in all three rounds found by tapping, a drag from the glass onto a
+  clue and holding finds it, the tour plays alone and taps through, Delete moves rounds 1 → 2 → 3, and round 3's
+  Delete goes to `/complete`. No console errors (only the local 404 for the Framer page). Framer's saved copy
+  matches the repo byte for byte. **Not yet checked on the live site.**
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
