@@ -371,7 +371,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1174
+ * @framerIntrinsicHeight 1187
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -963,8 +963,8 @@ function Lesson(props: Props) {
                     flex: "none",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "1.8cqw",
-                    marginTop: 4, // 4 px more space under the card than between the other parts (owner)
+                    gap: "calc(1.8cqw - 3px)", // 3 px given to the gaps around the board (owner)
+                    marginTop: 6, // 6 px more space under the card than between the other parts (owner)
                 }}
             >
                 <div
@@ -987,7 +987,8 @@ function Lesson(props: Props) {
                     style={{
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
-                        gap: "1.8cqw",
+                        columnGap: "1.8cqw",
+                        rowGap: "calc(1.8cqw + 2px)", // between the card rows (owner: not smaller, a little more)
                     }}
                 >
                     {clues.map((_, k) => {
@@ -997,10 +998,10 @@ function Lesson(props: Props) {
                             <div
                                 key={k}
                                 style={{
-                                    height: "11cqw", // fixed (room for a two-line name), so nothing below moves as clues fill in (owner)
+                                    height: "calc(11cqw + 4px)", // fixed (room for a two-line name, with 2 px more padding, owner), so nothing below moves as clues fill in
                                     boxSizing: "border-box",
                                     borderRadius: "4cqw",
-                                    padding: "1cqw 2.6cqw",
+                                    padding: "calc(1cqw + 2px) 2.6cqw",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "2.4cqw",
@@ -1059,7 +1060,7 @@ function Lesson(props: Props) {
                     {
                         flex: "none",
                         height: "10.8cqw", // fixed (two lines; every text fits in two), so nothing moves as the text changes (owner)
-                        margin: "1cqw 0", // a little more room above and below the text (owner)
+                        margin: "calc(1cqw + 2px) 0", // more room above and below the text (owner)
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
@@ -1125,7 +1126,11 @@ function Count({ label, value }: { label: string; value: string }) {
     return (
         <div style={{ display: "flex", alignItems: "baseline", gap: "2cqw" }}>
             <span
-                style={{ fontFamily: black, fontSize: "3.8cqw", color: TEAL }}
+                style={{
+                    fontFamily: black,
+                    fontSize: "calc(3.8cqw + 2px)",
+                    color: TEAL,
+                }}
             >
                 {label}
             </span>

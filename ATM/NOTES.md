@@ -1515,16 +1515,20 @@ header, sub-header and other page copy in Framer.
   its why stays 2 s (`LAST_READ`; a tap moves on sooner), then "It's a scam." and the round's tip. Delete drops the card away and the next round
   slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
   fallback as Credit Score).
-- **Even spacing, nothing moves (owner):** the clue cards are a fixed 11cqw tall (room for a two-line name) and the
-  text line a fixed two lines (every text fits in two; round 3's card-number why was shortened to "A real prize
-  never asks for your card number."), so nothing under the message card moves as clues are found (checked through
-  every state of every round). The parts are spread with `space-between`; the text line has 1cqw above and below
-  and the board 4 px on top (owner: more room around "It's a scam…", 4 px more under the card). Measured gaps card →
-  board / board → text / text → Delete: about 34 / 38 / 38 px in round 1, 28 / 32 / 32 in round 2, 48 / 52 / 52 in
-  round 3 (the message cards differ in height). Delete sits 3cqw + 4 px from the bottom edge.
+- **Even spacing, nothing moves (owner):** the clue cards are a fixed height (11cqw + 4 px: room for a two-line
+  name with 2 px more padding, owner) and the text line a fixed two lines (every text fits in two; round 3's
+  card-number why was shortened to "A real prize never asks for your card number."), so nothing under the message
+  card moves as clues are found (checked through every state of every round). The parts are spread with
+  `space-between`; the text line has 1cqw + 2 px above and below, the board 6 px on top, the card rows 1.8cqw + 2 px
+  apart (owner: more room under the card and around "It's a scam…", never less between the cards). The owner
+  said not to give up any gap to make room, so the **layer is 1187 px tall** (was 1174; set on the page's layer
+  and as the component's default height). Measured gaps card → board / board → text / text → Delete: 36 / 40 / 40
+  px in round 1, 30 / 34 / 34 in round 2, 50 / 54 / 54 in round 3 (the message cards differ in height). Delete
+  sits 3cqw + 4 px from the layer's bottom; on the page the layer still ends about 146 px above the Kiosk frame's
+  bottom. The "Message" and "Clues found" labels are 3.8cqw + 2 px (owner).
 - **Round 1's sender (owner):** the phone number shows from the start (no "Your Bank" to uncover); the avatar
   shows "?"; its why reads "Your bank's texts come from a number you know. This one is a random number."
-- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing;
+- **Fits 920 × 1187** in every round with the end text and Delete showing;
   round 3's clue is "Surprise pop-up" and its tip says pop-up with a non-breaking hyphen, to keep it to two lines.
 - All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
 - Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message. Hint and Delete label
