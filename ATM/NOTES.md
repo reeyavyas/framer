@@ -1499,24 +1499,26 @@ header, sub-header and other page copy in Framer.
   owner asked for bolder, beside a big P22 Mackinac figure).
 - **Attention wiggle (owner):** while it's the user's turn, after 3 s with no touch anywhere on the lesson
   (`NUDGE_IDLE`) the glass tilts to and fro about its lens with a small lift (0.9 s), again every 3.5 s
-  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not during the demo, the last
-  clue's why or the end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
+  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not while the last
+  clue's why shows or at the end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
   on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
-  gradient, a glacier circle with the number, the clue's name in white Area Normal Black). Empty cards are faint
-  with their number. These replaced the yellow tags above each clue, which needed the wide line spacing.
-- **Round 1 demo** (the "shows how first" idea the owner picked): the glass glides to "URGENT!", finds it, its why
-  shows, it glides back, then "Your turn!". Rounds 2 and 3 start straight away.
+  gradient, a 6.2cqw glacier circle with a 3.6cqw number, the clue's name in white Area Normal Black 3.8cqw,
+  centred; owner asked for smaller numbers and names). Empty cards are faint with their number. These replaced the yellow tags above each clue, which needed the wide line spacing.
+- **No demo (owner, 30 Oct):** every round starts on the user's turn. (The first draft had the glass find round 1's
+  first clue on its own, the "shows how first" idea; the owner asked why it did that, so it's gone.)
 - **Why, straight away (owner, replacing the end-of-round tour):** the moment a clue is found, the line under
   the board shows its name in bold and why it's a scam, and its card gets an egg-yolk outline; it stays until the
-  next clue is found. After the last clue its why stays 4.5 s (`LAST_READ`; a tap anywhere moves on), then "It's a
-  scam." and the round's tip, with Delete at the foot. In round 1 the demo's clue and its why stay 4.5 s
-  (`DEMO_READ`) before "Your turn!". Delete drops the card away and the next round
+  next clue is found. The moment the last clue is found Delete shows (owner: it took too long, sometimes a tap);
+  its why stays 2 s (`LAST_READ`; a tap moves on sooner), then "It's a scam." and the round's tip. Delete drops the card away and the next round
   slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
   fallback as Credit Score).
-- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing, and
-  5cqw under Delete (owner: it was too close to the screen's bottom edge);
+- **Even spacing (owner):** the parts are spread with `space-between` over the 920 × 1174 layer, so the gaps card →
+  board → line → Delete are equal within each round (to 1 px: about 33 px in round 1, 26 in round 2, 41 in round 3,
+  since the cards differ in height); the board has 4 px on top because the counts' figures sit low. Delete sits
+  3cqw + 4 px from the bottom edge (owner: first too close, then too much room, then 4 px higher).
+- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing;
   round 3's clue is "Surprise pop-up" and its tip says pop-up with a non-breaking hyphen, to keep it to two lines.
 - All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
 - Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message. Hint and Delete label

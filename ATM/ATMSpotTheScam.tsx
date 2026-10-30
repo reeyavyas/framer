@@ -8,7 +8,7 @@ import { gsap } from "gsap"
 // Drag the magnifying glass over the message, or tap a spot to send it there. Under the glass the message shows
 // magnified, and a disguised link or sender name shows what it really is. A clue the glass rests on glows egg
 // yolk, gets a numbered badge and a card on the clue board, and the line under the board says straight away why
-// it's a scam (owner). In round 1 the glass first finds a clue on its own, then hands over. After the last clue's
+// it's a scam (owner). Every round starts on the user's turn (owner: no demo). After the last clue's
 // why, Delete shows; on the last round it goes to the completion page. No background of its own; no red and no
 // countdowns (owner).
 //
@@ -25,8 +25,7 @@ const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
 const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
-const DEMO_READ = 4500 // ms the demo's first clue and its why stay up before "Your turn!"
-const LAST_READ = 4500 // ms the last clue's why stays up before Delete shows (a tap moves on sooner)
+const LAST_READ = 2000 // ms the last clue's why stays up before "It's a scam." (Delete already shows; owner: quicker)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
 const NUDGE_IDLE = 3000 // ms with no touch, while it's the user's turn, before the glass wiggles for attention
@@ -80,15 +79,16 @@ const badge: React.CSSProperties = {
 // A clue card's number, like the letter on Save or Spend's option cards
 const option: React.CSSProperties = {
     flex: "none",
-    width: "7.4cqw",
-    height: "7.4cqw",
+    width: "6.2cqw",
+    height: "6.2cqw",
     borderRadius: 999,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontFamily: black,
-    fontSize: "4.4cqw",
+    fontSize: "3.6cqw",
     lineHeight: 1,
+    paddingBottom: "0.2cqw", // the font sits low, so this centres the number
 }
 const link: React.CSSProperties = {
     color: DARK_TEAL,
@@ -355,7 +355,7 @@ const ROUNDS: Round[] = [
 const useRouter: () => unknown =
     (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
 
-type Phase = "demo" | "hunt" | "last" | "end" | "leaving"
+type Phase = "hunt" | "last" | "end" | "leaving"
 type CanvasRound = "Round 1" | "Round 2" | "Round 3"
 
 interface Props {
@@ -399,7 +399,7 @@ function Lesson(props: Props) {
         { i: number; n: number; x: number; y: number }[]
     >([])
     const [phase, setPhaseState] = React.useState<Phase>(
-        isCanvas ? (props.canvasFound ? "end" : "hunt") : "demo"
+        props.canvasFound && isCanvas ? "end" : "hunt"
     )
     const [explain, setExplain] = React.useState(-1) // the clue whose why shows: the last one found
     const [size, setSize] = React.useState<{ w: number; h: number } | null>(
@@ -478,10 +478,6 @@ function Lesson(props: Props) {
             })
         )
         return out
-    }
-    const centreOf = (i: number) => {
-        const q = rectsOf(i)[0]
-        return q ? { x: (q.l + q.r) / 2, y: (q.t + q.b) / 2 } : rest()
     }
     const cqw = (n: number) => ((sizeRef.current?.w ?? 920) / 100) * n
     const rest = () => {
@@ -581,12 +577,14 @@ function Lesson(props: Props) {
             }, 50)
         })
 
-    // Every clue found: the last one's why stays up to be read (a tap moves on), then Delete shows
+    // Every clue found: Delete shows at once; the last clue's why stays up a moment, then the round's tip
     async function lastClue(token: number) {
         setPhase("last")
         skip.current = false
         await wait(LAST_READ, token, true)
-        if (run.current === token) setPhase("end")
+        // not once Delete has been tapped (it's "leaving" then)
+        if (run.current === token && phaseRef.current === "last")
+            setPhase("end")
     }
 
     // Measure the card (it sizes with the component and the fonts)
@@ -618,29 +616,14 @@ function Lesson(props: Props) {
         )
     }, [found, size])
 
-    // Each round: the glass starts at rest; in round 1 it first finds a clue on its own
+    // Each round: the glass starts at rest and it's the user's turn straight away
     React.useEffect(() => {
         if (!ready) return
-        const token = ++run.current
+        ++run.current
         tween.current?.kill()
         const r = rest()
         place(r.x, r.y)
-        if (isCanvas) return
-        ;(async () => {
-            if (round === 0) {
-                setPhase("demo")
-                await wait(900, token)
-                if (run.current !== token) return
-                await glide(centreOf(0), 1.4)
-                if (run.current !== token) return
-                markFound(0)
-                await wait(DEMO_READ, token) // its why, read before the user's turn
-                if (run.current !== token) return
-                await glide(rest(), 1.1)
-                setExplain(-1)
-            }
-            if (run.current === token) setPhase("hunt")
-        })()
+        if (!isCanvas) setPhase("hunt")
         return () => {
             run.current++
             tween.current?.kill()
@@ -745,7 +728,11 @@ function Lesson(props: Props) {
     }
 
     const remove = () => {
-        if (phaseRef.current !== "end" || isCanvas) return
+        if (
+            (phaseRef.current !== "end" && phaseRef.current !== "last") ||
+            isCanvas
+        )
+            return
         setPhase("leaving")
         const next = () => {
             if (round === ROUNDS.length - 1) return goDone()
@@ -859,6 +846,7 @@ function Lesson(props: Props) {
     }
 
     const ended = phase === "end" || phase === "leaving"
+    const canDelete = ended || phase === "last"
     let line = props.hint
     let lead = "" // in bold before the line: the clue's name, or "It's a scam."
     if (ended) {
@@ -867,9 +855,7 @@ function Lesson(props: Props) {
     } else if (explain >= 0) {
         lead = clues[explain].name + "."
         line = clues[explain].why
-    } else if (phase === "demo")
-        line = "Watch the magnifying glass find the first clue."
-    else if (round === 0) line = "Your turn! " + props.hint
+    }
 
     return (
         <div
@@ -887,7 +873,8 @@ function Lesson(props: Props) {
                     display: "flex",
                     flexDirection: "column",
                     gap: "1.8cqw",
-                    paddingBottom: "5cqw", // room between Delete and the screen's bottom edge (owner)
+                    justifyContent: "space-between", // spare height spread between the parts (owner)
+                    paddingBottom: "calc(3cqw + 4px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher)
                     boxSizing: "border-box",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
@@ -976,6 +963,7 @@ function Lesson(props: Props) {
                     display: "flex",
                     flexDirection: "column",
                     gap: "2.4cqw",
+                    marginTop: 4, // the counts' big figures sit low in their line, so this evens the gap above (owner: even spacing)
                 }}
             >
                 <div
@@ -1049,8 +1037,9 @@ function Lesson(props: Props) {
                                         animate={!reduceMotion && !isCanvas}
                                         style={{
                                             fontFamily: black,
-                                            fontSize: "4.2cqw",
-                                            lineHeight: 1.1,
+                                            fontSize: "3.8cqw",
+                                            lineHeight: 1.15,
+                                            paddingBottom: "0.3cqw", // the font sits low, so this centres it
                                         }}
                                     >
                                         {clues[i].name}
@@ -1089,10 +1078,9 @@ function Lesson(props: Props) {
             <div
                 style={{
                     flex: "none",
-                    marginTop: "auto", // Delete sits at the foot of the component
                     display: "flex",
                     justifyContent: "center",
-                    visibility: ended ? "visible" : "hidden",
+                    visibility: canDelete ? "visible" : "hidden",
                 }}
             >
                 <button
