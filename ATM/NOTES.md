@@ -1376,8 +1376,8 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Every band name sits the same
   110 gauge units (about 23 px) from its block (owner): Poor and Excellent centred on their block's
   height (its bounding box, side face included) and out from its outer edge, Good centred over its block. Fair
-  and Very Good sit beside the upper part of their tilted block's outer side (owner, raised twice from its middle;
-  `BESIDE` y -880): centred on the block's whole height they lined up with the gap below it. Measured
+  and Very Good sit beside the upper part of their tilted block's outer side (owner, raised three times from its middle;
+  `BESIDE` y -890): centred on the block's whole height they lined up with the gap below it. Measured
   in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
   are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
