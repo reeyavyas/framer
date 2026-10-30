@@ -1258,8 +1258,8 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   coins and key keep one size. Checked locally: a 12% run held a 170px tip and 579px drawing throughout. The tip
   text is centred. Inactivity panel, live: it appeared at about 176 s idle ("Are you still there?", counting down
   from 30); Yes, I'm Here closed it and left the lesson as it was; left alone it counted down and went to /atm.
-  Return Home not pressed yet. Reduced motion, checked locally with it forced on: a rate finishes at once (12%
-  → 36 / 36, $16,000 at 8%), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
+  Return Home not pressed yet. Reduced motion, checked locally with it forced on: a rate finishes at once (8%
+  → 36 / 36, $16,000), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
   Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
   reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
   once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
