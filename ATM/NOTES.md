@@ -1373,7 +1373,11 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   labels above the gauge): Area Normal Black caps in pill frames, mint text and a mint edge at full strength (owner:
   bolder, caps, not faded, further from the arc), the current band a yolk pill with midnight text. They stay
   straight: curved text along the arc was offered, but at 24 px "VERY GOOD" and "EXCELLENT" are each longer than
-  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Every band name sits the same
+  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). The gauge and its names are centred in the card as
+  one group (owner): Excellent is wider than Poor, so the code measures the group once drawn (again when fonts
+  load or it resizes) and shifts it left by half the difference. Vertically, the space above Good matches the space
+  from the bottom of the blocks to the hairline (owner; the drawing's empty room under the blocks is taken out of
+  the hairline's top margin). Every band name sits the same
   110 gauge units (about 23 px) from its block (owner): Poor and Excellent centred on their block's
   height (its bounding box, side face included) and out from its outer edge, Good centred over its block. Fair
   and Very Good sit beside the upper part of their tilted block's outer side (owner, raised three times from its middle;

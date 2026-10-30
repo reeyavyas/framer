@@ -232,6 +232,7 @@ function Challenge(props: Props) {
     const skipStampRef = React.useRef<HTMLDivElement>(null)
     const chipRef = React.useRef<HTMLSpanElement>(null)
     const labelRefs = React.useRef<(HTMLSpanElement | null)[]>([])
+    const gaugeRef = React.useRef<HTMLDivElement>(null)
     const drag = React.useRef<{ x: number; dx: number; id: number } | null>(
         null
     )
@@ -347,6 +348,32 @@ function Challenge(props: Props) {
             count.kill()
         }
     }, [score, markup])
+
+    // The gauge with its band names is centred as one group: Excellent is wider than Poor, so the group shifts
+    // left by half the difference. Measured, since the fonts set the widths; again once they load or it resizes.
+    React.useLayoutEffect(() => {
+        const el = gaugeRef.current
+        if (!el) return
+        const centre = () => {
+            el.style.transform = ""
+            const box = el.getBoundingClientRect()
+            if (!box.width) return
+            let left = box.left
+            let right = box.right
+            el.querySelectorAll("[data-band]").forEach((s) => {
+                const b = s.getBoundingClientRect()
+                left = Math.min(left, b.left)
+                right = Math.max(right, b.right)
+            })
+            const scale = el.offsetWidth / box.width // the Framer canvas may be zoomed
+            el.style.transform = `translateX(${(((box.left + box.right) / 2 - (left + right) / 2) * scale).toFixed(1)}px)`
+        }
+        centre()
+        document.fonts?.ready.then(centre)
+        const ro = new ResizeObserver(centre)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
 
     // The band name the needle has just moved into pops.
     React.useLayoutEffect(() => {
@@ -588,10 +615,11 @@ function Challenge(props: Props) {
                 }}
             >
                 <div
+                    ref={gaugeRef}
                     style={{
                         position: "relative",
                         width: "56cqw",
-                        margin: "6cqw auto 0", // room for the top band name
+                        margin: "7.75cqw auto 0", // as much space above Good as between the blocks and the line
                     }}
                 >
                     <svg
@@ -619,6 +647,7 @@ function Challenge(props: Props) {
                         return (
                             <span
                                 key={b.name}
+                                data-band=""
                                 style={{
                                     position: "absolute",
                                     left: `${((x - VB.x) / VB.w) * 100}%`,
@@ -661,7 +690,7 @@ function Challenge(props: Props) {
                 <div
                     style={{
                         height: 1,
-                        margin: "2cqw 0 2.4cqw",
+                        margin: "0.25cqw 0 2.4cqw", // the drawing has empty room under the blocks
                         background: "rgba(217,238,255,.22)",
                     }}
                 />
