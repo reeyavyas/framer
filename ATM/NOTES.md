@@ -1488,8 +1488,9 @@ header, sub-header and other page copy in Framer.
   rounded alike (3cqw), lines at 1.5 (owner disliked the wide spacing), body text 4.1cqw (smaller, owner, to make
   room under Delete; From and Subject unchanged), links in dark teal `#046b68` so they read on mint.
 - **Round 3's browser (owner):** the top bar is brand light blue `#0079a9` (it was light teal, and the glass blended
-  into it); the page behind the pop-up is dark teal `#046b68`; the mint pop-up is centred and fills the page with
-  2.8cqw on all four sides; the card-number field is white.
+  into it); the page behind the pop-up is dark teal `#046b68`; the browser is the whole card (no navy frame
+  around it, owner: no frame inside a frame), its bar and page lined up with the other messages' insets; the mint
+  pop-up is centred and fills the page with room on all four sides; the card-number field is white.
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, with its handle on the page.

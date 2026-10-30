@@ -247,11 +247,12 @@ const ROUNDS: Round[] = [
         ],
         end: "Never give a pop\u2011up your card number. Delete it.", // \u2011: a hyphen that never breaks
         view: (c) => (
-            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
+            <div>
+                {/* the browser is the whole card, no frame inside a frame (owner) */}
                 <div
                     style={{
                         background: DARK_TEAL, // the browser page behind the pop-up (owner)
-                        borderRadius: "3cqw",
+                        borderRadius: "4cqw", // the card's corners
                         overflow: "hidden",
                     }}
                 >
@@ -260,7 +261,7 @@ const ROUNDS: Round[] = [
                             display: "flex",
                             alignItems: "center",
                             gap: "1.4cqw",
-                            padding: "2cqw 3cqw",
+                            padding: "2.6cqw 4.4cqw", // lined up with the other messages' insets
                             background: "#0079a9", // brand light blue, so the teal glass stands out on it (owner)
                         }}
                     >
@@ -289,8 +290,8 @@ const ROUNDS: Round[] = [
                             www.daily-recipes.com
                         </span>
                     </div>
-                    {/* the pop-up fills the page, centred, with the same room on all four sides (owner) */}
-                    <div style={{ padding: "2.8cqw" }}>
+                    {/* the pop-up fills the page, centred, with room on all four sides as the other messages' frames have */}
+                    <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
                         <div
                             style={{
                                 background: MINT, // like the other messages (owner)
