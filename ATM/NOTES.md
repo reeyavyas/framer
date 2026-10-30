@@ -1260,12 +1260,18 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   from 30); Yes, I'm Here closed it and left the lesson as it was; left alone it counted down and went to /atm.
   Return Home not pressed yet. Reduced motion, checked locally with it forced on: a rate finishes at once (8%
   → 36 / 36, $16,000), no shimmer or nudge; the race starts finished at 52 / 52 with the reveal.
+  Live after publishing: all five rates held a 145px tip and 400px drawing from start to reveal; the tip is
+  centred and fills the full 920px width (same as the card and Done). Return Home on the inactivity panel went
+  to /atm. Seen once at the start of a new run: for one sample (under 100 ms) the new rate's reveal showed
+  before "Watch your $1,000 grow…".
   Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
   reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
   once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
 - **Year-end text centred, Done timer gone (30 Oct, owner):** a shorter reveal now sits in the middle of the box
   (the tallest reveal sets the box's height); the race callouts stay at the top. Done no longer has an idle timer
   or orange strip: it goes to the completion page only on a tap. The Idle (s) control is removed.
+  Live: every pick's reveal centred (A-C 44px above and below, D 24px, the box's padding); the page stayed put
+  16 s after the reveal and Done went to /complete on a tap.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key
