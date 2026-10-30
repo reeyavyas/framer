@@ -540,6 +540,7 @@ export default function ATMCoinRace(props: Props) {
                         <span
                             style={{
                                 display: "block",
+                                marginTop: "0.65cqw", // evens the box's top and bottom space (the last line's leading sits below it)
                                 marginBottom: "1cqw",
                                 fontFamily: '"Area Normal Black", sans-serif',
                                 fontSize: "3.26cqw",
@@ -547,7 +548,7 @@ export default function ATMCoinRace(props: Props) {
                                 color: TEAL,
                             }}
                         >
-                            After one year ({WEEKS} weeks)
+                            AFTER ONE YEAR ({WEEKS} WEEKS)
                         </span>
                         <span>{bold(reveal)}</span>
                         <span
