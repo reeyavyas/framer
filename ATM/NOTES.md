@@ -1478,26 +1478,37 @@ header, sub-header and other page copy in Framer.
   ATM Components → ATM Lessons), placed after the Question stack at 920 × 1174 like the Credit Score Challenge.
 
 **How the draft works (`ATMSpotTheScam.tsx`):**
-- **The glass** is ATMBrowserSearch's `mag` group and only the defs it uses, copied into `LENS_ART` (build.py
-  can't be rerun without the stock source). Its opening (an ellipse turned 70°) clips a second copy of the
-  message, drawn 1.45× and kept under the lens, so the text magnifies; in that copy every disguised link or name
-  shows its truth (`c(i, text, truth)` in `ROUNDS`). Once found, the truth also replaces it on the card.
+- **The glass (owner, 30 Oct round 2):** one teal ring, not the browser-search magnifier's several rims. The ring
+  keeps that magnifier's rim gradient (`g57`) and is as thick as its neck (124 art units); the neck now shares the
+  ring's gradient (it was mint); the glass inside keeps its shine (the light-teal glass fill, the white highlight
+  arc and spot). The orange handle is unchanged. Under the glass a second copy of the message, drawn 1.45× and
+  clipped to the round opening, magnifies the text; in that copy every disguised link or name shows its truth
+  (`c(i, text, truth)` in `ROUNDS`). Once found, the truth also replaces it on the card.
+- **Message frames are mint** (the paragraph bubble and the email panel; owner), lines at 1.5 (owner disliked the
+  wide spacing), links in dark teal `#046b68` so they read on mint.
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
-  glass still sends it). It rests at the card's top right, where no clue is, with its handle on the page.
+  glass still sends it). It rests at the card's top right, with its handle on the page.
+- **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
+  in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal label beside a big P22
+  Mackinac figure).
+- **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
+  on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
+  gradient, a glacier circle with the number, the clue's name in white Area Normal Black). Empty cards are faint
+  with their number. These replaced the yellow tags above each clue, which needed the wide line spacing.
 - **Round 1 demo:** the glass glides to "URGENT!", finds it, glides back, then "Your turn!". Rounds 2 and 3 start
   straight away.
-- **Tour:** after the last clue, the glass visits each clue in order; the line under the card shows the clue's
-  name (yolk pill) and why. 4.5 s per stop (`TOUR_STOP`), and a tap anywhere after it arrives moves on. Then "It's
-  a scam", the round's last line and Delete. Delete drops the card away and the next round slides in; on round 3
-  it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path fallback as Credit Score).
-- Progress dots above the card (done teal, current egg yolk, next faint), per design.md. Clue tags use Area Normal
-  Black at 2.6cqw (24 px at 920). Message lines have extra height (2.3) so tags fit between lines; round 3 puts
-  one clue per line and its pop-up sits left, clear of the resting glass.
+- **Tour:** after the last clue, the glass visits each clue in the order found; its card gets an egg-yolk outline
+  and the line under the board says why. 4.5 s per stop (`TOUR_STOP`); a tap anywhere after it arrives moves on.
+  Then "It's a scam." and the round's tip, with Delete at the foot. Delete drops the card away and the next round
+  slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
+  fallback as Credit Score).
+- **Fits 920 × 1174** (the page's room under the header) in every round with the end text and Delete showing;
+  round 3's clue is "Surprise pop-up" and its tip says pop-up with a non-breaking hyphen, to keep it to two lines.
 - All waits pause while the inactivity overlay is open. Reduced motion jumps the glass instead of gliding.
-- Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message with its tags. Hint and
-  Delete label are layer properties; message texts are in code (`ROUNDS`).
-- **Local check (30 Oct, before Framer):** headless Chrome at 1000 × 1300 with a stand-in for Framer's module:
+- Canvas controls: Canvas (Round 1/2/3) and Clues (Found/Hidden) to preview each message. Hint and Delete label
+  are layer properties; message texts are in code (`ROUNDS`).
+- **Local check (30 Oct, first draft; rerun after the round-2 restyle, all passing):** headless Chrome at 1000 × 1300 with a stand-in for Framer's module:
   demo hands over after about 5 s, every clue in all three rounds found by tapping, a drag from the glass onto a
   clue and holding finds it, the tour plays alone and taps through, Delete moves rounds 1 → 2 → 3, and round 3's
   Delete goes to `/complete`. No console errors (only the local 404 for the Framer page). Framer's saved copy

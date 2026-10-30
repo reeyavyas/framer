@@ -11,7 +11,7 @@ import { gsap } from "gsap"
 // Once every clue is found, the glass tours them with a line on why each one is a scam, and Delete shows. Delete
 // on the last round goes to the completion page. No background of its own; no red and no countdowns (owner).
 //
-// The glass is ATMBrowserSearch's magnifier (its `mag` group and the defs it uses, copied from that file's ART).
+// The glass is a single teal ring with ATMBrowserSearch's magnifier shine and handle.
 // Transforms and opacity only; no blur, filters or CSS transitions.
 
 const NAVY = "#002c44"
@@ -20,22 +20,24 @@ const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const MINT = "#bce2d7"
 const GLACIER = "#d9eeff"
+const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
-const R = 10 // cqw: the glass opening's short radius on screen
+const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
 const TOUR_STOP = 4500 // ms the tour rests on each clue (a tap moves on sooner)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
 
-// The opening in the art: an ellipse turned 70°, centred at LENS_X, LENS_Y (art units, the group's offset added)
+// The lens: one teal ring (the browser-search magnifier's rim gradient, as thick as the neck, which shares it; owner) round a
+// circular opening at LENS_X, LENS_Y (art units, the group's offset added), with that magnifier's glass shine
+// inside; the neck, handle and gradients are copied from ATMBrowserSearch's ART
 const LENS_X = 2399
 const LENS_Y = 1213
-const OPEN_RX = 402
-const OPEN_RY = 343
-const K = R / OPEN_RY // cqw per art unit
-const VB = [1860, 650, 1620, 1830] // the magnifier with its handle
+const OPEN_R = 365 // the opening, inside the ring
+const K = R / OPEN_R // cqw per art unit
+const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
-const LENS_ART = `<defs><linearGradient id="g53" x1="0" y1="0" x2="0" y2="1"><stop offset="0.00" stop-color="#d6f0e8"/><stop offset="0.33" stop-color="#bce2d7"/><stop offset="0.67" stop-color="#8fd3c0"/><stop offset="1.00" stop-color="#5fbfa6"/></linearGradient><linearGradient id="g54" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#5fbfa6" stop-opacity="0"/><stop offset="1.00" stop-color="#5fbfa6" stop-opacity="0.9"/></linearGradient><linearGradient id="g55" x1="0" y1="0" x2="1" y2="1"><stop offset="0.00" stop-color="#5fbfa6" stop-opacity="0.75"/><stop offset="0.33" stop-color="#5fbfa6" stop-opacity="0"/><stop offset="0.67" stop-color="#5fbfa6" stop-opacity="0"/><stop offset="1.00" stop-color="#5fbfa6" stop-opacity="0.75"/></linearGradient><mask id="hole56" maskUnits="userSpaceOnUse" x="0" y="0" width="4200" height="2800"><rect width="4200" height="2800" fill="#fff"/><ellipse cx="2349" cy="1283" rx="402" ry="343" transform="rotate(70 2349 1283)" fill="#000"/></mask><linearGradient id="g57" x1="0.1" y1="0" x2="0.35" y2="1"><stop offset="0.00" stop-color="#8fe0e0"/><stop offset="0.33" stop-color="#3bbfc0"/><stop offset="0.67" stop-color="#1fa9a8"/><stop offset="1.00" stop-color="#059390"/></linearGradient><linearGradient id="g58" x1="1" y1="1" x2="0" y2="0"><stop offset="0.00" stop-color="#5fbfa6"/><stop offset="0.50" stop-color="#3fa58c"/><stop offset="1.00" stop-color="#8fd3c0"/></linearGradient><linearGradient id="g59" x1="0" y1="0" x2="1" y2="1"><stop offset="0.00" stop-color="#3fa58c" stop-opacity="0.85"/><stop offset="1.00" stop-color="#3fa58c" stop-opacity="0.15"/></linearGradient><linearGradient id="g60" x1="0" y1="0" x2="0.75" y2="0.75"><stop offset="0.00" stop-color="#8fe0e0" stop-opacity="0.6"/><stop offset="0.50" stop-color="#8fe0e0" stop-opacity="0.15"/><stop offset="1.00" stop-color="#8fe0e0" stop-opacity="0"/></linearGradient><linearGradient id="g61" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#059390" stop-opacity="0"/><stop offset="1.00" stop-color="#059390" stop-opacity="0.9"/></linearGradient><linearGradient id="g62" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#059390" stop-opacity="0"/><stop offset="1.00" stop-color="#059390" stop-opacity="0.9"/></linearGradient><radialGradient id="s63"><stop offset="0" stop-color="#5fbfa6" stop-opacity="0.700"/><stop offset="0.25" stop-color="#5fbfa6" stop-opacity="0.560"/><stop offset="0.45" stop-color="#5fbfa6" stop-opacity="0.329"/><stop offset="0.6" stop-color="#5fbfa6" stop-opacity="0.175"/><stop offset="0.72" stop-color="#5fbfa6" stop-opacity="0.084"/><stop offset="0.83" stop-color="#5fbfa6" stop-opacity="0.028"/><stop offset="0.92" stop-color="#5fbfa6" stop-opacity="0.008"/><stop offset="1" stop-color="#5fbfa6" stop-opacity="0.000"/></radialGradient><linearGradient id="g64" x1="0" y1="0" x2="0.12" y2="1"><stop offset="0.00" stop-color="#ffcc40"/><stop offset="0.33" stop-color="#f6a11d"/><stop offset="0.67" stop-color="#e08a12"/><stop offset="1.00" stop-color="#c97a0c"/></linearGradient><linearGradient id="g65" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#c97a0c" stop-opacity="0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.9"/></linearGradient><linearGradient id="g66" x1="0" y1="0" x2="1" y2="0"><stop offset="0.00" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="0.50" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.45"/></linearGradient></defs><g pointer-events="visiblePainted"><g transform="translate(50 -70)"><g transform="translate(3061 2145) rotate(50.4)"><rect x="-648" y="-62" width="300" height="124" fill="url(#g53)" stroke="url(#g54)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-648" y="-62" width="300" height="124" fill="url(#g55)" /><path d="M-618,-26 H-388" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity=".9"/></g><ellipse cx="2380" cy="1320" rx="604" ry="504" transform="rotate(54 2380 1320)" fill="url(#g57)" mask="url(#hole56)"/><ellipse cx="2376" cy="1312" rx="492" ry="412" transform="rotate(54 2380 1320)" fill="url(#g58)" mask="url(#hole56)"/><ellipse cx="2349" cy="1283" rx="416" ry="357" transform="rotate(70 2349 1283)" fill="none" stroke="url(#g59)" stroke-width="30"/><ellipse cx="2349" cy="1283" rx="402" ry="343" transform="rotate(70 2349 1283)" fill="url(#g60)"/><path d="M2100,1323 A281,268 0 0 1 2289,1057" transform="rotate(-20 2349 1283)" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" opacity=".75"/><circle cx="2479" cy="1073" r="23" fill="#ffffff" opacity=".75"/><path d="M1831,1320 A549,449 0 0 1 2380,871" transform="rotate(54 2380 1320)" fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" opacity=".8"/><path d="M2934,1320 A554,454 0 0 1 2380,1774" transform="rotate(54 2380 1320)" fill="none" stroke="#ffffff" stroke-width="23" stroke-linecap="round" opacity=".6"/><ellipse cx="2020" cy="1020" rx="22" ry="13" transform="rotate(-40 2020 1020)" fill="#ffffff" opacity=".95"/><ellipse cx="2349" cy="1283" rx="402" ry="343" transform="rotate(70 2349 1283)" fill="none" stroke="url(#g61)" stroke-width="23.0" stroke-linejoin="round"/><ellipse cx="2380" cy="1320" rx="604" ry="504" transform="rotate(54 2380 1320)" fill="none" stroke="url(#g62)" stroke-width="23.0" stroke-linejoin="round"/><g transform="translate(3061 2145) rotate(50.4)"><ellipse cx="-358" cy="10" rx="70" ry="123" fill="url(#s63)"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g64)" stroke="url(#g65)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g66)"/><path d="M-248,-84 H218" stroke="#ffffff" stroke-width="46" stroke-linecap="round" opacity="0.9"/><ellipse cx="-228" cy="-92" rx="30" ry="16" fill="#ffffff" opacity=".95"/></g></g></g>`
+const LENS_ART = `<defs><linearGradient id="g57" x1="0.1" y1="0" x2="0.35" y2="1"><stop offset="0.00" stop-color="#8fe0e0"/><stop offset="0.33" stop-color="#3bbfc0"/><stop offset="0.67" stop-color="#1fa9a8"/><stop offset="1.00" stop-color="#059390"/></linearGradient><linearGradient id="g60" x1="0" y1="0" x2="0.75" y2="0.75"><stop offset="0.00" stop-color="#8fe0e0" stop-opacity="0.6"/><stop offset="0.50" stop-color="#8fe0e0" stop-opacity="0.15"/><stop offset="1.00" stop-color="#8fe0e0" stop-opacity="0"/></linearGradient><radialGradient id="s63"><stop offset="0" stop-color="#5fbfa6" stop-opacity="0.700"/><stop offset="0.25" stop-color="#5fbfa6" stop-opacity="0.560"/><stop offset="0.45" stop-color="#5fbfa6" stop-opacity="0.329"/><stop offset="0.6" stop-color="#5fbfa6" stop-opacity="0.175"/><stop offset="0.72" stop-color="#5fbfa6" stop-opacity="0.084"/><stop offset="0.83" stop-color="#5fbfa6" stop-opacity="0.028"/><stop offset="0.92" stop-color="#5fbfa6" stop-opacity="0.008"/><stop offset="1" stop-color="#5fbfa6" stop-opacity="0.000"/></radialGradient><linearGradient id="g64" x1="0" y1="0" x2="0.12" y2="1"><stop offset="0.00" stop-color="#ffcc40"/><stop offset="0.33" stop-color="#f6a11d"/><stop offset="0.67" stop-color="#e08a12"/><stop offset="1.00" stop-color="#c97a0c"/></linearGradient><linearGradient id="g65" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#c97a0c" stop-opacity="0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.9"/></linearGradient><linearGradient id="g66" x1="0" y1="0" x2="1" y2="0"><stop offset="0.00" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="0.50" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.45"/></linearGradient></defs><g pointer-events="visiblePainted"><g transform="translate(50 -70)"><g transform="translate(3061 2145) rotate(50.4)"><rect x="-648" y="-62" width="300" height="124" fill="url(#g57)"/><path d="M-618,-26 H-388" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity=".9"/></g><circle cx="2349" cy="1283" r="365" fill="url(#g60)"/><path d="M2100,1323 A281,268 0 0 1 2289,1057" transform="rotate(-20 2349 1283)" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" opacity=".75"/><circle cx="2479" cy="1073" r="23" fill="#ffffff" opacity=".75"/><circle cx="2349" cy="1283" r="427" fill="none" stroke="url(#g57)" stroke-width="124"/><ellipse cx="2080" cy="1000" rx="22" ry="13" transform="rotate(-40 2080 1000)" fill="#ffffff" opacity=".95"/><g transform="translate(3061 2145) rotate(50.4)"><ellipse cx="-358" cy="10" rx="70" ry="123" fill="url(#s63)"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g64)" stroke="url(#g65)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g66)"/><path d="M-248,-84 H218" stroke="#ffffff" stroke-width="46" stroke-linecap="round" opacity="0.9"/><ellipse cx="-228" cy="-92" rx="30" ry="16" fill="#ffffff" opacity=".95"/></g></g></g>`
 
 type Clue = { name: string; why: string }
 type ClueFn = (i: number, text: string, truth?: string) => React.ReactNode
@@ -50,14 +52,44 @@ type Round = {
 const black = '"Area Normal Black", sans-serif'
 const display = '"P22 Mackinac ExtraBold", "P22 Mackinac Bold", serif'
 const bubble: React.CSSProperties = {
-    background: GLACIER,
+    background: MINT,
     color: NAVY,
     borderRadius: "1cqw 4cqw 4cqw 4cqw",
-    padding: "2.6cqw 4cqw",
-    fontSize: "4.2cqw",
-    lineHeight: 2.3, // room between lines for the tags
+    padding: "3cqw 4cqw",
+    fontSize: "4.5cqw",
+    lineHeight: 1.5,
 }
-const link: React.CSSProperties = { color: TEAL, textDecoration: "underline" }
+// The numbered badge on a found clue in the message (its number matches its card on the clue board)
+const badge: React.CSSProperties = {
+    width: "5.2cqw",
+    height: "5.2cqw",
+    borderRadius: 999,
+    background: YOLK,
+    color: MIDNIGHT,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: black,
+    fontSize: "3.2cqw",
+    lineHeight: 1,
+}
+// A clue card's number, like the letter on Save or Spend's option cards
+const option: React.CSSProperties = {
+    flex: "none",
+    width: "7.4cqw",
+    height: "7.4cqw",
+    borderRadius: 999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: black,
+    fontSize: "4.4cqw",
+    lineHeight: 1,
+}
+const link: React.CSSProperties = {
+    color: DARK_TEAL,
+    textDecoration: "underline",
+}
 const ROUNDS: Round[] = [
     {
         clues: [
@@ -80,7 +112,7 @@ const ROUNDS: Round[] = [
         ],
         end: "Don’t reply and don’t tap the link. Delete it.",
         view: (c) => (
-            <div style={{ padding: "4cqw 5cqw 5cqw" }}>
+            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
                 <div
                     style={{
                         display: "flex",
@@ -136,18 +168,18 @@ const ROUNDS: Round[] = [
                 why: "A button hides where it goes. This one leads to a fake payment page.",
             },
         ],
-        end: "Track packages on the delivery company’s own app. Delete this email.",
+        end: "Track packages in the delivery company’s own app. Delete it.",
         view: (c) => (
-            <div style={{ padding: "4cqw 5cqw 5cqw" }}>
+            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
                 <div
                     style={{
-                        background: GLACIER,
+                        background: MINT,
                         color: NAVY,
                         borderRadius: "3cqw",
-                        padding: "3cqw 4cqw 4cqw",
+                        padding: "3.4cqw 4.4cqw 4cqw",
                     }}
                 >
-                    <div style={{ fontSize: "3.6cqw", lineHeight: 2.2 }}>
+                    <div style={{ fontSize: "3.8cqw", lineHeight: 1.5 }}>
                         <span style={{ fontFamily: black }}>From: </span>
                         {c(
                             1,
@@ -155,7 +187,7 @@ const ROUNDS: Round[] = [
                             "notice@pkg-redeliver.co"
                         )}
                     </div>
-                    <div style={{ fontSize: "3.6cqw", lineHeight: 2.2 }}>
+                    <div style={{ fontSize: "3.8cqw", lineHeight: 1.5 }}>
                         <span style={{ fontFamily: black }}>Subject: </span>
                         Your package is on hold
                     </div>
@@ -163,10 +195,10 @@ const ROUNDS: Round[] = [
                         style={{
                             height: "0.3cqw",
                             background: "rgba(0,44,68,.15)",
-                            margin: "2cqw 0 1.4cqw",
+                            margin: "1.6cqw 0 1cqw",
                         }}
                     />
-                    <div style={{ fontSize: "4.2cqw", lineHeight: 2.3 }}>
+                    <div style={{ fontSize: "4.5cqw", lineHeight: 1.5 }}>
                         We couldn’t deliver your package. Pay a{" "}
                         {c(2, "$2.49 redelivery fee")} {c(0, "within 24 hours")}{" "}
                         or it will go back to the sender.
@@ -174,13 +206,13 @@ const ROUNDS: Round[] = [
                     <div
                         style={{
                             display: "inline-block",
-                            marginTop: "2.4cqw",
-                            padding: "1.4cqw 4cqw",
+                            marginTop: "3cqw",
+                            padding: "1.6cqw 4.4cqw",
                             borderRadius: 999,
                             background: TEAL,
                             color: "#ffffff",
                             fontFamily: black,
-                            fontSize: "3.8cqw",
+                            fontSize: "4.2cqw",
                             lineHeight: 1.4,
                         }}
                     >
@@ -197,7 +229,7 @@ const ROUNDS: Round[] = [
                 why: "“Before it’s gone” is pressure. Slow down and close the pop-up.",
             },
             {
-                name: "Pop-up you didn’t ask for",
+                name: "Surprise pop\u2011up",
                 why: "A surprise prize box is a trick to grab your attention.",
             },
             {
@@ -209,9 +241,9 @@ const ROUNDS: Round[] = [
                 why: "A real prize never needs your card number. They’d use it to take your money.",
             },
         ],
-        end: "Never type your card number into a surprise pop-up. Delete it.",
+        end: "Never give a pop\u2011up your card number. Delete it.", // \u2011: a hyphen that never breaks
         view: (c) => (
-            <div style={{ padding: "4cqw 5cqw 5cqw" }}>
+            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
                 <div
                     style={{
                         background: "rgba(217,238,255,.14)",
@@ -253,29 +285,34 @@ const ROUNDS: Round[] = [
                             www.daily-recipes.com
                         </span>
                     </div>
-                    <div style={{ position: "relative", padding: "3cqw 4cqw" }}>
-                        {[70, 90, 55, 80].map((w, k) => (
+                    <div
+                        style={{
+                            position: "relative",
+                            padding: "3cqw 15cqw 3cqw 3cqw",
+                        }}
+                    >
+                        {/* the page behind the pop-up */}
+                        {[70, 90, 55, 80, 65, 85].map((w, k) => (
                             <div
                                 key={k}
                                 style={{
-                                    width: `${w}%`,
+                                    position: "absolute",
+                                    left: "4cqw",
+                                    top: `${4 + k * 7}cqw`,
+                                    width: `${w * 0.86}%`,
                                     height: "2.4cqw",
                                     borderRadius: 999,
                                     background: "rgba(217,238,255,.25)",
-                                    margin: "2cqw 0",
                                 }}
                             />
                         ))}
                         <div
                             style={{
-                                position: "absolute",
-                                left: "3cqw",
-                                right: "15cqw", // clear of the resting glass
-                                top: "2cqw",
+                                position: "relative", // over the page lines, and clear of the resting glass
                                 background: "#ffffff",
                                 color: NAVY,
                                 borderRadius: "3cqw",
-                                padding: "3cqw 3cqw 3.4cqw",
+                                padding: "2.4cqw 3cqw 2.6cqw",
                                 boxShadow: "0 1.6cqw 4cqw rgba(0,0,0,.35)",
                                 textAlign: "center",
                             }}
@@ -283,26 +320,25 @@ const ROUNDS: Round[] = [
                             <div
                                 style={{
                                     fontFamily: display,
-                                    fontSize: "4.6cqw",
-                                    lineHeight: 2.1,
+                                    fontSize: "4.8cqw",
+                                    lineHeight: 1.4,
                                 }}
                             >
                                 {c(1, "You’ve been selected!")}
                             </div>
-                            {/* one clue per line, so their tags never meet */}
                             <div
-                                style={{ fontSize: "3.8cqw", lineHeight: 2.3 }}
+                                style={{ fontSize: "3.9cqw", lineHeight: 1.5 }}
                             >
                                 You won {c(2, "a $500 gift card")}!
                             </div>
                             <div
-                                style={{ fontSize: "3.8cqw", lineHeight: 2.3 }}
+                                style={{ fontSize: "3.9cqw", lineHeight: 1.5 }}
                             >
                                 {c(3, "Enter your card number")} for shipping.
                             </div>
                             <div
                                 style={{
-                                    margin: "1.4cqw 0 1.6cqw",
+                                    margin: "1.2cqw 0 1.2cqw",
                                     padding: "1.2cqw",
                                     borderRadius: "1.6cqw",
                                     boxShadow: `inset 0 0 0 0.3cqw ${MINT}`,
@@ -316,16 +352,14 @@ const ROUNDS: Round[] = [
                             <div
                                 style={{
                                     fontFamily: black,
-                                    fontSize: "3.8cqw",
-                                    lineHeight: 1.8,
+                                    fontSize: "3.9cqw",
+                                    lineHeight: 1.5,
                                 }}
                             >
                                 {c(0, "Claim it now before it’s gone!")}
                             </div>
                         </div>
                     </div>
-                    {/* room under the pop-up, which floats over the page */}
-                    <div style={{ height: "36cqw" }} />
                 </div>
             </div>
         ),
@@ -377,7 +411,7 @@ function Lesson(props: Props) {
         isCanvas && props.canvasFound ? clues.map((_, i) => i) : []
     )
     const [tags, setTags] = React.useState<
-        { i: number; x: number; y: number; right: boolean }[]
+        { i: number; n: number; x: number; y: number }[]
     >([])
     const [phase, setPhaseState] = React.useState<Phase>(
         isCanvas ? (props.canvasFound ? "end" : "hunt") : "demo"
@@ -465,7 +499,7 @@ function Lesson(props: Props) {
     const cqw = (n: number) => ((sizeRef.current?.w ?? 920) / 100) * n
     const rest = () => {
         const s = sizeRef.current ?? { w: 920, h: 600 }
-        return { x: s.w - cqw(22), y: cqw(13) } // top right: no clue there, and the handle stays on the page
+        return { x: s.w - cqw(19), y: cqw(8) } // top right: no clue there, and the handle stays on the page
     }
 
     const markFound = (i: number) => {
@@ -559,11 +593,11 @@ function Lesson(props: Props) {
             }, 50)
         })
 
-    // Every clue found: the glass visits each with its why, then goes back and Delete shows
+    // Every clue found: the glass visits each, in the order found, with its why; then it goes back and Delete shows
     async function tour(token: number) {
         setPhase("tour")
         await wait(700, token)
-        for (let i = 0; i < clues.length; i++) {
+        for (const i of foundRef.current) {
             if (run.current !== token) return
             setTourAt(i)
             await glide(centreOf(i), 0.9)
@@ -588,18 +622,18 @@ function Lesson(props: Props) {
         return () => ro.disconnect()
     }, [round])
 
-    // The tags sit just above each found clue's first line, kept in card percentages so they follow resizes
+    // Each found clue gets a numbered badge on its first line's top left (numbered in the order found, matching
+    // the clue board), kept in card percentages so it follows resizes
     React.useLayoutEffect(() => {
         if (!size) return
         setTags(
-            found.map((i) => {
+            found.map((i, k) => {
                 const q = rectsOf(i)[0] ?? { l: 0, t: 0, r: 0, b: 0 }
-                const right = q.l > size.w * 0.55 // far right: the tag ends at the clue's right edge instead
                 return {
                     i,
-                    x: ((right ? q.r : q.l) / size.w) * 100,
+                    n: k + 1,
+                    x: (q.l / size.w) * 100,
                     y: (q.t / size.h) * 100,
-                    right,
                 }
             })
         )
@@ -784,44 +818,32 @@ function Lesson(props: Props) {
                         key={t.i}
                         animate={!zoomed && !reduceMotion && !isCanvas}
                         style={{
+                            ...badge,
                             position: "absolute",
                             left: `${t.x}%`,
                             top: `${t.y}%`,
-                            transform: `translate(${t.right ? "-100%" : "0"}, calc(-100% - 0.4cqw))`,
-                            whiteSpace: "nowrap",
-                            padding: "0.7cqw 1.6cqw 0.8cqw",
-                            borderRadius: 999,
-                            background: YOLK,
-                            color: MIDNIGHT,
-                            fontFamily: black,
-                            fontSize: "2.6cqw",
-                            letterSpacing: "0.1cqw",
-                            textTransform: "uppercase",
-                            lineHeight: 1,
-                            boxShadow: "0 0.6cqw 1.6cqw rgba(0,0,0,.3)",
+                            transform: "translate(-35%, -70%)", // mostly above the clue, clear of the word before it
+                            boxShadow:
+                                "0 0 0 0.5cqw #ffffff, 0 0.6cqw 1.4cqw rgba(0,44,68,.25)",
                             pointerEvents: "none",
                         }}
                     >
-                        {clues[t.i].name}
+                        {t.n}
                     </Pop>
                 ))}
             </div>
         )
     }
 
-    let label = `Clues found: ${found.length} of ${clues.length}`
     let line = props.hint
     if (phase === "demo")
         line = "Watch the magnifying glass find the first clue."
     else if (phase === "hunt" && round === 0) line = "Your turn! " + props.hint
-    else if (phase === "tour" && tourAt >= 0) {
-        label = clues[tourAt].name
-        line = clues[tourAt].why
-    } else if (phase === "tour") line = "You found them all! Here’s why."
-    else if (phase === "end" || phase === "leaving") {
-        label = "It’s a scam"
-        line = ROUNDS[round].end
-    }
+    else if (phase === "tour")
+        line =
+            tourAt >= 0 ? clues[tourAt].why : "You found them all! Here’s why."
+    else line = ROUNDS[round].end
+    const ended = phase === "end" || phase === "leaving"
 
     return (
         <div
@@ -836,7 +858,7 @@ function Lesson(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "3cqw",
+                    gap: "2cqw",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -844,35 +866,6 @@ function Lesson(props: Props) {
                 } as React.CSSProperties
             }
         >
-            {/* progress: done teal, current egg yolk, next faint */}
-            <div
-                style={{
-                    flex: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "1.6cqw",
-                }}
-                aria-label={`Message ${round + 1} of ${ROUNDS.length}`}
-            >
-                {ROUNDS.map((_, k) => (
-                    <span
-                        key={k}
-                        style={{
-                            width: k === round ? "6cqw" : "2.2cqw",
-                            height: "2.2cqw",
-                            borderRadius: 999,
-                            background:
-                                k < round
-                                    ? TEAL
-                                    : k === round
-                                      ? YOLK
-                                      : "rgba(0,44,68,.2)",
-                        }}
-                    />
-                ))}
-            </div>
-
             <div
                 ref={wrapRef}
                 onPointerDown={onDown}
@@ -905,35 +898,25 @@ function Lesson(props: Props) {
                             aria-hidden="true"
                             style={{
                                 position: "absolute",
-                                left: `${-OPEN_RX * K}cqw`,
-                                top: `${-OPEN_RY * K}cqw`,
-                                width: `${2 * OPEN_RX * K}cqw`,
-                                height: `${2 * OPEN_RY * K}cqw`,
+                                left: `${-R}cqw`,
+                                top: `${-R}cqw`,
+                                width: `${2 * R}cqw`,
+                                height: `${2 * R}cqw`,
                                 borderRadius: "50%",
                                 overflow: "hidden",
-                                transform: "rotate(70deg)",
                                 background: NAVY,
                             }}
                         >
                             <div
+                                ref={copyRef}
                                 style={{
                                     position: "absolute",
                                     left: "50%",
                                     top: "50%",
-                                    transform: "rotate(-70deg)",
+                                    transformOrigin: "0 0",
                                 }}
                             >
-                                <div
-                                    ref={copyRef}
-                                    style={{
-                                        position: "absolute",
-                                        left: 0,
-                                        top: 0,
-                                        transformOrigin: "0 0",
-                                    }}
-                                >
-                                    {card(true)}
-                                </div>
+                                {card(true)}
                             </div>
                         </div>
                         <svg
@@ -953,63 +936,131 @@ function Lesson(props: Props) {
                 </div>
             </div>
 
+            {/* the clue board: the two counts (styled like Money Double's "Your money"), then a card per clue,
+                filled in the order found, styled like Save or Spend's A-D options; the tour lights up the one it's on */}
+            <div
+                style={{
+                    flex: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "2.4cqw",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "baseline",
+                    }}
+                >
+                    <Count
+                        label="Message"
+                        value={`${round + 1} / ${ROUNDS.length}`}
+                    />
+                    <Count
+                        label="Clues found"
+                        value={`${found.length} / ${clues.length}`}
+                    />
+                </div>
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "2.4cqw",
+                    }}
+                >
+                    {clues.map((_, k) => {
+                        const i = found[k]
+                        const on = i !== undefined && i === tourAt
+                        return (
+                            <div
+                                key={k}
+                                style={{
+                                    minHeight: "11.6cqw",
+                                    boxSizing: "border-box",
+                                    borderRadius: "4cqw",
+                                    padding: "1.6cqw 2.6cqw",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "2.4cqw",
+                                    background:
+                                        i === undefined
+                                            ? "rgba(0,59,92,.06)"
+                                            : "linear-gradient(180deg, #0b4a6e, #003b5c)",
+                                    boxShadow:
+                                        i === undefined
+                                            ? "inset 0 0 0 0.3cqw rgba(0,59,92,.18)"
+                                            : on
+                                              ? `inset 0 0 0 0.6cqw ${YOLK}`
+                                              : "inset 0 0 0 1px rgba(217,238,255,.22)",
+                                    color: "#ffffff",
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        ...option,
+                                        background:
+                                            i === undefined
+                                                ? "rgba(0,59,92,.12)"
+                                                : GLACIER,
+                                        color:
+                                            i === undefined
+                                                ? "rgba(0,59,92,.45)"
+                                                : NAVY,
+                                    }}
+                                >
+                                    {k + 1}
+                                </span>
+                                {i !== undefined && (
+                                    <Pop
+                                        key={i}
+                                        animate={!reduceMotion && !isCanvas}
+                                        style={{
+                                            fontFamily: black,
+                                            fontSize: "4.2cqw",
+                                            lineHeight: 1.1,
+                                        }}
+                                    >
+                                        {clues[i].name}
+                                    </Pop>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+
             {/* what to do, or why */}
             <div
                 aria-live="polite"
-                style={{
-                    flex: "none",
-                    minHeight: "22cqw",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "1.6cqw",
-                    marginTop: "6cqw", // room for the handle below the card
-                    padding: "0 4cqw",
-                    textAlign: "center",
-                }}
+                style={
+                    {
+                        flex: "none",
+                        minHeight: "12cqw", // two lines
+                        padding: "0 3cqw",
+                        textAlign: "center",
+                        fontSize: "4.4cqw",
+                        lineHeight: 1.35,
+                        color: MIDNIGHT,
+                        textWrap: "balance",
+                    } as React.CSSProperties
+                }
             >
-                <span
-                    style={{
-                        padding: "0.9cqw 2cqw 1cqw",
-                        borderRadius: 999,
-                        background:
-                            phase === "tour" && tourAt >= 0
-                                ? YOLK
-                                : "transparent",
-                        color:
-                            phase === "tour" && tourAt >= 0 ? MIDNIGHT : TEAL,
-                        fontFamily: black,
-                        fontSize: "3cqw",
-                        letterSpacing: "0.15cqw",
-                        textTransform: "uppercase",
-                        lineHeight: 1,
-                    }}
-                >
-                    {label}
-                </span>
-                <span
-                    style={
-                        {
-                            fontSize: "4.4cqw",
-                            lineHeight: 1.35,
-                            color: MIDNIGHT,
-                            textWrap: "balance",
-                        } as React.CSSProperties
-                    }
-                >
-                    {line}
-                </span>
+                {ended && (
+                    <span style={{ fontFamily: display, fontSize: "4.8cqw" }}>
+                        It’s a scam.{" "}
+                    </span>
+                )}
+                {line}
             </div>
 
             <div
                 style={{
                     flex: "none",
+                    marginTop: "auto", // Delete sits at the foot of the component
                     display: "flex",
                     justifyContent: "center",
-                    visibility:
-                        phase === "end" || phase === "leaving"
-                            ? "visible"
-                            : "hidden",
+                    visibility: ended ? "visible" : "hidden",
                 }}
             >
                 <button
@@ -1022,7 +1073,7 @@ function Lesson(props: Props) {
                         alignItems: "center",
                         justifyContent: "center",
                         width: "60cqw",
-                        height: "10.6cqw", // 97px at 920 wide: a full touch target
+                        height: "10cqw", // as Save or Spend's buttons (92px at 920 wide)
                         boxSizing: "border-box",
                         paddingBottom: "0.22cqw", // the font sits low, so this centres the label
                         borderRadius: 999,
@@ -1036,6 +1087,25 @@ function Lesson(props: Props) {
                     {props.deleteLabel}
                 </button>
             </div>
+        </div>
+    )
+}
+
+// A count: a label beside a big figure, in Money Double's "Your money" styles
+function Count({ label, value }: { label: string; value: string }) {
+    return (
+        <div style={{ display: "flex", alignItems: "baseline", gap: "2cqw" }}>
+            <span style={{ fontSize: "3.8cqw", color: TEAL }}>{label}</span>
+            <span
+                style={{
+                    fontFamily: display,
+                    fontSize: "7.6cqw",
+                    lineHeight: 1,
+                    color: MIDNIGHT,
+                }}
+            >
+                {value}
+            </span>
         </div>
     )
 }
