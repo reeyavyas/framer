@@ -1410,7 +1410,10 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   fills along its bottom over 10 s and then it goes on its own; a tap goes straight away; the strip holds while the
   inactivity overlay is open. The 10 s is in code (`DONE_SECONDS`), not a layer property, so no stale saved value
   can override it. Checked locally: 44% filled 6.1 s after the last answer (1.3 s before Done shows), then it went
-  to the completion path.
+  to the completion path. Live (30 Oct): the strip is `rgb(4, 107, 104)` along Done's bottom; left alone it went to `/complete`
+  ("Nicely done!…"); a tap with the strip part-filled goes at once. The live run took about 14 s from the last answer,
+  not 11.3, because the test browser only draws frames on screenshots and the strip only advances on drawn frames;
+  a kiosk screen draws continuously.
 - **Code:** `ATMCreditScoreChallenge.tsx`. Canvas (Start / Finale) picks what the Framer canvas shows (it remounts on a
   change); the live page always starts at the first card. Hint, No, Yes, Finale ({score} is the final score), Done and When Done are
   properties (renamed from the first draft's Do / Skip, so the layer's saved first-draft values don't stick).
