@@ -1447,6 +1447,37 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
   the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.
 
+## Lesson 5: Spot the Scam (plan agreed 30 Oct, not built yet)
+
+Users drag a magnifying glass over a scam message to find its suspicious parts, then learn why each one is a
+scam. The key lesson is fake urgency: scammers rush you so you don't stop to think. The owner wrote the
+header, sub-header and other page copy in Framer.
+
+- **Three rounds (owner picked):**
+  1. **Bank text message:** "URGENT! Your account has been locked. Click here immediately…", a link and "Reply
+     with your PIN to unlock." Clues: fake urgency, unknown link, asks for PIN, unknown sender.
+  2. **Delivery email:** a small redelivery fee (made-up amount) "within 24 hours or it will be returned" and a
+     Pay now button. Clues: fake urgency, small fee as bait, fake button link, odd sender address.
+  3. **Prize pop-up on a website:** a gift card "you've been selected" for, "enter your card number to cover
+     shipping". Clues: too good to be true, asks for card number, pop-up you didn't ask for. The browser-search
+     artwork can be the scene.
+- **Magnifying glass (owner picked these four):** the glass is the one from `ATMBrowserSearch`.
+  1. It shows how first: at the start of round 1 it scans on its own, settles on the first clue, then hands over
+     ("Your turn").
+  2. It shows the truth: under the lens a link shows its real address and a friendly sender name shows the
+     random number behind it.
+  3. Found clues keep a small yellow tag naming the clue ("Fake urgency", "Asks for your PIN").
+  4. Guided tour at the end of each round: the glass moves from tag to tag with a one-line "why" at each.
+  Tapping a clue also works (jumps the lens there) for users who find dragging hard.
+- **Look (owner):** messages on the navy / teal glass card; suspicious parts glow Egg Yolk. **No red. No
+  countdown**: urgency comes only from the wording.
+- **End of each round (owner):** a single Delete button (no "tap the link" choice). After round 3, the usual
+  lesson-complete page.
+- **Split:** page copy, lesson cards and buttons are native Framer; the message, draggable lens, clues, reveals
+  and tour are one code component with the round as a property.
+- **Open:** the glass is drawn inside the browser-search artwork, so it may need pulling out as its own piece to
+  drag.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
