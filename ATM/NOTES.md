@@ -1494,7 +1494,8 @@ header, sub-header and other page copy in Framer.
   pop-up is centred and fills the page with room on all four sides; the card-number field is white. The bar's three dots are egg yolk, light teal and glacier (owner).
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
-  glass still sends it). It rests at the card's top right, with its handle on the page.
+  glass still sends it). It rests at the card's top right, 31cqw in from the right edge, so its whole handle stays
+  on the card (owner: the handle was cut off at the screen's right edge; checked 17 px inside the card).
 - **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
   in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal Area Normal Black label,
   owner asked for bolder, beside a big P22 Mackinac figure).
@@ -1516,16 +1517,17 @@ header, sub-header and other page copy in Framer.
   slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
   fallback as Credit Score).
 - **Even spacing, nothing moves (owner):** the clue cards are a fixed height (11cqw + 4 px: room for a two-line
-  name with 2 px more padding, owner) and the text line a fixed two lines (every text fits in two; round 3's
+  name with 2 px more padding, owner) and the text line a fixed 11.1cqw, exactly the longest text (two lines with
+  the bigger "It's a scam." lead in front; the earlier 10.8cqw clipped it by 3 px; every text fits in two; round 3's
   card-number why was shortened to "A real prize never asks for your card number."), so nothing under the message
   card moves as clues are found (checked through every state of every round). The parts are spread with
-  `space-between`; the text line has 1cqw + 2 px above and below, the board 6 px on top, the card rows 1.8cqw + 2 px
+  `space-between`; the text line has 1cqw + 6 px above and below, the board 6 px on top, the card rows 1.8cqw + 2 px
   apart (owner: more room under the card and around "It's a scam…", never less between the cards). The owner
-  said not to give up any gap to make room, so the **layer is 1187 px tall** (was 1174; set on the page's layer
-  and as the component's default height). Measured gaps card → board / board → text / text → Delete: 36 / 40 / 40
-  px in round 1, 30 / 34 / 34 in round 2, 50 / 54 / 54 in round 3 (the message cards differ in height). Delete
-  sits 3cqw + 4 px from the layer's bottom; on the page the layer still ends about 146 px above the Kiosk frame's
-  bottom. The "Message" and "Clues found" labels are 3.8cqw + 2 px (owner).
+  said not to give up any gap to make room, so the **layer is 1197 px tall** (was 1174, then 1187; set on the
+  page's layer and as the component's default height). Measured gaps card → board / board → text / text → Delete:
+  36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
+  height). Delete sits 3cqw + 4 px from the layer's bottom; on the page the layer still ends well above the Kiosk
+  frame's bottom (about 146 px at 1187). The "Message" and "Clues found" labels are 3.8cqw + 2 px (owner).
 - **Round 1's sender (owner):** the phone number shows from the start (no "Your Bank" to uncover); the avatar
   shows "?"; its why reads "Your bank's texts come from a number you know. This one is a random number."
 - **Fits 920 × 1187** in every round with the end text and Delete showing;

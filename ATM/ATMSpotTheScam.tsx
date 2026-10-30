@@ -371,7 +371,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1187
+ * @framerIntrinsicHeight 1197
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -483,7 +483,7 @@ function Lesson(props: Props) {
     const cqw = (n: number) => ((sizeRef.current?.w ?? 920) / 100) * n
     const rest = () => {
         const s = sizeRef.current ?? { w: 920, h: 600 }
-        return { x: s.w - cqw(19), y: cqw(8) } // top right: no clue there, and the handle stays on the page
+        return { x: s.w - cqw(31), y: cqw(8) } // top right, far enough in that the whole handle stays on the card (owner)
     }
 
     const markFound = (i: number) => {
@@ -1059,8 +1059,8 @@ function Lesson(props: Props) {
                 style={
                     {
                         flex: "none",
-                        height: "10.8cqw", // fixed (two lines; every text fits in two), so nothing moves as the text changes (owner)
-                        margin: "calc(1cqw + 2px) 0", // more room above and below the text (owner)
+                        height: "11.1cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
+                        margin: "calc(1cqw + 6px) 0", // more room above and below the text (owner)
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
