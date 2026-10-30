@@ -1357,8 +1357,8 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
 
 "Can You Reach 760?" The score starts at 700 (Good). One card at a time asks a yes/no question about a money
 choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are plain Yes and No, with no icons
-(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. The hint under the buttons says what to swipe, on two lines: 'Swipe the card right
-for “Yes” or left for “No.”' then 'You can also tap a button below.' (owner's wording; the hint keeps typed line breaks) (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
+(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. Under the card, the hint says what to swipe, on two lines: 'Swipe the card right
+for “Yes” or left for “No.”' then 'You can also tap a button below.' (owner's wording; the hint keeps typed line breaks). The No / Yes buttons sit under the hint (owner). (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
 the layer's saved old text doesn't stick). The owner laid out the page (heading, sub-heading, intro in
 "you" voice, light mint background); the component sits under the Question stack.
 
@@ -1394,7 +1394,7 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
   segment it lands on pops; crossing into a band sweeps the glint and pops that band's name. A chip floats up from
   the score and fades: teal for a gain ("Paid on time +15"), Cancel coral for a drop ("Missed a payment −40"; the
-  owner asked for red drop chips). The line under the buttons says why. Until the first touch the card nudges right
+  owner asked for red drop chips). The hint line under the card then says why. Until the first touch the card nudges right
   and back. A drag under a quarter of the card's width springs back.
 - **Finale (owner, no confetti):** the cards and buttons fade, the gauge glides to the middle, then
   "Congratulations, your score is now {score}!" and Done fade in under it. Done goes to

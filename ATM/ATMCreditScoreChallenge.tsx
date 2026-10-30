@@ -874,6 +874,26 @@ function Challenge(props: Props) {
 
             <div
                 data-fade=""
+                aria-live="polite"
+                style={
+                    {
+                        ...fade,
+                        flex: "none",
+                        minHeight: "10cqw", // room for two lines, so the cards keep one size
+                        whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
+                        padding: "0 2cqw",
+                        textAlign: "center",
+                        fontSize: "3.7cqw",
+                        lineHeight: 1.35,
+                        textWrap: "pretty",
+                    } as React.CSSProperties
+                }
+            >
+                {why || props.cardHint}
+            </div>
+
+            <div
+                data-fade=""
                 style={{ ...fade, flex: "none", display: "flex", gap: "3cqw" }}
             >
                 <button
@@ -895,26 +915,6 @@ function Challenge(props: Props) {
                 >
                     {props.yes}
                 </button>
-            </div>
-
-            <div
-                data-fade=""
-                aria-live="polite"
-                style={
-                    {
-                        ...fade,
-                        flex: "none",
-                        minHeight: "10cqw", // room for two lines, so the cards keep one size
-                        whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
-                        padding: "0 2cqw",
-                        textAlign: "center",
-                        fontSize: "3.7cqw",
-                        lineHeight: 1.35,
-                        textWrap: "pretty",
-                    } as React.CSSProperties
-                }
-            >
-                {why || props.cardHint}
             </div>
 
             {/* The finale, under the gauge once it has moved to the middle */}
