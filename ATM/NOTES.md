@@ -1401,7 +1401,8 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   segment it lands on pops; crossing into a band sweeps the glint and pops that band's name. A chip floats up from
   the score and fades: teal for a gain ("Paid on time +15"), Cancel coral for a drop ("Missed a payment −40"; the
   owner asked for red drop chips). The hint line above the card then says why. Until the first touch the card nudges right
-  and back. A drag under a quarter of the card's width springs back.
+  and back. A drag under a quarter of the card's width springs back. A card being swiped passes over the navy card, not under it
+  (owner; the card stack sits a layer above it, and at the finale the faded stack still lets Done take taps).
 - **Finale (owner, no confetti):** the cards and buttons fade, the gauge glides to the middle, then
   "Congratulations, your score is now {score}!" and Done fade in under it. Done goes to
   `/atm-lessons/credit-score-challenge/complete`, which has the confetti.

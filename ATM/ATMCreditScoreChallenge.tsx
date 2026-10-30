@@ -616,7 +616,7 @@ function Challenge(props: Props) {
                 style={{
                     flex: "none",
                     position: "relative",
-                    zIndex: 2, // the chip floats over the cards
+                    zIndex: 2, // above the hint; the cards go over it
                     borderRadius: "4cqw",
                     padding: "2.4cqw 5cqw 3.4cqw",
                     background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`,
@@ -796,7 +796,13 @@ function Challenge(props: Props) {
             {/* The card stack: a blank card behind the one to swipe */}
             <div
                 data-fade=""
-                style={{ ...fade, flex: 1, minHeight: 0, position: "relative" }}
+                style={{
+                    ...fade,
+                    flex: 1,
+                    minHeight: 0,
+                    position: "relative",
+                    zIndex: 3, // a card being swiped passes over the navy card, not under it (owner)
+                }}
             >
                 {deck.length > 1 && (
                     <div
