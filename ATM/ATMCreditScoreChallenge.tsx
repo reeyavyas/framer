@@ -232,7 +232,6 @@ function Challenge(props: Props) {
     const skipStampRef = React.useRef<HTMLDivElement>(null)
     const chipRef = React.useRef<HTMLSpanElement>(null)
     const labelRefs = React.useRef<(HTMLSpanElement | null)[]>([])
-    const gaugeRef = React.useRef<HTMLDivElement>(null)
     const drag = React.useRef<{ x: number; dx: number; id: number } | null>(
         null
     )
@@ -348,32 +347,6 @@ function Challenge(props: Props) {
             count.kill()
         }
     }, [score, markup])
-
-    // The gauge with its band names is centred as one group: Excellent is wider than Poor, so the group shifts
-    // left by half the difference. Measured, since the fonts set the widths; again once they load or it resizes.
-    React.useLayoutEffect(() => {
-        const el = gaugeRef.current
-        if (!el) return
-        const centre = () => {
-            el.style.transform = ""
-            const box = el.getBoundingClientRect()
-            if (!box.width) return
-            let left = box.left
-            let right = box.right
-            el.querySelectorAll("[data-band]").forEach((s) => {
-                const b = s.getBoundingClientRect()
-                left = Math.min(left, b.left)
-                right = Math.max(right, b.right)
-            })
-            const scale = el.offsetWidth / box.width // the Framer canvas may be zoomed
-            el.style.transform = `translateX(${(((box.left + box.right) / 2 - (left + right) / 2) * scale).toFixed(1)}px)`
-        }
-        centre()
-        document.fonts?.ready.then(centre)
-        const ro = new ResizeObserver(centre)
-        ro.observe(el)
-        return () => ro.disconnect()
-    }, [])
 
     // The band name the needle has just moved into pops.
     React.useLayoutEffect(() => {
@@ -615,7 +588,6 @@ function Challenge(props: Props) {
                 }}
             >
                 <div
-                    ref={gaugeRef}
                     style={{
                         position: "relative",
                         width: "56cqw",
@@ -647,7 +619,6 @@ function Challenge(props: Props) {
                         return (
                             <span
                                 key={b.name}
-                                data-band=""
                                 style={{
                                     position: "absolute",
                                     left: `${((x - VB.x) / VB.w) * 100}%`,
@@ -664,7 +635,8 @@ function Challenge(props: Props) {
                                         labelRefs.current[i] = el
                                     }}
                                     style={{
-                                        display: "block",
+                                        display: "grid", // every name in one cell, so each pill is as wide as the widest
+                                        justifyItems: "center",
                                         padding: "0.9cqw 1.8cqw 1.1cqw",
                                         borderRadius: 999,
                                         background: on
@@ -681,7 +653,21 @@ function Challenge(props: Props) {
                                         color: on ? MIDNIGHT : MINT,
                                     }}
                                 >
-                                    {b.name}
+                                    {BANDS.map((o) => (
+                                        <span
+                                            key={o.name}
+                                            aria-hidden={o !== b}
+                                            style={{
+                                                gridArea: "1 / 1",
+                                                visibility:
+                                                    o === b
+                                                        ? "visible"
+                                                        : "hidden",
+                                            }}
+                                        >
+                                            {o.name}
+                                        </span>
+                                    ))}
                                 </span>
                             </span>
                         )
