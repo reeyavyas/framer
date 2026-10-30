@@ -179,7 +179,7 @@ type View = "Start" | "Finale"
 
 interface Props {
     canvasView: View
-    swipeHint: string
+    cardHint: string
     yes: string
     no: string
     finale: string
@@ -584,7 +584,7 @@ function Challenge(props: Props) {
                     padding: "2.4cqw 5cqw 3.4cqw",
                     background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`,
                     boxShadow:
-                        "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22), 0 2cqw 5cqw rgba(0,44,68,.22)",
+                        "inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(217,238,255,.22)", // the light rim only, no drop shadow (owner)
                     color: "#ffffff",
                 }}
             >
@@ -815,7 +815,7 @@ function Challenge(props: Props) {
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: "3cqw",
+                            gap: "1.4cqw", // between the statement and the question (owner: tighter)
                             padding: "4cqw 6cqw",
                             boxSizing: "border-box",
                             textAlign: "center",
@@ -913,7 +913,7 @@ function Challenge(props: Props) {
                     } as React.CSSProperties
                 }
             >
-                {why || props.swipeHint}
+                {why || props.cardHint}
             </div>
 
             {/* The finale, under the gauge once it has moved to the middle */}
@@ -999,7 +999,8 @@ function FadeIn({
 
 ATMCreditScoreChallenge.defaultProps = {
     canvasView: "Start" as View,
-    swipeHint: "Swipe right for yes. Swipe left for no.",
+    cardHint:
+        "Swipe the card right for Yes or left for No. You can also tap a button.",
     yes: "Yes",
     no: "No",
     finale: "Congratulations, your score is now {score}!",
@@ -1016,11 +1017,11 @@ addPropertyControls(ATMCreditScoreChallenge, {
         options: ["Start", "Finale"],
         defaultValue: ATMCreditScoreChallenge.defaultProps.canvasView,
     },
-    swipeHint: {
+    cardHint: {
         type: ControlType.String,
         title: "Hint",
         displayTextArea: true,
-        defaultValue: ATMCreditScoreChallenge.defaultProps.swipeHint,
+        defaultValue: ATMCreditScoreChallenge.defaultProps.cardHint,
     },
     no: {
         type: ControlType.String,

@@ -1357,7 +1357,9 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
 
 "Can You Reach 760?" The score starts at 700 (Good). One card at a time asks a yes/no question about a money
 choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are plain Yes and No, with no icons
-(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. The owner laid out the page (heading, sub-heading, intro in
+(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. The hint under the buttons says what to swipe: "Swipe the card right for Yes or
+left for No. You can also tap a button." (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
+the layer's saved old text doesn't stick). The owner laid out the page (heading, sub-heading, intro in
 "you" voice, light mint background); the component sits under the Question stack.
 
 - **Scoring (owner):** +15 for a right choice, −40 for a missed or late payment, −30 for a maxed-out card or high
@@ -1385,7 +1387,8 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
   are Area Normal Black caps (owner), in two equal halves with the divider in the card's middle (owner). Caps
   text gets 0.15cqw of left padding to match the letter spacing CSS adds after the last letter, so the letters are
-  centred exactly (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
+  centred exactly (owner). The navy card has no drop shadow, only its light rim (owner). The question card has a teal 0.5cqw stroke, 1.4cqw
+  between the statement and the question (owner: tighter), and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
