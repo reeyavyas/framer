@@ -265,7 +265,7 @@ const ROUNDS: Round[] = [
                             background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`, // the navy card's colours, so the teal glass stands out on it (owner)
                         }}
                     >
-                        {[YOLK, MINT, GLACIER].map((col) => (
+                        {[YOLK, "#3bbfc0", GLACIER].map((col) => (
                             <span
                                 key={col}
                                 style={{

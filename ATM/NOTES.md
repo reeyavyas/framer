@@ -1490,7 +1490,7 @@ header, sub-header and other page copy in Framer.
 - **Round 3's browser (owner):** the top bar has the navy card's colours (navy to midnight; it was light teal, then
   light blue; the teal glass blended into light teal); the page behind the pop-up is dark teal `#046b68`; the browser is the whole card (no navy frame
   around it, owner: no frame inside a frame), its bar and page lined up with the other messages' insets; the mint
-  pop-up is centred and fills the page with room on all four sides; the card-number field is white.
+  pop-up is centred and fills the page with room on all four sides; the card-number field is white. The bar's three dots are egg yolk, light teal and glacier (owner).
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, with its handle on the page.
