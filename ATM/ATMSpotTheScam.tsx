@@ -27,6 +27,8 @@ const ZOOM = 1.45 // how much the glass magnifies
 const TOUR_STOP = 4500 // ms the tour rests on each clue (a tap moves on sooner)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
+const NUDGE_IDLE = 3000 // ms with no touch, while it's the user's turn, before the glass wiggles for attention
+const NUDGE_EVERY = 3500 // ms between wiggles while it stays untouched
 
 // The lens: one teal ring (the browser-search magnifier's rim gradient, as thick as the neck, which shares it; owner) round a
 // circular opening at LENS_X, LENS_Y (art units, the group's offset added), with that magnifier's glass shine
@@ -424,6 +426,8 @@ function Lesson(props: Props) {
     const cardRef = React.useRef<HTMLDivElement>(null)
     const lensRef = React.useRef<HTMLDivElement>(null)
     const popRef = React.useRef<HTMLDivElement>(null)
+    const nudgeRef = React.useRef<HTMLDivElement>(null)
+    const touched = React.useRef(0) // when the card was last touched (ms)
     const copyRef = React.useRef<HTMLDivElement>(null)
     const phaseRef = React.useRef(phase)
     const foundRef = React.useRef(found)
@@ -669,6 +673,47 @@ function Lesson(props: Props) {
         }
     }, [round, ready])
 
+    // While it's the user's turn and nobody touches the card, the glass wiggles now and then to say "pick me up":
+    // a tilt to and fro about the lens with a small lift. Not while the inactivity overlay is open, nor with
+    // reduced motion.
+    React.useEffect(() => {
+        if (phase !== "hunt" || isCanvas || reduceMotion) return
+        touched.current = performance.now()
+        let last = 0
+        const id = window.setInterval(() => {
+            const now = performance.now()
+            if (
+                drag.current ||
+                (window as any).__systemOverlayOpen ||
+                now - touched.current < NUDGE_IDLE ||
+                now - last < NUDGE_EVERY
+            )
+                return
+            last = now
+            nudgeRef.current?.animate(
+                [
+                    { transform: "none" },
+                    {
+                        transform: "translateY(-1.6cqw) rotate(-12deg)",
+                        offset: 0.2,
+                    },
+                    {
+                        transform: "translateY(-1.6cqw) rotate(9deg)",
+                        offset: 0.4,
+                    },
+                    {
+                        transform: "translateY(-0.8cqw) rotate(-6deg)",
+                        offset: 0.6,
+                    },
+                    { transform: "rotate(3deg)", offset: 0.8 },
+                    { transform: "none" },
+                ],
+                { duration: 900, easing: "ease-in-out" }
+            )
+        }, 250)
+        return () => window.clearInterval(id)
+    }, [phase])
+
     // A new round slides in
     React.useLayoutEffect(() => {
         const wrap = wrapRef.current
@@ -708,6 +753,7 @@ function Lesson(props: Props) {
         }
     }
     const onMove = (e: React.PointerEvent) => {
+        if (drag.current) touched.current = performance.now()
         const d = drag.current
         if (!d || phaseRef.current !== "hunt") return
         const p = toLocal(e.clientX, e.clientY)
@@ -849,6 +895,8 @@ function Lesson(props: Props) {
         <div
             onPointerDown={() => {
                 if (phaseRef.current === "tour") skip.current = true // a tap anywhere moves the tour on
+                touched.current = performance.now() // any touch holds off the wiggle...
+                nudgeRef.current?.getAnimations().forEach((a) => a.cancel()) // ...and stops one at once
             }}
             style={
                 {
@@ -893,45 +941,47 @@ function Lesson(props: Props) {
                         pointerEvents: "none",
                     }}
                 >
-                    <div ref={popRef}>
-                        <div
-                            aria-hidden="true"
-                            style={{
-                                position: "absolute",
-                                left: `${-R}cqw`,
-                                top: `${-R}cqw`,
-                                width: `${2 * R}cqw`,
-                                height: `${2 * R}cqw`,
-                                borderRadius: "50%",
-                                overflow: "hidden",
-                                background: NAVY,
-                            }}
-                        >
+                    <div ref={nudgeRef}>
+                        <div ref={popRef}>
                             <div
-                                ref={copyRef}
+                                aria-hidden="true"
                                 style={{
                                     position: "absolute",
-                                    left: "50%",
-                                    top: "50%",
-                                    transformOrigin: "0 0",
+                                    left: `${-R}cqw`,
+                                    top: `${-R}cqw`,
+                                    width: `${2 * R}cqw`,
+                                    height: `${2 * R}cqw`,
+                                    borderRadius: "50%",
+                                    overflow: "hidden",
+                                    background: NAVY,
                                 }}
                             >
-                                {card(true)}
+                                <div
+                                    ref={copyRef}
+                                    style={{
+                                        position: "absolute",
+                                        left: "50%",
+                                        top: "50%",
+                                        transformOrigin: "0 0",
+                                    }}
+                                >
+                                    {card(true)}
+                                </div>
                             </div>
+                            <svg
+                                viewBox={VB.join(" ")}
+                                aria-hidden="true"
+                                style={{
+                                    position: "absolute",
+                                    left: `${(VB[0] - LENS_X) * K}cqw`,
+                                    top: `${(VB[1] - LENS_Y) * K}cqw`,
+                                    width: `${VB[2] * K}cqw`,
+                                    height: `${VB[3] * K}cqw`,
+                                    overflow: "visible",
+                                }}
+                                dangerouslySetInnerHTML={{ __html: lensMarkup }}
+                            />
                         </div>
-                        <svg
-                            viewBox={VB.join(" ")}
-                            aria-hidden="true"
-                            style={{
-                                position: "absolute",
-                                left: `${(VB[0] - LENS_X) * K}cqw`,
-                                top: `${(VB[1] - LENS_Y) * K}cqw`,
-                                width: `${VB[2] * K}cqw`,
-                                height: `${VB[3] * K}cqw`,
-                                overflow: "visible",
-                            }}
-                            dangerouslySetInnerHTML={{ __html: lensMarkup }}
-                        />
                     </div>
                 </div>
             </div>
@@ -1095,7 +1145,11 @@ function Lesson(props: Props) {
 function Count({ label, value }: { label: string; value: string }) {
     return (
         <div style={{ display: "flex", alignItems: "baseline", gap: "2cqw" }}>
-            <span style={{ fontSize: "3.8cqw", color: TEAL }}>{label}</span>
+            <span
+                style={{ fontFamily: black, fontSize: "3.8cqw", color: TEAL }}
+            >
+                {label}
+            </span>
             <span
                 style={{
                     fontFamily: display,

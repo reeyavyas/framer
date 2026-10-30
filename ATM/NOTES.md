@@ -1490,8 +1490,13 @@ header, sub-header and other page copy in Framer.
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, with its handle on the page.
 - **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
-  in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal label beside a big P22
-  Mackinac figure).
+  in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal Area Normal Black label,
+  owner asked for bolder, beside a big P22 Mackinac figure).
+- **Attention wiggle (owner):** while it's the user's turn, after 3 s with no touch anywhere on the lesson
+  (`NUDGE_IDLE`) the glass tilts to and fro about its lens with a small lift (0.9 s), again every 3.5 s
+  (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not during the demo, tour or
+  end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
+  after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
   on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
   gradient, a glacier circle with the number, the clue's name in white Area Normal Black). Empty cards are faint
