@@ -1265,7 +1265,7 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   to /atm. Seen once at the start of a new run: for one frame the new rate's reveal showed before "Watch your
   $1,000 grow…" (the rate changed on touch, but the run's finished flag only cleared after render). Fixed: a touch
   clears finished, year and doubled together with the new rate; checked locally frame by frame (12% reveal →
-  "Watch…" with nothing between). Not yet seen live.
+  "Watch…" with nothing between). Live, frame by frame: 12% → 8% and 8% → 4% went straight to "Watch…".
   Live after the next publish: every pick (A-D) held a 284px box and 407px lanes from the first callout to the
   reveal, timed every 50-100ms; Pick Again worked between runs. The very first run after the publish read 244px
   once (probably the old build still cached); a fresh reload of the same pick held 284px throughout.
