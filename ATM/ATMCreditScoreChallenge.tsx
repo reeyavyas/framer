@@ -191,7 +191,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1150
+ * @framerIntrinsicHeight 1214
  */
 export default function ATMCreditScoreChallenge(props: Props) {
     // keyed on the canvas view, so switching it on the canvas starts over in that view
@@ -565,7 +565,7 @@ function Challenge(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "2.4cqw",
+                    gap: "3.6cqw", // between the gauge, the hint, the card and the buttons (owner: more air)
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -778,7 +778,9 @@ function Challenge(props: Props) {
                         aria-label={`${turn.again ? card.again[0] : card.story} ${turn.again ? card.again[1] : card.ask}`}
                         onPointerDown={(e) => {
                             if (busy.current) return
-                            e.currentTarget.setPointerCapture(e.pointerId)
+                            try {
+                                e.currentTarget.setPointerCapture(e.pointerId)
+                            } catch {} // a pointer already gone (a very quick tap) has nothing to capture
                             e.currentTarget
                                 .getAnimations()
                                 .forEach((a) => a.cancel())

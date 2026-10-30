@@ -1403,8 +1403,20 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 - **Code:** `ATMCreditScoreChallenge.tsx`. Canvas (Start / Finale) picks what the Framer canvas shows (it remounts on a
   change); the live page always starts at the first card. Hint, No, Yes, Finale ({score} is the final score), Done and When Done are
   properties (renamed from the first draft's Do / Skip, so the layer's saved first-draft values don't stick).
-- **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1150 (about 40 px clear of the 1920
-  bottom).
+- **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1214 (about 45 px clear of the 1920
+  bottom; owner shortened the sub-header to "…Make choices that help it grow.", freeing 65 px). Gaps between the
+  gauge, hint, card and buttons are 3.6cqw (owner: more air); the card takes any spare height.
+- **Live test (30 Oct, 1080 × 1920, before the spacing change):** real fonts load (Area Normal, P22 Mackinac);
+  all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. A real swipe right on
+  card 1 scores 700 → 715 with the teal chip and its why line; a short drag springs back with no choice; Yes on the
+  headphones card drops to 685 with a coral chip; the rest of the deck ends at 745 with Very Good lit and the
+  console card back; a swipe left on it reaches 760 and the finale (cards and buttons fade and can't be tapped,
+  gauge to the middle, "Congratulations, your score is now 760!", Done 182 px above the bottom). A perfect run ends
+  at 790. A double tap on Yes counts once. Done goes to `/complete` ("Nicely done! You've successfully completed
+  CREDIT SCORE CHALLENGE"), which goes to `/atm-start` after 5 s; the X goes to `/atm-start`. Not checked: the
+  inactivity overlay on this page (it's the shared component), reduced motion. Test-browser quirk: when the pane
+  draws no frames between actions, the card's fly-off animation never finishes and the next card waits; a kiosk
+  screen always draws, so this only matters for automated tests (use real taps with screenshots between).
 - **Local check (30 Oct, before Framer):** rendered at 920 × 1150 with a stand-in for Framer's module: a swipe right
   scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
   the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.
