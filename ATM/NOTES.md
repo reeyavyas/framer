@@ -1357,7 +1357,7 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
 
 "Can You Reach 760?" The score starts at 700 (Good). One card at a time asks a yes/no question about a money
 choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are plain Yes and No, with no icons
-(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. Above the card, the hint says what to swipe, as one paragraph: 'Swipe the question
+(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); there are no stamps on the card while dragging (owner took the YES / NO stamps out). Above the card, the hint says what to swipe, as one paragraph: 'Swipe the question
 card right for “Yes” or left for “No.” You can also tap a button below.' (owner's wording; the hint keeps any line
 break typed in it). Order (owner): gauge, hint, question card, No / Yes buttons. (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
 the layer's saved old text doesn't stick). The owner laid out the page (heading, sub-heading, intro in
@@ -1365,11 +1365,14 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 
 - **Scoring (owner):** +15 for a right choice, −40 for a missed or late payment, −30 for a maxed-out card or high
   balance. All six cards are played, so a perfect run ends at **790**; the goal is "at least 760". If the deck ends
-  under 760, the cards they got wrong come back reworded (all six, reworded, if none were wrong) until the score is
-  760 or more. 790 stays inside Very Good (740–799), so every finish lands in the same band.
+  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more. Never
+  the same question twice (owner): each card has four scenarios and takes its next unused one each time it's dealt,
+  24 in all. Missing all six first-round cards (490) and then answering everything right uses exactly all 24 to
+  reach 760 (checked locally); only a run with even more misses would see a card's scenarios start over. 790 stays inside Very Good (740–799), so every finish lands in the same band.
 - **The cards** alternate right answers (yes, no, yes, no, yes, no) so swiping one way can't win. They cover the
   four actions: pay on time, keep balances low, don't miss a payment, don't max out. The texts are in code
-  (`CARDS`), not layer properties; change them by prompt.
+  (`CARDS`, four scenarios each), not layer properties; change them by prompt. The autopay card's chip is "Payment
+  on time" and the balance card's "Paid down your balance", so they fit every scenario.
 - **Gauge heads-up display (owner):** ATMGauge's art on a navy card (the Money Double card's look) at the top. Each
   of its five segments is one band (Poor 300–579, Fair 580–669, Good 670–739, Very Good 740–799, Excellent 800+),
   and the needle sits at the score's place within its band. Band names sit round the arc (owner asked for them as

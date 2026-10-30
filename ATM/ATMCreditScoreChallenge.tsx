@@ -8,9 +8,9 @@ import { gsap } from "gsap"
 // about a money choice as a yes/no question; swipe right (or tap Yes) for yes, left (or No) for no. A right choice adds 15,
 // a wrong one costs 40 (a missed payment) or 30 (a maxed-out card). The gauge at the top is the heads-up display:
 // its needle springs to the score, the band names round its arc light up as the score crosses into a band, and a
-// chip by the score says what happened ("Paid on time +15"). A line under the buttons says why. The whole deck
-// is played (a perfect run ends at 790); if it ends under 760, the cards they got wrong come back reworded, and so
-// on until the score is 760 or more. Then the cards clear, the gauge glides to the middle and the finale line and
+// chip by the score says what happened ("Paid on time +15"). The hint line above the card then says why. The whole deck
+// is played (a perfect run ends at 790); if it ends under 760, the cards they got wrong come back as new questions,
+// and so on until the score is 760 or more. Then the cards clear, the gauge glides to the middle and the finale line and
 // Done show. No background of its own.
 //
 // The gauge is ATMGauge's art (ATM/artwork/vectors/gauge/build.py, export_anim): five 36° segments, one per band,
@@ -51,11 +51,11 @@ const needleAt = (s: number) => {
     )
 }
 
-// The cards. `go` is the right swipe ("do" = right, "skip" = left). A card answered wrong comes back later as `again`.
+// The cards. `go` is the right swipe ("do" = right, "skip" = left). Each has four scenarios: the first round deals
+// the first, and every time a card is dealt again (after a wrong answer) it takes its next unused one, so a run
+// never shows the same question twice.
 type Card = {
-    story: string
-    ask: string
-    again: [string, string]
+    versions: [string, string][] // [story, question]
     go: "do" | "skip"
     right: string
     rightWhy: string
@@ -65,9 +65,12 @@ type Card = {
 }
 const CARDS: Card[] = [
     {
-        story: "Your phone bill is due tomorrow.",
-        ask: "Pay it now?",
-        again: ["Your car payment is due on Friday.", "Pay it on time?"],
+        versions: [
+            ["Your phone bill is due tomorrow.", "Pay it now?"],
+            ["Your car payment is due on Friday.", "Pay it on time?"],
+            ["Your internet bill is due today.", "Pay it before the deadline?"],
+            ["Your rent is due on the 1st.", "Pay it by the due date?"],
+        ],
         go: "do",
         right: "Paid on time",
         rightWhy: "Paying on time is the biggest part of your score.",
@@ -76,11 +79,23 @@ const CARDS: Card[] = [
         cost: 40,
     },
     {
-        story: "New headphones cost $900. Your card's limit is $1,000.",
-        ask: "Put them on your card?",
-        again: [
-            "A game console costs $450. Your card's limit is $500.",
-            "Put it on your card?",
+        versions: [
+            [
+                "New headphones cost $900. Your card's limit is $1,000.",
+                "Put them on your card?",
+            ],
+            [
+                "A game console costs $450. Your card's limit is $500.",
+                "Put it on your card?",
+            ],
+            [
+                "A new phone costs $700. Your card's limit is $800.",
+                "Charge it all to your card?",
+            ],
+            [
+                "A bike costs $550. Your card's limit is $600.",
+                "Use almost all your limit on it?",
+            ],
         ],
         go: "skip",
         right: "Kept your balance low",
@@ -91,25 +106,46 @@ const CARDS: Card[] = [
         cost: 30,
     },
     {
-        story: "You have a busy month coming up.",
-        ask: "Set up autopay for your card bill?",
-        again: [
-            "You keep forgetting due dates.",
-            "Set a reminder for your bills?",
+        versions: [
+            [
+                "You have a busy month coming up.",
+                "Set up autopay for your card bill?",
+            ],
+            [
+                "You keep forgetting due dates.",
+                "Set a reminder for your bills?",
+            ],
+            [
+                "You'll be on a trip when your bill is due.",
+                "Pay it before you leave?",
+            ],
+            [
+                "Your bank app can send due-date alerts.",
+                "Turn on payment alerts?",
+            ],
         ],
         go: "do",
-        right: "Autopay on",
-        rightWhy: "With autopay, you never miss a due date.",
+        right: "Payment on time",
+        rightWhy: "Planning ahead means you never miss a due date.",
         wrong: "Missed a payment",
         wrongWhy: "One forgotten bill can drop your score fast.",
         cost: 40,
     },
     {
-        story: "There's a big holiday sale.",
-        ask: "Max out your card on gifts?",
-        again: [
-            "Your favourite store has a sale.",
-            "Spend right up to your card's limit?",
+        versions: [
+            ["There's a big holiday sale.", "Max out your card on gifts?"],
+            [
+                "Your favorite store has a sale.",
+                "Spend right up to your card's limit?",
+            ],
+            [
+                "Your friends are planning a big trip.",
+                "Max out your card to pay for it?",
+            ],
+            [
+                "A new game just came out with lots of extras.",
+                "Max out your card on all of them?",
+            ],
         ],
         go: "skip",
         right: "Stayed under your limit",
@@ -119,22 +155,40 @@ const CARDS: Card[] = [
         cost: 30,
     },
     {
-        story: "Your card statement just arrived.",
-        ask: "Pay off the whole balance?",
-        again: ["You have $200 left on your card.", "Pay it down to zero?"],
+        versions: [
+            ["Your card statement just arrived.", "Pay off the whole balance?"],
+            ["You have $200 left on your card.", "Pay it down to zero?"],
+            [
+                "You got paid and have extra this week.",
+                "Use some to pay down your card?",
+            ],
+            [
+                "Your card balance is $150 and you have the money.",
+                "Pay it off in full?",
+            ],
+        ],
         go: "do",
-        right: "Paid in full",
+        right: "Paid down your balance",
         rightWhy: "A low balance shows you use credit wisely.",
         wrong: "Balance stayed high",
         wrongWhy: "Carrying a big balance can lower your score.",
         cost: 30,
     },
     {
-        story: "Concert tickets just went on sale.",
-        ask: "Skip this month's card payment to buy them?",
-        again: [
-            "New sneakers just dropped.",
-            "Skip your phone bill to buy them?",
+        versions: [
+            [
+                "Concert tickets just went on sale.",
+                "Skip this month's card payment to buy them?",
+            ],
+            ["New sneakers just dropped.", "Skip your phone bill to buy them?"],
+            [
+                "A new video game is on sale.",
+                "Skip your card payment to buy it?",
+            ],
+            [
+                "Your friends want to go out to eat.",
+                "Skip a bill payment to join them?",
+            ],
         ],
         go: "skip",
         right: "Paid on time",
@@ -145,9 +199,9 @@ const CARDS: Card[] = [
         cost: 40,
     },
 ]
-// A turn in the deck: which card, and whether it's the reworded one
-type Turn = { c: number; again: boolean }
-const FIRST_DECK: Turn[] = CARDS.map((_, c) => ({ c, again: false }))
+// A turn in the deck: which card, and which of its scenarios
+type Turn = { c: number; v: number }
+const FIRST_DECK: Turn[] = CARDS.map((_, c) => ({ c, v: 0 }))
 
 // The gauge drawing; its pivot (and the arch's centre) is at (0, 0), the arch's outer radius 1000
 const VIEWBOX = "-1242 -1092 2484 1378"
@@ -215,6 +269,7 @@ function Challenge(props: Props) {
     const [shown, setShown] = React.useState(showFinale ? 790 : START) // the number as it counts
     const [deck, setDeck] = React.useState<Turn[]>(FIRST_DECK)
     const [missed, setMissed] = React.useState<number[]>([])
+    const dealt = React.useRef(CARDS.map(() => 1)) // scenarios each card has used so far
     const [chip, setChip] = React.useState<{
         id: number
         text: string
@@ -228,8 +283,6 @@ function Challenge(props: Props) {
     const svgRef = React.useRef<SVGSVGElement | null>(null)
     const hudRef = React.useRef<HTMLDivElement>(null)
     const cardRef = React.useRef<HTMLDivElement>(null)
-    const doStampRef = React.useRef<HTMLDivElement>(null)
-    const skipStampRef = React.useRef<HTMLDivElement>(null)
     const chipRef = React.useRef<HTMLSpanElement>(null)
     const labelRefs = React.useRef<(HTMLSpanElement | null)[]>([])
     const drag = React.useRef<{ x: number; dx: number; id: number } | null>(
@@ -442,18 +495,6 @@ function Challenge(props: Props) {
         return () => anim.cancel()
     }, [finished])
 
-    const stamps = (dx: number) => {
-        const w = cardRef.current?.offsetWidth || 1
-        if (doStampRef.current)
-            doStampRef.current.style.opacity = String(
-                Math.max(0, Math.min(1, dx / (w * 0.25)))
-            )
-        if (skipStampRef.current)
-            skipStampRef.current.style.opacity = String(
-                Math.max(0, Math.min(1, -dx / (w * 0.25)))
-            )
-    }
-
     // A choice: the card flies off that way, then the score, chip and why line follow and the next card comes up.
     const choose = (pick: "do" | "skip") => {
         const el = cardRef.current
@@ -466,11 +507,16 @@ function Challenge(props: Props) {
             const next = score + (ok ? GAIN : -card.cost)
             const nowMissed = ok ? missed : [...missed, turn.c]
             let rest = deck.slice(1)
-            // The deck's done: under the goal, the cards they got wrong come back reworded (all of them if none were)
+            // The deck's done: under the goal, the cards they got wrong come back (all of them if none were), each
+            // with a scenario not shown yet
             if (!rest.length && next < GOAL) {
                 rest = (
                     nowMissed.length ? nowMissed : CARDS.map((_, c) => c)
-                ).map((c) => ({ c, again: true }))
+                ).map((c) => ({
+                    c,
+                    // shortcut: after a card's four scenarios it starts over; only a run with 4+ misses on one card gets there
+                    v: dealt.current[c]++ % CARDS[c].versions.length,
+                }))
                 setMissed([])
             } else setMissed(nowMissed)
             setScore(next)
@@ -535,19 +581,6 @@ function Challenge(props: Props) {
         fontFamily: black,
         fontSize: "4.2cqw",
         lineHeight: 1,
-    }
-    const stamp: React.CSSProperties = {
-        position: "absolute",
-        top: "4cqw",
-        padding: "1cqw 2.4cqw",
-        borderRadius: "1.6cqw",
-        border: "0.6cqw solid",
-        fontFamily: black,
-        fontSize: "4.6cqw",
-        lineHeight: 1,
-        letterSpacing: "0.2cqw",
-        opacity: 0,
-        pointerEvents: "none",
     }
     const fade: React.CSSProperties = {
         opacity: finished ? 0 : 1,
@@ -772,10 +805,10 @@ function Challenge(props: Props) {
                 )}
                 {card && turn && (
                     <div
-                        key={`${turn.c}-${turn.again}-${deck.length}`}
+                        key={`${turn.c}-${turn.v}-${deck.length}`}
                         ref={cardRef}
                         role="group"
-                        aria-label={`${turn.again ? card.again[0] : card.story} ${turn.again ? card.again[1] : card.ask}`}
+                        aria-label={card.versions[turn.v].join(" ")}
                         onPointerDown={(e) => {
                             if (busy.current) return
                             try {
@@ -796,7 +829,6 @@ function Challenge(props: Props) {
                             if (!d || d.id !== e.pointerId) return
                             d.dx = e.clientX - d.x
                             e.currentTarget.style.transform = `translateX(${d.dx}px) rotate(${d.dx * 0.04}deg)`
-                            stamps(d.dx)
                         }}
                         onPointerUp={(e) => {
                             const d = drag.current
@@ -808,7 +840,6 @@ function Challenge(props: Props) {
                             // not far enough: it springs back
                             const from = el.style.transform
                             el.style.transform = ""
-                            stamps(0)
                             if (from && !reduceMotion)
                                 el.animate(
                                     [
@@ -824,7 +855,6 @@ function Challenge(props: Props) {
                         onPointerCancel={(e) => {
                             drag.current = null
                             e.currentTarget.style.transform = ""
-                            stamps(0)
                         }}
                         style={{
                             position: "absolute",
@@ -853,7 +883,7 @@ function Challenge(props: Props) {
                                 color: TEAL,
                             }}
                         >
-                            {turn.again ? card.again[0] : card.story}
+                            {card.versions[turn.v][0]}
                         </div>
                         <div
                             style={
@@ -866,29 +896,7 @@ function Challenge(props: Props) {
                                 } as React.CSSProperties
                             }
                         >
-                            {turn.again ? card.again[1] : card.ask}
-                        </div>
-                        <div
-                            ref={doStampRef}
-                            style={{
-                                ...stamp,
-                                left: "4cqw",
-                                color: TEAL,
-                                transform: "rotate(-12deg)",
-                            }}
-                        >
-                            YES
-                        </div>
-                        <div
-                            ref={skipStampRef}
-                            style={{
-                                ...stamp,
-                                right: "4cqw",
-                                color: MIDNIGHT,
-                                transform: "rotate(12deg)",
-                            }}
-                        >
-                            NO
+                            {card.versions[turn.v][1]}
                         </div>
                     </div>
                 )}
