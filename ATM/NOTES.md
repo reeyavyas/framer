@@ -1241,7 +1241,10 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
 - **No layout shift mid-race (30 Oct, owner):** the lanes used to shrink when the taller reveal replaced the callouts.
   The reveal is now always laid out in the white box (hidden during the race, the callout stacked over it), so the box
   starts at its finished height and the lanes keep one size. Checked locally: box 244px and lanes 453px through every
-  callout and the reveal, for all four picks.
+  callout and the reveal, for all four picks. Live (30 Oct): picks A and B held 244px box / 447px lanes through
+  every callout and the reveal; counter read "52 / 52 weeks in a year" and the reveal opened with the caps heading.
+- **Race box outline (30 Oct, owner):** the half-white callout box blended into the background, so it now has the
+  reveal's teal outline the whole race, and the callouts sit at the top of the box instead of the middle.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key

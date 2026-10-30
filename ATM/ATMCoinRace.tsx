@@ -526,9 +526,7 @@ export default function ATMCoinRace(props: Props) {
                         background: finished
                             ? "#ffffff"
                             : "rgba(255,255,255,.45)",
-                        boxShadow: finished
-                            ? `inset 0 0 0 0.5cqw ${TEAL}`
-                            : "none",
+                        boxShadow: `inset 0 0 0 0.5cqw ${TEAL}`, // the callouts need it too, or they blend into the background
                         fontSize: "3.87cqw", // 35.6px at the race's 920px width
                         lineHeight: 1.35,
                         textWrap: "pretty",
@@ -568,9 +566,7 @@ export default function ATMCoinRace(props: Props) {
                         </span>
                     </div>
                     {!finished && (
-                        <span
-                            style={{ gridArea: "1 / 1", alignSelf: "center" }}
-                        >
+                        <span style={{ gridArea: "1 / 1", alignSelf: "start" }}>
                             {bold(callout)}
                         </span>
                     )}
