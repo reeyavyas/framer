@@ -1001,7 +1001,7 @@ function FadeIn({
 ATMCreditScoreChallenge.defaultProps = {
     canvasView: "Start" as View,
     cardHint:
-        "Swipe the question card right for “Yes” or left for “No.”\nYou can also tap a button below.",
+        "Swipe the question card right for “Yes” or left for “No.” You can also tap a button below.",
     yes: "Yes",
     no: "No",
     finale: "Congratulations, your score is now {score}!",
