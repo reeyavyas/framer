@@ -1375,7 +1375,7 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   straight: curved text along the arc was offered, but at 24 px "VERY GOOD" and "EXCELLENT" are each longer than
   their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Poor and Excellent are centred
   on their blocks' height (owner), not on the arc; Fair, Good and Very Good stay on the arc. Your score and Goal
-  are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and its story line is Area Normal
+  are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the

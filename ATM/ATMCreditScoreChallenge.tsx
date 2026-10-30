@@ -787,7 +787,7 @@ function Challenge(props: Props) {
                             borderRadius: "4cqw",
                             background: "#ffffff",
                             border: `0.5cqw solid ${TEAL}`,
-                            boxShadow: "0 2cqw 5cqw rgba(0,44,68,.18)",
+                            boxShadow: "0 1.2cqw 6cqw rgba(0,44,68,.08)", // soft (owner)
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
