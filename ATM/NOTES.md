@@ -1373,8 +1373,10 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   labels above the gauge): Area Normal Black caps in pill frames, mint text and a mint edge at full strength (owner:
   bolder, caps, not faded, further from the arc), the current band a yolk pill with midnight text. They stay
   straight: curved text along the arc was offered, but at 24 px "VERY GOOD" and "EXCELLENT" are each longer than
-  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Poor and Excellent are centred
-  on their blocks' height (owner), not on the arc; Fair, Good and Very Good stay on the arc. Your score and Goal
+  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Every band name sits the same
+  110 gauge units (about 23 px) from its block (owner): Poor, Fair, Very Good and Excellent centred on their block's
+  height (its bounding box, side face included) and out from its outer edge, Good centred over its block. Measured
+  in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
   are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
