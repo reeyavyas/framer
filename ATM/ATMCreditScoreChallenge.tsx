@@ -682,9 +682,9 @@ function Challenge(props: Props) {
                 />
                 <div
                     style={{
-                        display: "flex",
-                        alignItems: "flex-end",
-                        justifyContent: "space-around",
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1px 1fr", // two equal halves, so the divider sits in the middle
+                        alignItems: "end",
                         textAlign: "center",
                         whiteSpace: "nowrap",
                     }}

@@ -1383,7 +1383,7 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   and Very Good sit beside the upper part of their tilted block's outer side (owner, raised three times from its middle;
   `BESIDE` y -890): centred on the block's whole height they lined up with the gap below it. Measured
   in the browser, not from the arc's maths: the gloss art's blocks don't sit where the plain arc would put them. Your score and Goal
-  are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
+  are Area Normal Black caps (owner), in two equal halves with the divider in the card's middle (owner). The question card has a teal 0.5cqw stroke and a soft shadow (owner: `0 1.2cqw 6cqw`, navy at 8%), and its story line is Area Normal
   Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
