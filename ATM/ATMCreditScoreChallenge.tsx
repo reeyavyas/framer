@@ -732,6 +732,26 @@ function Challenge(props: Props) {
                 </div>
             </div>
 
+            <div
+                data-fade=""
+                aria-live="polite"
+                style={
+                    {
+                        ...fade,
+                        flex: "none",
+                        minHeight: "10cqw", // room for two lines, so the cards keep one size
+                        whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
+                        padding: "0 2cqw",
+                        textAlign: "center",
+                        fontSize: "3.7cqw",
+                        lineHeight: 1.35,
+                        textWrap: "pretty",
+                    } as React.CSSProperties
+                }
+            >
+                {why || props.cardHint}
+            </div>
+
             {/* The card stack: a blank card behind the one to swipe */}
             <div
                 data-fade=""
@@ -874,26 +894,6 @@ function Challenge(props: Props) {
 
             <div
                 data-fade=""
-                aria-live="polite"
-                style={
-                    {
-                        ...fade,
-                        flex: "none",
-                        minHeight: "10cqw", // room for two lines, so the cards keep one size
-                        whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
-                        padding: "0 2cqw",
-                        textAlign: "center",
-                        fontSize: "3.7cqw",
-                        lineHeight: 1.35,
-                        textWrap: "pretty",
-                    } as React.CSSProperties
-                }
-            >
-                {why || props.cardHint}
-            </div>
-
-            <div
-                data-fade=""
                 style={{ ...fade, flex: "none", display: "flex", gap: "3cqw" }}
             >
                 <button
@@ -1001,7 +1001,7 @@ function FadeIn({
 ATMCreditScoreChallenge.defaultProps = {
     canvasView: "Start" as View,
     cardHint:
-        "Swipe the card right for “Yes” or left for “No.”\nYou can also tap a button below.",
+        "Swipe the question card right for “Yes” or left for “No.”\nYou can also tap a button below.",
     yes: "Yes",
     no: "No",
     finale: "Congratulations, your score is now {score}!",
