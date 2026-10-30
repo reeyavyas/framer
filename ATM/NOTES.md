@@ -1234,9 +1234,8 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   the panel didn't show, so Idle was set to 10 on that layer by hand; live it now leaves after 10.0 s.
 - **A year is 52 weeks (30 Oct, owner):** to tie the race to "Fast-forward a year", the counter reads "12 / 52 weeks
   in a year", and when the year ends the white box opens with "AFTER ONE YEAR (52 WEEKS)" (caps, owner) in teal above the
-  reveal, Each of the box's three lines (heading, black reveal, teal compare) is trimmed
-  with `text-box: trim-both cap alphabetic`, so the gaps are exactly the margins: 2cqw between the lines (18.4px heading to
-  black, 18.4px black to teal) and 24.5px top and bottom, measured in all four races. Needs Chrome 133+ (the owner's is 156); older browsers fall back to uneven leading.
+  reveal. The box's spacing is as it was before (tried evening it with a top nudge and with text-box trimming; the
+  owner asked for it back as it was and doesn't want line-height tweaks chased).
   Both are in code, not layer properties, so all four race variants get them and the owner's reveal texts are untouched.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
