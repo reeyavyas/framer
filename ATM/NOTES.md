@@ -1357,8 +1357,8 @@ shows the whole time, with no idle timer. The owner will restyle; code changes c
 
 "Can You Reach 760?" The score starts at 700 (Good). One card at a time asks a yes/no question about a money
 choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are plain Yes and No, with no icons
-(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. The hint under the buttons says what to swipe: "Swipe the card right for Yes or
-left for No. You can also tap a button." (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
+(owner turned down "Do it" / "Skip it" and the ✗ / ✓ icons); the drag stamps read YES and NO. The hint under the buttons says what to swipe, on two lines: 'Swipe the card right
+for “Yes” or left for “No.”' then 'You can also tap a button below.' (owner's wording; the hint keeps typed line breaks) (owner: the first wording wasn't clear; the property is `cardHint`, renamed so
 the layer's saved old text doesn't stick). The owner laid out the page (heading, sub-heading, intro in
 "you" voice, light mint background); the component sits under the Question stack.
 

@@ -905,6 +905,7 @@ function Challenge(props: Props) {
                         ...fade,
                         flex: "none",
                         minHeight: "10cqw", // room for two lines, so the cards keep one size
+                        whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
                         padding: "0 2cqw",
                         textAlign: "center",
                         fontSize: "3.7cqw",
@@ -1000,7 +1001,7 @@ function FadeIn({
 ATMCreditScoreChallenge.defaultProps = {
     canvasView: "Start" as View,
     cardHint:
-        "Swipe the card right for Yes or left for No. You can also tap a button.",
+        "Swipe the card right for “Yes” or left for “No.”\nYou can also tap a button below.",
     yes: "Yes",
     no: "No",
     finale: "Congratulations, your score is now {score}!",
