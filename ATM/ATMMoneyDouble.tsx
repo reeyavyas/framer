@@ -29,8 +29,8 @@ const LIGHT_TEAL = "#3bbfc0"
 const MINT = "#bce2d7"
 const money = (n: number) => "$" + n.toLocaleString("en-US")
 // A value in a box as wide as its widest value, centred, so the row's spacing holds still as the numbers change
-const fit = (value: React.ReactNode, widest: string) => (
-    <span style={{ display: "inline-grid", justifyItems: "center" }}>
+const fit = (value: React.ReactNode, widest: string, align = "center") => (
+    <span style={{ display: "inline-grid", justifyItems: align }}>
         <span style={{ gridArea: "1 / 1", visibility: "hidden" }}>
             {widest}
         </span>
@@ -793,7 +793,7 @@ export default function ATMMoneyDouble(props: Props) {
                         <div
                             style={{ ...big, fontSize: "6.6cqw", color: YOLK }}
                         >
-                            {fit(year, "36")}
+                            {fit(year, "36", "end")}
                             <span
                                 style={{
                                     fontFamily:

@@ -309,7 +309,7 @@ export default function ATMCoinRace(props: Props) {
                         }}
                     >
                         {" "}
-                        / {WEEKS} weeks
+                        / {WEEKS} weeks in a year
                     </span>
                 </div>
                 <div
@@ -537,6 +537,18 @@ export default function ATMCoinRace(props: Props) {
             >
                 {finished ? (
                     <>
+                        <span
+                            style={{
+                                display: "block",
+                                marginBottom: "1cqw",
+                                fontFamily: '"Area Normal Black", sans-serif',
+                                fontSize: "3.26cqw",
+                                lineHeight: 1,
+                                color: TEAL,
+                            }}
+                        >
+                            After one year ({WEEKS} weeks)
+                        </span>
                         <span>{bold(reveal)}</span>
                         <span
                             style={{
