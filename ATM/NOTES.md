@@ -1247,6 +1247,12 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   reveal's teal outline the whole race, and the callouts sit at the top of the box instead of the middle.
 - **Bolder labels (30 Oct, owner):** "/ 52 weeks in a year" and "Earned so far" are in Area Normal Black (the
   page already loads it for the reveal heading); checked on the canvas.
+- **Same lane size for every pick (30 Oct):** live, A-C held a 244px box / 447px lanes but D's longer reveal made a
+  284px box / 407px lanes (steady within each run, but different between picks). All four reveals are now laid out
+  hidden in the box, so it takes the tallest (D's) for every pick. Live checks after that publish: C and D runs,
+  teal outline (4.6px) through the race, callouts 24px from the box top, Pick Again back to the cards with the pick
+  kept, Done's idle redirect to /complete then /atm-start, both labels in Area Normal Black. Money Double's "0 / 36"
+  now hugs (0 ends where "/ 36" starts).
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key

@@ -221,15 +221,13 @@ export default function ATMCoinRace(props: Props) {
         }
     }, [finished, isCanvas, props.idle])
 
-    const reveal = [props.revealA, props.revealB, props.revealC, props.revealD][
-        p
-    ]
-    const compare = [
+    const reveals = [props.revealA, props.revealB, props.revealC, props.revealD]
+    const compares = [
         props.compareA,
         props.compareB,
         props.compareC,
         props.compareD,
-    ][p]
+    ]
     const callout =
         week >= HALF
             ? `${props.halfway} ` +
@@ -517,7 +515,7 @@ export default function ATMCoinRace(props: Props) {
                     {
                         borderRadius: "4cqw",
                         padding: "2.6cqw 3cqw",
-                        minHeight: "22cqw", // a floor for short reveals; the hidden reveal below sets the real height
+                        minHeight: "22cqw", // a floor for short reveals; the hidden reveals below set the real height
                         flex: "none",
                         margin: "1.6cqw 0", // more room above and below the reveal than the other gaps
                         boxSizing: "border-box",
@@ -534,38 +532,43 @@ export default function ATMCoinRace(props: Props) {
                     } as React.CSSProperties
                 }
             >
-                {/* the reveal is always laid out (hidden during the race), so the box and the lanes above keep one size throughout */}
+                {/* all four reveals are always laid out (hidden but the pick's at the end), so the box takes the tallest and the lanes keep one size for every pick */}
                 <div style={{ display: "grid" }}>
-                    <div
-                        style={{
-                            gridArea: "1 / 1",
-                            visibility: finished ? "visible" : "hidden",
-                        }}
-                    >
-                        <span
+                    {reveals.map((reveal, i) => (
+                        <div
+                            key={i}
                             style={{
-                                display: "block",
-                                marginBottom: "1.6cqw",
-                                fontFamily: '"Area Normal Black", sans-serif',
-                                fontSize: "3.26cqw",
-                                lineHeight: 1,
-                                color: TEAL,
+                                gridArea: "1 / 1",
+                                visibility:
+                                    finished && i === p ? "visible" : "hidden",
                             }}
                         >
-                            AFTER ONE YEAR ({WEEKS} WEEKS)
-                        </span>
-                        <span>{bold(reveal)}</span>
-                        <span
-                            style={{
-                                display: "block",
-                                marginTop: "1.6cqw",
-                                fontSize: "3.26cqw", // 30px
-                                color: TEAL,
-                            }}
-                        >
-                            {compare}
-                        </span>
-                    </div>
+                            <span
+                                style={{
+                                    display: "block",
+                                    marginBottom: "1.6cqw",
+                                    fontFamily:
+                                        '"Area Normal Black", sans-serif',
+                                    fontSize: "3.26cqw",
+                                    lineHeight: 1,
+                                    color: TEAL,
+                                }}
+                            >
+                                AFTER ONE YEAR ({WEEKS} WEEKS)
+                            </span>
+                            <span>{bold(reveal)}</span>
+                            <span
+                                style={{
+                                    display: "block",
+                                    marginTop: "1.6cqw",
+                                    fontSize: "3.26cqw", // 30px
+                                    color: TEAL,
+                                }}
+                            >
+                                {compares[i]}
+                            </span>
+                        </div>
+                    ))}
                     {!finished && (
                         <span style={{ gridArea: "1 / 1", alignSelf: "start" }}>
                             {bold(callout)}
