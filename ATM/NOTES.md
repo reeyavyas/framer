@@ -1373,7 +1373,10 @@ choice; swipe right (or tap Yes) for yes, left (or No) for no. The buttons are p
   labels above the gauge): Area Normal Black caps in pill frames, mint text and a mint edge at full strength (owner:
   bolder, caps, not faded, further from the arc), the current band a yolk pill with midnight text. They stay
   straight: curved text along the arc was offered, but at 24 px "VERY GOOD" and "EXCELLENT" are each longer than
-  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Under a hairline: Your score (yolk,
+  their 36° of arc. The gauge is 56cqw wide (owner asked for it a little wider). Poor and Excellent are centred
+  on their blocks' height (owner), not on the arc; Fair, Good and Very Good stay on the arc. Your score and Goal
+  are Area Normal Black caps (owner). The question card has a teal 0.5cqw stroke and its story line is Area Normal
+  Black at 4.4cqw (owner: bolder, slightly larger). Under a hairline: Your score (yolk,
   counts) and Goal 760.
 - **Motion:** the needle springs up with an overshoot on a gain and drops sharply with a small wobble on a loss; the
   segment it lands on pops; crossing into a band sweeps the glint and pops that band's name. A chip floats up from
