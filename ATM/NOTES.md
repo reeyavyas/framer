@@ -1420,8 +1420,8 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 - **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1174 (owner shortened the
   sub-header to "…Make choices that help it grow."; after trying 1214 the owner wanted the buttons further from the
   bottom: they now end about 80 px clear of 1920). Gaps between the gauge, hint, card and buttons are 3cqw; the hint
-  has 2.7cqw more above it, so the space above its text matches the space under the question card (58 px each,
-  owner), and sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
+  has 3cqw more above it, so the space above its text matches the space under the question card (owner; live at
+  2.7cqw it measured 57 above vs 60 below in the real font, so it went to 3cqw), and sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
   instructions (owner). The card takes any spare height.
 - **Live test (30 Oct, 1080 × 1920, before the spacing change):** real fonts load (Area Normal, P22 Mackinac);
   all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. After the 24-scenario
@@ -1441,6 +1441,8 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
   spare. One-miss run with real taps: 700 → 735 after the deck, the missed phone-bill card returns as "Your car
   payment is due on Friday." (750), then "Your internet bill is due today." takes it to 765 and the finale shows:
   8 cards, no repeats, no extra round. No drag stamps.
+- **Live test 3 (30 Oct, end-at-760 publish):** a perfect run ends after four cards at 760 ("Congratulations, your
+  score is now 760!", Very Good lit, Done's strip filling). All card texts fit (tightest 36 px spare, card 311 px).
 - **Local check (30 Oct, before Framer):** rendered at 920 × 1150 with a stand-in for Framer's module: a swipe right
   scores, a short drag springs back, a wrong answer drops to 685 and its card returns reworded after the deck,
   the finale shows at 760; a perfect run ends at 790. No console errors. Not yet checked on the live site.

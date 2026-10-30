@@ -806,7 +806,7 @@ function Challenge(props: Props) {
                         ...fade,
                         flex: "none",
                         minHeight: "10cqw", // room for two lines, so the cards keep one size
-                        marginTop: "2.7cqw", // as much space above the hint as under the question card (owner)
+                        marginTop: "3cqw", // as much space above the hint as under the question card (owner; measured live in the real font)
                         marginBottom: "-2.2cqw", // clearly closer to its card than the other gaps (owner)
                         display: "flex", // a one-line why sits at the foot, by the card
                         flexDirection: "column",
