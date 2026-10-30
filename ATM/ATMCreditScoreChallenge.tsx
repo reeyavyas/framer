@@ -10,7 +10,7 @@ import { gsap } from "gsap"
 // its needle springs to the score, the band names round its arc light up as the score crosses into a band, and a
 // chip by the score says what happened ("Paid on time +15"). The hint line above the card then says why. The whole deck
 // is played (a perfect run ends at 790); if it ends under 760, the cards they got wrong come back as new questions,
-// and so on until the score is 760 or more. Then the cards clear, the gauge glides to the middle and the finale line and
+// and so on until the score is 760 or more (past the first round, the lesson ends the moment it gets there). Then the cards clear, the gauge glides to the middle and the finale line and
 // Done show. No background of its own.
 //
 // The gauge is ATMGauge's art (ATM/artwork/vectors/gauge/build.py, export_anim): five 36° segments, one per band,
@@ -94,7 +94,7 @@ const CARDS: Card[] = [
             ],
             [
                 "A bike costs $550. Your card's limit is $600.",
-                "Use almost all your limit on it?",
+                "Use most of your limit on it?",
             ],
         ],
         go: "skip",
@@ -144,7 +144,7 @@ const CARDS: Card[] = [
             ],
             [
                 "A new game just came out with lots of extras.",
-                "Max out your card on all of them?",
+                "Max out your card on them?",
             ],
         ],
         go: "skip",
@@ -245,7 +245,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1214
+ * @framerIntrinsicHeight 1174
  */
 export default function ATMCreditScoreChallenge(props: Props) {
     // keyed on the canvas view, so switching it on the canvas starts over in that view
@@ -270,6 +270,7 @@ function Challenge(props: Props) {
     const [deck, setDeck] = React.useState<Turn[]>(FIRST_DECK)
     const [missed, setMissed] = React.useState<number[]>([])
     const dealt = React.useRef(CARDS.map(() => 1)) // scenarios each card has used so far
+    const comeback = React.useRef(false) // past the first round, which is always played in full
     const [chip, setChip] = React.useState<{
         id: number
         text: string
@@ -507,6 +508,8 @@ function Challenge(props: Props) {
             const next = score + (ok ? GAIN : -card.cost)
             const nowMissed = ok ? missed : [...missed, turn.c]
             let rest = deck.slice(1)
+            // Past the first round, reaching the goal ends the lesson there and then
+            if (comeback.current && next >= GOAL) rest = []
             // The deck's done: under the goal, the cards they got wrong come back (all of them if none were), each
             // with a scenario not shown yet
             if (!rest.length && next < GOAL) {
@@ -518,6 +521,7 @@ function Challenge(props: Props) {
                     v: dealt.current[c]++ % CARDS[c].versions.length,
                 }))
                 setMissed([])
+                comeback.current = true
             } else setMissed(nowMissed)
             setScore(next)
             setDeck(rest)
@@ -598,7 +602,7 @@ function Challenge(props: Props) {
                     containerType: "inline-size", // Framer's CSS types don't list it yet, hence the cast
                     display: "flex",
                     flexDirection: "column",
-                    gap: "3.6cqw", // between the gauge, the hint, the card and the buttons (owner: more air)
+                    gap: "3cqw", // between the gauge, the hint, the card and the buttons (owner)
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
                     userSelect: "none",
@@ -773,6 +777,10 @@ function Challenge(props: Props) {
                         ...fade,
                         flex: "none",
                         minHeight: "10cqw", // room for two lines, so the cards keep one size
+                        marginBottom: "-2.2cqw", // clearly closer to its card than the other gaps (owner)
+                        display: "flex", // a one-line why sits at the foot, by the card
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
                         whiteSpace: "pre-line", // line breaks typed in the Hint start a new line
                         padding: "0 2cqw",
                         textAlign: "center",

@@ -1365,10 +1365,12 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 
 - **Scoring (owner):** +15 for a right choice, −40 for a missed or late payment, −30 for a maxed-out card or high
   balance. All six cards are played, so a perfect run ends at **790**; the goal is "at least 760". If the deck ends
-  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more. Never
+  under 760, the cards they got wrong come back (all six if none were wrong) until the score is 760 or more; past
+  the first round the lesson ends the moment the score gets there (one miss ends at 765 after 8 cards, not 840
+  after 13). Never
   the same question twice (owner): each card has four scenarios and takes its next unused one each time it's dealt,
   24 in all. Missing all six first-round cards (490) and then answering everything right uses exactly all 24 to
-  reach 760 (checked locally); only a run with even more misses would see a card's scenarios start over. 790 stays inside Very Good (740–799), so every finish lands in the same band.
+  reach 760 (checked locally, along with one miss: 765, and a perfect run: 790); only a run with even more misses would see a card's scenarios start over. 790 stays inside Very Good (740–799), so every finish lands in the same band.
 - **The cards** alternate right answers (yes, no, yes, no, yes, no) so swiping one way can't win. They cover the
   four actions: pay on time, keep balances low, don't miss a payment, don't max out. The texts are in code
   (`CARDS`, four scenarios each), not layer properties; change them by prompt. The autopay card's chip is "Payment
@@ -1406,11 +1408,15 @@ the layer's saved old text doesn't stick). The owner laid out the page (heading,
 - **Code:** `ATMCreditScoreChallenge.tsx`. Canvas (Start / Finale) picks what the Framer canvas shows (it remounts on a
   change); the live page always starts at the first card. Hint, No, Yes, Finale ({score} is the final score), Done and When Done are
   properties (renamed from the first draft's Do / Skip, so the layer's saved first-draft values don't stick).
-- **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1214 (about 45 px clear of the 1920
-  bottom; owner shortened the sub-header to "…Make choices that help it grow.", freeing 65 px). Gaps between the
-  gauge, hint, card and buttons are 3.6cqw (owner: more air); the card takes any spare height.
+- **Page:** the layer sits after the Question stack in Scrollable Content, 920 × 1174 (owner shortened the
+  sub-header to "…Make choices that help it grow."; after trying 1214 the owner wanted the buttons further from the
+  bottom: they now end about 80 px clear of 1920). Gaps between the gauge, hint, card and buttons are 3cqw; the hint
+  sits closer to its card (-2.2cqw margin, its text at the foot of its two-line box), so it reads as the card's
+  instructions (owner). The card takes any spare height.
 - **Live test (30 Oct, 1080 × 1920, before the spacing change):** real fonts load (Area Normal, P22 Mackinac);
-  all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. A real swipe right on
+  all 12 card texts (6 cards and their rewordings) fit the card with at least 36 px spare. After the 24-scenario
+  publish (card 336 px tall), all 24 fit; the bike and new-game questions were shortened to one line ("Use most of
+  your limit on it?", "Max out your card on them?") after measuring 9 px spare, now 73. A real swipe right on
   card 1 scores 700 → 715 with the teal chip and its why line; a short drag springs back with no choice; Yes on the
   headphones card drops to 685 with a coral chip; the rest of the deck ends at 745 with Very Good lit and the
   console card back; a swipe left on it reaches 760 and the finale (cards and buttons fade and can't be tapped,
