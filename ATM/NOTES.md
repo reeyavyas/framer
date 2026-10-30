@@ -1237,6 +1237,11 @@ returns to the cards (pick kept); Done goes to the completion page. The owner wi
   reveal. The box's spacing is as it was before (tried evening it with a top nudge and with text-box trimming; the
   owner asked for it back as it was and doesn't want line-height tweaks chased).
   Both are in code, not layer properties, so all four race variants get them and the owner's reveal texts are untouched.
+  The owner then set the heading's gap below to 1.6cqw and the lanes' side padding to 2cqw in Framer.
+- **No layout shift mid-race (30 Oct, owner):** the lanes used to shrink when the taller reveal replaced the callouts.
+  The reveal is now always laid out in the white box (hidden during the race, the callout stacked over it), so the box
+  starts at its finished height and the lanes keep one size. Checked locally: box 244px and lanes 453px through every
+  callout and the reveal, for all four picks.
 - **Race speed:** the owner set Week (ms) to 70 on the Coin Race layer (about 3.7 s for the year); it's set on
   each of Variants 6-9, since one variant's value doesn't carry to the others. The code default stays 110. Lanes read "$1,300 / Saved $25 per Week" ("Spent it all" for A), the mint line 29 px and two lines
   tall ("per Week" always starts line two) so every lane's figure lines up; lanes grow to fit rather than letting text spill out. The coin key

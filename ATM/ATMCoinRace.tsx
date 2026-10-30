@@ -407,7 +407,7 @@ export default function ATMCoinRace(props: Props) {
                                     alignItems: "center",
                                     gap: "0.6cqw",
                                     borderRadius: "4cqw",
-                                    padding: "4cqw 1cqw", // the coins' spare room goes to the top and bottom of the lane
+                                    padding: "4cqw 2cqw", // the coins' spare room goes to the top and bottom of the lane
                                     background: `linear-gradient(180deg, ${mine ? "#0e5577" : "#0b4a6e"}, ${DEEP})`,
                                     boxShadow: mine
                                         ? `inset 0 0 0 0.5cqw ${YOLK}, 0 0 5cqw rgba(255,204,64,.45)`
@@ -516,7 +516,7 @@ export default function ATMCoinRace(props: Props) {
                     {
                         borderRadius: "4cqw",
                         padding: "2.6cqw 3cqw",
-                        minHeight: "22cqw", // holds the lanes' size when the reveal replaces the callouts; grows if the text needs it
+                        minHeight: "22cqw", // a floor for short reveals; the hidden reveal below sets the real height
                         flex: "none",
                         margin: "1.6cqw 0", // more room above and below the reveal than the other gaps
                         boxSizing: "border-box",
@@ -535,12 +535,18 @@ export default function ATMCoinRace(props: Props) {
                     } as React.CSSProperties
                 }
             >
-                {finished ? (
-                    <>
+                {/* the reveal is always laid out (hidden during the race), so the box and the lanes above keep one size throughout */}
+                <div style={{ display: "grid" }}>
+                    <div
+                        style={{
+                            gridArea: "1 / 1",
+                            visibility: finished ? "visible" : "hidden",
+                        }}
+                    >
                         <span
                             style={{
                                 display: "block",
-                                marginBottom: "1cqw",
+                                marginBottom: "1.6cqw",
                                 fontFamily: '"Area Normal Black", sans-serif',
                                 fontSize: "3.26cqw",
                                 lineHeight: 1,
@@ -560,10 +566,15 @@ export default function ATMCoinRace(props: Props) {
                         >
                             {compare}
                         </span>
-                    </>
-                ) : (
-                    <span>{bold(callout)}</span>
-                )}
+                    </div>
+                    {!finished && (
+                        <span
+                            style={{ gridArea: "1 / 1", alignSelf: "center" }}
+                        >
+                            {bold(callout)}
+                        </span>
+                    )}
+                </div>
             </div>
 
             <div
