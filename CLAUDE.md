@@ -65,8 +65,9 @@ over to any account or computer that opens this repo.
 ### API keys and secrets
 
 - **The owner's API key never goes anywhere public**: no commit, code
-  file, Framer code component, published site, PR, issue, comment or
-  artifact, and never echoed in chat. This repo is public and Framer
+  file, Framer code component, published site, PR, issue, comment,
+  artifact or screenshot, and never echoed in chat. Before taking or
+  sending any screenshot, make sure no key is on screen. This repo is public and Framer
   code runs in visitors' browsers, so both are readable by anyone.
 - If a feature needs a key, stop and ask: it must live server-side (an
   environment variable on a backend or proxy), never in client code.
