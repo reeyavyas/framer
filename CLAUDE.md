@@ -62,6 +62,17 @@ open shapes, lines and edges on every moving part.
 These are the owner's standing preferences, kept here so they carry
 over to any account or computer that opens this repo.
 
+### API keys and secrets
+
+- **The owner's API key never goes anywhere public**: no commit, code
+  file, Framer code component, published site, PR, issue, comment or
+  artifact, and never echoed in chat. This repo is public and Framer
+  code runs in visitors' browsers, so both are readable by anyone.
+- If a feature needs a key, stop and ask: it must live server-side (an
+  environment variable on a backend or proxy), never in client code.
+- Before every commit, check the diff for keys. If one is ever exposed,
+  tell the owner to revoke it at once; deleting the commit isn't enough.
+
 ### Screenshots and data
 
 - **Never commit the owner's screenshots or reference images.** Use them
