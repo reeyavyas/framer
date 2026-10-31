@@ -69,6 +69,9 @@ over to any account or computer that opens this repo.
   artifact or screenshot, and never echoed in chat. Before taking or
   sending any screenshot, make sure no key is on screen. This repo is public and Framer
   code runs in visitors' browsers, so both are readable by anyone.
+- **`.env` stays on the owner's computer only**, never in the repo:
+  never `git add -f` it, never drop the `.env` / `.env.*` lines from
+  `.gitignore`, never copy it anywhere else.
 - If a feature needs a key, stop and ask: it must live server-side (an
   environment variable on a backend or proxy), never in client code.
 - Before every commit, check the diff for keys. If one is ever exposed,
