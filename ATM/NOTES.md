@@ -1544,7 +1544,9 @@ header, sub-header and other page copy in Framer.
   40 px all round instead of 33 above, the card 7 px taller; set on the
   page's layer and as the component's default height). Then **1405** (2 Nov): the owner hid the page's sub-header,
   so the layer starts at y 492 and grew 200 px, all of it under the card (a 200 px margin under it; left to
-  `space-between` it was split over the three gaps), where the glass's handle hangs. The
+  `space-between` it was split over the three gaps), where the glass's handle hangs; then 24 px of it moved under Delete (owner: Done sat too close to the
+  bottom; the handle may come close to "Clues found"). The lens also stays far enough from the screen's edges that
+  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). The
   lens also stops at the middle of the lowest clue it must reach (place()), so the handle, which reaches 318 px
   below the lens centre, stays clear of "Clues found". Earlier measured gaps card → board / board → text / text → Delete:
   36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in

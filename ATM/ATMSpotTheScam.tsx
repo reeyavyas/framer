@@ -40,6 +40,8 @@ const LENS_X = 2399
 const LENS_Y = 1213
 const OPEN_R = 365 // the opening, inside the ring
 const K = R / OPEN_R // cqw per art unit
+const GLASS_LEFT = 13.8 // cqw the glass reaches left of the lens centre (the ring), measured live
+const GLASS_RIGHT = 29.6 // cqw it reaches right of it (the handle's end)
 const BUBBLE_X = 12.4 // cqw from the lens centre to the "Drag me!" bubble: 1cqw over the ring (13.4), in front of it (owner)
 const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
@@ -525,7 +527,10 @@ function Lesson(props: Props) {
                 Math.min(...rectsOf(k).map((q) => (q.t + q.b) / 2))
             )
         )
-        x = Math.min(s.w, Math.max(0, x))
+        // ...and the whole glass, ring and handle, stays on the screen (owner: it was cut off at the right edge)
+        const left = toLocal(0, 0).x + cqw(GLASS_LEFT)
+        const right = toLocal(window.innerWidth, 0).x - cqw(GLASS_RIGHT)
+        x = Math.min(s.w, right, Math.max(0, left, x))
         y = Math.min(s.h, floor, Math.max(0, y))
         pos.current = { x, y }
         if (lensRef.current)
@@ -896,7 +901,7 @@ function Lesson(props: Props) {
                     flexDirection: "column",
                     gap: "1.8cqw",
                     justifyContent: "space-between", // spare height spread between the parts (owner)
-                    paddingBottom: "calc(3cqw - 4px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher; then 8 px given to the 4 gaps above, 2 px each)
+                    paddingBottom: "calc(3cqw + 20px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher; then 8 px given to the 4 gaps above, 2 px each; then 24 px more, taken from under the card)
                     boxSizing: "border-box",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
@@ -914,7 +919,7 @@ function Lesson(props: Props) {
                 style={{
                     flex: "none",
                     position: "relative",
-                    marginBottom: 200, // room for the glass's handle, clear of "Clues found" (owner; the layer grew by the same)
+                    marginBottom: 176, // room for the glass's handle, clear of "Clues found" (owner; the layer grew 200 px; 24 of it then moved under Delete)
                     touchAction: "none",
                     cursor: phase === "hunt" ? "grab" : undefined,
                 }}
