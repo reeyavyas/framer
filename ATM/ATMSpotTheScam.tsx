@@ -25,7 +25,6 @@ const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
 const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
-const GLIDE_HOME = 0.6 // s for the glass to slide back to its rest spot once every clue is found
 const LAST_READ = 4000 // ms the last clue's why stays up before "It's a scam." (Delete already shows; owner: was 4.5 s, then 2 s, now 4 s to read it)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
@@ -42,6 +41,8 @@ const OPEN_R = 365 // the opening, inside the ring
 const K = R / OPEN_R // cqw per art unit
 const GLASS_LEFT = 13.8 // cqw the glass reaches left of the lens centre (the ring), measured live
 const GLASS_RIGHT = 29.6 // cqw it reaches right of it (the handle's end)
+const TURN = 82 // degrees the glass turns near the screen's right edge, so the handle points down-left instead
+const TURN_BACK = 4 // cqw further left it must come before it turns back (no flicker at the edge)
 const BUBBLE_X = 12.4 // cqw from the lens centre to the "Drag me!" bubble: 1cqw over the ring (13.4), in front of it (owner)
 const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
@@ -419,6 +420,8 @@ function Lesson(props: Props) {
     const lensRef = React.useRef<HTMLDivElement>(null)
     const popRef = React.useRef<HTMLDivElement>(null)
     const nudgeRef = React.useRef<HTMLDivElement>(null)
+    const turnRef = React.useRef<HTMLDivElement>(null)
+    const turned = React.useRef(false)
     const bubbleRef = React.useRef<HTMLSpanElement>(null)
     const touched = React.useRef(0) // when the card was last touched (ms)
     const copyRef = React.useRef<HTMLDivElement>(null)
@@ -515,6 +518,24 @@ function Lesson(props: Props) {
             lastClue(run.current)
     }
 
+    // Turns the ring and handle about the lens centre (the magnified view inside doesn't turn)
+    const turn = (on: boolean) => {
+        turned.current = on
+        const el = turnRef.current
+        if (!el) return
+        const from = getComputedStyle(el).transform
+        el.getAnimations().forEach((a) => a.cancel())
+        el.style.transform = `rotate(${on ? TURN : 0}deg)`
+        if (!reduceMotion)
+            el.animate(
+                [
+                    { transform: from === "none" ? "rotate(0deg)" : from },
+                    { transform: el.style.transform },
+                ],
+                { duration: 350, easing: "cubic-bezier(.3,1.3,.5,1)" }
+            )
+    }
+
     // Moves the glass (its centre, in card pixels) and the magnified copy under it; while hunting, a clue counts
     // as found once the glass rests on it for DWELL ms, so sweeping straight across the message doesn't find all.
     const place = (x: number, y: number) => {
@@ -527,9 +548,15 @@ function Lesson(props: Props) {
                 Math.min(...rectsOf(k).map((q) => (q.t + q.b) / 2))
             )
         )
-        // ...and the whole glass, ring and handle, stays on the screen (owner: it was cut off at the right edge)
-        const left = toLocal(0, 0).x + cqw(GLASS_LEFT)
-        const right = toLocal(window.innerWidth, 0).x - cqw(GLASS_RIGHT)
+        // ...and the whole glass, ring and handle, stays on the screen (owner: it was cut off at the right edge).
+        // Near the right edge the glass turns so the handle points down-left, letting the lens reach the edge.
+        const sl = toLocal(0, 0).x
+        const sr = toLocal(window.innerWidth, 0).x
+        const edge = sr - cqw(GLASS_RIGHT)
+        if (!turned.current && x > edge) turn(true)
+        else if (turned.current && x < edge - cqw(TURN_BACK)) turn(false)
+        const left = sl + cqw(turned.current ? GLASS_RIGHT : GLASS_LEFT)
+        const right = sr - cqw(turned.current ? GLASS_LEFT : GLASS_RIGHT)
         x = Math.min(s.w, right, Math.max(0, left, x))
         y = Math.min(s.h, floor, Math.max(0, y))
         pos.current = { x, y }
@@ -601,11 +628,10 @@ function Lesson(props: Props) {
             }, 50)
         })
 
-    // Every clue found: Delete shows at once and the glass slides back to its rest spot (owner: off "Clues found");
+    // Every clue found: Delete shows at once (the glass stays where it is: owner, its slide back was too abrupt);
     // the last clue's why stays up a moment, then the round's tip
     async function lastClue(token: number) {
         setPhase("last")
-        glide(rest(), GLIDE_HOME)
         await wait(LAST_READ, token)
         // not once Delete has been tapped (it's "leaving" then)
         if (run.current === token && phaseRef.current === "last")
@@ -965,19 +991,31 @@ function Lesson(props: Props) {
                                     {card(true)}
                                 </div>
                             </div>
-                            <svg
-                                viewBox={VB.join(" ")}
-                                aria-hidden="true"
+                            <div
+                                ref={turnRef}
                                 style={{
                                     position: "absolute",
-                                    left: `${(VB[0] - LENS_X) * K}cqw`,
-                                    top: `${(VB[1] - LENS_Y) * K}cqw`,
-                                    width: `${VB[2] * K}cqw`,
-                                    height: `${VB[3] * K}cqw`,
-                                    overflow: "visible",
+                                    left: 0,
+                                    top: 0,
+                                    transformOrigin: "0 0",
                                 }}
-                                dangerouslySetInnerHTML={{ __html: lensMarkup }}
-                            />
+                            >
+                                <svg
+                                    viewBox={VB.join(" ")}
+                                    aria-hidden="true"
+                                    style={{
+                                        position: "absolute",
+                                        left: `${(VB[0] - LENS_X) * K}cqw`,
+                                        top: `${(VB[1] - LENS_Y) * K}cqw`,
+                                        width: `${VB[2] * K}cqw`,
+                                        height: `${VB[3] * K}cqw`,
+                                        overflow: "visible",
+                                    }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: lensMarkup,
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
                     {!dragged && phase === "hunt" && (

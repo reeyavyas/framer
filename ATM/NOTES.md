@@ -1496,8 +1496,8 @@ header, sub-header and other page copy in Framer.
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, 31cqw in from the right edge, so its whole handle stays
   on the card (owner: the handle was cut off at the screen's right edge; checked 17 px inside the card).
-  The moment the last clue is found the glass slides back to its rest spot in 0.6 s (GLIDE_HOME), so its handle
-  no longer covers "Clues found" while the round ends (owner, 2 Nov; mid-round it can still pass over the counts).
+  After the last clue the glass stays where it was (owner, 2 Nov: a 0.6 s slide back to rest was too abrupt; the
+  space under the card keeps the handle off "Clues found").
 - **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
   in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal Area Normal Black label,
   owner asked for bolder, beside a big P22 Mackinac figure).
@@ -1546,7 +1546,9 @@ header, sub-header and other page copy in Framer.
   so the layer starts at y 492 and grew 200 px, all of it under the card (a 200 px margin under it; left to
   `space-between` it was split over the three gaps), where the glass's handle hangs; then 24 px of it moved under Delete (owner: Done sat too close to the
   bottom; the handle may come close to "Clues found"). The lens also stays far enough from the screen's edges that
-  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). The
+  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). Near the right edge it
+  turns 82° (TURN, a 350 ms spring) so the handle points down-left, and the lens can reach the edge (owner: it
+  couldn't cover the end of "Reply with your PIN"); it turns back 4cqw further left (TURN_BACK). The
   lens also stops at the middle of the lowest clue it must reach (place()), so the handle, which reaches 318 px
   below the lens centre, stays clear of "Clues found". Earlier measured gaps card → board / board → text / text → Delete:
   36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
