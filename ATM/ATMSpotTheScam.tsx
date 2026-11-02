@@ -30,6 +30,7 @@ const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
 const NUDGE_IDLE = 3000 // ms with no touch, while it's the user's turn, before the glass wiggles for attention
 const NUDGE_EVERY = 3500 // ms between wiggles while it stays untouched
+const NUDGE_FIRST = 800 // ms before the first wiggle when the page opens (owner: 3 s felt slow)
 
 // The lens: one teal ring (the browser-search magnifier's rim gradient, as thick as the neck, which shares it; owner) round a
 // circular opening at LENS_X, LENS_Y (art units, the group's offset added), with that magnifier's glass shine
@@ -363,6 +364,7 @@ interface Props {
     canvasRound: CanvasRound
     canvasFound: boolean
     hint: string
+    nudge: string
     deleteLabel: string
     doneLink: string
 }
@@ -403,6 +405,7 @@ function Lesson(props: Props) {
         props.canvasFound && isCanvas ? "end" : "hunt"
     )
     const [explain, setExplain] = React.useState(-1) // the clue whose why shows: the last one found
+    const [dragged, setDragged] = React.useState(false) // the "Drag me!" bubble shows until the glass is first dragged
     const [size, setSize] = React.useState<{ w: number; h: number } | null>(
         null
     )
@@ -638,7 +641,9 @@ function Lesson(props: Props) {
     // reduced motion.
     React.useEffect(() => {
         if (phase !== "hunt" || isCanvas || reduceMotion) return
-        touched.current = performance.now()
+        // the page's first wiggle comes sooner; later rounds wait the full NUDGE_IDLE
+        touched.current =
+            performance.now() - (round === 0 ? NUDGE_IDLE - NUDGE_FIRST : 0)
         let last = 0
         const id = window.setInterval(() => {
             const now = performance.now()
@@ -719,6 +724,7 @@ function Lesson(props: Props) {
         const p = toLocal(e.clientX, e.clientY)
         if (!d.moved && Math.hypot(p.x - d.x, p.y - d.y) < cqw(1.5)) return
         d.moved = true
+        setDragged(true)
         tween.current?.kill()
         place(p.x + d.dx, p.y + d.dy)
     }
@@ -953,6 +959,26 @@ function Lesson(props: Props) {
                             />
                         </div>
                     </div>
+                    {!dragged && phase === "hunt" && (
+                        <span
+                            style={{
+                                position: "absolute",
+                                right: `${R + 2}cqw`, // left of the lens, clear of the handle
+                                top: 0,
+                                transform: "translateY(-50%)",
+                                whiteSpace: "nowrap",
+                                padding: "1.2cqw 2.4cqw",
+                                borderRadius: 999,
+                                background: "#ffffff",
+                                color: MIDNIGHT,
+                                fontFamily: black,
+                                fontSize: "3.6cqw",
+                                lineHeight: 1,
+                            }}
+                        >
+                            {props.nudge}
+                        </span>
+                    )}
                 </div>
             </div>
 
@@ -1201,6 +1227,7 @@ ATMSpotTheScam.defaultProps = {
     canvasRound: "Round 1" as CanvasRound,
     canvasFound: false,
     hint: "Rest the glass on anything that looks suspicious, or tap a spot.",
+    nudge: "Drag me!",
     deleteLabel: "Delete",
     doneLink: "/atm-lessons/spot-the-scam/complete",
 }
@@ -1226,6 +1253,11 @@ addPropertyControls(ATMSpotTheScam, {
         title: "Hint",
         displayTextArea: true,
         defaultValue: ATMSpotTheScam.defaultProps.hint,
+    },
+    nudge: {
+        type: ControlType.String,
+        title: "Nudge",
+        defaultValue: ATMSpotTheScam.defaultProps.nudge,
     },
     deleteLabel: {
         type: ControlType.String,

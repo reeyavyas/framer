@@ -1506,6 +1506,11 @@ header, sub-header and other page copy in Framer.
   (`NUDGE_EVERY`) until touched. Any touch stops a wiggle at once and restarts the 3 s. Not while the last
   clue's why shows or at the end, not while the inactivity overlay is open, not with reduced motion. Checked locally: first wiggle about 3 s
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
+  When the page opens the first wiggle comes after 0.8 s (`NUDGE_FIRST`; owner, 2 Nov: 3 s felt slow); later
+  rounds still wait 3 s.
+- **"Drag me!" bubble (owner, 2 Nov):** a white pill left of the lens, as on Money Double's slider thumb, until
+  the glass is first dragged (a tap alone doesn't clear it); then gone for the rest of the lesson. It follows
+  the glass but doesn't tilt with the wiggle. Text is the **Nudge** property.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
   on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
   gradient, a 6.2cqw glacier circle with a 3.6cqw number, the clue's name in white Area Normal Black 3.8cqw,
