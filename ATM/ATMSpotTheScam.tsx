@@ -914,6 +914,7 @@ function Lesson(props: Props) {
                 style={{
                     flex: "none",
                     position: "relative",
+                    marginBottom: 200, // room for the glass's handle, clear of "Clues found" (owner; the layer grew by the same)
                     touchAction: "none",
                     cursor: phase === "hunt" ? "grab" : undefined,
                 }}
