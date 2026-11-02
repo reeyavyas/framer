@@ -908,7 +908,7 @@ function Lesson(props: Props) {
                     flexDirection: "column",
                     gap: "1.8cqw",
                     justifyContent: "space-between", // spare height spread between the parts (owner)
-                    paddingBottom: "calc(3cqw + 20px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher; then 8 px given to the 4 gaps above, 2 px each; then 24 px more, taken from under the card)
+                    paddingBottom: "calc(3cqw + 17px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher; then 8 px given to the 4 gaps above, 2 px each; then 24 px more, taken from under the card; then 3 px to the explanation's box)
                     boxSizing: "border-box",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
@@ -1113,12 +1113,12 @@ function Lesson(props: Props) {
                 style={
                     {
                         flex: "none",
-                        height: "10cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
+                        height: "10.3cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
                         margin: "calc(1cqw + 8px) 0", // more room above and below the text (owner; then 2 px more each)
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
-                        padding: "0 3cqw",
+                        padding: "0 1cqw", // nearly the full width, so every why fits two lines (owner)
                         textAlign: "center",
                         fontSize: "3.7cqw", // a little smaller (owner; was 4.1cqw)
                         lineHeight: 1.3,
