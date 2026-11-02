@@ -1546,9 +1546,8 @@ header, sub-header and other page copy in Framer.
   so the layer starts at y 492 and grew 200 px, all of it under the card (a 200 px margin under it; left to
   `space-between` it was split over the three gaps), where the glass's handle hangs; then 24 px of it moved under Delete (owner: Done sat too close to the
   bottom; the handle may come close to "Clues found"). The lens also stays far enough from the screen's edges that
-  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). Near the right edge it
-  turns 82° (TURN, a 350 ms spring) so the handle points down-left, and the lens can reach the edge (owner: it
-  couldn't cover the end of "Reply with your PIN"); it turns back 4cqw further left (TURN_BACK). The
+  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). (Tried and removed: turning
+  the glass near the right edge so its handle pointed down-left; owner: keep the glass's tilt.) The
   lens also stops at the middle of the lowest clue it must reach (place()), so the handle, which reaches 318 px
   below the lens centre, stays clear of "Clues found". Earlier measured gaps card → board / board → text / text → Delete:
   36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
