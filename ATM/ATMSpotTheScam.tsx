@@ -978,10 +978,14 @@ function Lesson(props: Props) {
                                 top: 0,
                                 transform: "translateY(-50%)",
                                 whiteSpace: "nowrap",
-                                padding: "1.4cqw 2cqw",
+                                padding: "1.2cqw 2cqw 1.6cqw", // 0.2cqw more below than above: the font sits low (owner: centre it)
                                 borderRadius: 999,
-                                background: "#3bbfc0", // owner: light teal (the brand's Light Teal) with white text, bigger than Money Double's
-                                color: "#ffffff",
+                                // owner: the handle's colours (its gradient across, a light top edge, a darker bottom one)
+                                background:
+                                    "linear-gradient(180deg, #ffcc40, #f6a11d 33%, #e08a12 67%, #c97a0c)",
+                                boxShadow:
+                                    "inset 0 0.3cqw 0 rgba(255,255,255,.55), inset 0 -0.3cqw 0 rgba(201,122,12,.6)",
+                                color: MIDNIGHT, // as on Money Double's yolk thumb; white is unreadable on yellow
                                 fontFamily: black,
                                 fontSize: "4.2cqw", // as big as fits on screen with the glass at rest
                                 lineHeight: 1,
