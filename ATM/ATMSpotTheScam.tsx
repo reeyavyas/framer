@@ -177,7 +177,8 @@ const ROUNDS: Round[] = [
         ],
         end: "Track packages in the delivery company’s own app. Delete it.",
         view: (c) => (
-            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
+            <div style={{ padding: "4.4cqw" }}>
+                {/* the same room above the email as below and beside it (owner: centre it in the card) */}
                 <div
                     style={{
                         background: MINT,
@@ -374,7 +375,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1197
+ * @framerIntrinsicHeight 1205
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
