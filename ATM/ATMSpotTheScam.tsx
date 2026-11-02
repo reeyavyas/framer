@@ -39,6 +39,7 @@ const LENS_X = 2399
 const LENS_Y = 1213
 const OPEN_R = 365 // the opening, inside the ring
 const K = R / OPEN_R // cqw per art unit
+const BUBBLE_X = 14.4 // cqw from the lens centre to the "Drag me!" bubble: just clear of the ring (13.4), so teal doesn't merge with teal
 const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
 const LENS_ART = `<defs><linearGradient id="g57" x1="0.1" y1="0" x2="0.35" y2="1"><stop offset="0.00" stop-color="#8fe0e0"/><stop offset="0.33" stop-color="#3bbfc0"/><stop offset="0.67" stop-color="#1fa9a8"/><stop offset="1.00" stop-color="#059390"/></linearGradient><linearGradient id="g60" x1="0" y1="0" x2="0.75" y2="0.75"><stop offset="0.00" stop-color="#8fe0e0" stop-opacity="0.6"/><stop offset="0.50" stop-color="#8fe0e0" stop-opacity="0.15"/><stop offset="1.00" stop-color="#8fe0e0" stop-opacity="0"/></linearGradient><radialGradient id="s63"><stop offset="0" stop-color="#5fbfa6" stop-opacity="0.700"/><stop offset="0.25" stop-color="#5fbfa6" stop-opacity="0.560"/><stop offset="0.45" stop-color="#5fbfa6" stop-opacity="0.329"/><stop offset="0.6" stop-color="#5fbfa6" stop-opacity="0.175"/><stop offset="0.72" stop-color="#5fbfa6" stop-opacity="0.084"/><stop offset="0.83" stop-color="#5fbfa6" stop-opacity="0.028"/><stop offset="0.92" stop-color="#5fbfa6" stop-opacity="0.008"/><stop offset="1" stop-color="#5fbfa6" stop-opacity="0.000"/></radialGradient><linearGradient id="g64" x1="0" y1="0" x2="0.12" y2="1"><stop offset="0.00" stop-color="#ffcc40"/><stop offset="0.33" stop-color="#f6a11d"/><stop offset="0.67" stop-color="#e08a12"/><stop offset="1.00" stop-color="#c97a0c"/></linearGradient><linearGradient id="g65" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0.00" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="0.33" stop-color="#ffffff" stop-opacity="0"/><stop offset="0.67" stop-color="#c97a0c" stop-opacity="0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.9"/></linearGradient><linearGradient id="g66" x1="0" y1="0" x2="1" y2="0"><stop offset="0.00" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="0.50" stop-color="#c97a0c" stop-opacity="0.0"/><stop offset="1.00" stop-color="#c97a0c" stop-opacity="0.45"/></linearGradient></defs><g pointer-events="visiblePainted"><g transform="translate(50 -70)"><g transform="translate(3061 2145) rotate(50.4)"><rect x="-648" y="-62" width="300" height="124" fill="url(#g57)"/><path d="M-618,-26 H-388" stroke="#ffffff" stroke-width="26" stroke-linecap="round" opacity=".9"/></g><circle cx="2349" cy="1283" r="365" fill="url(#g60)"/><path d="M2100,1323 A281,268 0 0 1 2289,1057" transform="rotate(-20 2349 1283)" fill="none" stroke="#ffffff" stroke-width="44" stroke-linecap="round" opacity=".75"/><circle cx="2479" cy="1073" r="23" fill="#ffffff" opacity=".75"/><circle cx="2349" cy="1283" r="427" fill="none" stroke="url(#g57)" stroke-width="124"/><g transform="translate(3061 2145) rotate(50.4)"><ellipse cx="-358" cy="10" rx="70" ry="123" fill="url(#s63)"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g64)" stroke="url(#g65)" stroke-width="23.0" stroke-linejoin="round"/><rect x="-368" y="-154" width="736" height="308" rx="110" fill="url(#g66)"/><path d="M-248,-84 H218" stroke="#ffffff" stroke-width="46" stroke-linecap="round" opacity="0.9"/><ellipse cx="-228" cy="-92" rx="30" ry="16" fill="#ffffff" opacity=".95"/></g></g></g>`
@@ -528,8 +529,8 @@ function Lesson(props: Props) {
             // "Drag me!" sits right of the lens (owner: not over the phone number), or left of it once the glass is
             // further right than its rest spot, where there's no room on the right
             const left = x > rest().x + 1
-            b.style.right = left ? `${R + 2}cqw` : ""
-            b.style.left = left ? "" : `${R + 2}cqw`
+            b.style.right = left ? `${BUBBLE_X}cqw` : ""
+            b.style.left = left ? "" : `${BUBBLE_X}cqw`
         }
         if (phaseRef.current !== "hunt") return
         const g = cqw(HIT)
@@ -973,16 +974,16 @@ function Lesson(props: Props) {
                             ref={bubbleRef}
                             style={{
                                 position: "absolute",
-                                left: `${R + 2}cqw`, // right of the lens, above the handle (place() flips it near the right edge)
+                                left: `${BUBBLE_X}cqw`, // right of the lens, above the handle (place() flips it near the right edge)
                                 top: 0,
                                 transform: "translateY(-50%)",
                                 whiteSpace: "nowrap",
-                                padding: "1.2cqw 2.4cqw",
+                                padding: "1.4cqw 2cqw",
                                 borderRadius: 999,
-                                background: "#ffffff",
-                                color: MIDNIGHT,
+                                background: TEAL, // owner: teal with white text, bigger than Money Double's
+                                color: "#ffffff",
                                 fontFamily: black,
-                                fontSize: "3.6cqw",
+                                fontSize: "4.2cqw", // as big as fits on screen with the glass at rest
                                 lineHeight: 1,
                             }}
                         >
