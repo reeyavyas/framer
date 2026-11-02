@@ -1508,10 +1508,11 @@ header, sub-header and other page copy in Framer.
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
   When the page opens the first wiggle comes after 0.8 s (`NUDGE_FIRST`; owner, 2 Nov: 3 s felt slow); later
   rounds still wait 3 s.
-- **"Drag me!" bubble (owner, 2 Nov):** a white pill left of the lens, as on Money Double's slider thumb, until
+- **"Drag me!" bubble (owner, 2 Nov):** a white pill right of the lens (owner: not over the phone number, where
+  it first sat on the left), as on Money Double's slider thumb, until
   the glass is first dragged (a tap alone doesn't clear it); then gone for the rest of the lesson. It follows
-  the glass but doesn't tilt with the wiggle, and flips to the lens's right when the glass is too near the left
-  edge (live test: it ran off-screen at x = -7). Text is the **Nudge** property.
+  the glass but doesn't tilt with the wiggle. Once the glass is further right than its rest spot it flips to the
+  lens's left. At rest it runs 22 px past the card's right edge (ends at 1022 of 1080). Text is the **Nudge** property.
 - **Wiggle timer bug (fixed 2 Nov):** the "last wiggle" time started at 0, which is the page's load time, so no
   wiggle could come before 3.5 s into the page whatever the delay; it starts at -Infinity now.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card

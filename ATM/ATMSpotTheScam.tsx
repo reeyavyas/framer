@@ -525,8 +525,9 @@ function Lesson(props: Props) {
             copyRef.current.style.transform = `translate(${-x * ZOOM}px, ${-y * ZOOM}px) scale(${ZOOM})`
         const b = bubbleRef.current
         if (b) {
-            // "Drag me!" sits left of the lens, or right of it when there's no room on the left
-            const left = x - cqw(R + 2) - b.offsetWidth >= 0
+            // "Drag me!" sits right of the lens (owner: not over the phone number), or left of it once the glass is
+            // further right than its rest spot, where there's no room on the right
+            const left = x > rest().x + 1
             b.style.right = left ? `${R + 2}cqw` : ""
             b.style.left = left ? "" : `${R + 2}cqw`
         }
@@ -972,7 +973,7 @@ function Lesson(props: Props) {
                             ref={bubbleRef}
                             style={{
                                 position: "absolute",
-                                right: `${R + 2}cqw`, // left of the lens, clear of the handle (place() flips it near the left edge)
+                                left: `${R + 2}cqw`, // right of the lens, above the handle (place() flips it near the right edge)
                                 top: 0,
                                 transform: "translateY(-50%)",
                                 whiteSpace: "nowrap",
