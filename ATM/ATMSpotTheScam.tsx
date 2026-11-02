@@ -1093,8 +1093,8 @@ function Lesson(props: Props) {
                                         animate={!reduceMotion && !isCanvas}
                                         style={{
                                             fontFamily: black,
-                                            fontSize: "3.8cqw",
-                                            lineHeight: 1.15,
+                                            fontSize: "calc(3.8cqw - 2px)", // 2 px smaller (owner)
+                                            lineHeight: 1, // two-line names closer, so they clear the card's edges (owner)
                                             paddingBottom: "0.3cqw", // the font sits low, so this centres it
                                         }}
                                     >
