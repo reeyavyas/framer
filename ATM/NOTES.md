@@ -1510,7 +1510,10 @@ header, sub-header and other page copy in Framer.
   rounds still wait 3 s.
 - **"Drag me!" bubble (owner, 2 Nov):** a white pill left of the lens, as on Money Double's slider thumb, until
   the glass is first dragged (a tap alone doesn't clear it); then gone for the rest of the lesson. It follows
-  the glass but doesn't tilt with the wiggle. Text is the **Nudge** property.
+  the glass but doesn't tilt with the wiggle, and flips to the lens's right when the glass is too near the left
+  edge (live test: it ran off-screen at x = -7). Text is the **Nudge** property.
+- **Wiggle timer bug (fixed 2 Nov):** the "last wiggle" time started at 0, which is the page's load time, so no
+  wiggle could come before 3.5 s into the page whatever the delay; it starts at -Infinity now.
 - **Found clues:** a numbered egg-yolk badge on the clue in the message (numbered in the order found), and a card
   on the clue board under the counts: four cards, 2 × 2, styled like Save or Spend's A-D options (the lanes' blue
   gradient, a 6.2cqw glacier circle with a 3.6cqw number, the clue's name in white Area Normal Black 3.8cqw,

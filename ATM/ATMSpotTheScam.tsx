@@ -414,6 +414,7 @@ function Lesson(props: Props) {
     const lensRef = React.useRef<HTMLDivElement>(null)
     const popRef = React.useRef<HTMLDivElement>(null)
     const nudgeRef = React.useRef<HTMLDivElement>(null)
+    const bubbleRef = React.useRef<HTMLSpanElement>(null)
     const touched = React.useRef(0) // when the card was last touched (ms)
     const copyRef = React.useRef<HTMLDivElement>(null)
     const phaseRef = React.useRef(phase)
@@ -522,6 +523,13 @@ function Lesson(props: Props) {
             lensRef.current.style.transform = `translate(${x}px, ${y}px)`
         if (copyRef.current)
             copyRef.current.style.transform = `translate(${-x * ZOOM}px, ${-y * ZOOM}px) scale(${ZOOM})`
+        const b = bubbleRef.current
+        if (b) {
+            // "Drag me!" sits left of the lens, or right of it when there's no room on the left
+            const left = x - cqw(R + 2) - b.offsetWidth >= 0
+            b.style.right = left ? `${R + 2}cqw` : ""
+            b.style.left = left ? "" : `${R + 2}cqw`
+        }
         if (phaseRef.current !== "hunt") return
         const g = cqw(HIT)
         const i = clues.findIndex(
@@ -644,7 +652,7 @@ function Lesson(props: Props) {
         // the page's first wiggle comes sooner; later rounds wait the full NUDGE_IDLE
         touched.current =
             performance.now() - (round === 0 ? NUDGE_IDLE - NUDGE_FIRST : 0)
-        let last = 0
+        let last = -Infinity // not 0: performance.now() starts at page load, so 0 would hold off the first wiggle
         const id = window.setInterval(() => {
             const now = performance.now()
             if (
@@ -961,9 +969,10 @@ function Lesson(props: Props) {
                     </div>
                     {!dragged && phase === "hunt" && (
                         <span
+                            ref={bubbleRef}
                             style={{
                                 position: "absolute",
-                                right: `${R + 2}cqw`, // left of the lens, clear of the handle
+                                right: `${R + 2}cqw`, // left of the lens, clear of the handle (place() flips it near the left edge)
                                 top: 0,
                                 transform: "translateY(-50%)",
                                 whiteSpace: "nowrap",
