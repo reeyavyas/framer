@@ -1488,8 +1488,9 @@ header, sub-header and other page copy in Framer.
 - **Message frames are mint** (the paragraph bubble, the email panel and the prize pop-up; owner), all four corners
   rounded alike (3cqw), lines at 1.5 (owner disliked the wide spacing), body text 4.1cqw (smaller, owner, to make
   room under Delete; From and Subject unchanged), links in dark teal `#046b68` so they read on mint.
-- **Round 3's browser (owner):** the top bar has the navy card's colours (navy to midnight; it was light teal, then
-  light blue; the teal glass blended into light teal); the page behind the pop-up is dark teal `#046b68`; the browser is the whole card (no navy frame
+- **Round 3's browser (owner):** the top bar is dark teal `#046b68` and the page behind the pop-up has the navy card's
+  colours like the other messages (2 Nov, owner swapped them; the bar was navy, before that light teal, then light
+  blue); the browser is the whole card (no navy frame
   around it, owner: no frame inside a frame), its bar and page lined up with the other messages' insets; the mint
   pop-up is centred and fills the page with room on all four sides; the card-number field is white. The bar's three dots are egg yolk, light teal and glacier (owner).
 - **Finding a clue:** the glass must rest on it for 350 ms (`DWELL`), so sweeping straight across the message

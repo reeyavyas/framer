@@ -261,7 +261,7 @@ const ROUNDS: Round[] = [
                 {/* the browser is the whole card, no frame inside a frame (owner) */}
                 <div
                     style={{
-                        background: DARK_TEAL, // the browser page behind the pop-up (owner)
+                        background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`, // the browser page behind the pop-up: the other cards' navy (owner, swapped with the bar)
                         borderRadius: "4cqw", // the card's corners
                         overflow: "hidden",
                     }}
@@ -272,7 +272,7 @@ const ROUNDS: Round[] = [
                             alignItems: "center",
                             gap: "1.4cqw",
                             padding: "2.6cqw 4.4cqw", // lined up with the other messages' insets
-                            background: `linear-gradient(160deg, ${NAVY} 30%, ${MIDNIGHT})`, // the navy card's colours, so the teal glass stands out on it (owner)
+                            background: DARK_TEAL, // the browser bar (owner, swapped with the page's navy)
                         }}
                     >
                         {[YOLK, "#3bbfc0", GLACIER].map((col) => (
