@@ -206,8 +206,7 @@ GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both sc
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
 STACK = dict(cx=2865,  # moved right with the taller arrow (was 2665)
               bottom=2459, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
-# ATMSavingsJar.tsx then lifts the stack 12 and the arrow 16 (ARROW_FOOT too) so all three bottoms sit at the jar's lowest point, y 2446, and slants the arrow 9.46 deg (skewY about its front
-# corner) so its front face's base is level, not tilted up to the right; redo both after a rebuild
+# ATMSavingsJar.tsx then lifts the stack 12 and the arrow 16 (ARROW_FOOT too) so all three bottoms sit at the jar's lowest point, y 2446; redo that after a rebuild
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
