@@ -886,7 +886,7 @@ function Lesson(props: Props) {
                     flexDirection: "column",
                     gap: "1.8cqw",
                     justifyContent: "space-between", // spare height spread between the parts (owner)
-                    paddingBottom: "calc(3cqw + 4px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher)
+                    paddingBottom: "calc(3cqw - 4px)", // room between Delete and the screen's bottom edge (owner: then 4 px higher; then 8 px given to the 4 gaps above, 2 px each)
                     boxSizing: "border-box",
                     color: NAVY,
                     fontFamily: '"Area Normal Bold", sans-serif',
@@ -995,7 +995,7 @@ function Lesson(props: Props) {
                     flex: "none",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "calc(1.8cqw - 3px)", // 3 px given to the gaps around the board (owner)
+                    gap: "calc(1.8cqw - 1px)", // 3 px given to the gaps around the board, then 2 px back (owner)
                     marginTop: 6, // 6 px more space under the card than between the other parts (owner)
                 }}
             >
@@ -1020,7 +1020,7 @@ function Lesson(props: Props) {
                         display: "grid",
                         gridTemplateColumns: "1fr 1fr",
                         columnGap: "1.8cqw",
-                        rowGap: "calc(1.8cqw + 2px)", // between the card rows (owner: not smaller, a little more)
+                        rowGap: "calc(1.8cqw + 4px)", // between the card rows (owner: not smaller, a little more; then 2 px more)
                     }}
                 >
                     {clues.map((_, k) => {
@@ -1092,7 +1092,7 @@ function Lesson(props: Props) {
                     {
                         flex: "none",
                         height: "11.1cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
-                        margin: "calc(1cqw + 6px) 0", // more room above and below the text (owner)
+                        margin: "calc(1cqw + 8px) 0", // more room above and below the text (owner; then 2 px more each)
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",

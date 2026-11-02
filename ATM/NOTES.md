@@ -1544,7 +1544,9 @@ header, sub-header and other page copy in Framer.
   40 px all round instead of 33 above, the card 7 px taller; set on the
   page's layer and as the component's default height). Measured gaps card → board / board → text / text → Delete:
   36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
-  height). Delete sits 3cqw + 4 px from the layer's bottom; on the page the layer still ends well above the Kiosk
+  height). Delete sits 3cqw + 4 px from the layer's bottom (2 Nov, owner: 2 px more in each gap from "Message" down to
+  Delete, taken from under Delete: counts → cards 1.8cqw − 1 px, card rows 1.8cqw + 4 px, the text's margins 1cqw + 8 px,
+  Delete now 3cqw − 4 px from the bottom, about 28 px; the gap above "Message" is unchanged); on the page the layer still ends well above the Kiosk
   frame's bottom (about 146 px at 1187). The "Message" and "Clues found" labels are 3.8cqw + 2 px (owner).
 - **Round 1's sender (owner):** the phone number shows from the start (no "Your Bank" to uncover); the avatar
   shows "?"; its why reads "Your bank's texts come from a number you know. This one is a random number."
