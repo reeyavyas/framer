@@ -1510,10 +1510,10 @@ header, sub-header and other page copy in Framer.
   rounds still wait 3 s.
 - **"Drag me!" bubble (owner, 2 Nov):** a teal pill with white text (owner), 4.2cqw Area Normal Black (bigger
   than Money Double's white 3.6cqw one), right of the lens (owner: not over the phone number, where it first sat
-  on the left), 14.4cqw from the lens centre so it clears the teal ring (13.4cqw), until
+  on the left), 12.4cqw from the lens centre so it overlaps the ring (13.4cqw) slightly, in front of it (owner), until
   the glass is first dragged (a tap alone doesn't clear it); then gone for the rest of the lesson. It follows
   the glass but doesn't tilt with the wiggle. Once the glass is further right than its rest spot it flips to the
-  lens's left. At rest it runs past the card's right edge onto the page (ends at 1062 of 1080; owner: keep it
+  lens's left. At rest it runs past the card's right edge onto the page (ends at 1043 of 1080; owner: keep it
   that way); 4.2cqw is as big as fits on screen there. Text is the **Nudge** property.
 - **Wiggle timer bug (fixed 2 Nov):** the "last wiggle" time started at 0, which is the page's load time, so no
   wiggle could come before 3.5 s into the page whatever the delay; it starts at -Infinity now.
