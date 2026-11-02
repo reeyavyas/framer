@@ -25,7 +25,7 @@ const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
 const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
-const LAST_READ = 2000 // ms the last clue's why stays up before "It's a scam." (Delete already shows; owner: quicker)
+const LAST_READ = 4000 // ms the last clue's why stays up before "It's a scam." (Delete already shows; owner: was 4.5 s, then 2 s, now 4 s to read it)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
 const NUDGE_IDLE = 3000 // ms with no touch, while it's the user's turn, before the glass wiggles for attention
