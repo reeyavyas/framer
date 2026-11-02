@@ -433,7 +433,6 @@ function Lesson(props: Props) {
     } | null>(null)
     const tween = React.useRef<gsap.core.Tween | null>(null)
     const run = React.useRef(0) // bumped to cancel a running sequence
-    const skip = React.useRef(false) // a tap while the last clue's why shows moves on
     const dwell = React.useRef({ i: -1, t: 0 }) // the clue under the glass and its timer
     const ready = size !== null
 
@@ -573,19 +572,16 @@ function Lesson(props: Props) {
         })
 
     // Waits ms, not counting time the inactivity overlay is open (ATMInactivityOverlay sets
-    // window.__systemOverlayOpen); ends early when the sequence is cancelled or, if `skippable`, on a tap.
-    const wait = (ms: number, token: number, skippable = false) =>
+    // window.__systemOverlayOpen); ends early only when the sequence is cancelled (owner: a tap mustn't cut the
+    // last clue's why short).
+    const wait = (ms: number, token: number) =>
         new Promise<void>((done) => {
             let last = performance.now()
             const id = window.setInterval(() => {
                 const now = performance.now()
                 if (!(window as any).__systemOverlayOpen) ms -= now - last
                 last = now
-                if (
-                    ms <= 0 ||
-                    run.current !== token ||
-                    (skippable && skip.current)
-                ) {
+                if (ms <= 0 || run.current !== token) {
                     window.clearInterval(id)
                     done()
                 }
@@ -595,8 +591,7 @@ function Lesson(props: Props) {
     // Every clue found: Delete shows at once; the last clue's why stays up a moment, then the round's tip
     async function lastClue(token: number) {
         setPhase("last")
-        skip.current = false
-        await wait(LAST_READ, token, true)
+        await wait(LAST_READ, token)
         // not once Delete has been tapped (it's "leaving" then)
         if (run.current === token && phaseRef.current === "last")
             setPhase("end")
@@ -878,7 +873,6 @@ function Lesson(props: Props) {
     return (
         <div
             onPointerDown={() => {
-                if (phaseRef.current === "last") skip.current = true // a tap anywhere moves on to Delete
                 touched.current = performance.now() // any touch holds off the wiggle...
                 nudgeRef.current?.getAnimations().forEach((a) => a.cancel()) // ...and stops one at once
             }}

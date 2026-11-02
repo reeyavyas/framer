@@ -1528,7 +1528,8 @@ header, sub-header and other page copy in Framer.
 - **Why, straight away (owner, replacing the end-of-round tour):** the moment a clue is found, the line under
   the board shows its name in bold and why it's a scam, and its card gets an egg-yolk outline; it stays until the
   next clue is found. The moment the last clue is found Delete shows (owner: it took too long, sometimes a tap);
-  its why stays 2 s (`LAST_READ`; a tap moves on sooner), then "It's a scam." and the round's tip. Delete drops the card away and the next round
+  its why stays 2 s (`LAST_READ`; always the full 2 s: a tap used to cut it short, which made the wait vary and
+  hid the why, so the owner asked; paused while the inactivity overlay is open; tapping Delete still moves on), then "It's a scam." and the round's tip. Delete drops the card away and the next round
   slides in; on round 3 it goes to `/atm-lessons/spot-the-scam/complete` (When Done, with the same saved-path
   fallback as Credit Score).
 - **Even spacing, nothing moves (owner):** the clue cards are a fixed height (11cqw + 4 px: room for a two-line
