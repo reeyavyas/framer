@@ -376,7 +376,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1205
+ * @framerIntrinsicHeight 1405
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -518,8 +518,15 @@ function Lesson(props: Props) {
     const place = (x: number, y: number) => {
         const s = sizeRef.current
         if (!s) return
+        // the lens goes no lower than the middle of the lowest clue it must reach, so the handle stays in the
+        // space under the card, clear of "Clues found" (owner)
+        const floor = Math.max(
+            ...clues.map((_, k) =>
+                Math.min(...rectsOf(k).map((q) => (q.t + q.b) / 2))
+            )
+        )
         x = Math.min(s.w, Math.max(0, x))
-        y = Math.min(s.h, Math.max(0, y))
+        y = Math.min(s.h, floor, Math.max(0, y))
         pos.current = { x, y }
         if (lensRef.current)
             lensRef.current.style.transform = `translate(${x}px, ${y}px)`
