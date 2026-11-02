@@ -122,7 +122,7 @@ const ROUNDS: Round[] = [
         ],
         end: "Don’t reply and don’t tap the link. Delete it.",
         view: (c) => (
-            <div style={{ padding: "3.6cqw 4.4cqw 21.3cqw" }}>
+            <div style={{ padding: "3.6cqw 4.4cqw 27.6cqw" }}>
                 {/* room below for the glass's handle (owner) */}
                 <div
                     style={{
@@ -149,7 +149,8 @@ const ROUNDS: Round[] = [
                         </div>
                     </div>
                 </div>
-                <div style={bubble}>
+                {/* lines a little closer (owner: PIN was hard to reach with the glass) */}
+                <div style={{ ...bubble, lineHeight: 1.4 }}>
                     {c(0, "URGENT!")} Your account has been locked because of
                     unusual activity. Verify your details {c(0, "immediately")}{" "}
                     to get back in:{" "}
@@ -382,7 +383,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1418
+ * @framerIntrinsicHeight 1426
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -524,13 +525,12 @@ function Lesson(props: Props) {
     const place = (x: number, y: number) => {
         const s = sizeRef.current
         if (!s) return
-        // the lens goes no lower than the middle of the lowest clue it must reach, so the handle stays in the
-        // space under the card, clear of "Clues found" (owner)
-        const floor = Math.max(
-            ...clues.map((_, k) =>
-                Math.min(...rectsOf(k).map((q) => (q.t + q.b) / 2))
-            )
+        // the lens goes no lower than the middle of the lowest line of any clue (owner: the second line of
+        // "Reply with your PIN" must be reachable), so the handle stays in the room at the card's bottom
+        const mids = clues.flatMap((_, k) =>
+            rectsOf(k).map((q) => (q.t + q.b) / 2)
         )
+        const floor = mids.length ? Math.max(...mids) : s.h
         // ...and the whole glass, ring and handle, stays on the screen (owner: it was cut off at the right edge)
         const left = toLocal(0, 0).x + cqw(GLASS_LEFT)
         const right = toLocal(window.innerWidth, 0).x - cqw(GLASS_RIGHT)
@@ -1052,10 +1052,10 @@ function Lesson(props: Props) {
                             <div
                                 key={k}
                                 style={{
-                                    height: "calc(11cqw + 4px)", // fixed (room for a two-line name, with 2 px more padding, owner), so nothing below moves as clues fill in
+                                    height: "calc(11cqw + 8px)", // fixed (room for a two-line name, with 2 px more padding, then 2 px more again, owner), so nothing below moves as clues fill in
                                     boxSizing: "border-box",
                                     borderRadius: "4cqw",
-                                    padding: "calc(1cqw + 2px) 2.6cqw",
+                                    padding: "calc(1cqw + 4px) 2.6cqw",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "2.4cqw",

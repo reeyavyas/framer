@@ -1543,10 +1543,11 @@ header, sub-header and other page copy in Framer.
   said not to give up any gap to make room, so the **layer is 1205 px tall** (was 1174, then 1187, then 1197; 1205
   when round 2's email was centred in its card, 2 Nov: its top padding 3.6 → 4.4cqw like its sides and bottom,
   40 px all round instead of 33 above, the card 7 px taller; set on the
-  page's layer and as the component's default height). Then **1418** (2 Nov): the owner hid the page's sub-header, so
+  page's layer and as the component's default height). Then **1418**, then **1426** (8 px for 2 px more padding above and below each clue card, owner) (2 Nov): the owner hid the page's sub-header, so
   the layer starts at y 492. The glass's handle reaches 34.6cqw (318 px) below the lens centre, so each message has
-  room at its own bottom for it (message 1 21.3cqw, 2 25cqw, 3 28.6cqw at the bottom, inside the teal page for 3),
-  and the lens stops at the lowest clue's middle and where the handle would end 10 px below the card (BELOW_CARD,
+  room at its own bottom for it (message 1 27.6cqw, 2 25cqw, 3 28.6cqw at the bottom, inside the teal page for 3),
+  and the lens stops at the middle of the lowest line of any clue (owner: "PIN" on its own line was out of reach;
+  message 1's lines also went from 1.5 to 1.4 apart) and where the handle would end 10 px below the card (BELOW_CARD,
   owner). (Before that a 200 px margin under the card held the handle, over the page; owner: keep it in the card.)
   24 px of the space went under Delete (owner: Done sat too close to the bottom). The lens also stays far enough
   from the screen's edges that the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right
