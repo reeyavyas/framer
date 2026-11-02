@@ -980,7 +980,7 @@ function Lesson(props: Props) {
                                 whiteSpace: "nowrap",
                                 padding: "1.4cqw 2cqw",
                                 borderRadius: 999,
-                                background: TEAL, // owner: teal with white text, bigger than Money Double's
+                                background: "#3bbfc0", // owner: light teal (the brand's Light Teal) with white text, bigger than Money Double's
                                 color: "#ffffff",
                                 fontFamily: black,
                                 fontSize: "4.2cqw", // as big as fits on screen with the glass at rest

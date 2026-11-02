@@ -1508,7 +1508,7 @@ header, sub-header and other page copy in Framer.
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
   When the page opens the first wiggle comes after 0.8 s (`NUDGE_FIRST`; owner, 2 Nov: 3 s felt slow); later
   rounds still wait 3 s.
-- **"Drag me!" bubble (owner, 2 Nov):** a teal pill with white text (owner), 4.2cqw Area Normal Black (bigger
+- **"Drag me!" bubble (owner, 2 Nov):** a light teal (`#3bbfc0`) pill with white text (owner), 4.2cqw Area Normal Black (bigger
   than Money Double's white 3.6cqw one), right of the lens (owner: not over the phone number, where it first sat
   on the left), 12.4cqw from the lens centre so it overlaps the ring (13.4cqw) slightly, in front of it (owner), until
   the glass is first dragged (a tap alone doesn't clear it); then gone for the rest of the lesson. It follows
