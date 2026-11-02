@@ -383,7 +383,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1426
+ * @framerIntrinsicHeight 1428
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -1052,7 +1052,7 @@ function Lesson(props: Props) {
                             <div
                                 key={k}
                                 style={{
-                                    height: "calc(11cqw + 8px)", // fixed (room for a two-line name, with 2 px more padding, then 2 px more again, owner), so nothing below moves as clues fill in
+                                    height: "calc(11cqw + 14px)", // fixed (room for a two-line name, with 2 px more padding, then 2 px more again, then 6 px more for two-line names, owner), so nothing below moves as clues fill in
                                     boxSizing: "border-box",
                                     borderRadius: "4cqw",
                                     padding: "calc(1cqw + 4px) 2.6cqw",
@@ -1094,7 +1094,7 @@ function Lesson(props: Props) {
                                         style={{
                                             fontFamily: black,
                                             fontSize: "calc(3.8cqw - 2px)", // 2 px smaller (owner)
-                                            lineHeight: 1, // two-line names closer, so they clear the card's edges (owner)
+                                            lineHeight: 1.15,
                                             paddingBottom: "0.3cqw", // the font sits low, so this centres it
                                         }}
                                     >
@@ -1113,14 +1113,14 @@ function Lesson(props: Props) {
                 style={
                     {
                         flex: "none",
-                        height: "11.1cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
+                        height: "10cqw", // fixed: two lines with the bigger lead in front (exactly the longest text), so nothing moves as the text changes (owner)
                         margin: "calc(1cqw + 8px) 0", // more room above and below the text (owner; then 2 px more each)
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
                         padding: "0 3cqw",
                         textAlign: "center",
-                        fontSize: "4.1cqw",
+                        fontSize: "3.7cqw", // a little smaller (owner; was 4.1cqw)
                         lineHeight: 1.3,
                         color: MIDNIGHT,
                         textWrap: "balance",
@@ -1129,9 +1129,7 @@ function Lesson(props: Props) {
             >
                 <div>
                     {lead && (
-                        <span
-                            style={{ fontFamily: display, fontSize: "4.4cqw" }}
-                        >
+                        <span style={{ fontFamily: display, fontSize: "4cqw" }}>
                             {lead}{" "}
                         </span>
                     )}
