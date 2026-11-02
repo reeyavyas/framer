@@ -41,6 +41,8 @@ const OPEN_R = 365 // the opening, inside the ring
 const K = R / OPEN_R // cqw per art unit
 const GLASS_LEFT = 13.8 // cqw the glass reaches left of the lens centre (the ring), measured live
 const GLASS_RIGHT = 29.6 // cqw it reaches right of it (the handle's end)
+const GLASS_BOTTOM = 34.6 // cqw it reaches below it (the handle's end)
+const BELOW_CARD = 10 // px the handle may reach below the card (owner); each message has room at its bottom for it
 const BUBBLE_X = 12.4 // cqw from the lens centre to the "Drag me!" bubble: 1cqw over the ring (13.4), in front of it (owner)
 const VB = [1895, 710, 1585, 1765] // the magnifier with its handle
 // prettier-ignore
@@ -120,7 +122,8 @@ const ROUNDS: Round[] = [
         ],
         end: "Don’t reply and don’t tap the link. Delete it.",
         view: (c) => (
-            <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
+            <div style={{ padding: "3.6cqw 4.4cqw 21.3cqw" }}>
+                {/* room below for the glass's handle (owner) */}
                 <div
                     style={{
                         display: "flex",
@@ -179,8 +182,9 @@ const ROUNDS: Round[] = [
         ],
         end: "Track packages in the delivery company’s own app. Delete it.",
         view: (c) => (
-            <div style={{ padding: "4.4cqw" }}>
-                {/* the same room above the email as below and beside it (owner: centre it in the card) */}
+            <div style={{ padding: "4.4cqw 4.4cqw 25cqw" }}>
+                {/* the same room above the email as beside it (owner: centre it in the card), and room below for the
+                    glass's handle (owner) */}
                 <div
                     style={{
                         background: MINT,
@@ -297,7 +301,8 @@ const ROUNDS: Round[] = [
                         </span>
                     </div>
                     {/* the pop-up fills the page, centred, with room on all four sides as the other messages' frames have */}
-                    <div style={{ padding: "3.6cqw 4.4cqw 4.4cqw" }}>
+                    <div style={{ padding: "3.6cqw 4.4cqw 28.6cqw" }}>
+                        {/* room below for the glass's handle (owner) */}
                         <div
                             style={{
                                 background: MINT, // like the other messages (owner)
@@ -377,7 +382,7 @@ interface Props {
  * @framerSupportedLayoutWidth fixed
  * @framerSupportedLayoutHeight fixed
  * @framerIntrinsicWidth 920
- * @framerIntrinsicHeight 1405
+ * @framerIntrinsicHeight 1418
  */
 export default function ATMSpotTheScam(props: Props) {
     // keyed on the canvas settings, so changing them on the canvas starts over
@@ -530,7 +535,11 @@ function Lesson(props: Props) {
         const left = toLocal(0, 0).x + cqw(GLASS_LEFT)
         const right = toLocal(window.innerWidth, 0).x - cqw(GLASS_RIGHT)
         x = Math.min(s.w, right, Math.max(0, left, x))
-        y = Math.min(s.h, floor, Math.max(0, y))
+        y = Math.min(
+            s.h + BELOW_CARD - cqw(GLASS_BOTTOM),
+            floor,
+            Math.max(0, y)
+        )
         pos.current = { x, y }
         if (lensRef.current)
             lensRef.current.style.transform = `translate(${x}px, ${y}px)`
@@ -917,7 +926,6 @@ function Lesson(props: Props) {
                 style={{
                     flex: "none",
                     position: "relative",
-                    marginBottom: 176, // room for the glass's handle, clear of "Clues found" (owner; the layer grew 200 px; 24 of it then moved under Delete)
                     touchAction: "none",
                     cursor: phase === "hunt" ? "grab" : undefined,
                 }}

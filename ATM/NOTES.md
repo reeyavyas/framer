@@ -1542,14 +1542,14 @@ header, sub-header and other page copy in Framer.
   said not to give up any gap to make room, so the **layer is 1205 px tall** (was 1174, then 1187, then 1197; 1205
   when round 2's email was centred in its card, 2 Nov: its top padding 3.6 → 4.4cqw like its sides and bottom,
   40 px all round instead of 33 above, the card 7 px taller; set on the
-  page's layer and as the component's default height). Then **1405** (2 Nov): the owner hid the page's sub-header,
-  so the layer starts at y 492 and grew 200 px, all of it under the card (a 200 px margin under it; left to
-  `space-between` it was split over the three gaps), where the glass's handle hangs; then 24 px of it moved under Delete (owner: Done sat too close to the
-  bottom; the handle may come close to "Clues found"). The lens also stays far enough from the screen's edges that
-  the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right edge). (Tried and removed: turning
-  the glass near the right edge so its handle pointed down-left; owner: keep the glass's tilt.) The
-  lens also stops at the middle of the lowest clue it must reach (place()), so the handle, which reaches 318 px
-  below the lens centre, stays clear of "Clues found". Earlier measured gaps card → board / board → text / text → Delete:
+  page's layer and as the component's default height). Then **1418** (2 Nov): the owner hid the page's sub-header, so
+  the layer starts at y 492. The glass's handle reaches 34.6cqw (318 px) below the lens centre, so each message has
+  room at its own bottom for it (message 1 21.3cqw, 2 25cqw, 3 28.6cqw at the bottom, inside the teal page for 3),
+  and the lens stops at the lowest clue's middle and where the handle would end 10 px below the card (BELOW_CARD,
+  owner). (Before that a 200 px margin under the card held the handle, over the page; owner: keep it in the card.)
+  24 px of the space went under Delete (owner: Done sat too close to the bottom). The lens also stays far enough
+  from the screen's edges that the whole glass shows (GLASS_LEFT / GLASS_RIGHT, owner: it was cut off at the right
+  edge). (Tried and removed: turning the glass near the right edge; owner: keep the glass's tilt.) Earlier measured gaps card → board / board → text / text → Delete:
   36 / 46 / 46 px in round 1, 30 / 39 / 39 in round 2, 50 / 60 / 60 in round 3 (the message cards differ in
   height). Delete sits 3cqw + 4 px from the layer's bottom (2 Nov, owner: 2 px more in each gap from "Message" down to
   Delete, taken from under Delete: counts → cards 1.8cqw − 1 px, card rows 1.8cqw + 4 px, the text's margins 1cqw + 8 px,
