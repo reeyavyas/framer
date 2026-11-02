@@ -25,6 +25,7 @@ const DARK_TEAL = "#046b68" // links on mint (brand teal is too light there)
 
 const R = 10 // cqw: the glass opening's radius on screen
 const ZOOM = 1.45 // how much the glass magnifies
+const GLIDE_HOME = 0.6 // s for the glass to slide back to its rest spot once every clue is found
 const LAST_READ = 4000 // ms the last clue's why stays up before "It's a scam." (Delete already shows; owner: was 4.5 s, then 2 s, now 4 s to read it)
 const HIT = 1 // cqw a clue's box grows by for the glass to count as over it
 const DWELL = 350 // ms the glass rests on a clue before it counts
@@ -588,9 +589,11 @@ function Lesson(props: Props) {
             }, 50)
         })
 
-    // Every clue found: Delete shows at once; the last clue's why stays up a moment, then the round's tip
+    // Every clue found: Delete shows at once and the glass slides back to its rest spot (owner: off "Clues found");
+    // the last clue's why stays up a moment, then the round's tip
     async function lastClue(token: number) {
         setPhase("last")
+        glide(rest(), GLIDE_HOME)
         await wait(LAST_READ, token)
         // not once Delete has been tapped (it's "leaving" then)
         if (run.current === token && phaseRef.current === "last")

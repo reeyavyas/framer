@@ -1496,8 +1496,8 @@ header, sub-header and other page copy in Framer.
   doesn't find everything. Drag the glass, or tap anywhere on the card to send it there (a tap on or near the
   glass still sends it). It rests at the card's top right, 31cqw in from the right edge, so its whole handle stays
   on the card (owner: the handle was cut off at the screen's right edge; checked 17 px inside the card).
-  After the last clue the glass stays where it was; its handle may cover part of "Clues found" and a clue card
-  while the round ends. The owner chose to leave it there (2 Nov) rather than glide it back to rest.
+  The moment the last clue is found the glass slides back to its rest spot in 0.6 s (GLIDE_HOME), so its handle
+  no longer covers "Clues found" while the round ends (owner, 2 Nov; mid-round it can still pass over the counts).
 - **No progress dots** (owner: they looked like the messages could be swiped). Instead, under the card, two counts
   in Money Double's "Your money" style, "Message 1 / 3" and "Clues found 0 / 4" (teal Area Normal Black label,
   owner asked for bolder, beside a big P22 Mackinac figure).
