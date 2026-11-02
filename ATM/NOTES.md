@@ -1508,8 +1508,8 @@ header, sub-header and other page copy in Framer.
   after "Your turn!", none in the 2.5 s after a touch, back again when left alone.
   When the page opens the first wiggle comes after 0.8 s (`NUDGE_FIRST`; owner, 2 Nov: 3 s felt slow); later
   rounds still wait 3 s.
-- **"Drag me!" bubble (owner, 2 Nov):** a pill in the handle's colours (owner; it was teal, then light teal, with white text): the handle's
-  yellow-to-orange gradient with a light top and darker bottom edge, midnight text as on Money Double's yolk thumb
+- **"Drag me!" bubble (owner, 2 Nov):** a plain Egg Yolk (`#ffcc40`, the handle's light yellow) pill (owner; it was teal, then light teal, both
+  with white text, then the handle's full yellow-to-orange gradient; owner: no orange), midnight text as on Money Double's yolk thumb
   (white can't be read on yellow), the text 0.2cqw higher than the padding alone puts it (owner: not centred), 4.2cqw Area Normal Black (bigger
   than Money Double's white 3.6cqw one), right of the lens (owner: not over the phone number, where it first sat
   on the left), 12.4cqw from the lens centre so it overlaps the ring (13.4cqw) slightly, in front of it (owner), until
