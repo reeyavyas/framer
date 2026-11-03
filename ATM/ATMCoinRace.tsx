@@ -269,8 +269,7 @@ export default function ATMCoinRace(props: Props) {
     }, [props.pick, props.weekMs, still])
 
     // A clink as each new coin lands: the file's hit is 0.06 s in, the drop lands 0.315 s after the coin appears.
-    // Lanes that gain a coin the same week share one clink.
-    React.useEffect(() => loadSounds("coin-single.mp3"), [])
+    // Lanes that gain a coin the same week share one clink. (Loaded with the page: see below the controls.)
     React.useEffect(() => {
         if (still || !week || !props.sounds) return
         const gained = SAVE.some(
@@ -766,3 +765,6 @@ addPropertyControls(ATMCoinRace, {
     },
     onPickAgain: { type: ControlType.EventHandler, title: "Pick Again" },
 })
+
+// The race starts 70 ms after it shows, too soon to load the clink then, so it loads with the page
+loadSounds("coin-single.mp3")
