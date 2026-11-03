@@ -1609,6 +1609,12 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   picture in the rain (one every 120 ms) gets its own thump and its bounce a softer one. Correct (from 0.05 s in) or
   incorrect plays with the answer card's pop. Levels: thump ×0.8, correct ×1.2, incorrect ×0.6 (twice as loud as the
   others). The sounds load with the page, since the rain starts at once.
+  Live (3 Nov): all three load with the page (200). The opening rain played 12 thumps in about 1 s, at least 66 ms
+  apart, the first landings at full volume and later bumps softer (0.09-0.44 of 0.8). Netflix into Wants: correct
+  plays with "Correct! This is a want."; rent into Wants: incorrect plays with "Most people would consider this a
+  NEED.", then the tossed picture thumps as it lands (full volume) and softer on its bounces. Not run: sorting every
+  picture to the end (the last correct then the page switch), and how the rain sounds by ear. The test browser only
+  runs the physics while its pane is on screen.
 - The Credit Score Challenge has no coins, sand or zoom, so it stays silent. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
