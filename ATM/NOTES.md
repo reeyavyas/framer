@@ -1625,7 +1625,11 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   an answer counts (the card has flown off; the needle sets off, the score counts and the chip floats up), a right
   answer plays `score-up` (0.65 s) and a wrong one `score-down` (2 s). Both start straight away, so no offset. The drop
   is 2.5 times as loud, so the levels are up ×1.6, down ×0.65. Sounds and Volume properties as on the others; the
-  files load with the page. The looping lesson-card
+  files load with the page.
+  Live (3 Nov): both load (200). Yes on card 1: up with "Paid on time +15" (700 → 715); Yes on card 2: down with
+  "Card almost maxed out −30" (685); a swipe right on card 3 and No on card 4: up with their +15 chips. Each sound
+  started within 7 ms of its chip. A short drag that springs back plays nothing. No console errors. Not run: the
+  missed-payment −40 card (same code as −30) and the finale. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
 ## Decisions log (so feedback doesn't undo them by accident)
