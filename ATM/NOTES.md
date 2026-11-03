@@ -1586,6 +1586,12 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   or more the `coin-multiple` pile on the first landing. A drag mid-run cuts the sand at once.
 - **Spot the Scam:** the zoom as the glass locks onto a clue (the moment its badge and card appear).
 - Levels in code to even out the files: sand ×5, zoom ×3.5, coin pile ×1.3, race clinks ×0.7 (they overlap).
+- **Live test 1 (3 Nov)**, timing read from the page (when each sound starts vs. each animation), not by ear:
+  every file loads (200); race D: every clink hits its coin's landing to the ms, but only 22 of 26 played (the race
+  starts 70 ms after it shows, before the clink had loaded; it now loads with the page). Money Double 12%: single
+  clinks and the coin pile's first hit land on their coins to the ms, the sand starts with each drain (every 1.75 s),
+  but its fade was undone by the next drain's stop call, so it played through the flip (a stop now only counts
+  once). Spot the Scam round 1: all four clues zoomed, each starting on its clue's pop. Rounds 2-3 not yet run.
 - Not used: Need or Want and the Credit Score Challenge have no coins, sand or zoom. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
