@@ -1608,7 +1608,10 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   `ball-bounce` (freesound_community plastic-ball-bounce-14790, pinned to commit `aa7c863`) in place of `thump`, which
   stays in `ATM/sounds/` to swap back: the file bounces six times, and the physics makes the bounces, so only its
   first plays (0.06-0.23 s of the file, its hit at 0.065, faded out over the last 0.03 s, before the second bounce at
-  0.245). It's much quieter than the other files, so its level is ×4.5. (Thump played from 0.13 s, its hit at 0.14.) Hits under 200 px/s (settling, resting) are silent, and thumps are at least 60 ms apart, so each
+  0.245). It's much quieter than the other files, so its level is ×4.5. (Thump played from 0.13 s, its hit at 0.14.)
+  Live (3 Nov, bounce): loads from `aa7c863`; the rain played 12 bounces, each the 0.17 s slice from 0.06 s in, at
+  least 66 ms apart, volume following the hit (3.6 at full, 0.46 for light bumps); correct still plays with its card;
+  no console errors. Hits under 200 px/s (settling, resting) are silent, and thumps are at least 60 ms apart, so each
   picture in the rain (one every 120 ms) gets its own thump and its bounce a softer one. Correct (from 0.05 s in) or
   incorrect plays with the answer card's pop. Levels: bounce ×4.5 (thump was ×0.8), correct ×1.2, incorrect ×0.6 (twice as loud as the
   others). The sounds load with the page, since the rain starts at once.
