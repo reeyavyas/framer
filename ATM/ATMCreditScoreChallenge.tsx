@@ -234,6 +234,81 @@ const useRouter: () => unknown =
 
 type View = "Start" | "Finale"
 
+// ---- sounds ----
+// The owner's sound files (ATM/sounds), served from this repo at one commit so they never change under the page.
+// Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
+// loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
+const SOUNDS =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@6d2c93c3f1b8992e2ab84c4866e2ed867b26f8de/ATM/sounds/"
+let audioCtx: AudioContext | null = null
+const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
+function loadSounds(...names: string[]) {
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
+    if (!AC) return
+    const ac = (audioCtx ??= new AC())
+    for (const name of names)
+        if (buffers[name] === undefined) {
+            buffers[name] = null
+            fetch(SOUNDS + name)
+                .then((r) => r.arrayBuffer())
+                .then((b) => ac.decodeAudioData(b))
+                .then((b) => (buffers[name] = b))
+                .catch(() => (buffers[name] = undefined))
+        }
+}
+// Plays `name` `delay` s from now, from `offset` s into the file; returns a stop that fades it out over `fade` s
+function playSound(
+    name: string,
+    volume: number,
+    {
+        delay = 0,
+        offset = 0,
+        fadeIn = 0.005,
+        loop,
+    }: {
+        delay?: number
+        offset?: number
+        fadeIn?: number
+        loop?: [number, number]
+    } = {}
+) {
+    const ac = audioCtx
+    const buffer = buffers[name]
+    if (!ac || !buffer || volume <= 0) return (_fade?: number) => {}
+    if (ac.state === "suspended") void ac.resume()
+    const src = ac.createBufferSource()
+    src.buffer = buffer
+    if (loop) {
+        src.loop = true
+        src.loopStart = loop[0]
+        src.loopEnd = loop[1]
+    }
+    const gain = ac.createGain()
+    const t = ac.currentTime + delay
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    src.connect(gain).connect(ac.destination)
+    src.start(t, offset)
+    let stopped = false // only the first stop counts; a second would bring the volume back
+    return (fade = 0.2) => {
+        if (stopped) return
+        stopped = true
+        const now = Math.max(ac.currentTime, t + fadeIn)
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setValueAtTime(volume, now)
+        gain.gain.linearRampToValueAtTime(0, now + fade)
+        src.stop(now + fade + 0.02)
+    }
+}
+
 interface Props {
     canvasView: View
     cardHint: string
@@ -242,6 +317,8 @@ interface Props {
     finale: string
     done: string
     doneLink: string
+    sounds: boolean
+    volume: number
 }
 
 /**
@@ -553,6 +630,12 @@ function Challenge(props: Props) {
                 setMissed([])
             } else setMissed(nowMissed)
             setScore(next)
+            // with the needle setting off and the chip (both files start straight away; the drop is 2.5 times as loud)
+            if (props.sounds)
+                playSound(
+                    ok ? "score-up.mp3" : "score-down.mp3",
+                    props.volume * (ok ? 1.6 : 0.65)
+                )
             setDeck(rest)
             setChip({
                 id: ++chips.current,
@@ -1079,6 +1162,8 @@ ATMCreditScoreChallenge.defaultProps = {
     finale: "Congratulations, your score is now {score}!",
     done: "Done",
     doneLink: "/atm-lessons/credit-score-challenge/complete",
+    sounds: true,
+    volume: 0.8,
 }
 
 addPropertyControls(ATMCreditScoreChallenge, {
@@ -1124,4 +1209,16 @@ addPropertyControls(ATMCreditScoreChallenge, {
         description: "The lesson's completion page.",
         defaultValue: ATMCreditScoreChallenge.defaultProps.doneLink,
     },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    volume: {
+        type: ControlType.Number,
+        title: "Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: ATMCreditScoreChallenge.defaultProps.volume,
+        hidden: (props: Partial<Props>) => !props.sounds,
+    },
 })
+
+loadSounds("score-up.mp3", "score-down.mp3")

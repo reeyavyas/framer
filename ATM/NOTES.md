@@ -1621,7 +1621,11 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   NEED.", then the tossed picture thumps as it lands (full volume) and softer on its bounces. Not run: sorting every
   picture to the end (the last correct then the page switch), and how the rain sounds by ear. The test browser only
   runs the physics while its pane is on screen.
-- The Credit Score Challenge has no coins, sand or zoom, so it stays silent. The looping lesson-card
+- **Credit Score Challenge (3 Nov, owner's files `score-up`, `score-down`, pinned to commit `6d2c93c`):** the moment
+  an answer counts (the card has flown off; the needle sets off, the score counts and the chip floats up), a right
+  answer plays `score-up` (0.65 s) and a wrong one `score-down` (2 s). Both start straight away, so no offset. The drop
+  is 2.5 times as loud, so the levels are up ×1.6, down ×0.65. Sounds and Volume properties as on the others; the
+  files load with the page. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
 ## Decisions log (so feedback doesn't undo them by accident)
