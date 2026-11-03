@@ -1581,8 +1581,10 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
 
 - **Save or Spend (coin race):** as each new coin lands, 0.315 s after it appears (the drop's landing): a clink
   (`coin-single`) when one lane gains a coin that week, the coin pile (`coin-multiple`, owner asked for it) when two or
-  more do. Lane D gains every other week, so the race goes clink, pile, clink, pile; at 70 ms a week, a sound every
-  140 ms.
+  more do. A sound every other week (lane D's coins; 140 ms apart at 70 ms a week): 10 clinks and 16 piles in all,
+  mostly clink, pile, clink, pile, with runs of piles where lane B or C also lands (weeks 8 to 12, for example).
+  Live (3 Nov, picks A-D): 10 clinks and 16 piles for 44 coins each time, every pile on a week where two or more coins
+  land and every clink on a week where one does, all within 3 ms of the landing; no console errors.
 - **Money Double:** the sand pours from the start of each drain, looping the steady part for long drains, and fades out
   over the last 0.25 s into the flip. Each doubling's new coins clink as they land: one or two coins a clink each, three
   or more the `coin-multiple` pile on the first landing. A drag mid-run cuts the sand at once.
