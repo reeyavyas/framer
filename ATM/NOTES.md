@@ -1592,6 +1592,12 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   clinks and the coin pile's first hit land on their coins to the ms, the sand starts with each drain (every 1.75 s),
   but its fade was undone by the next drain's stop call, so it played through the flip (a stop now only counts
   once). Spot the Scam round 1: all four clues zoomed, each starting on its clue's pop. Rounds 2-3 not yet run.
+- **Live test 2 (3 Nov, after both fixes):** race A, B, C and D each play 26 clinks for 44 coins, within 2 ms of
+  each landing (every pick races all four lanes, so the count is the same). Money Double at 2, 4, 6, 8 and 12%: each
+  sand pour stops once, right as its drain ends (2%: 5.77 s, looping; 12%: 0.96 s), coins within 1 ms. A drag two
+  seconds into a 2% drain cut the sand within 70 ms and the new run's sand began straight away. Spot the Scam rounds
+  1-3: 12 clues, 12 zooms, each starting on its clue's pop; the last Delete still goes to /complete. No console
+  errors. Not checked: how it sounds (levels, the sand loop's seam) on the kiosk's speakers.
 - Not used: Need or Want and the Credit Score Challenge have no coins, sand or zoom. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
