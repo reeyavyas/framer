@@ -370,6 +370,78 @@ const useRouter: () => unknown =
 type Phase = "hunt" | "last" | "end" | "leaving"
 type CanvasRound = "Round 1" | "Round 2" | "Round 3"
 
+// ---- sounds ----
+// The owner's sound files (ATM/sounds), served from this repo at one commit so they never change under the page.
+// Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
+// loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
+const SOUNDS =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@3eb8d38ec89fc3dabf40ec90ed156ba3bfe32c7e/ATM/sounds/"
+let audioCtx: AudioContext | null = null
+const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
+function loadSounds(...names: string[]) {
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
+    if (!AC) return
+    const ac = (audioCtx ??= new AC())
+    for (const name of names)
+        if (buffers[name] === undefined) {
+            buffers[name] = null
+            fetch(SOUNDS + name)
+                .then((r) => r.arrayBuffer())
+                .then((b) => ac.decodeAudioData(b))
+                .then((b) => (buffers[name] = b))
+                .catch(() => (buffers[name] = undefined))
+        }
+}
+// Plays `name` `delay` s from now, from `offset` s into the file; returns a stop that fades it out over `fade` s
+function playSound(
+    name: string,
+    volume: number,
+    {
+        delay = 0,
+        offset = 0,
+        fadeIn = 0.005,
+        loop,
+    }: {
+        delay?: number
+        offset?: number
+        fadeIn?: number
+        loop?: [number, number]
+    } = {}
+) {
+    const ac = audioCtx
+    const buffer = buffers[name]
+    if (!ac || !buffer || volume <= 0) return (_fade?: number) => {}
+    if (ac.state === "suspended") void ac.resume()
+    const src = ac.createBufferSource()
+    src.buffer = buffer
+    if (loop) {
+        src.loop = true
+        src.loopStart = loop[0]
+        src.loopEnd = loop[1]
+    }
+    const gain = ac.createGain()
+    const t = ac.currentTime + delay
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    src.connect(gain).connect(ac.destination)
+    src.start(t, offset)
+    return (fade = 0.2) => {
+        const now = Math.max(ac.currentTime, t + fadeIn)
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setValueAtTime(volume, now)
+        gain.gain.linearRampToValueAtTime(0, now + fade)
+        src.stop(now + fade + 0.02)
+    }
+}
+
 interface Props {
     canvasRound: CanvasRound
     canvasFound: boolean
@@ -377,6 +449,8 @@ interface Props {
     nudge: string
     deleteLabel: string
     doneLink: string
+    sounds: boolean
+    volume: number
 }
 
 /**
@@ -500,11 +574,17 @@ function Lesson(props: Props) {
         return { x: s.w - cqw(31), y: cqw(8) } // top right, far enough in that the whole handle stays on the card (owner)
     }
 
+    React.useEffect(() => loadSounds("zoom-magnifying-glass.mp3"), [])
     const markFound = (i: number) => {
         if (foundRef.current.includes(i)) return
         foundRef.current = [...foundRef.current, i]
         setFound(foundRef.current)
         setExplain(i) // why it's a scam shows straight away
+        // the zoom as the glass locks on (the file is silent for its first 0.32 s)
+        if (props.sounds)
+            playSound("zoom-magnifying-glass.mp3", props.volume * 3.5, {
+                offset: 0.32,
+            })
         if (!reduceMotion)
             popRef.current?.animate(
                 [
@@ -1271,6 +1351,8 @@ ATMSpotTheScam.defaultProps = {
     nudge: "Drag me!",
     deleteLabel: "Delete",
     doneLink: "/atm-lessons/spot-the-scam/complete",
+    sounds: true,
+    volume: 0.8,
 }
 
 addPropertyControls(ATMSpotTheScam, {
@@ -1309,5 +1391,15 @@ addPropertyControls(ATMSpotTheScam, {
         type: ControlType.Link,
         title: "When Done",
         defaultValue: ATMSpotTheScam.defaultProps.doneLink,
+    },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    volume: {
+        type: ControlType.Number,
+        title: "Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: ATMSpotTheScam.defaultProps.volume,
+        hidden: (props: Partial<Props>) => !props.sounds,
     },
 })

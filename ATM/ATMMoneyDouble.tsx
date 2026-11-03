@@ -66,14 +66,16 @@ const LAND = 1560
 const DROP_FALL = 0.55
 
 // One run: `doubles` drains of `drain` seconds, each followed by a flip. onYear gets the years gone by as they
-// run; onDouble gets the number of doublings at each flip's midpoint; onEnd fires after the last landing.
+// run; onDouble gets the number of doublings at each flip's midpoint; onEnd fires after the last landing; onSand
+// gets true as each drain starts and false a moment before it ends, so the sand's sound fades out into the flip.
 function buildRun(
     svg: SVGSVGElement,
     drain: number,
     doubles: number,
     onYear: (y: number) => void,
     onDouble: (n: number) => void,
-    onEnd: () => void
+    onEnd: () => void,
+    onSand: (on: boolean) => void
 ) {
     const q = (k: string) => svg.querySelector(`[data-k="${k}"]`)
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } })
@@ -163,6 +165,8 @@ function buildRun(
             t
         )
         const f = t + drain
+        tl.call(onSand, [true], t)
+        tl.call(onSand, [false], f - Math.min(0.25, drain / 2))
         if (hgA && hgB && hourglass && squash)
             tl.fromTo(
                 hourglass,
@@ -289,6 +293,78 @@ function StackCoin({
 
 type Rate = "2" | "4" | "6" | "8" | "12"
 
+// ---- sounds ----
+// The owner's sound files (ATM/sounds), served from this repo at one commit so they never change under the page.
+// Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
+// loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
+const SOUNDS =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@3eb8d38ec89fc3dabf40ec90ed156ba3bfe32c7e/ATM/sounds/"
+let audioCtx: AudioContext | null = null
+const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
+function loadSounds(...names: string[]) {
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
+    if (!AC) return
+    const ac = (audioCtx ??= new AC())
+    for (const name of names)
+        if (buffers[name] === undefined) {
+            buffers[name] = null
+            fetch(SOUNDS + name)
+                .then((r) => r.arrayBuffer())
+                .then((b) => ac.decodeAudioData(b))
+                .then((b) => (buffers[name] = b))
+                .catch(() => (buffers[name] = undefined))
+        }
+}
+// Plays `name` `delay` s from now, from `offset` s into the file; returns a stop that fades it out over `fade` s
+function playSound(
+    name: string,
+    volume: number,
+    {
+        delay = 0,
+        offset = 0,
+        fadeIn = 0.005,
+        loop,
+    }: {
+        delay?: number
+        offset?: number
+        fadeIn?: number
+        loop?: [number, number]
+    } = {}
+) {
+    const ac = audioCtx
+    const buffer = buffers[name]
+    if (!ac || !buffer || volume <= 0) return (_fade?: number) => {}
+    if (ac.state === "suspended") void ac.resume()
+    const src = ac.createBufferSource()
+    src.buffer = buffer
+    if (loop) {
+        src.loop = true
+        src.loopStart = loop[0]
+        src.loopEnd = loop[1]
+    }
+    const gain = ac.createGain()
+    const t = ac.currentTime + delay
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    src.connect(gain).connect(ac.destination)
+    src.start(t, offset)
+    return (fade = 0.2) => {
+        const now = Math.max(ac.currentTime, t + fadeIn)
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setValueAtTime(volume, now)
+        gain.gain.linearRampToValueAtTime(0, now + fade)
+        src.stop(now + fade + 0.02)
+    }
+}
+
 interface Props {
     rate: Rate
     yearMs: number
@@ -309,6 +385,8 @@ interface Props {
     compare12: string
     done: string
     doneLink: string
+    sounds: boolean
+    volume: number
 }
 
 /**
@@ -402,7 +480,17 @@ export default function ATMMoneyDouble(props: Props) {
                 n,
                 (y) => setYear(Math.min(SPAN, Math.floor(y + 1e-6))),
                 setDoubled,
-                end
+                end,
+                (on) => {
+                    sand.current(0.25)
+                    if (on && props.sounds)
+                        // the file's steady pour runs 3.2 to 6 s; from 2 s in it builds into it, then loops it
+                        sand.current = playSound(
+                            "sand-hourglass.mp3",
+                            props.volume * 5,
+                            { offset: 2, fadeIn: 0.15, loop: [3.2, 6] }
+                        )
+                }
             )
         }, svg)
         const sync = () =>
@@ -412,8 +500,19 @@ export default function ATMMoneyDouble(props: Props) {
         return () => {
             window.removeEventListener("system-overlay-change", sync)
             ctx.revert()
+            sand.current(0.05)
         }
     }, [run, markup])
+    const sand = React.useRef((_fade?: number) => {}) // stops the sand's sound
+    React.useEffect(
+        () =>
+            loadSounds(
+                "sand-hourglass.mp3",
+                "coin-single.mp3",
+                "coin-multiple.mp3"
+            ),
+        []
+    )
 
     // Until the first touch the thumb nudges side to side, so kids know to drag it.
     React.useEffect(() => {
@@ -467,13 +566,24 @@ export default function ATMMoneyDouble(props: Props) {
     }
     const go = () => setRun(++runs.current)
 
-    // Each doubling pops the total.
+    // Each doubling pops the total, and its new coins clink as they land (each drops 0.315 s after its delay; see
+    // StackCoin's delay below). One or two coins get a clink each (hit 0.06 s into the file); more get the pile
+    // of coins, its first hit 0.11 s in, on the first landing.
     React.useLayoutEffect(() => {
-        if (doubled && run)
-            totalRef.current?.animate(
-                [{ transform: "scale(1.2)" }, { transform: "none" }],
-                { duration: 450, easing: "cubic-bezier(.3,1.6,.6,1)" }
-            )
+        if (!doubled || !run) return
+        totalRef.current?.animate(
+            [{ transform: "scale(1.2)" }, { transform: "none" }],
+            { duration: 450, easing: "cubic-bezier(.3,1.6,.6,1)" }
+        )
+        if (reduceMotion || !props.sounds) return
+        const fresh = 2 ** (doubled - 1)
+        if (fresh > 2)
+            playSound("coin-multiple.mp3", props.volume * 1.3, { delay: 0.205 })
+        else
+            for (let c = 0; c < fresh; c++)
+                playSound("coin-single.mp3", props.volume, {
+                    delay: (c * 0.7) / fresh + 0.255,
+                })
     }, [doubled])
 
     const coins = 2 ** doubled
@@ -1020,6 +1130,8 @@ export default function ATMMoneyDouble(props: Props) {
 ATMMoneyDouble.defaultProps = {
     rate: "2" as Rate,
     yearMs: 160,
+    sounds: true,
+    volume: 0.8,
     label: "Interest rate",
     nudge: "Drag me!",
     hint: "Slide to pick an interest rate. Let go to watch your $1,000 grow!",
@@ -1110,5 +1222,15 @@ addPropertyControls(ATMMoneyDouble, {
         title: "When Done",
         description: "The lesson's completion page.",
         defaultValue: ATMMoneyDouble.defaultProps.doneLink,
+    },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    volume: {
+        type: ControlType.Number,
+        title: "Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: ATMMoneyDouble.defaultProps.volume,
+        hidden: (props: Partial<Props>) => !props.sounds,
     },
 })

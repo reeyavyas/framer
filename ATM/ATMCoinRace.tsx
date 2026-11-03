@@ -57,6 +57,78 @@ const bold = (s: string) =>
 const useRouter: () => unknown =
     (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
 
+// ---- sounds ----
+// The owner's sound files (ATM/sounds), served from this repo at one commit so they never change under the page.
+// Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
+// loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
+const SOUNDS =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@3eb8d38ec89fc3dabf40ec90ed156ba3bfe32c7e/ATM/sounds/"
+let audioCtx: AudioContext | null = null
+const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
+function loadSounds(...names: string[]) {
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
+    if (!AC) return
+    const ac = (audioCtx ??= new AC())
+    for (const name of names)
+        if (buffers[name] === undefined) {
+            buffers[name] = null
+            fetch(SOUNDS + name)
+                .then((r) => r.arrayBuffer())
+                .then((b) => ac.decodeAudioData(b))
+                .then((b) => (buffers[name] = b))
+                .catch(() => (buffers[name] = undefined))
+        }
+}
+// Plays `name` `delay` s from now, from `offset` s into the file; returns a stop that fades it out over `fade` s
+function playSound(
+    name: string,
+    volume: number,
+    {
+        delay = 0,
+        offset = 0,
+        fadeIn = 0.005,
+        loop,
+    }: {
+        delay?: number
+        offset?: number
+        fadeIn?: number
+        loop?: [number, number]
+    } = {}
+) {
+    const ac = audioCtx
+    const buffer = buffers[name]
+    if (!ac || !buffer || volume <= 0) return (_fade?: number) => {}
+    if (ac.state === "suspended") void ac.resume()
+    const src = ac.createBufferSource()
+    src.buffer = buffer
+    if (loop) {
+        src.loop = true
+        src.loopStart = loop[0]
+        src.loopEnd = loop[1]
+    }
+    const gain = ac.createGain()
+    const t = ac.currentTime + delay
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    src.connect(gain).connect(ac.destination)
+    src.start(t, offset)
+    return (fade = 0.2) => {
+        const now = Math.max(ac.currentTime, t + fadeIn)
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setValueAtTime(volume, now)
+        gain.gain.linearRampToValueAtTime(0, now + fade)
+        src.stop(now + fade + 0.02)
+    }
+}
+
 interface Props {
     pick: Pick
     weekMs: number
@@ -74,6 +146,8 @@ interface Props {
     pickAgain: string
     done: string
     doneLink: string
+    sounds: boolean
+    volume: number
     onPickAgain?: () => void
 }
 
@@ -193,6 +267,20 @@ export default function ATMCoinRace(props: Props) {
         )
         return () => clearInterval(t)
     }, [props.pick, props.weekMs, still])
+
+    // A clink as each new coin lands: the file's hit is 0.06 s in, the drop lands 0.315 s after the coin appears.
+    // Lanes that gain a coin the same week share one clink.
+    React.useEffect(() => loadSounds("coin-single.mp3"), [])
+    React.useEffect(() => {
+        if (still || !week || !props.sounds) return
+        const gained = SAVE.some(
+            (s) =>
+                Math.floor((week * s) / 100) >
+                Math.floor(((week - 1) * s) / 100)
+        )
+        if (gained)
+            playSound("coin-single.mp3", props.volume * 0.7, { delay: 0.255 })
+    }, [week])
 
     const reveals = [props.revealA, props.revealB, props.revealC, props.revealD]
     const compares = [
@@ -586,6 +674,8 @@ export default function ATMCoinRace(props: Props) {
 ATMCoinRace.defaultProps = {
     pick: "C" as Pick,
     weekMs: 110,
+    sounds: true,
+    volume: 0.8,
     watch: "Watch the coins stack up…",
     every: "Every week is the same choice. Watch the stacks.",
     halfway: "Halfway!",
@@ -663,6 +753,16 @@ addPropertyControls(ATMCoinRace, {
         title: "When Done",
         description: "The lesson's completion page.",
         defaultValue: ATMCoinRace.defaultProps.doneLink,
+    },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    volume: {
+        type: ControlType.Number,
+        title: "Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: ATMCoinRace.defaultProps.volume,
+        hidden: (props: Partial<Props>) => !props.sounds,
     },
     onPickAgain: { type: ControlType.EventHandler, title: "Pick Again" },
 })
