@@ -1602,7 +1602,14 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   seconds into a 2% drain cut the sand within 70 ms and the new run's sand began straight away. Spot the Scam rounds
   1-3: 12 clues, 12 zooms, each starting on its clue's pop; the last Delete still goes to /complete. No console
   errors. Not checked: how it sounds (levels, the sand loop's seam) on the kiosk's speakers.
-- Not used: Need or Want and the Credit Score Challenge have no coins, sand or zoom. The looping lesson-card
+- **Need or Want (tumble wall, 3 Nov, owner's files `thump`, `correct`, `incorrect`, pinned to commit `441d831`):**
+  the physics reports how hard each picture hits the floor, a wall or another picture (px/s); once a frame the
+  hardest hit plays one thump, at volume hit / 1,800 (the rain lands at about 2,200), from 0.13 s into the file (its
+  hit is at 0.14). Hits under 200 px/s (settling, resting) are silent, and thumps are at least 60 ms apart, so each
+  picture in the rain (one every 120 ms) gets its own thump and its bounce a softer one. Correct (from 0.05 s in) or
+  incorrect plays with the answer card's pop. Levels: thump ×0.8, correct ×1.2, incorrect ×0.6 (twice as loud as the
+  others). The sounds load with the page, since the rain starts at once.
+- The Credit Score Challenge has no coins, sand or zoom, so it stays silent. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
 
 ## Decisions log (so feedback doesn't undo them by accident)
