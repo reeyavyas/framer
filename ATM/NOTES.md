@@ -1570,6 +1570,25 @@ header, sub-header and other page copy in Framer.
   Delete goes to `/complete`. No console errors (only the local 404 for the Framer page). Framer's saved copy
   matches the repo byte for byte. **Not yet checked on the live site.**
 
+## Lesson sounds (3 Nov, owner's files)
+
+The owner's four sound files are in `ATM/sounds/` and load from jsDelivr pinned to commit `3eb8d38` (the `SOUNDS`
+constant in each file), so the page never picks up a changed file. Web Audio, so every sound starts on the frame its
+animation needs; a file still loading is skipped, never played late. Each lesson has **Sounds** and **Volume** (0.8)
+properties; nothing plays on the canvas. Offsets were measured from the files: coin-single hits 0.06 s in,
+coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's steady pour is 3.2–6 s (it builds from
+2 s; the thump at its very end is never played).
+
+- **Save or Spend (coin race):** one clink (`coin-single`) as each new coin lands, 0.315 s after it appears (the drop's
+  landing). Lanes that gain a coin in the same week share one clink. At 70 ms a week that's a clink every 140 ms.
+- **Money Double:** the sand pours from the start of each drain, looping the steady part for long drains, and fades out
+  over the last 0.25 s into the flip. Each doubling's new coins clink as they land: one or two coins a clink each, three
+  or more the `coin-multiple` pile on the first landing. A drag mid-run cuts the sand at once.
+- **Spot the Scam:** the zoom as the glass locks onto a clue (the moment its badge and card appear).
+- Levels in code to even out the files: sand ×5, zoom ×3.5, coin pile ×1.3, race clinks ×0.7 (they overlap).
+- Not used: Need or Want and the Credit Score Challenge have no coins, sand or zoom. The looping lesson-card
+  illustrations (hourglass, savings jar) stay silent.
+
 ## Decisions log (so feedback doesn't undo them by accident)
 
 In the order they were made with the designer:
