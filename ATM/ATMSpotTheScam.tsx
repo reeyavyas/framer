@@ -433,6 +433,7 @@ function Lesson(props: Props) {
     sizeRef.current = size
     const pos = React.useRef<{ x: number; y: number } | null>(null)
     const drag = React.useRef<{
+        id: number
         dx: number
         dy: number
         x: number
@@ -613,6 +614,11 @@ function Lesson(props: Props) {
     // the last clue's why stays up a moment, then the round's tip
     async function lastClue(token: number) {
         setPhase("last")
+        // let go of a finger still on the glass, so lifting it on Delete reaches Delete (touchscreen: it didn't)
+        const d = drag.current
+        drag.current = null
+        if (d && wrapRef.current?.hasPointerCapture(d.id))
+            wrapRef.current.releasePointerCapture(d.id)
         await wait(LAST_READ, token)
         // not once Delete has been tapped (it's "leaving" then)
         if (run.current === token && phaseRef.current === "last")
@@ -733,6 +739,7 @@ function Lesson(props: Props) {
         if (onGlass) {
             // picked up: it keeps its place under the finger (a tap without a drag still sends it there, on up)
             drag.current = {
+                id: e.pointerId,
                 dx: pos.current.x - p.x,
                 dy: pos.current.y - p.y,
                 x: p.x,
@@ -741,7 +748,14 @@ function Lesson(props: Props) {
             }
         } else {
             // a tap elsewhere sends the glass there, and a drag carries on from it
-            drag.current = { dx: 0, dy: 0, x: p.x, y: p.y, moved: true }
+            drag.current = {
+                id: e.pointerId,
+                dx: 0,
+                dy: 0,
+                x: p.x,
+                y: p.y,
+                moved: true,
+            }
             glide(p, 0.25)
         }
     }
@@ -1148,6 +1162,7 @@ function Lesson(props: Props) {
                 <button
                     type="button"
                     onClick={remove}
+                    onPointerUp={remove} // a touch that moves a little sends no click (owner: Delete didn't respond on the ATM)
                     style={{
                         all: "unset",
                         cursor: "pointer",
