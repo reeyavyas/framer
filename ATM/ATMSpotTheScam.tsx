@@ -433,7 +433,10 @@ function playSound(
     gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
     src.connect(gain).connect(ac.destination)
     src.start(t, offset)
+    let stopped = false // only the first stop counts; a second would bring the volume back
     return (fade = 0.2) => {
+        if (stopped) return
+        stopped = true
         const now = Math.max(ac.currentTime, t + fadeIn)
         gain.gain.cancelScheduledValues(now)
         gain.gain.setValueAtTime(volume, now)
