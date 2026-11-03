@@ -41,7 +41,7 @@ interface Item {
 // Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
 // loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
 const SOUNDS =
-    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@441d83128982d280ab77b2422ee6ad0e407dd6c6/ATM/sounds/"
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@aa7c8631ffeb9d7e2dc3e8d3b0456b222277d2c9/ATM/sounds/"
 let audioCtx: AudioContext | null = null
 const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
 function loadSounds(...names: string[]) {
@@ -75,11 +75,13 @@ function playSound(
         offset = 0,
         fadeIn = 0.005,
         loop,
+        length,
     }: {
         delay?: number
         offset?: number
         fadeIn?: number
         loop?: [number, number]
+        length?: number // play only this many seconds of the file, fading out over its last 0.03 s
     } = {}
 ) {
     const ac = audioCtx
@@ -97,8 +99,12 @@ function playSound(
     const t = ac.currentTime + delay
     gain.gain.setValueAtTime(0, t)
     gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    if (length) {
+        gain.gain.setValueAtTime(volume, t + length - 0.03)
+        gain.gain.linearRampToValueAtTime(0, t + length)
+    }
     src.connect(gain).connect(ac.destination)
-    src.start(t, offset)
+    src.start(t, offset, length)
     let stopped = false // only the first stop counts; a second would bring the volume back
     return (fade = 0.2) => {
         if (stopped) return
@@ -168,7 +174,7 @@ const CARD_W = 500 // the wrong-answer line fits on two lines, 23 px to spare
 const CARD_EDGE = 32 // least room between a card and the screen's edge
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
 const DONE_MS = 1000 // last picture lands and its card pops up, then on
-// A thump for the hardest hit each frame (floor, wall or another picture), louder the harder it hits. Softer than
+// A bounce for the hardest hit each frame (floor, wall or another picture), louder the harder it hits. Softer than
 // THUMP_MIN px/s is settling, not landing, and stays quiet; thumps are at least THUMP_GAP ms apart, so the rain
 // (a picture every 120 ms) gets one each and its bounce a softer one.
 const THUMP_MIN = 200
@@ -222,9 +228,9 @@ export default function ATMTumbleWall(props: Props) {
     itemsRef.current = items
     const soundsRef = React.useRef(props)
     soundsRef.current = props
-    const play = (name: string, level: number, offset = 0) => {
+    const play = (name: string, level: number, offset = 0, length?: number) => {
         const p = soundsRef.current
-        if (p.sounds) playSound(name, p.volume * level, { offset })
+        if (p.sounds) playSound(name, p.volume * level, { offset, length })
     }
     // Framer's own page switch (no reload, so no blank flash); a plain page
     // load if this Framer version has no router to ask.
@@ -585,10 +591,17 @@ export default function ATMTumbleWall(props: Props) {
                 step((now - start) / 1000)
                 acc -= STEP
             }
-            // the thump's hit is 0.14 s into its file, so it plays from just before it
+            // the owner's ball bounce bounces six times; the physics makes the bounces, so only its first plays:
+            // the hit at 0.065 s, faded out by 0.23 s, before the second at 0.245 (it's quieter than the others,
+            // hence the level)
             if (peak >= THUMP_MIN && now - lastThump >= THUMP_GAP) {
                 lastThump = now
-                play("thump.mp3", 0.8 * Math.min(1, peak / THUMP_FULL), 0.13)
+                play(
+                    "ball-bounce.mp3",
+                    4.5 * Math.min(1, peak / THUMP_FULL),
+                    0.06,
+                    0.17
+                )
             }
             peak = 0
             bodies.forEach((b, i) => {
@@ -991,4 +1004,4 @@ addPropertyControls(ATMTumbleWall, {
 })
 
 // The rain starts as soon as the page opens, so the sounds load with it
-loadSounds("thump.mp3", "correct.mp3", "incorrect.mp3")
+loadSounds("ball-bounce.mp3", "correct.mp3", "incorrect.mp3")

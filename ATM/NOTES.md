@@ -1604,10 +1604,13 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   errors. Not checked: how it sounds (levels, the sand loop's seam) on the kiosk's speakers.
 - **Need or Want (tumble wall, 3 Nov, owner's files `thump`, `correct`, `incorrect`, pinned to commit `441d831`):**
   the physics reports how hard each picture hits the floor, a wall or another picture (px/s); once a frame the
-  hardest hit plays one thump, at volume hit / 1,800 (the rain lands at about 2,200), from 0.13 s into the file (its
-  hit is at 0.14). Hits under 200 px/s (settling, resting) are silent, and thumps are at least 60 ms apart, so each
+  hardest hit plays one bounce, at volume hit / 1,800 (the rain lands at about 2,200). The sound is now the owner's
+  `ball-bounce` (freesound_community plastic-ball-bounce-14790, pinned to commit `aa7c863`) in place of `thump`, which
+  stays in `ATM/sounds/` to swap back: the file bounces six times, and the physics makes the bounces, so only its
+  first plays (0.06-0.23 s of the file, its hit at 0.065, faded out over the last 0.03 s, before the second bounce at
+  0.245). It's much quieter than the other files, so its level is ×4.5. (Thump played from 0.13 s, its hit at 0.14.) Hits under 200 px/s (settling, resting) are silent, and thumps are at least 60 ms apart, so each
   picture in the rain (one every 120 ms) gets its own thump and its bounce a softer one. Correct (from 0.05 s in) or
-  incorrect plays with the answer card's pop. Levels: thump ×0.8, correct ×1.2, incorrect ×0.6 (twice as loud as the
+  incorrect plays with the answer card's pop. Levels: bounce ×4.5 (thump was ×0.8), correct ×1.2, incorrect ×0.6 (twice as loud as the
   others). The sounds load with the page, since the rain starts at once.
   Live (3 Nov): all three load with the page (200). The opening rain played 12 thumps in about 1 s, at least 66 ms
   apart, the first landings at full volume and later bumps softer (0.09-0.44 of 0.8). Netflix into Wants: correct
