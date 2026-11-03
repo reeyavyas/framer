@@ -271,16 +271,21 @@ export default function ATMCoinRace(props: Props) {
         return () => clearInterval(t)
     }, [props.pick, props.weekMs, still])
 
-    // A clink as each new coin lands: the file's hit is 0.06 s in, the drop lands 0.315 s after the coin appears.
-    // Lanes that gain a coin the same week share one clink. (Loaded with the page: see below the controls.)
+    // A clink as a lane's new coin lands, or the coin pile when two or more lanes' coins land the same week. The drop
+    // lands 0.315 s after the coin appears; the clink's hit is 0.06 s into its file, the pile's first 0.11 s. (Loaded
+    // with the page: see below the controls.)
     React.useEffect(() => {
         if (still || !week || !props.sounds) return
-        const gained = SAVE.some(
+        const gained = SAVE.filter(
             (s) =>
                 Math.floor((week * s) / 100) >
                 Math.floor(((week - 1) * s) / 100)
-        )
-        if (gained)
+        ).length
+        if (gained > 1)
+            playSound("coin-multiple.mp3", props.volume * 0.9, {
+                delay: 0.205,
+            })
+        else if (gained)
             playSound("coin-single.mp3", props.volume * 0.7, { delay: 0.255 })
     }, [week])
 
@@ -769,5 +774,5 @@ addPropertyControls(ATMCoinRace, {
     onPickAgain: { type: ControlType.EventHandler, title: "Pick Again" },
 })
 
-// The race starts 70 ms after it shows, too soon to load the clink then, so it loads with the page
-loadSounds("coin-single.mp3")
+// The race starts 70 ms after it shows, too soon to load the sounds then, so they load with the page
+loadSounds("coin-single.mp3", "coin-multiple.mp3")

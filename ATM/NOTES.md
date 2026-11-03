@@ -1579,13 +1579,15 @@ properties; nothing plays on the canvas. Offsets were measured from the files: c
 coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's steady pour is 3.2–6 s (it builds from
 2 s; the thump at its very end is never played).
 
-- **Save or Spend (coin race):** one clink (`coin-single`) as each new coin lands, 0.315 s after it appears (the drop's
-  landing). Lanes that gain a coin in the same week share one clink. At 70 ms a week that's a clink every 140 ms.
+- **Save or Spend (coin race):** as each new coin lands, 0.315 s after it appears (the drop's landing): a clink
+  (`coin-single`) when one lane gains a coin that week, the coin pile (`coin-multiple`, owner asked for it) when two or
+  more do. Lane D gains every other week, so the race goes clink, pile, clink, pile; at 70 ms a week, a sound every
+  140 ms.
 - **Money Double:** the sand pours from the start of each drain, looping the steady part for long drains, and fades out
   over the last 0.25 s into the flip. Each doubling's new coins clink as they land: one or two coins a clink each, three
   or more the `coin-multiple` pile on the first landing. A drag mid-run cuts the sand at once.
 - **Spot the Scam:** the zoom as the glass locks onto a clue (the moment its badge and card appear).
-- Levels in code to even out the files: sand ×5, zoom ×3.5, coin pile ×1.3, race clinks ×0.7 (they overlap).
+- Levels in code to even out the files: sand ×5, zoom ×3.5, coin pile ×1.3, race clinks ×0.7 and race piles ×0.9 (they overlap).
 - **Live test 1 (3 Nov)**, timing read from the page (when each sound starts vs. each animation), not by ear:
   every file loads (200); race D: every clink hits its coin's landing to the ms, but only 22 of 26 played (the race
   starts 70 ms after it shows, before the clink had loaded; it now loads with the page). Money Double 12%: single
