@@ -51,7 +51,8 @@ stays as it is (owner, 4 Nov).
 
 Every step is one `TutorialOverlay` in one page group. "Tap" steps move
 on when the target is tapped. "Event" steps move on when a component
-fires its event. "Next" steps move on with the card's Next button. Skip
+fires its event. "Timed" steps move on by themselves after the set time
+(`nextStepAfterSeconds`, with the progress bar showing). "Next" steps move on with the card's Next button. Skip
 does the step's action for the visitor so later numbers still add up.
 
 The figures are the Simulator's existing made-up values. None come from
@@ -59,25 +60,27 @@ the owner's screenshots.
 
 | # | Target | Visitor does | Card text (draft) | Moves on |
 |---|---|---|---|---|
-| 1 | Gauge | reads | "This is your credit score: **720, Good**. Scores run from 300 to 850. Lenders use it to decide whether to lend to you and at what rate." | Next |
-| 2 | Score Rating header | opens it | "Open **Score Rating** to see how close you are to the next level." | Tap |
-| 3 | Points Journey panel | reads | "You're **60 points** from Excellent. Let's see what moves your score." | Next |
-| 4 | Payment History header | opens it | "**Payment History** is the biggest part of your score (40%). Open it to see your grade." | Tap |
-| 5 | Payment History body | reads | "Paying every bill on time keeps this grade high. Even one late payment can stay on your report for years." | Next |
-| 6 | Credit Usage header | opens it | "**Credit Usage** is how much of your limits you're using (20%)." | Tap |
-| 7 | Credit Usage body | reads | "Try to keep your balances below 30% of your limits. Under 10% is best." | Next |
-| 8 | Credit Age header | opens it | "**Credit Age** is how long you've had credit (21%)." | Tap |
-| 9 | Credit Age body | reads | "Older accounts help. Think twice before closing your oldest card." | Next |
-| 10 | Simulator tab | taps it | "Now try it. Tap **Simulator** to see what changes your score." | Tap |
-| 11 | Pay down row ($1,200) | taps it | "Pay down $1,200 of your balances." Score → **735 ▲15** | Event |
-| 12 | On-time payments row | taps it | "Keep making payments on time." Score → **742 ▲22** | Event |
-| 13 | Missed payment, 1 mo | taps it | "Now see what one missed payment does." Score → **697 ▼23** | Event |
-| 14 | Missed payment, 1 mo | taps it again to undo | "One missed payment wiped out both good moves. Tap it again to undo it." Score → **742 ▲22** | Event |
-| 15 | Goals tab | taps it | "Set yourself a goal so you can track your progress." | Tap |
-| 16 | Set Up Your Goal | taps it | "Tap **Set Up Your Goal**." | Tap |
-| 17 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap → congrats page |
+| 1 | Gauge | reads | "This is your credit score: **720, Good**. Scores run from 300 to 850." | Timed, 5 s |
+| 2 | Gauge | reads | "Lenders use it to decide whether to lend to you and at what rate." | Timed, 5 s |
+| 3 | Score Rating header | opens it | "Open **Score Rating** to see how close you are to the next level." | Tap |
+| 4 | Points Journey panel | reads | "You're **60 points** from Excellent. Let's see what moves your score." | Next |
+| 5 | Payment History header | opens it | "**Payment History** is the biggest part of your score (40%). Open it to see your grade." | Tap |
+| 6 | Payment History body | reads | "Paying every bill on time keeps this grade high. Even one late payment can stay on your report for years." | Next |
+| 7 | Credit Usage header | opens it | "**Credit Usage** is how much of your limits you're using (20%)." | Tap |
+| 8 | Credit Usage body | reads | "Try to keep your balances below 30% of your limits. Under 10% is best." | Next |
+| 9 | Credit Age header | opens it | "**Credit Age** is how long you've had credit (21%)." | Tap |
+| 10 | Credit Age body | reads | "Older accounts help. Think twice before closing your oldest card." | Next |
+| 11 | Simulator tab | taps it | "Now try it. Tap **Simulator** to see what changes your score." | Tap |
+| 12 | Pay down row ($1,200) | taps it | "Pay down $1,200 of your balances." Score → **735 ▲15** | Event |
+| 13 | On-time payments row | taps it | "Keep making payments on time." Score → **742 ▲22** | Event |
+| 14 | Missed payment, 1 mo | taps it | "Now see what one missed payment does." Score → **697 ▼23** | Event |
+| 15 | Missed payment, 1 mo | taps it again to undo | "One missed payment wiped out both good moves. Tap it again to undo it." Score → **742 ▲22** | Event |
+| 16 | Goals tab | taps it | "Set yourself a goal so you can track your progress." | Tap |
+| 17 | Set Up Your Goal | taps it | "Tap **Set Up Your Goal**." | Tap |
+| 18 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap → congrats page |
 
-That's 17 steps, about 3–4 minutes (owner kept all 17, 4 Nov).
+That's 18 steps, about 3–4 minutes (owner kept all of them, 4 Nov; step 1
+split into two timed cards).
 
 ## New code (smallest set)
 
@@ -114,7 +117,7 @@ repo's type-check before a push.
   opening one pushes the next one down. Each step's hole has to follow
   its target (`VirtualScroll` / the overlay's own scroll handling).
   Check this on the first live build before writing the rest.
-- **Sticky Simulator header.** Steps 11–14 change the pinned simulated
+- **Sticky Simulator header.** Steps 12–15 change the pinned simulated
   gauge while the hole is on a row. Check that the visitor can see the
   gauge from each row.
 - **Simulator rows inside the overlay hole.** The overlay blocks taps
@@ -141,7 +144,7 @@ Results go in `tutorials/credit-score-tutorial/NOTES.md`.
 ## Decided (owner, 4 Nov)
 
 1. The score starts at 720, moves up and down, and ends at 742.
-2. All 17 steps stay.
+2. All the steps stay, with the first card split into two timed ones (18 steps).
 3. The free-play page stays at 742.
 4. The card text in the steps table is a draft for the owner to edit.
 
