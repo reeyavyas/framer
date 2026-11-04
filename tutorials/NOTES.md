@@ -275,6 +275,9 @@ anywhere else on the page.
     TutorialOverlay (`fingerprint-marker`) is set to Active: Off. To
     bring it back, move the overlay onto Login BTN again, remove the
     wrapper's link, and turn step 2 on.
+    Live test (4 Nov 2026, 1080x1920): Login goes to `/tutorials` with
+    no fingerprint card in between; with step 1 showing, a tap outside
+    the button is blocked and the ✕ goes to `/app`.
   - **Shared starting steps:** many tutorials start on the Accounts
     page and go either to the More tab or to Settings. Those opening
     targets live here once, each noting which tutorials use it:
