@@ -263,7 +263,18 @@ anywhere else on the page.
   truth. Last synced on `card-controls/reset-pin`.
   **Organized by tutorial, in step order**, with each tutorial's step
   list at the top of its section:
-  - **Login Tutorial:** `LoginButton`, `FingerprintMarker`.
+  - **Login Tutorial:** `LoginButton`, `FingerprintMarker`. Since
+    4 Nov 2026 the login page's Login button goes straight to
+    `/tutorials`. Its "Login BTN" sits in a "Login Link" frame that
+    holds the link, because the component instance has no Link field
+    and its one override slot is `LoginButton`. The fingerprint
+    overlay (`App Touch ID` with its `FingerprintDelayedNavigation`
+    override, plus the `FingerprintMarker` frame) was kept, not
+    deleted. It's attached to a hidden "Fingerprint Overlay (unused)"
+    frame in Screen Content, so nothing can open it, and step 2's
+    TutorialOverlay (`fingerprint-marker`) is set to Active: Off. To
+    bring it back, move the overlay onto Login BTN again, remove the
+    wrapper's link, and turn step 2 on.
   - **Shared starting steps:** many tutorials start on the Accounts
     page and go either to the More tab or to Settings. Those opening
     targets live here once, each noting which tutorials use it:
