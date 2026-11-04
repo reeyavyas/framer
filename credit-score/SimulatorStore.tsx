@@ -37,6 +37,13 @@ export function totalPoints(): number {
     return sum
 }
 
+// True when a row with this Row ID is on (its keys are `${id}#n`).
+export function isOn(rowId: string): boolean {
+    for (const [key, p] of entries)
+        if (p !== null && key.startsWith(rowId + "#")) return true
+    return false
+}
+
 // A row worth 0 points still counts as on.
 export function anyOn(): boolean {
     for (const p of entries.values()) if (p !== null) return true

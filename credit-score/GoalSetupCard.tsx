@@ -68,9 +68,11 @@ export default function GoalSetupCard(props: Props) {
     const shownGoal = goal ? goal.score : phase === "form" ? score : null
     const text = { color: props.textColor }
 
-    const button = (label: string, onTap: () => void) => (
+    // `target` tags the button for TutorialOverlay (Credit Score tutorial).
+    const button = (label: string, target: string, onTap: () => void) => (
         <motion.button
             type="button"
+            data-tutorial-target={target}
             onClick={onTap}
             whileTap={{ scale: 0.97 }}
             style={{
@@ -181,7 +183,9 @@ export default function GoalSetupCard(props: Props) {
                             {props.introText}
                         </div>
                     </div>
-                    {button(props.startButton, () => setPhase("form"))}
+                    {button(props.startButton, "goal-setup-start", () =>
+                        setPhase("form")
+                    )}
                 </>
             )}
 
@@ -309,7 +313,7 @@ export default function GoalSetupCard(props: Props) {
                         />
                     </div>
 
-                    {button(props.nextButton, () =>
+                    {button(props.nextButton, "goal-setup-next", () =>
                         setGoal({ score, months, reason })
                     )}
                 </>

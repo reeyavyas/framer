@@ -363,9 +363,7 @@ export function AccountPrefsDone(
 // /account-controls-tutorial/accounts-2. A target, not a marker: the nav
 // button underneath links to the free-play Accounts page, so this frame
 // has to take the tap itself rather than pass it through.
-export function AccountsTab(
-    Component: ComponentType<any>
-): ComponentType<any> {
+export function AccountsTab(Component: ComponentType<any>): ComponentType<any> {
     return withTutorialTarget("accounts-tab")(Component)
 }
 
@@ -379,4 +377,63 @@ export function AccountsUpdated(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("accounts-updated")(Component)
+}
+
+// ═══ Credit Score Tutorial ════════════════════════════════════════════
+// /credit-score-tutorial/score. Everything below the gauge sits inside
+// the Section Tabs Tutorial component (a copy of Section Tabs), so these
+// go on layers in that copy and never reach the free-play page.
+//   1–2   gauge: withCreditScoreTutorialStart (CreditScoreTutorial.tsx)
+//   3–4   ScoreRatingTarget
+//   5–6   PaymentHistoryTarget
+//   7–8   CreditUsageTarget
+//   9–10  CreditAgeTarget
+//   11    SimulatorTabTarget
+//   12–15 Simulator rows: CreditScoreTutorial.tsx's row overrides
+//   16    GoalsTabTarget
+//   17–18 GoalSetupCard's own buttons ("goal-setup-start",
+//         "goal-setup-next"), tagged in its code
+//   19    no target: a timed card that goes to the complete page
+
+// Steps 3–4 — TARGET: the Score Rating accordion instance. Closed it's
+// just the header (the tap that opens it); open, it's the whole card.
+export function ScoreRatingTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-score-rating")(Component)
+}
+
+// Steps 5–6 — TARGET: the Payment History accordion instance.
+export function PaymentHistoryTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-payment-history")(Component)
+}
+
+// Steps 7–8 — TARGET: the Credit Usage accordion instance.
+export function CreditUsageTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-credit-usage")(Component)
+}
+
+// Steps 9–10 — TARGET: the Credit Age accordion instance.
+export function CreditAgeTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-credit-age")(Component)
+}
+
+// Step 11 — TARGET: the "Tab Simulator" cell in the section tab row.
+export function SimulatorTabTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-simulator-tab")(Component)
+}
+
+// Step 16 — TARGET: the "Tab Goals" cell in the section tab row.
+export function GoalsTabTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialTarget("cs-goals-tab")(Component)
 }

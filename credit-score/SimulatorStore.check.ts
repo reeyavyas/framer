@@ -5,6 +5,7 @@ import assert from "node:assert/strict"
 import {
     _clearForTests,
     anyOn,
+    isOn,
     newEntryKey,
     onReset,
     remove,
@@ -75,7 +76,19 @@ function resets() {
     assert.ok(fired >= 1)
 }
 
+function isOnById() {
+    _clearForTests()
+    const k = newEntryKey("payDown")
+    setPoints(newEntryKey("pay"), 5)
+    assert.equal(isOn("payDown"), false)
+    setPoints(k, 15)
+    assert.equal(isOn("payDown"), true)
+    setPoints(k, null)
+    assert.equal(isOn("payDown"), false)
+}
+
 sums()
+isOnById()
 zeroCountsAsOn()
 clamps()
 duplicateIds()
