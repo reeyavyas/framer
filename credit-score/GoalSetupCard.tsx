@@ -91,7 +91,10 @@ export default function GoalSetupCard(props: Props) {
     )
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
+        <div
+            data-tutorial-target="goal-setup-card"
+            style={{ display: "flex", flexDirection: "column", gap: 48 }}
+        >
             {goal && (
                 <div style={{ ...props.titleFont, ...text }}>
                     {props.setTitle}

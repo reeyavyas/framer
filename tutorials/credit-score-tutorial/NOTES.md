@@ -65,10 +65,46 @@ Skip on steps 12–15: the row override taps the row into the wanted
 state (pay down / on-time field; "1 mo", then the picked month again),
 so the score still reads 735 / 742 / 697 / 742.
 
-## Not tested yet
+## Live test 1 (4 Nov, first publish)
 
-Nothing is live-tested. Needs a publish. Check first: the hole following
-the accordions as they open and push the page down, the arrow and card
-placement on each step (copied from Account Controls: right-aligned,
-below the target), and that the pinned Simulator header shows the score
-from each row.
+Chrome, real clicks (the window here is 823×380 and can't be made
+kiosk-sized, so targets were scrolled on screen by script first;
+screenshots time out on the live site, so checks read the DOM).
+
+- Passed: steps 1–2 time out after 7 s each with the right text; taps on
+  the Score Rating, Payment History, Credit Usage and Credit Age headers
+  open each accordion and move on; Skip on the read steps moves on;
+  Simulator tab tap opens it on 720; Goals tab tap; Set Up Your Goal
+  opens the form; Next saves, step 19 shows and the page goes to
+  `/complete` ("Well done! … CREDIT SCORE").
+- Found and fixed (needs the next publish):
+  1. **Gauge and Simulator rows had no hole.** Code components don't put
+     a `data-tutorial-target` prop on the page, so the overlay blocked
+     every tap on steps 12–15 (Skip was the only way on).
+     `CreditScoreTutorial.tsx` now tags the Framer container the
+     component renders in (a hidden marker's parent).
+  2. **Targets below the fold.** TutorialOverlay never scrolled to its
+     target, and the accordions start well below the gauge. New
+     TutorialOverlay setting **Scroll into view** (off by default, so
+     other tutorials are unchanged): a target that fits is centred, a
+     tall one (an open accordion) gets its top a third of the way down.
+     On for steps 1–18.
+  3. **Read-step cards off screen.** Steps 4, 6, 8 and 10 highlight the
+     whole open accordion (2,600–3,700 px tall here), so a card below it
+     was off the page. Those steps now put the card **above** the target,
+     with the arrow hidden.
+  4. **Step 18 blocked the sliders.** It highlighted only Next. Now it
+     highlights the whole goal card (`goal-setup-card`, tagged in
+     GoalSetupCard) and waits for `cs-tutorial-goal-set`, which
+     `withCreditScoreTutorialStart` fires once a goal is saved; Skip
+     there taps Next. Card above, arrow hidden.
+- Framer's TutorialOverlay.tsx had newer edits than the repo (the card
+  only renders when it has content, plus Prettier wrapping); the repo now
+  holds Framer's text plus the Scroll into view setting.
+
+## Still to test (after the next publish)
+
+Steps 12–15 with real taps (735 / 742 / 697 / 742) and Skip on each;
+Scroll into view on every step; card placement on 4, 6, 8, 10 and 18;
+dragging the goal sliders on 18; Exit; a second run; the free-play
+Score page afterwards (742, no goal left over); inactivity mid-run.

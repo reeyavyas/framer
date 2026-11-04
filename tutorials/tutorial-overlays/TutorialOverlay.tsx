@@ -92,6 +92,7 @@ interface Props {
     active: boolean
 
     target: string
+    scrollIntoView?: boolean // when this step starts, scroll its target on screen (tall targets land a third of the way down, leaving room for a card above)
     revealDelaySeconds: number // dim shows at once, but the hole/glow/arrow/card wait this long — e.g. for a target inside an overlay that's still animating open when this step starts
     holeShape: HoleShape
     cornerRadius: number
@@ -371,10 +372,7 @@ function cardWrapperStyle(
             // actually needs.
             const centerX = rect.left + rect.width / 2 + offsetX
             style.left = Math.max(0, centerX - CARD_MAX_WIDTH / 2)
-            style.right = Math.max(
-                0,
-                viewportW - centerX - CARD_MAX_WIDTH / 2
-            )
+            style.right = Math.max(0, viewportW - centerX - CARD_MAX_WIDTH / 2)
             style.display = "flex"
             style.justifyContent = "center"
             style.alignItems = "flex-start"
@@ -483,6 +481,7 @@ export default function TutorialOverlay(props: Props) {
     const {
         active,
         target,
+        scrollIntoView,
         revealDelaySeconds,
         holeShape,
         cornerRadius,
@@ -666,6 +665,42 @@ export default function TutorialOverlay(props: Props) {
         }
     }, [isCanvas, active, isMyTurn, target])
 
+    // Scroll into view: brings the target on screen when this step
+    // starts, for targets below the fold (the Credit Score tutorial's
+    // accordions). A target that fits is centred, and left alone if it's
+    // already fully on screen; a tall one (an open accordion) gets its top
+    // a third of the way down. Scrolls whichever frame scrolls it.
+    React.useEffect(() => {
+        if (isCanvas || !active || !isMyTurn || !target || !scrollIntoView)
+            return
+        const timer = setTimeout(() => {
+            const el = document.querySelector(
+                `[data-tutorial-target="${target}"]`
+            )
+            if (!el) return
+            const r = el.getBoundingClientRect()
+            const h = window.innerHeight
+            const tall = r.height > h * 0.6
+            if (!tall && r.top >= 0 && r.bottom <= h) return
+            const top = tall ? h / 3 : (h - r.height) / 2
+            // The nearest ancestor that scrolls, else the page.
+            let box: HTMLElement | null = el.parentElement
+            while (box && box !== document.body) {
+                const s = window.getComputedStyle(box)
+                if (
+                    (s.overflowY === "auto" || s.overflowY === "scroll") &&
+                    box.scrollHeight > box.clientHeight
+                )
+                    break
+                box = box.parentElement
+            }
+            const scroller: HTMLElement | Window =
+                box && box !== document.body ? box : window
+            scroller.scrollBy({ top: r.top - top, behavior: "smooth" })
+        }, 50)
+        return () => clearTimeout(timer)
+    }, [isCanvas, active, isMyTurn, target, scrollIntoView])
+
     // Timer-driven reveal of everything that traces the target (hole,
     // glow, arrow, card). For a target inside something that's still
     // animating in when this step starts — e.g. the login page's
@@ -807,7 +842,8 @@ export default function TutorialOverlay(props: Props) {
     // A set skipLink still wins over all of this — handled by the <a>
     // itself below, as before.
     const skipUsedRef = React.useRef(false)
-    const skipBackstopRef = React.useRef<ReturnType<typeof setTimeout>>(undefined)
+    const skipBackstopRef =
+        React.useRef<ReturnType<typeof setTimeout>>(undefined)
     React.useEffect(() => {
         skipUsedRef.current = false
         return () => clearTimeout(skipBackstopRef.current)
@@ -849,7 +885,9 @@ export default function TutorialOverlay(props: Props) {
             } else {
                 const el = resolveScrollTarget(scrollContainerTarget)
                 const node =
-                    el === window ? document.documentElement : (el as HTMLElement)
+                    el === window
+                        ? document.documentElement
+                        : (el as HTMLElement)
                 const max = node.scrollHeight - node.clientHeight
                 el.scrollTo({ top: (max * percent) / 100, behavior: "smooth" })
             }
@@ -1167,8 +1205,7 @@ export default function TutorialOverlay(props: Props) {
     // scroll in real time needs the same wheel/touchmove veto that costs
     // main-thread jank, which VirtualScroll exists specifically to avoid.
     React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive)
-            return
+        if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive) return
         return lookupVirtualScroll(scrollContainerTarget, (virtual) => {
             virtual.freezeHere()
             return () => virtual.unfreeze()
@@ -1482,91 +1519,91 @@ export default function TutorialOverlay(props: Props) {
                     cardBody ||
                     (showProgressBar && progressBarDurationSeconds > 0) ||
                     showNextButton) && (
-                <div
-                    style={{
-                        ...cardWrapperStyle(
-                            cardAnchorX,
-                            cardAnchorY,
-                            cardOffsetX,
-                            cardOffsetY,
-                            rect,
-                            viewport.w
-                        ),
-                        pointerEvents: "none",
-                    }}
-                >
-                    {/* Enter animation only: the card unmounts together
-                        with this wrapper, so an exit animation would never
-                        get to play. */}
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                            y:
-                                cardAnchorY === "top"
-                                    ? -24
-                                    : cardAnchorY === "bottom"
-                                      ? 24
-                                      : 0,
-                        }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.45, ease: "easeOut" }}
+                    <div
                         style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: 24,
-                            padding: "40px 60px",
-                            borderRadius: 24,
-                            background: cardBackgroundColor,
-                            maxWidth: CARD_MAX_WIDTH,
-                            textAlign: "center",
+                            ...cardWrapperStyle(
+                                cardAnchorX,
+                                cardAnchorY,
+                                cardOffsetX,
+                                cardOffsetY,
+                                rect,
+                                viewport.w
+                            ),
                             pointerEvents: "none",
                         }}
                     >
-                        {(cardTitleLine1 || cardTitleLine2) && (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 4,
-                                }}
-                            >
-                                {cardTitleLine1 && (
-                                    <div
-                                        style={{
-                                            ...cardTitleLine1Font,
-                                            color: cardTitleLine1Color,
-                                            whiteSpace: "pre-line",
-                                        }}
-                                    >
-                                        {cardTitleLine1}
-                                    </div>
-                                )}
-                                {cardTitleLine2 && (
-                                    <div
-                                        style={{
-                                            ...cardTitleLine2Font,
-                                            color: cardTitleLine2Color,
-                                            whiteSpace: "pre-line",
-                                        }}
-                                    >
-                                        {cardTitleLine2}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {cardBody && (
-                            <div
-                                style={{
-                                    ...cardBodyFont,
-                                    color: cardBodyColor,
-                                    whiteSpace: "pre-line",
-                                }}
-                            >
-                                {cardBody}
-                            </div>
-                        )}
-                        {/* Next button above, progress bar below it —
+                        {/* Enter animation only: the card unmounts together
+                        with this wrapper, so an exit animation would never
+                        get to play. */}
+                        <motion.div
+                            initial={{
+                                opacity: 0,
+                                y:
+                                    cardAnchorY === "top"
+                                        ? -24
+                                        : cardAnchorY === "bottom"
+                                          ? 24
+                                          : 0,
+                            }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.45, ease: "easeOut" }}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 24,
+                                padding: "40px 60px",
+                                borderRadius: 24,
+                                background: cardBackgroundColor,
+                                maxWidth: CARD_MAX_WIDTH,
+                                textAlign: "center",
+                                pointerEvents: "none",
+                            }}
+                        >
+                            {(cardTitleLine1 || cardTitleLine2) && (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 4,
+                                    }}
+                                >
+                                    {cardTitleLine1 && (
+                                        <div
+                                            style={{
+                                                ...cardTitleLine1Font,
+                                                color: cardTitleLine1Color,
+                                                whiteSpace: "pre-line",
+                                            }}
+                                        >
+                                            {cardTitleLine1}
+                                        </div>
+                                    )}
+                                    {cardTitleLine2 && (
+                                        <div
+                                            style={{
+                                                ...cardTitleLine2Font,
+                                                color: cardTitleLine2Color,
+                                                whiteSpace: "pre-line",
+                                            }}
+                                        >
+                                            {cardTitleLine2}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {cardBody && (
+                                <div
+                                    style={{
+                                        ...cardBodyFont,
+                                        color: cardBodyColor,
+                                        whiteSpace: "pre-line",
+                                    }}
+                                >
+                                    {cardBody}
+                                </div>
+                            )}
+                            {/* Next button above, progress bar below it —
                             grouped in their own wrapper (rather than
                             relying on the card's own 24px gap). Space
                             above the button is the card's own 24px
@@ -1581,51 +1618,51 @@ export default function TutorialOverlay(props: Props) {
                             the one element it's about, not a value
                             shared across every pair of children in
                             the wrapper. */}
-                        {(showNextButton ||
-                            (showProgressBar &&
-                                progressBarDurationSeconds > 0)) && (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    marginTop: 8,
-                                    width: "100%",
-                                }}
-                            >
-                                {showNextButton && (
-                                    <button
-                                        type="button"
-                                        onClick={pressNext}
-                                        style={{
-                                            pointerEvents: "auto",
-                                            cursor: "pointer",
-                                            border: "none",
-                                            padding: "24px 48px",
-                                            marginBottom: 32,
-                                            borderRadius: 999,
-                                            background:
-                                                nextButtonBackgroundColor,
-                                            color: nextButtonTextColor,
-                                            ...nextButtonFont,
-                                        }}
-                                    >
-                                        {nextButtonLabel}
-                                    </button>
-                                )}
-                                {showProgressBar &&
-                                    progressBarDurationSeconds > 0 && (
-                                        <div
+                            {(showNextButton ||
+                                (showProgressBar &&
+                                    progressBarDurationSeconds > 0)) && (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        marginTop: 8,
+                                        width: "100%",
+                                    }}
+                                >
+                                    {showNextButton && (
+                                        <button
+                                            type="button"
+                                            onClick={pressNext}
                                             style={{
-                                                width: "100%",
-                                                height: 6,
+                                                pointerEvents: "auto",
+                                                cursor: "pointer",
+                                                border: "none",
+                                                padding: "24px 48px",
+                                                marginBottom: 32,
                                                 borderRadius: 999,
                                                 background:
-                                                    progressBarTrackColor,
-                                                overflow: "hidden",
+                                                    nextButtonBackgroundColor,
+                                                color: nextButtonTextColor,
+                                                ...nextButtonFont,
                                             }}
                                         >
-                                            {/* Purely visual — the
+                                            {nextButtonLabel}
+                                        </button>
+                                    )}
+                                    {showProgressBar &&
+                                        progressBarDurationSeconds > 0 && (
+                                            <div
+                                                style={{
+                                                    width: "100%",
+                                                    height: 6,
+                                                    borderRadius: 999,
+                                                    background:
+                                                        progressBarTrackColor,
+                                                    overflow: "hidden",
+                                                }}
+                                            >
+                                                {/* Purely visual — the
                                                 actual hand-off is the
                                                 separate
                                                 nextStepAfterSeconds
@@ -1646,31 +1683,31 @@ export default function TutorialOverlay(props: Props) {
                                                 whole card subtree
                                                 remount), so it always
                                                 restarts at 0%. */}
-                                            <motion.div
-                                                key={resumeCount}
-                                                initial={{ width: "0%" }}
-                                                animate={{
-                                                    width: "100%",
-                                                }}
-                                                transition={{
-                                                    duration:
-                                                        progressBarDurationSeconds,
-                                                    ease: "linear",
-                                                }}
-                                                style={{
-                                                    height: "100%",
-                                                    background:
-                                                        progressBarColor,
-                                                    borderRadius: 999,
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                            </div>
-                        )}
-                    </motion.div>
-                </div>
-            )}
+                                                <motion.div
+                                                    key={resumeCount}
+                                                    initial={{ width: "0%" }}
+                                                    animate={{
+                                                        width: "100%",
+                                                    }}
+                                                    transition={{
+                                                        duration:
+                                                            progressBarDurationSeconds,
+                                                        ease: "linear",
+                                                    }}
+                                                    style={{
+                                                        height: "100%",
+                                                        background:
+                                                            progressBarColor,
+                                                        borderRadius: 999,
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
 
             {/* glow ring — appears/disappears on its own, traces the hole
                 exactly since it shares the same rect/shape/radius. Plain
@@ -1914,6 +1951,13 @@ addPropertyControls(TutorialOverlay, {
         title: "Target ID",
         defaultValue: "more-tab",
         placeholder: "data-tutorial-target value",
+    },
+    scrollIntoView: {
+        type: ControlType.Boolean,
+        title: "Scroll into view",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
     },
     revealDelaySeconds: {
         type: ControlType.Number,

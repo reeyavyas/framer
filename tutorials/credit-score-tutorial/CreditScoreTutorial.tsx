@@ -1,7 +1,11 @@
 import * as React from "react"
 import type { ComponentType } from "react"
 import { isOn, subscribe } from "../../Credit_Score/SimulatorStore.tsx"
-import { setGoal } from "../../Credit_Score/GoalStore.tsx"
+import {
+    getGoal,
+    setGoal,
+    subscribe as subscribeGoal,
+} from "../../Credit_Score/GoalStore.tsx"
 
 // Credit Score tutorial (/credit-score-tutorial/score). Overrides that tag
 // layers for TutorialOverlay and fire the events its Simulator steps wait
@@ -16,15 +20,33 @@ const PAY_DOWN_ID = "payDown"
 const ON_TIME_ID = "onTime"
 const MISSED_ID = "missedPayment"
 
+// Step 18 waits for this, fired once the goal form's Next saves a goal.
+const GOAL_SET_EVENT = "cs-tutorial-goal-set"
+
+// These go on code components (the gauge, the Simulator rows), which don't
+// put a data-tutorial-target prop on the page. So a hidden marker tags the
+// Framer container it renders in, which has the component's size.
 function tagged(id: string, Component: ComponentType<any>) {
     return React.forwardRef(function Tagged(props: any, ref: any) {
-        return <Component {...props} ref={ref} data-tutorial-target={id} />
+        const marker = React.useRef<HTMLSpanElement>(null)
+        React.useLayoutEffect(() => {
+            const box = marker.current?.parentElement
+            box?.setAttribute("data-tutorial-target", id)
+            return () => box?.removeAttribute("data-tutorial-target")
+        }, [])
+        return (
+            <>
+                <Component {...props} ref={ref} />
+                <span ref={marker} hidden />
+            </>
+        )
     })
 }
 
 // Steps 1–2 — the gauge. Also clears the goal when the tutorial opens (so
 // a goal from free play doesn't skip the Goals steps) and when the page is
-// left (so the tutorial's goal doesn't show on the free-play page).
+// left (so the tutorial's goal doesn't show on the free-play page), and
+// fires step 18's event when a goal is set. Skip on step 18 taps Next.
 export function withCreditScoreTutorialStart(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -32,7 +54,24 @@ export function withCreditScoreTutorialStart(
     return React.forwardRef(function TutorialStart(props: any, ref: any) {
         React.useEffect(() => {
             setGoal(null)
-            return () => setGoal(null)
+            const unsubscribe = subscribeGoal(() => {
+                if (getGoal()) window.dispatchEvent(new Event(GOAL_SET_EVENT))
+            })
+            function onSkip(e: Event) {
+                if ((e as CustomEvent).detail?.event !== GOAL_SET_EVENT) return
+                const next = document.querySelector<HTMLElement>(
+                    '[data-tutorial-target="goal-setup-next"]'
+                )
+                if (!next) return
+                e.preventDefault()
+                next.click()
+            }
+            window.addEventListener(SKIP_EVENT, onSkip)
+            return () => {
+                unsubscribe()
+                window.removeEventListener(SKIP_EVENT, onSkip)
+                setGoal(null)
+            }
         }, [])
         return <Tagged {...props} ref={ref} />
     })
