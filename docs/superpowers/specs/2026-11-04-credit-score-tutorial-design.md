@@ -60,8 +60,8 @@ the owner's screenshots.
 
 | # | Target | Visitor does | Card text (draft) | Moves on |
 |---|---|---|---|---|
-| 1 | Gauge | reads | "This is your credit score: **720, Good**. Scores run from 300 to 850." | Timed, 5 s |
-| 2 | Gauge | reads | "Lenders use it to decide whether to lend to you and at what rate." | Timed, 5 s |
+| 1 | Gauge | reads | "This is your credit score: **720, Good**. Scores run from 300 to 850." | Timed, 7 s |
+| 2 | Gauge | reads | "Lenders use it to decide whether to lend to you and at what rate." | Timed, 7 s |
 | 3 | Score Rating header | opens it | "Open **Score Rating** to see how close you are to the next level." | Tap |
 | 4 | Points Journey panel | reads | "You're **60 points** from Excellent. Let's see what moves your score." | Next |
 | 5 | Payment History header | opens it | "**Payment History** is the biggest part of your score (40%). Open it to see your grade." | Tap |
