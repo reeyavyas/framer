@@ -77,9 +77,10 @@ the owner's screenshots.
 | 15 | Missed payment, 1 mo | taps it again to undo | "One missed payment wiped out both good moves. Tap it again to undo it." Score → **742 ▲22** | Event |
 | 16 | Goals tab | taps it | "Set yourself a goal so you can track your progress." | Tap |
 | 17 | Set Up Your Goal | taps it | "Tap **Set Up Your Goal**." | Tap |
-| 18 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap → congrats page |
+| 18 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap |
+| 19 | none | reads | "Your goal is set! You're ready to make informed credit decisions." | Timed, 4 s → `/credit-score-tutorial/complete` |
 
-That's 18 steps, about 3–4 minutes (owner kept all of them, 4 Nov; step 1
+That's 19 steps (step 19 added in the build: a tap on the last step can't change page), about 3–4 minutes (owner kept all of them, 4 Nov; step 1
 split into two timed cards).
 
 ## New code (smallest set)

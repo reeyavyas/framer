@@ -610,6 +610,16 @@ for the Framer setup and the step list.
 - `AccountControlsTutorialReset.tsx`: clears the tutorial store when
   the tutorial's first page opens.
 
+## `credit-score-tutorial/`
+
+Tutorial-only overrides for the Credit Score tutorial (gauge → Score
+Rating → Payment History, Credit Usage, Credit Age → Simulator → Goals).
+See `credit-score-tutorial/NOTES.md`.
+
+- `CreditScoreTutorial.tsx`: the gauge's start override (clears the
+  goal) and the three Simulator row overrides that fire each step's
+  event and handle Skip.
+
 ## `reset-pin-tutorial/` (reserved, not created yet)
 
 The home for tutorial-only duplicates of `reset-pin/` components, if
@@ -629,4 +639,5 @@ tutorials-main-page/<feature>
 tutorial-overlays/<feature>
 card-controls-tutorial/<feature>
 account-controls-tutorial/<feature>
+credit-score-tutorial/<feature>
 ```
