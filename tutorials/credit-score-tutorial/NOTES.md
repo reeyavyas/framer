@@ -137,9 +137,32 @@ kept the kiosk's inactivity timer from sending the page to `/app`.
   visible browser; it only stalled in the hidden pane.
 - Owner (4 Nov): no Credit Score card on the tutorials page yet.
 
-## Still to test (after the next publish)
+## Live test 3 (4 Nov, third publish)
 
-Skip on 12–15 and 18; step 14 row visible below the header and "1 mo"
-tappable; cards above the open accordions on 4, 6, 8, 10 and above the
-goal card on 18; step 17's card; Exit; a second run; the free-play Score
-page afterwards with an in-app navigation (742, no goal left over).
+Same setup as test 2 (built-in browser, 1080×1920, pane showing).
+
+- Passed, real taps unless noted: steps 1–2 (gauge highlighted with its
+  card and progress bar); 3, 5, 7, 9 (each accordion centred in the
+  visible frame, opens on tap); 4, 6, 8, 10 (card **above** the open
+  accordion, its Next button tapped); 11 Simulator on 720; Skip on 12
+  (735) and 13 (742); 14 row below the pinned header, real tap on "1 mo"
+  (697); Skip on 15 (742); 16 Goals; 17 card full width beside its
+  button; 18 card above the goal card, Skip taps Next and saves; 19 →
+  `/complete`. Exit (✕) on step 1 → `/tutorials`.
+- Found and fixed (goes live with the next publish): the pay-down row on
+  step 12 sat 11 px under the pinned Simulator header (label top clipped),
+  because the header only pins once the frame has scrolled. Scroll into
+  view now places the target again 700 ms later, when the header counts.
+- Framer reformats one line of TutorialOverlay.tsx differently from the
+  local Prettier (a `HTMLElement | undefined` cast); the repo keeps
+  Framer's text.
+
+## Not tested
+
+- A second run straight after the first in the same session, and the
+  free-play Score page afterwards via in-app navigation (742, no goal
+  left over). There's no in-app link from the tutorials page to this
+  tutorial yet (owner, 4 Nov: no tutorials card for now), so each run
+  here started with a fresh page load, which clears the goal anyway.
+- Inactivity part-way through (the kiosk timer sends the page to `/app`
+  after about a minute without touches).

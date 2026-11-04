@@ -673,7 +673,7 @@ export default function TutorialOverlay(props: Props) {
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !target || !scrollIntoView)
             return
-        const timer = setTimeout(() => {
+        function place() {
             const el = document.querySelector(
                 `[data-tutorial-target="${target}"]`
             )
@@ -722,8 +722,15 @@ export default function TutorialOverlay(props: Props) {
             if (!tall && r.top >= visTop && r.bottom <= visTop + visH) return
             const top = visTop + (tall ? visH / 3 : (visH - r.height) / 2)
             scroller.scrollBy({ top: r.top - top, behavior: "smooth" })
-        }, 50)
-        return () => clearTimeout(timer)
+        }
+        // Again once that scroll has settled: a sticky header only pins,
+        // and so only counts as covering, after the frame has scrolled.
+        const first = setTimeout(place, 50)
+        const second = setTimeout(place, 700)
+        return () => {
+            clearTimeout(first)
+            clearTimeout(second)
+        }
     }, [isCanvas, active, isMyTurn, target, scrollIntoView])
 
     // Timer-driven reveal of everything that traces the target (hole,
