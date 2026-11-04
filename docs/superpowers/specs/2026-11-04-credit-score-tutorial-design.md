@@ -31,18 +31,21 @@ underneath; the overlay only lets the visitor tap the current target.
   `TutorialCongratsAutoRedirect`, then the tutorials main page.
 - **Entry:** a Credit Score card on the tutorials main page carousel.
 
-## One score throughout: 720
+## Score: starts at 720, ends at 742
 
-The free-play page mixes numbers: the gauge and Simulator say **742**,
-while the accordions, Points Journey ("60 points away from Excellent")
-and Goals are written for **720**. On the tutorial copy only, set:
+The accordions, Points Journey ("60 points away from Excellent") and
+Goals are written for **720**, and the free-play page's gauge shows
+**742**. The tutorial starts at 720, goes up and down in the Simulator,
+and ends at **742**, the free-play page's score (owner, 4 Nov). On the
+tutorial copy only, set:
 
 - the gauge's **Score** property to 720;
-- SimulatorScoreHeader's **Current Score** property to 720.
+- SimulatorScoreHeader's **Current Score** property to 720;
+- the on-time payments row's **Points** to **+7** (free play keeps +11),
+  so pay down (+15) plus on-time (+7) lands on 742.
 
-Both are properties, so this needs no code change. The free-play page is
-left as it is. (Fixing it there too is a separate decision for the
-owner.)
+These are all properties, so no code change is needed. The free-play page
+stays as it is (owner, 4 Nov).
 
 ## Steps
 
@@ -62,21 +65,19 @@ the owner's screenshots.
 | 4 | Payment History header | opens it | "**Payment History** is the biggest part of your score (40%). Open it to see your grade." | Tap |
 | 5 | Payment History body | reads | "Paying every bill on time keeps this grade high. Even one late payment can stay on your report for years." | Next |
 | 6 | Credit Usage header | opens it | "**Credit Usage** is how much of your limits you're using (20%)." | Tap |
-| 7 | Credit Usage body | reads | "Try to keep your balances below 30% of your limits. Lower is better." | Next |
+| 7 | Credit Usage body | reads | "Try to keep your balances below 30% of your limits. Under 10% is best." | Next |
 | 8 | Credit Age header | opens it | "**Credit Age** is how long you've had credit (21%)." | Tap |
 | 9 | Credit Age body | reads | "Older accounts help. Think twice before closing your oldest card." | Next |
 | 10 | Simulator tab | taps it | "Now try it. Tap **Simulator** to see what changes your score." | Tap |
 | 11 | Pay down row ($1,200) | taps it | "Pay down $1,200 of your balances." Score → **735 ▲15** | Event |
-| 12 | On-time payments row | taps it | "Keep making payments on time." Score → **746 ▲26** | Event |
-| 13 | Missed payment, 1 mo | taps it | "Now see what one missed payment does." Score → **701 ▼19** | Event |
-| 14 | Simulated gauge | reads | "One missed payment undid both good moves. Paying on time matters most." | Next |
+| 12 | On-time payments row | taps it | "Keep making payments on time." Score → **742 ▲22** | Event |
+| 13 | Missed payment, 1 mo | taps it | "Now see what one missed payment does." Score → **697 ▼23** | Event |
+| 14 | Missed payment, 1 mo | taps it again to undo | "One missed payment wiped out both good moves. Tap it again to undo it." Score → **742 ▲22** | Event |
 | 15 | Goals tab | taps it | "Set yourself a goal so you can track your progress." | Tap |
 | 16 | Set Up Your Goal | taps it | "Tap **Set Up Your Goal**." | Tap |
 | 17 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap → congrats page |
 
-That's 17 steps, about 3–4 minutes. Steps 3, 5, 7 and 9 can be merged
-into the step before them (one card that says "open it" and then
-explains) if the run feels long. That would bring it to 13.
+That's 17 steps, about 3–4 minutes (owner kept all 17, 4 Nov).
 
 ## New code (smallest set)
 
@@ -95,7 +96,8 @@ Everything else is native Framer or the existing components.
   - `withRowOnEvent` overrides for the three Simulator rows. They
     subscribe to the store and fire `cs-tutorial-paid-down`,
     `cs-tutorial-on-time` and `cs-tutorial-missed` the first time their
-    row is on. On `tutorial-skip` for their event, they turn the row on
+    row is on, and `cs-tutorial-missed-undone` when the missed row is
+    off again after that. On `tutorial-skip` for their event, they turn the row on
     by tapping it for the visitor.
   - `withCreditScoreTutorialReset` on the page. Clears the goal
     (`setGoal(null)`) when the tutorial opens, so a goal from free play
@@ -112,8 +114,9 @@ repo's type-check before a push.
   opening one pushes the next one down. Each step's hole has to follow
   its target (`VirtualScroll` / the overlay's own scroll handling).
   Check this on the first live build before writing the rest.
-- **Sticky Simulator header.** Step 14 points at the simulated gauge
-  while it is pinned. Check that the hole lines up.
+- **Sticky Simulator header.** Steps 11–14 change the pinned simulated
+  gauge while the hole is on a row. Check that the visitor can see the
+  gauge from each row.
 - **Simulator rows inside the overlay hole.** The overlay blocks taps
   outside the hole, so a row's ⓧ or a neighbouring segment can't be
   tapped by mistake. Check that the row's own tap still lands.
@@ -126,7 +129,7 @@ On the live published site at 1080×1920, with real taps:
 
 - every step in order;
 - Skip on every step, including the event steps (the score still reads
-  735 / 746 / 701 afterwards);
+  735 / 742 / 697 / 742 afterwards);
 - Exit (X) from several steps;
 - a second run in the same session (starts on step 1, no goal set,
   Simulator empty);
@@ -135,14 +138,12 @@ On the live published site at 1080×1920, with real taps:
 
 Results go in `tutorials/credit-score-tutorial/NOTES.md`.
 
-## Open questions for the owner
+## Decided (owner, 4 Nov)
 
-1. Use 720 for the tutorial? (Recommended: it matches all the written
-   text.)
-2. Keep 17 steps, or merge the read steps down to 13?
-3. Should the free-play page's 742 / 720 mismatch be fixed too, as a
-   separate change?
-4. Card copy: the table's text is a draft for the owner to edit.
+1. The score starts at 720, moves up and down, and ends at 742.
+2. All 17 steps stay.
+3. The free-play page stays at 742.
+4. The card text in the steps table is a draft for the owner to edit.
 
 ## Out of scope
 
