@@ -102,9 +102,44 @@ screenshots time out on the live site, so checks read the DOM).
   only renders when it has content, plus Prettier wrapping); the repo now
   holds Framer's text plus the Scroll into view setting.
 
+## Live test 2 (4 Nov, second publish)
+
+Built-in browser emulating 1080×1920 with the pane showing (a hidden
+pane runs no animation frames, so the hole and smooth scroll freeze
+there; Chrome's window here is only 823×380). A pointermove every 4 s
+kept the kiosk's inactivity timer from sending the page to `/app`.
+
+- Passed with real taps: steps 1–2 (gauge scrolled into view); 3, 5, 7, 9
+  (each accordion scrolled to the middle, opens on tap, moves on); 11
+  (Simulator opens on 720); 12 (pay down → 735 ▲15); 13 (on-time →
+  742 ▲22); 14–15 by positioned taps (1 mo → 697, undo → 742); 16
+  (Goals); 17 (Set Up Your Goal); 18 (slider dragged to 781 without
+  moving on, page scrolls during the step, Next saves) → 19 → `/complete`
+  → `/tutorials`.
+- Found and fixed (needs the next publish):
+  1. **Skip on 12–15 and 18 did nothing.** The overrides used
+     `el.click()`, which has no position, so the overlay blocked it as a
+     tap outside the hole. They now send a positioned tap (`tapAt`), like
+     the overlay's own Skip.
+  2. **Rows under the pinned Simulator header.** Step 14's row was
+     already "on screen" but behind the sticky Score Header Card, and
+     rows' labels hid under it on 12–13. Scroll into view now treats a
+     sticky header at the top of the scrolling frame as covering it, and
+     measures the visible area from the frame (below the app header and
+     tabs) instead of the window. Checked on the live page: the header's
+     bottom is found (929) and the missed-payment row lands at 1171–1468.
+  3. **Read-step cards still below.** The "Above target" change hadn't
+     saved: Card position Y is a select, not a segmented control. Now set
+     (`_string_top`) on 4, 6, 8, 10 and 18 and confirmed after reselecting.
+  4. **Step 17's card squeezed** into a narrow column (right-aligned to a
+     narrow button near the left edge). Now Align left edge, offset X 0.
+- A hand-eased scroll was tried and dropped: smooth scrollBy works in a
+  visible browser; it only stalled in the hidden pane.
+- Owner (4 Nov): no Credit Score card on the tutorials page yet.
+
 ## Still to test (after the next publish)
 
-Steps 12–15 with real taps (735 / 742 / 697 / 742) and Skip on each;
-Scroll into view on every step; card placement on 4, 6, 8, 10 and 18;
-dragging the goal sliders on 18; Exit; a second run; the free-play
-Score page afterwards (742, no goal left over); inactivity mid-run.
+Skip on 12–15 and 18; step 14 row visible below the header and "1 mo"
+tappable; cards above the open accordions on 4, 6, 8, 10 and above the
+goal card on 18; step 17's card; Exit; a second run; the free-play Score
+page afterwards with an in-app navigation (742, no goal left over).

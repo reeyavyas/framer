@@ -26,6 +26,27 @@ const GOAL_SET_EVENT = "cs-tutorial-goal-set"
 // These go on code components (the gauge, the Simulator rows), which don't
 // put a data-tutorial-target prop on the page. So a hidden marker tags the
 // Framer container it renders in, which has the component's size.
+// A tap with a position, for Skip. TutorialOverlay blocks clicks outside
+// the step's hole by their coordinates, and el.click() has none.
+function tapAt(el: HTMLElement) {
+    const r = el.getBoundingClientRect()
+    const init = {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        clientX: r.left + r.width / 2,
+        clientY: r.top + r.height / 2,
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        button: 0,
+        buttons: 1,
+    }
+    el.dispatchEvent(new PointerEvent("pointerdown", init))
+    el.dispatchEvent(new PointerEvent("pointerup", { ...init, buttons: 0 }))
+    el.dispatchEvent(new MouseEvent("click", { ...init, buttons: 0 }))
+}
+
 function tagged(id: string, Component: ComponentType<any>) {
     return React.forwardRef(function Tagged(props: any, ref: any) {
         const marker = React.useRef<HTMLSpanElement>(null)
@@ -64,7 +85,7 @@ export function withCreditScoreTutorialStart(
                 )
                 if (!next) return
                 e.preventDefault()
-                next.click()
+                tapAt(next)
             }
             window.addEventListener(SKIP_EVENT, onSkip)
             return () => {
@@ -133,7 +154,7 @@ function withRowEvents(
                 e.preventDefault()
                 const el = tap(row, event === onEvent)
                 // Already in that state: the step only needs its event.
-                if (el) el.click()
+                if (el) tapAt(el)
                 else window.dispatchEvent(new Event(event))
             }
             window.addEventListener(SKIP_EVENT, onSkip)

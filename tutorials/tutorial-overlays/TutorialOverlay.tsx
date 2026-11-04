@@ -680,9 +680,6 @@ export default function TutorialOverlay(props: Props) {
             if (!el) return
             const r = el.getBoundingClientRect()
             const h = window.innerHeight
-            const tall = r.height > h * 0.6
-            if (!tall && r.top >= 0 && r.bottom <= h) return
-            const top = tall ? h / 3 : (h - r.height) / 2
             // The nearest ancestor that scrolls, else the page.
             let box: HTMLElement | null = el.parentElement
             while (box && box !== document.body) {
@@ -696,6 +693,34 @@ export default function TutorialOverlay(props: Props) {
             }
             const scroller: HTMLElement | Window =
                 box && box !== document.body ? box : window
+            // Place it within the part of that frame that's on screen (on
+            // the kiosk it starts below the fixed header and tabs).
+            const area =
+                scroller === window
+                    ? { top: 0, bottom: h }
+                    : (scroller as HTMLElement).getBoundingClientRect()
+            let visTop = Math.max(0, area.top)
+            // A sticky header pinned at the top of that frame (the
+            // Simulator's score card) covers what's under it.
+            let pinned = document
+                .elementsFromPoint(r.left + r.width / 2, visTop + 2)
+                .find((e) => !e.closest("[data-tutorial-overlay]")) as
+                | HTMLElement
+                | undefined
+            while (pinned && pinned !== scroller && pinned !== document.body) {
+                if (window.getComputedStyle(pinned).position === "sticky") {
+                    visTop = Math.max(
+                        visTop,
+                        pinned.getBoundingClientRect().bottom
+                    )
+                    break
+                }
+                pinned = pinned.parentElement ?? undefined
+            }
+            const visH = Math.min(h, area.bottom) - visTop
+            const tall = r.height > visH * 0.6
+            if (!tall && r.top >= visTop && r.bottom <= visTop + visH) return
+            const top = visTop + (tall ? visH / 3 : (visH - r.height) / 2)
             scroller.scrollBy({ top: r.top - top, behavior: "smooth" })
         }, 50)
         return () => clearTimeout(timer)
