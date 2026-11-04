@@ -48,7 +48,12 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Moving parts must be whole: cart version 2's basket got its back rim, its right side running back to it, and its
   inside; its yellow box is a true box, inside the basket's right side.
 - Savings jar: keep the original jar and lid shapes (a redrawn geometric jar was rejected), clean only the lid's
-  jagged sides. Colours from cart version 2: glass = the sky basket, lid = the teal handle and wheels, arrow = the
+  jagged sides. (Round 3: clipping the lid to a plain cylinder and painting a band round it read as a stroke
+  hiding the jagged sides, and cut off the thread bulge. Fixed by redrawing the lid's side faces and grooves from
+  curves fitted to the trace, with no band or rim: see `LID_CLEAN` in `savings-jar/build.py`. Round 4: the jar's
+  outline went too: its open ends beside the lid read as a stroke with a gap. The neck glass now reaches the
+  outline's ends, and the neck bands are sampled evenly in angle so their steep ends have no facets. Clean the
+  shape itself; never cover an uneven edge with a stroke or outline.) Colours from cart version 2: glass = the sky basket, lid = the teal handle and wheels, arrow = the
   mint and teal boxes. No yellow beyond the coins. Arrow as tall as the jar's body. The coin that drops in lands
   inside. Coin stacks start short and coins pile on one by one (shown at full strength as they drop: a half-faded
   coin shows its own shading as a dark ghost).
@@ -248,6 +253,7 @@ so it's seamless.
 ```sh
 mkdir tools && cd tools && npm i framer framer-motion gsap react@19 @types/react@19 typescript esbuild playwright-core
 # stock dir: the .ai converted to src.svg
+# (no Ghostscript or poppler on the Mac: python3 ATM/artwork/vectors/pdf2svg.py Vectors.ai <page> src.svg, with pymupdf)
 cp Art.ai src.eps && gs -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite -o src.pdf src.eps && pdftocairo -svg src.pdf src.svg
 sh ATM/artwork/cart/preview/build.sh <stock dir> <tools dir>
 python3 ATM/artwork/cart/preview/outlines.py <stock dir>/measure.png

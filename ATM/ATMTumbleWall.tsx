@@ -36,6 +36,87 @@ interface Item {
     kind?: Kind
 }
 
+// ---- sounds ----
+// The owner's sound files (ATM/sounds), served from this repo at one commit so they never change under the page.
+// Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
+// loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
+const SOUNDS =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@aa7c8631ffeb9d7e2dc3e8d3b0456b222277d2c9/ATM/sounds/"
+let audioCtx: AudioContext | null = null
+const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
+function loadSounds(...names: string[]) {
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
+    if (!AC) return
+    const ac = (audioCtx ??= new AC())
+    for (const name of names)
+        if (buffers[name] === undefined) {
+            buffers[name] = null
+            fetch(SOUNDS + name)
+                .then((r) => r.arrayBuffer())
+                .then((b) => ac.decodeAudioData(b))
+                .then((b) => (buffers[name] = b))
+                .catch(() => (buffers[name] = undefined))
+        }
+}
+// Plays `name` `delay` s from now, from `offset` s into the file; returns a stop that fades it out over `fade` s
+function playSound(
+    name: string,
+    volume: number,
+    {
+        delay = 0,
+        offset = 0,
+        fadeIn = 0.005,
+        loop,
+        length,
+    }: {
+        delay?: number
+        offset?: number
+        fadeIn?: number
+        loop?: [number, number]
+        length?: number // play only this many seconds of the file, fading out over its last 0.03 s
+    } = {}
+) {
+    const ac = audioCtx
+    const buffer = buffers[name]
+    if (!ac || !buffer || volume <= 0) return (_fade?: number) => {}
+    if (ac.state === "suspended") void ac.resume()
+    const src = ac.createBufferSource()
+    src.buffer = buffer
+    if (loop) {
+        src.loop = true
+        src.loopStart = loop[0]
+        src.loopEnd = loop[1]
+    }
+    const gain = ac.createGain()
+    const t = ac.currentTime + delay
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(volume, t + fadeIn)
+    if (length) {
+        gain.gain.setValueAtTime(volume, t + length - 0.03)
+        gain.gain.linearRampToValueAtTime(0, t + length)
+    }
+    src.connect(gain).connect(ac.destination)
+    src.start(t, offset, length)
+    let stopped = false // only the first stop counts; a second would bring the volume back
+    return (fade = 0.2) => {
+        if (stopped) return
+        stopped = true
+        const now = Math.max(ac.currentTime, t + fadeIn)
+        gain.gain.cancelScheduledValues(now)
+        gain.gain.setValueAtTime(volume, now)
+        gain.gain.linearRampToValueAtTime(0, now + fade)
+        src.stop(now + fade + 0.02)
+    }
+}
+
 interface Props {
     items: Item[]
     itemSize: number
@@ -49,6 +130,8 @@ interface Props {
     wantInNeeds: string
     needInWants: string
     doneLink: string
+    sounds: boolean
+    volume: number
 }
 
 // The card shown for the latest sorting answer, over the basket at (x, y).
@@ -91,6 +174,12 @@ const CARD_W = 500 // the wrong-answer line fits on two lines, 23 px to spare
 const CARD_EDGE = 32 // least room between a card and the screen's edge
 const CARD_MS = 3200 // pop in, hold long enough to read, fade
 const DONE_MS = 1000 // last picture lands and its card pops up, then on
+// A bounce for the hardest hit each frame (floor, wall or another picture), louder the harder it hits. Softer than
+// THUMP_MIN px/s is settling, not landing, and stays quiet; thumps are at least THUMP_GAP ms apart, so the rain
+// (a picture every 120 ms) gets one each and its bounce a softer one.
+const THUMP_MIN = 200
+const THUMP_FULL = 1800 // px/s for full volume (the rain lands at about 2,200)
+const THUMP_GAP = 60
 
 // Framer's router, read from the module so a Framer version without it can't break the file.
 const useRouter: () => unknown =
@@ -137,6 +226,12 @@ export default function ATMTumbleWall(props: Props) {
     const count = items.length
     const itemsRef = React.useRef(items)
     itemsRef.current = items
+    const soundsRef = React.useRef(props)
+    soundsRef.current = props
+    const play = (name: string, level: number, offset = 0, length?: number) => {
+        const p = soundsRef.current
+        if (p.sounds) playSound(name, p.volume * level, { offset, length })
+    }
     // Framer's own page switch (no reload, so no blank flash); a plain page
     // load if this Framer version has no router to ask.
     const router = useRouter() as
@@ -276,6 +371,8 @@ export default function ATMTumbleWall(props: Props) {
         let stirred = false
         let sorted = 0
         let doneTimer = 0
+        let peak = 0 // the hardest hit since the last frame, px/s
+        let lastThump = 0
         let grabDX = 0
         let grabDY = 0
         let lastPX = 0
@@ -395,6 +492,9 @@ export default function ATMTumbleWall(props: Props) {
                 x: (m.left + m.right) / 2,
                 y: m.top,
             }))
+            // with the answer card's pop (correct's chime starts 0.05 s into its file)
+            if (ok) play("correct.mp3", 1.2, 0.05)
+            else play("incorrect.mp3", 0.6)
             if (ok) {
                 b.live = false
                 b.spawnAt = Infinity // never comes back
@@ -449,12 +549,18 @@ export default function ATMTumbleWall(props: Props) {
                     for (let j = i + 1; j < bodies.length; j++) {
                         const c = bodies[j]
                         if (!c.live) continue
-                        collide(a, c, i === held, j === held, r, bounce)
+                        peak = Math.max(
+                            peak,
+                            collide(a, c, i === held, j === held, r, bounce)
+                        )
                     }
                 }
                 for (let i = 0; i < bodies.length; i++) {
                     if (bodies[i].live && i !== held)
-                        walls(bodies[i], w, h, top, r, bounce)
+                        peak = Math.max(
+                            peak,
+                            walls(bodies[i], w, h, top, r, bounce)
+                        )
                 }
             }
             // Anything touching the floor or another picture eases toward
@@ -485,6 +591,19 @@ export default function ATMTumbleWall(props: Props) {
                 step((now - start) / 1000)
                 acc -= STEP
             }
+            // the owner's ball bounce bounces six times; the physics makes the bounces, so only its first plays:
+            // the hit at 0.065 s, faded out by 0.23 s, before the second at 0.245 (it's quieter than the others,
+            // hence the level)
+            if (peak >= THUMP_MIN && now - lastThump >= THUMP_GAP) {
+                lastThump = now
+                play(
+                    "ball-bounce.mp3",
+                    4.5 * Math.min(1, peak / THUMP_FULL),
+                    0.06,
+                    0.17
+                )
+            }
+            peak = 0
             bodies.forEach((b, i) => {
                 const el = elRefs.current[i]
                 if (!el) return
@@ -638,14 +757,16 @@ export default function ATMTumbleWall(props: Props) {
                             </div>
                         )}
                         <div
-                            style={{
-                                fontFamily: `"Area Normal Bold", sans-serif`,
-                                fontWeight: 700,
-                                fontSize: 36,
-                                lineHeight: 1.2,
-                                color: "#002c44",
-                                textWrap: "balance",
-                            }}
+                            style={
+                                {
+                                    fontFamily: `"Area Normal Bold", sans-serif`,
+                                    fontWeight: 700,
+                                    fontSize: 36,
+                                    lineHeight: 1.2,
+                                    color: "#002c44",
+                                    textWrap: "balance", // Framer's CSS types don't list it yet, hence the cast
+                                } as React.CSSProperties
+                            }
                         >
                             {card.ok
                                 ? card.kind === "need"
@@ -686,12 +807,12 @@ function collide(
     cHeld: boolean,
     r: number,
     e: number
-) {
+): number {
     const dx = c.x - a.x
     const dy = c.y - a.y
     const d2 = dx * dx + dy * dy
     const min = 2 * r
-    if (d2 >= min * min || (aHeld && cHeld)) return
+    if (d2 >= min * min || (aHeld && cHeld)) return 0
     a.touching = c.touching = true
     const d = Math.sqrt(d2) || 0.01
     const nx = d2 ? dx / d : 0
@@ -704,12 +825,13 @@ function collide(
     c.x += nx * overlap * wc
     c.y += ny * overlap * wc
     const vn = (c.vx - a.vx) * nx + (c.vy - a.vy) * ny
-    if (vn >= 0) return
+    if (vn >= 0) return 0
     const j = -(1 + e) * vn
     a.vx -= nx * j * wa
     a.vy -= ny * j * wa
     c.vx += nx * j * wc
     c.vy += ny * j * wc
+    return -vn // how hard they hit, px/s
 }
 
 function walls(
@@ -719,27 +841,41 @@ function walls(
     top: number,
     r: number,
     e: number
-) {
+): number {
+    let hit = 0 // how hard it hit a wall, px/s
     if (!b.below) {
         if (b.y >= top + r) b.below = true
     } else if (b.y < top + r) {
         b.y = top + r
-        if (b.vy < 0) b.vy = b.vy * -e
+        if (b.vy < 0) {
+            hit = -b.vy
+            b.vy = b.vy * -e
+        }
     }
     if (b.y > h - r) {
         b.y = h - r
-        if (b.vy > 0) b.vy = b.vy * -e
+        if (b.vy > 0) {
+            hit = Math.max(hit, b.vy)
+            b.vy = b.vy * -e
+        }
         b.vx *= FRICTION
         b.touching = true
         if (Math.abs(b.vy) < 20) b.vy = 0
     }
     if (b.x < r) {
         b.x = r
-        if (b.vx < 0) b.vx = b.vx * -e
+        if (b.vx < 0) {
+            hit = Math.max(hit, -b.vx)
+            b.vx = b.vx * -e
+        }
     } else if (b.x > w - r) {
         b.x = w - r
-        if (b.vx > 0) b.vx = b.vx * -e
+        if (b.vx > 0) {
+            hit = Math.max(hit, b.vx)
+            b.vx = b.vx * -e
+        }
     }
+    return hit
 }
 
 ATMTumbleWall.defaultProps = {
@@ -756,6 +892,8 @@ ATMTumbleWall.defaultProps = {
     wantInNeeds: "🤔 Most people would consider this a WANT.",
     needInWants: "🤔 Most people would consider this a NEED.",
     doneLink: "/atm-lessons/need-or-want/complete",
+    sounds: true,
+    volume: 0.8,
 }
 
 addPropertyControls(ATMTumbleWall, {
@@ -853,4 +991,17 @@ addPropertyControls(ATMTumbleWall, {
         description: "The page to go to once every picture is in its basket.",
         defaultValue: ATMTumbleWall.defaultProps.doneLink,
     },
+    sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
+    volume: {
+        type: ControlType.Number,
+        title: "Volume",
+        min: 0,
+        max: 1,
+        step: 0.05,
+        defaultValue: ATMTumbleWall.defaultProps.volume,
+        hidden: (props: Partial<Props>) => !props.sounds,
+    },
 })
+
+// The rain starts as soon as the page opens, so the sounds load with it
+loadSounds("ball-bounce.mp3", "correct.mp3", "incorrect.mp3")
