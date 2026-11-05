@@ -60,6 +60,16 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   touch/wheel on), and the hole is clipped to the target's visible part
   of its scrolling frame.
 
+## Live test 7 (5 Nov, side arrows)
+
+Built-in browser, 1080×1920, all 33 steps by Skip, measured from the
+DOM: on every curved-arrow step the arrow's tail sits 15 px off the
+card's side within its height and the tip lands 5–7 px from the target's
+edge; every card stays 40 px from the screen edges and inside 287–1710
+(step 1's 5% snap puts the gauge at 971–1661). Checked by eye on 2, 20
+and 29 (mirrored). Wrapping splits "300–850" over two lines on step 2's
+card (copy is the owner's to edit).
+
 ## Live test 6 (5 Nov, rebuild's first publish)
 
 Built-in browser, 1080×1920, pane showing; real taps and drags, scroll
