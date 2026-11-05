@@ -1641,6 +1641,13 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   since nothing needs to sync to a frame. The lesson's taps came first, so the browser allows it; if it's ever
   blocked (a fresh load straight onto /complete with no tap), the page stays silent. Not on the canvas, and not on
   the tutorials' Congrats pages, which use their own override.
+- **Live test (5 Nov, crumple + victory):** Spot the Scam rounds 1-3, every clue found, then Delete: each played one
+  crumple (0.17 s into the file) in the same millisecond as the tap; a double tap on round 2's Delete played it once.
+  Round 3's Delete went to `/complete` 470 ms later, and the victory sound started (`play()` resolved, volume 0.8,
+  pinned `fdac2b5`) 560 ms after that, then the page went to /atm-start. Need or Want, Save or Spend, Can Your Money
+  Double and Credit Score Challenge's `/complete` pages, loaded directly: each fetches the victory file and goes to
+  /atm-start after 5 s, so the override is on all five. No console errors. Not checked: reaching those four pages
+  from their lessons' Done (the same code; Framer's router couldn't be driven by hand), and how either sounds by ear.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
