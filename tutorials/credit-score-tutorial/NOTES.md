@@ -157,6 +157,16 @@ Same setup as test 2 (built-in browser, 1080×1920, pane showing).
   local Prettier (a `HTMLElement | undefined` cast); the repo keeps
   Framer's text.
 
+## Live check 4 (5 Nov, fourth publish)
+
+- The 700 ms second pass didn't fix step 12: the pay-down row still sat
+  at 918 under the header's bottom (929). At 700 ms the first smooth
+  scroll hadn't finished, so the header wasn't pinned yet. Run on the
+  live page afterwards, the same check finds the pinned Score Header
+  Card. The second pass now runs on the frame's `scrollend` event
+  instead of a timer (it fired 184 ms after a short smooth scroll in the
+  test browser). Saved in Framer; needs the next publish.
+
 ## Not tested
 
 - A second run straight after the first in the same session, and the
