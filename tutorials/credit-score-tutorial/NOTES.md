@@ -73,7 +73,9 @@ card (copy is the owner's to edit).
 Owner found: **Next on step 33 ("Your goal is set!") went nowhere**, just
 closed the overlay. Only Auto-advance had the link; Next on the last
 step of a group needs its own **Next button link**, now
-`/credit-score-tutorial/complete` (needs the next publish).
+`/credit-score-tutorial/complete`. Checked live after the publish: Next
+tapped 0.6 s after the card showed, page on `/complete` ("Well done!")
+well before the 4 s timer.
 
 ## Live test 6 (5 Nov, rebuild's first publish)
 
