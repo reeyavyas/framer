@@ -56,6 +56,32 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   touch/wheel on), and the hole is clipped to the target's visible part
   of its scrolling frame.
 
+## Live test 6 (5 Nov, rebuild's first publish)
+
+Built-in browser, 1080×1920, pane showing; real taps and drags, scroll
+steps set by script to their exact % (as the snap below now does).
+All 33 steps ran: gauge 720, Score Rating / Payment History / Credit
+Usage / Credit Age open on tap, read cards above their targets with the
+arrow in the gap; Simulator 735 → 742 → 697 → 742 with field-only
+holes below the pinned header; Goals tab, Set Up, score slider (818,
+moved on when let go), months slider (18), Next saves; final card →
+`/complete`. Cards stayed inside 287–1710 except as noted.
+
+Found and fixed (needs the next publish):
+- **Overshoot:** three wheel ticks scrolled 360 px past step 1's 7%, so
+  the gauge rose and step 2's card went over the top nav. New
+  TutorialOverlay setting **Snap to threshold** (native containers,
+  off by default so Card Alerts is unchanged) settles the page exactly
+  at the threshold when it's crossed; on for all 11 scroll steps.
+- **Step 18's card touched the right edge** (centred on a tab right of
+  centre). Centred cards now keep 40 px (`CARD_EDGE`) from both edges.
+- **Steps 23 and 25's arrow pointed at "2 mo."**: Arrow offset X −309,
+  over "1 mo."
+- **Step 24's arrow sat on its card** (the header is 264 px tall, not
+  600): Arrow offset Y 278, offset X 280 (at the simulated score).
+- TutorialOverlay's `hidden` callbacks now take `Partial<Props>`
+  (CLAUDE.md rule; 36 of them).
+
 ## Live test 1 (4 Nov, first publish)
 
 Chrome, real clicks (the window here is 823×380 and can't be made

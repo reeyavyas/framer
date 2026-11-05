@@ -103,6 +103,7 @@ interface Props {
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
+    snapToThreshold?: boolean // on a native scroll container, settle the page exactly at the threshold when it's crossed, so a fast swipe can't overshoot where the next step's target lands
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     freezeScrollWhileActive: boolean // stops scrolling in EITHER direction for exactly as long as this step is active — a VirtualScroll container (scrollContainerTarget) holds still, and on a native page touch/wheel gestures are swallowed — resumes normally once the step ends
@@ -280,6 +281,8 @@ function findScrollableAt(x: number, y: number): HTMLElement | Window {
 // step with no hole, e.g. a closing "all set" card).
 const CARD_TARGET_GAP = 24
 const CARD_MAX_WIDTH = 900
+// A card centred on a target near a screen edge keeps at least this gap.
+const CARD_EDGE = 40
 // Fired by Skip on a step with advanceOnEvent (see skipStep). Must match
 // the listener in the component that fires that event.
 const SKIP_EVENT = "tutorial-skip"
@@ -394,8 +397,11 @@ function cardWrapperStyle(
             // regardless of how much of it the card's own content
             // actually needs.
             const centerX = rect.left + rect.width / 2 + offsetX
-            style.left = Math.max(0, centerX - CARD_MAX_WIDTH / 2)
-            style.right = Math.max(0, viewportW - centerX - CARD_MAX_WIDTH / 2)
+            style.left = Math.max(CARD_EDGE, centerX - CARD_MAX_WIDTH / 2)
+            style.right = Math.max(
+                CARD_EDGE,
+                viewportW - centerX - CARD_MAX_WIDTH / 2
+            )
             style.display = "flex"
             style.justifyContent = "center"
             style.alignItems = "flex-start"
@@ -515,6 +521,7 @@ export default function TutorialOverlay(props: Props) {
         scrollAdvancesStep,
         scrollDirection,
         scrollThresholdPercent,
+        snapToThreshold,
         scrollContainerTarget,
         freezeScrollWhileActive,
         advanceOnEvent,
@@ -1157,7 +1164,14 @@ export default function TutorialOverlay(props: Props) {
                 el === window ? document.documentElement : (el as HTMLElement)
             function checkScroll() {
                 const max = node.scrollHeight - node.clientHeight
-                checkPercent(max > 0 ? (node.scrollTop / max) * 100 : 100)
+                const percent = max > 0 ? (node.scrollTop / max) * 100 : 100
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                if (crossed && snapToThreshold && max > 0)
+                    node.scrollTop = (max * scrollThresholdPercent) / 100
+                checkPercent(percent)
             }
             checkScroll()
             el.addEventListener("scroll", checkScroll, { passive: true })
@@ -1177,6 +1191,7 @@ export default function TutorialOverlay(props: Props) {
         scrollDirection,
         scrollContainerTarget,
         scrollThresholdPercent,
+        snapToThreshold,
         advanceStep,
     ])
 
@@ -1962,7 +1977,7 @@ addPropertyControls(TutorialOverlay, {
         min: 0,
         max: 999,
         defaultValue: 0,
-        hidden: (props) => props.holeShape !== "rectangle",
+        hidden: (props: Partial<Props>) => props.holeShape !== "rectangle",
     },
     pageGroup: {
         type: ControlType.String,
@@ -1976,7 +1991,7 @@ addPropertyControls(TutorialOverlay, {
         min: 1,
         step: 1,
         defaultValue: 1,
-        hidden: (props) => !props.pageGroup,
+        hidden: (props: Partial<Props>) => !props.pageGroup,
     },
     clickAdvancesStep: {
         type: ControlType.Boolean,
@@ -1984,7 +1999,7 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (props) => !props.pageGroup,
+        hidden: (props: Partial<Props>) => !props.pageGroup,
     },
     clickAdvanceDelaySeconds: {
         type: ControlType.Number,
@@ -1992,7 +2007,8 @@ addPropertyControls(TutorialOverlay, {
         min: 0,
         step: 0.1,
         defaultValue: 0,
-        hidden: (props) => !props.pageGroup || !props.clickAdvancesStep,
+        hidden: (props: Partial<Props>) =>
+            !props.pageGroup || !props.clickAdvancesStep,
     },
     nextStepAfterSeconds: {
         type: ControlType.Number,
@@ -2000,7 +2016,7 @@ addPropertyControls(TutorialOverlay, {
         min: 0,
         step: 0.5,
         defaultValue: 0,
-        hidden: (props) => !props.pageGroup,
+        hidden: (props: Partial<Props>) => !props.pageGroup,
     },
     scrollAdvancesStep: {
         type: ControlType.Boolean,
@@ -2008,7 +2024,7 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (props) => !props.pageGroup,
+        hidden: (props: Partial<Props>) => !props.pageGroup,
     },
     scrollDirection: {
         type: ControlType.Enum,
@@ -2019,7 +2035,8 @@ addPropertyControls(TutorialOverlay, {
             "Up — advance back below the threshold",
         ],
         defaultValue: "down",
-        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+        hidden: (props: Partial<Props>) =>
+            !props.pageGroup || !props.scrollAdvancesStep,
     },
     scrollThresholdPercent: {
         type: ControlType.Number,
@@ -2028,7 +2045,17 @@ addPropertyControls(TutorialOverlay, {
         max: 100,
         step: 5,
         defaultValue: 50,
-        hidden: (props) => !props.pageGroup || !props.scrollAdvancesStep,
+        hidden: (props: Partial<Props>) =>
+            !props.pageGroup || !props.scrollAdvancesStep,
+    },
+    snapToThreshold: {
+        type: ControlType.Boolean,
+        title: "Snap to threshold",
+        defaultValue: false,
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        hidden: (props: Partial<Props>) =>
+            !props.pageGroup || !props.scrollAdvancesStep,
     },
     scrollContainerTarget: {
         type: ControlType.String,
@@ -2037,7 +2064,7 @@ addPropertyControls(TutorialOverlay, {
         placeholder: "blank = whole page",
         // Shown for a scroll step (which needs a page group) or a freeze
         // (which doesn't).
-        hidden: (props) =>
+        hidden: (props: Partial<Props>) =>
             !(props.pageGroup && props.scrollAdvancesStep) &&
             !props.freezeScrollWhileActive,
     },
@@ -2056,7 +2083,7 @@ addPropertyControls(TutorialOverlay, {
         title: "Advance on event",
         defaultValue: "",
         placeholder: "e.g. account-prefs-moved",
-        hidden: (props) => !props.pageGroup,
+        hidden: (props: Partial<Props>) => !props.pageGroup,
     },
     eventProgressSeconds: {
         type: ControlType.Number,
@@ -2065,7 +2092,8 @@ addPropertyControls(TutorialOverlay, {
         min: 0,
         max: 60,
         step: 0.25,
-        hidden: (props) => !props.pageGroup || !props.advanceOnEvent,
+        hidden: (props: Partial<Props>) =>
+            !props.pageGroup || !props.advanceOnEvent,
     },
     cardTitleLine1: {
         type: ControlType.String,
@@ -2160,19 +2188,21 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "Show",
         disabledTitle: "Hide",
-        hidden: (props) => !hasProgressTimer(props),
+        hidden: (props: Partial<Props>) => !hasProgressTimer(props),
     },
     progressBarColor: {
         type: ControlType.Color,
         title: "Progress bar color",
         defaultValue: "#ffffff",
-        hidden: (props) => !hasProgressTimer(props) || !props.showProgressBar,
+        hidden: (props: Partial<Props>) =>
+            !hasProgressTimer(props) || !props.showProgressBar,
     },
     progressBarTrackColor: {
         type: ControlType.Color,
         title: "Progress bar track color",
         defaultValue: "rgba(255,255,255,0.25)",
-        hidden: (props) => !hasProgressTimer(props) || !props.showProgressBar,
+        hidden: (props: Partial<Props>) =>
+            !hasProgressTimer(props) || !props.showProgressBar,
     },
     showNextButton: {
         type: ControlType.Boolean,
@@ -2185,19 +2215,19 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.String,
         title: "Next button label",
         defaultValue: "Next",
-        hidden: (props) => !props.showNextButton,
+        hidden: (props: Partial<Props>) => !props.showNextButton,
     },
     nextButtonTextColor: {
         type: ControlType.Color,
         title: "Next button text color",
         defaultValue: "#11232D",
-        hidden: (props) => !props.showNextButton,
+        hidden: (props: Partial<Props>) => !props.showNextButton,
     },
     nextButtonBackgroundColor: {
         type: ControlType.Color,
         title: "Next button color",
         defaultValue: "#FFCC40",
-        hidden: (props) => !props.showNextButton,
+        hidden: (props: Partial<Props>) => !props.showNextButton,
     },
     nextButtonFont: {
         type: ControlType.Font,
@@ -2207,12 +2237,12 @@ addPropertyControls(TutorialOverlay, {
         // takes size, variant and spacing, not a font family.
         defaultFontType: "sans-serif",
         defaultValue: { variant: "Bold", fontSize: 34, lineHeight: 1.2 },
-        hidden: (props) => !props.showNextButton,
+        hidden: (props: Partial<Props>) => !props.showNextButton,
     },
     nextButtonLink: {
         type: ControlType.Link,
         title: "Next button link",
-        hidden: (props) => !props.showNextButton,
+        hidden: (props: Partial<Props>) => !props.showNextButton,
     },
     showGlow: {
         type: ControlType.Boolean,
@@ -2227,13 +2257,13 @@ addPropertyControls(TutorialOverlay, {
         options: ["static", "breathing", "ripple"],
         optionTitles: ["Soft glow", "Breathing pulse", "Ripple ping"],
         defaultValue: "breathing",
-        hidden: (props) => !props.showGlow,
+        hidden: (props: Partial<Props>) => !props.showGlow,
     },
     glowColor: {
         type: ControlType.Color,
         title: "Glow color",
         defaultValue: "rgba(5,147,144,1)",
-        hidden: (props) => !props.showGlow,
+        hidden: (props: Partial<Props>) => !props.showGlow,
     },
     glowIntensity: {
         type: ControlType.Number,
@@ -2242,7 +2272,7 @@ addPropertyControls(TutorialOverlay, {
         max: 5,
         step: 1,
         defaultValue: 2,
-        hidden: (props) => !props.showGlow,
+        hidden: (props: Partial<Props>) => !props.showGlow,
     },
     showArrow: {
         type: ControlType.Boolean,
@@ -2257,34 +2287,34 @@ addPropertyControls(TutorialOverlay, {
         options: ["curve", "bounce"],
         optionTitles: ["Curved", "Bounce"],
         defaultValue: "curve",
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowColor: {
         type: ControlType.Color,
         title: "Arrow color",
         defaultValue: "rgba(5,147,144,1)",
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowStrokeWidth: {
         type: ControlType.Number,
         title: "Arrow stroke width",
         min: 1,
         defaultValue: 8,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowSize: {
         type: ControlType.Number,
         title: "Arrow size",
         min: 10,
         defaultValue: 90,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowRotation: {
         type: ControlType.Number,
         title: "Arrow rotation",
         step: 1,
         defaultValue: 0,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowReflectX: {
         type: ControlType.Boolean,
@@ -2292,7 +2322,7 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowReflectY: {
         type: ControlType.Boolean,
@@ -2300,7 +2330,7 @@ addPropertyControls(TutorialOverlay, {
         defaultValue: false,
         enabledTitle: "On",
         disabledTitle: "Off",
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowDelaySeconds: {
         type: ControlType.Number,
@@ -2308,19 +2338,19 @@ addPropertyControls(TutorialOverlay, {
         min: 0,
         step: 0.1,
         defaultValue: 1.2,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowOffsetX: {
         type: ControlType.Number,
         title: "Arrow offset X",
         defaultValue: 0,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     arrowOffsetY: {
         type: ControlType.Number,
         title: "Arrow offset Y",
         defaultValue: -100,
-        hidden: (props) => !props.showArrow,
+        hidden: (props: Partial<Props>) => !props.showArrow,
     },
     autoAdvanceAfterSeconds: {
         type: ControlType.Number,
@@ -2332,7 +2362,7 @@ addPropertyControls(TutorialOverlay, {
     autoAdvanceLink: {
         type: ControlType.Link,
         title: "Auto-advance link",
-        hidden: (props) => !props.autoAdvanceAfterSeconds,
+        hidden: (props: Partial<Props>) => !props.autoAdvanceAfterSeconds,
     },
     dimColor: {
         type: ControlType.Color,
@@ -2350,12 +2380,12 @@ addPropertyControls(TutorialOverlay, {
         type: ControlType.String,
         title: "Skip label",
         defaultValue: "Skip",
-        hidden: (props) => !props.showSkipButton,
+        hidden: (props: Partial<Props>) => !props.showSkipButton,
     },
     skipLink: {
         type: ControlType.Link,
         title: "Skip link",
-        hidden: (props) => !props.showSkipButton,
+        hidden: (props: Partial<Props>) => !props.showSkipButton,
     },
     exitLink: {
         type: ControlType.Link,
