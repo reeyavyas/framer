@@ -1631,6 +1631,12 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   started within 7 ms of its chip. A short drag that springs back plays nothing. No console errors. Not run: the
   missed-payment −40 card (same code as −30) and the finale. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
+- **Lesson complete pages (5 Nov, owner's file `victory`, eaglaxle gaming-victory-464016, 3.9 s, pinned to commit
+  `fdac2b5`):** `ATMLessonCompleteRedirect` plays it as each `/atm-lessons/.../complete` page opens, at volume 0.8,
+  then still goes to /atm-start after 5 s (which cuts the sound if it's still playing). A plain `Audio` element,
+  since nothing needs to sync to a frame. The lesson's taps came first, so the browser allows it; if it's ever
+  blocked (a fresh load straight onto /complete with no tap), the page stays silent. Not on the canvas, and not on
+  the tutorials' Congrats pages, which use their own override.
 
 ## Decisions log (so feedback doesn't undo them by accident)
 
