@@ -57,9 +57,9 @@ target is tapped or its event fires); **final** (no target, 4 s +
 progress bar + Next, to `/credit-score-tutorial/complete`). No
 auto-scroll. Card centred on its target (or aligned 40 px in from the
 edge when centring would push it off screen), kept inside the content
-area (287–1710 at 1080×1920). Arrow: bounce style, 300, straight in the
-gap between card and target, tip at the target (pointing down with the
-card above, rotated 180° with the card below). Highlights are tight:
+area (287–1710 at 1080×1920). Arrow: curved, 300, in the gap between
+card and target, curving onto it (reflected vertically with the card
+below); straight only on 23 and 25, which point at "1 mo.". Highlights are tight:
 headers, fields, the months buttons, sliders, buttons.
 
 Scroll % measured at 1080×1920 on the free-play page (same layout); each

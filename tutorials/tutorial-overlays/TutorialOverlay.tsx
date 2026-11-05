@@ -882,7 +882,12 @@ export default function TutorialOverlay(props: Props) {
                         ? document.documentElement
                         : (el as HTMLElement)
                 const max = node.scrollHeight - node.clientHeight
-                el.scrollTo({ top: (max * percent) / 100, behavior: "smooth" })
+                // With Snap, jump: a smooth scroll would carry on past the
+                // spot the snap settles on.
+                el.scrollTo({
+                    top: (max * percent) / 100,
+                    behavior: snapToThreshold ? "auto" : "smooth",
+                })
             }
             // Backstop once the scroll has had time to finish: if it still
             // didn't cross the threshold (e.g. content shorter than
@@ -959,6 +964,7 @@ export default function TutorialOverlay(props: Props) {
         scrollAdvancesStep,
         scrollDirection,
         scrollThresholdPercent,
+        snapToThreshold,
         scrollContainerTarget,
         target,
         showNextButton,
