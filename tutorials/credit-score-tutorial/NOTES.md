@@ -33,15 +33,16 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   scrollable range at that point, so it depends on which accordions are
   open: changing an accordion's content means re-measuring the later
   steps.
-- **Cards and arrows:** card centred on the target (Goals, Set Up and
-  Next are aligned 40 px in from the screen edge instead), offset 144 px
-  from it; curved arrow (the owner's style), size 300, in that gap
-  curving onto the target (Reflect Y off and offset Y −24 with the card
-  above; Reflect Y on and offset Y target height + 24 with the card
-  below; step 24 offset X 280, at the simulated score). Steps 23 and 25
-  keep the straight bounce arrow (offset X −309, Y 122): it has to land
-  on "1 mo." among three buttons. Scroll and final cards are centred in
-  the content area (offset Y 38).
+- **Cards and arrows** (owner, 5 Nov: tie card > arrow > target):
+  curved arrow, size 340, beside the card's side and curving onto the
+  target; the card is aligned to one side of the target to make room
+  (Card position X right with the arrow on its right; left with Reflect
+  X on for Set Up and Next). Card offset Y 48; arrow offset Y −24 with
+  the card above, target height + 24 with Reflect Y on below. Steps 23
+  and 25 keep the straight bounce arrow on its own line under the card
+  (offset X −309, Y 122, at "1 mo."). Step 1 snaps at 5% so the gauge
+  sits low enough for steps 2–3's cards above it. Scroll and final cards
+  are centred in the content area (offset Y 38).
 - **Targets:** `cs-scroll` (TutorialTargets `CreditScoreScrollTarget`)
   on the page's Scrollable Content. `cs-points-journey`
   (`PointsJourneyTarget`) on Score Rating Tabs' PointsJourneyBar;
@@ -87,7 +88,9 @@ Found and fixed (needs the next publish):
 - **Skip on a scroll step overshot** (its smooth scroll carried on past
   the snap). With Snap to threshold on, Skip now jumps straight there.
 - **Arrows switched to curved** (owner, 5 Nov: use the curved arrow,
-  the straight one only a little); straight kept on 23 and 25.
+  the straight one only a little); straight kept on 23 and 25. Then
+  moved beside the cards (above). Left- and right-aligned cards now keep
+  `CARD_EDGE` from the far screen edge and wrap, like centred ones.
 
 ## Live test 1 (4 Nov, first publish)
 

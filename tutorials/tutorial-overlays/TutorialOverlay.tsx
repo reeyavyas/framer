@@ -363,8 +363,14 @@ function cardWrapperStyle(
     let translateY = "0"
 
     if (rect) {
-        if (anchorX === "left") style.left = rect.left + offsetX
-        else if (anchorX === "right") {
+        if (anchorX === "left") {
+            style.left = rect.left + offsetX
+            // Keep the edge margin; a card that doesn't fit wraps.
+            style.right = CARD_EDGE
+            style.display = "flex"
+            style.justifyContent = "flex-start"
+            style.alignItems = "flex-start"
+        } else if (anchorX === "right") {
             // Deliberately `right` here, not `left` + translateX(-100%).
             // For an auto-width position:fixed box, the browser computes
             // shrink-to-fit width BEFORE applying any transform, capped
@@ -375,6 +381,10 @@ function cardWrapperStyle(
             // this: its available-width cap runs toward the left edge,
             // which has plenty of room for a target near the right side.
             style.right = Math.max(0, viewportW - rect.right - offsetX)
+            style.left = CARD_EDGE
+            style.display = "flex"
+            style.justifyContent = "flex-end"
+            style.alignItems = "flex-start"
         } else {
             // Same shrink-to-fit bug as the no-target case below (see
             // its comment for the full explanation) — a fixed-position

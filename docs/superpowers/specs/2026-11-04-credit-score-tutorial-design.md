@@ -57,9 +57,10 @@ target is tapped or its event fires); **final** (no target, 4 s +
 progress bar + Next, to `/credit-score-tutorial/complete`). No
 auto-scroll. Card centred on its target (or aligned 40 px in from the
 edge when centring would push it off screen), kept inside the content
-area (287–1710 at 1080×1920). Arrow: curved, 300, in the gap between
-card and target, curving onto it (reflected vertically with the card
-below); straight only on 23 and 25, which point at "1 mo.". Highlights are tight:
+area (287–1710 at 1080×1920). Arrow: curved, 340, beside the card's
+side and curving onto the target, with the card aligned to one side of
+the target; straight only on 23 and 25 (own line under the card, at
+"1 mo."). Highlights are tight:
 headers, fields, the months buttons, sliders, buttons.
 
 Scroll % measured at 1080×1920 on the free-play page (same layout); each
@@ -67,7 +68,7 @@ is scroll position over scrollable range at that point.
 
 | # | Type | Target | Moves on | Card |
 |---|---|---|---|---|
-| 1 | scroll ↓ 7% | — | scroll | Let's explore your credit score! / Please scroll down to see your score. |
+| 1 | scroll ↓ 5% | — | scroll | Let's explore your credit score! / Please scroll down to see your score. |
 | 2 | read | `cs-gauge` | 7 s / Next | This is your credit score: / 720, Good. Scores run 300–850. |
 | 3 | read | `cs-gauge` | 7 s / Next | Lenders use it to decide / whether to lend and at what rate. |
 | 4 | scroll ↓ 30% | — | scroll | Let's see what shapes your score. / Please scroll down to continue. |
