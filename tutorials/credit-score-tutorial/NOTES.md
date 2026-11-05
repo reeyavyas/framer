@@ -60,6 +60,15 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   touch/wheel on), and the hole is clipped to the target's visible part
   of its scrolling frame.
 
+## Score ranges info (added 5 Nov, owner: no step used the ⓘ)
+
+New steps 4–6 after the gauge: tap the ⓘ (`cs-gauge-info`), read the
+ranges pop-up (`cs-gauge-ranges`, 7 s + Next), tap its ✕
+(`cs-gauge-ranges-close`). CreditScoreGauge.tsx carries those three ids
+itself (attributes only, as GoalSetupCard does). Old steps 4–38 are now
+7–38 (layer names and Step numbers both moved by 3; all 38 checked).
+Card offsets are estimated from the pop-up's code; check live.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top

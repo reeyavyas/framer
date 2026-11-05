@@ -6,6 +6,8 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
 // with a pointer at the score, the score with its change since last
 // time, today's "Updated" date, and an info button that opens the
 // ranges pop-up. Built for the 1080-wide kiosk; app styles (Inter).
+// The info button, pop-up and its close carry data-tutorial-target ids
+// for the Credit Score tutorial (attributes only).
 
 const MIN = 300
 const MAX = 850
@@ -155,14 +157,20 @@ export default function CreditScoreGauge(props: Props) {
                     <svg width={34} height={26} viewBox="0 0 34 26" aria-hidden>
                         {/* A same-colour round-joined stroke softens the corners. */}
                         <path
-                            d={trend === "up" ? "M17 3 L31 23 L3 23 Z" : "M3 3 L31 3 L17 23 Z"}
+                            d={
+                                trend === "up"
+                                    ? "M17 3 L31 23 L3 23 Z"
+                                    : "M3 3 L31 3 L17 23 Z"
+                            }
                             fill={trend === "up" ? "#4db67a" : "#e5483b"}
                             stroke={trend === "up" ? "#4db67a" : "#e5483b"}
                             strokeWidth={5}
                             strokeLinejoin="round"
                         />
                     </svg>
-                    <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1 }}>
+                    <div
+                        style={{ fontSize: 36, fontWeight: 700, lineHeight: 1 }}
+                    >
                         {change}
                     </div>
                 </div>
@@ -206,6 +214,7 @@ export default function CreditScoreGauge(props: Props) {
                 <button
                     type="button"
                     aria-label="About credit score ranges"
+                    data-tutorial-target="cs-gauge-info"
                     onClick={() => setInfoOpen(true)}
                     style={{
                         width: 64,
@@ -256,9 +265,23 @@ function Label({ x, text }: { x: number; text: string }) {
 function InfoIcon({ size }: { size: number }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-            <circle cx={12} cy={12} r={10.5} fill="none" stroke="#353535" strokeWidth={2} />
+            <circle
+                cx={12}
+                cy={12}
+                r={10.5}
+                fill="none"
+                stroke="#353535"
+                strokeWidth={2}
+            />
             <circle cx={12} cy={7.5} r={1.4} fill="#353535" />
-            <rect x={10.9} y={10.3} width={2.2} height={7.2} rx={1.1} fill="#353535" />
+            <rect
+                x={10.9}
+                y={10.3}
+                width={2.2}
+                height={7.2}
+                rx={1.1}
+                fill="#353535"
+            />
         </svg>
     )
 }
@@ -275,7 +298,8 @@ function InfoPopup({
     onClose: () => void
 }) {
     // shortcut: falls back to the nearest scrolling ancestor if the frame is renamed.
-    const host = anchor.closest<HTMLElement>(OVERLAY_HOST) ?? scrollParent(anchor)
+    const host =
+        anchor.closest<HTMLElement>(OVERLAY_HOST) ?? scrollParent(anchor)
     const [visible, setVisible] = React.useState({ top: 0, height: 0 })
 
     React.useLayoutEffect(() => {
@@ -326,6 +350,7 @@ function InfoPopup({
                 role="dialog"
                 aria-modal="true"
                 aria-label="Credit score ranges"
+                data-tutorial-target="cs-gauge-ranges"
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     position: "relative",
@@ -344,6 +369,7 @@ function InfoPopup({
                 <button
                     type="button"
                     aria-label="Close"
+                    data-tutorial-target="cs-gauge-ranges-close"
                     onClick={onClose}
                     style={{
                         position: "absolute",
@@ -361,8 +387,20 @@ function InfoPopup({
                     }}
                 >
                     <svg width={52} height={52} viewBox="0 0 52 52" aria-hidden>
-                        <circle cx={26} cy={26} r={23.5} fill="none" stroke="#212121" strokeWidth={3} />
-                        <path d="M19 19 L33 33 M33 19 L19 33" stroke="#212121" strokeWidth={3.5} strokeLinecap="round" />
+                        <circle
+                            cx={26}
+                            cy={26}
+                            r={23.5}
+                            fill="none"
+                            stroke="#212121"
+                            strokeWidth={3}
+                        />
+                        <path
+                            d="M19 19 L33 33 M33 19 L19 33"
+                            stroke="#212121"
+                            strokeWidth={3.5}
+                            strokeLinecap="round"
+                        />
                     </svg>
                 </button>
             </div>
