@@ -60,6 +60,28 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   touch/wheel on), and the hole is clipped to the target's visible part
   of its scrolling frame.
 
+## Alerts overview (added 5 Nov)
+
+- **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
+  (the Credit Score Top Nav scrolls with the page); 35 taps Alerts. The
+  page's Top Nav instance has Alerts Link `/credit-score-tutorial/alerts`
+  (instance property, free play keeps its own) and `AlertsTabTarget`
+  (CreditScoreTutorial.tsx), which tags just the Alerts tab.
+- **Alerts page:** five layers in Screen Content ("01 Scroll to alerts"
+  … "05 All caught up"), page group `credit-score-tutorial-alerts` (its
+  own group: the Score page's group would still be on step 35 after the
+  in-app navigation). Scrollable Content has `CreditScoreScrollTarget`;
+  the shared Alerts Feed instance has `AlertsFeedTargets`, which tags
+  "Alert Payment History" and "Alert Monitoring 1" by layer name. Scroll %
+  measured at 1080×1920 (range 2910 px): 10% puts the Payment History card
+  at 807, 56% puts the first monitoring card at 802. Read cards above
+  their card, right-aligned 202 px in, arrow at their right side. Step 5
+  has Next and Auto-advance (4 s) links to `/credit-score-tutorial/complete`.
+- While renaming, a select-all ran on the canvas and typed characters
+  acted as shortcuts on the Alerts page's top layers; undone (opacity and
+  size checked against the Score page: 100%, 1080×1920). Worth a look by
+  eye on the canvas.
+
 ## Live test 7 (5 Nov, side arrows)
 
 Built-in browser, 1080×1920, all 33 steps by Skip, measured from the

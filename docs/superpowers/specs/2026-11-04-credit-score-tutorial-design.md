@@ -100,7 +100,21 @@ is scroll position over scrollable range at that point.
 | 30 | tap | `goal-score-slider` | `goal-score-slider-done` | Drag to pick / your goal score. |
 | 31 | tap | `goal-months-slider` | `goal-months-slider-done` | Drag to pick / how many months. |
 | 32 | tap | `goal-setup-next` | tap | Tap Next / to save your goal. |
-| 33 | final | — | 4 s / Next → complete | Your goal is set! / You're ready to make informed credit decisions. |
+| 33 | read | — | 7 s / Next | Your goal is set! / You're ready to make informed credit decisions. |
+| 34 | scroll ↑ 0% | — | scroll | Now let's check your alerts. / Please scroll up to the top. |
+| 35 | tap | `cs-alerts-tab` | tap (links to `/credit-score-tutorial/alerts`) | Tap Alerts / to see what has changed. |
+
+**Alerts page** (`/credit-score-tutorial/alerts`, page group
+`credit-score-tutorial-alerts`, added 5 Nov at the owner's request: an
+overview):
+
+| # | Type | Target | Moves on | Card |
+|---|---|---|---|---|
+| 1 | scroll ↓ 10% | — | scroll | Here's what has changed. / Please scroll down to your alerts. |
+| 2 | read | `cs-alert-payment-history` | 7 s / Next | Each alert explains a change / and how it affects your score. |
+| 3 | scroll ↓ 56% | — | scroll | Please scroll down / to Credit monitoring. |
+| 4 | read | `cs-alert-monitoring` | 7 s / Next | We watch your credit report daily. / Didn't open an account? Tell your lender right away. |
+| 5 | final | — | 4 s / Next → complete | You're all caught up! / Check your alerts often to stay on top of your credit. |
 
 Score path: 720 → 735 (pay down) → 742 (on-time) → 697 (1 mo) → 742.
 
@@ -172,7 +186,5 @@ Results go in `tutorials/credit-score-tutorial/NOTES.md`.
 
 ## Out of scope
 
-- An Alerts page step (opening a monitoring alert to spot an account you
-  don't recognise). It can be added later as a short second page.
 - Account Mix and Inquiries accordions (shown on the page but not taught).
 - Any new credit maths: the Simulator keeps adding its set points.

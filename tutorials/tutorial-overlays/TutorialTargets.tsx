@@ -394,6 +394,10 @@ export function AccountsUpdated(
 //   SimulatorTabTarget, GoalsTabTarget: the section tab cells
 //   GoalSetupCard tags its own buttons and sliders ("goal-setup-start",
 //     "goal-score-slider", "goal-months-slider", "goal-setup-next")
+//   AlertsTabTarget (CreditScoreTutorial.tsx): the top nav's Alerts tab
+// /credit-score-tutorial/alerts: CreditScoreScrollTarget again on its
+//   Scrollable Content; the alert cards are tagged by AlertsFeedTargets
+//   (CreditScoreTutorial.tsx) on the Alerts Feed instance
 //   the last step has no target: a timed card to the complete page
 
 // TARGET: the page's Scrollable Content frame (native scrolling; the

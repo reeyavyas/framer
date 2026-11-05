@@ -115,6 +115,53 @@ export function SimulatedScoreTarget(
     return tagged("cs-simulated-score", Component)
 }
 
+// The Alerts tab in the Score page's Credit Score Top Nav (on the
+// instance, so the free-play nav isn't touched).
+export function AlertsTabTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return tagged(
+        "cs-alerts-tab",
+        Component,
+        (box) =>
+            Array.from(box.querySelectorAll("a")).find(
+                (a) => a.textContent?.trim() === "Alerts"
+            ) ?? null
+    )
+}
+
+// The Alerts page's Alerts Feed instance: tags two of its cards by
+// layer name (the feed is shared with the free-play page, so this goes
+// on the tutorial page's instance instead of inside the component).
+const ALERT_CARDS: [string, string][] = [
+    ["Alert Payment History", "cs-alert-payment-history"],
+    ["Alert Monitoring 1", "cs-alert-monitoring"],
+]
+
+export function AlertsFeedTargets(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return React.forwardRef(function AlertsFeed(props: any, ref: any) {
+        const marker = React.useRef<HTMLSpanElement>(null)
+        React.useLayoutEffect(() => {
+            const box = marker.current?.parentElement
+            const els = ALERT_CARDS.map(([name, id]) => {
+                const el = box?.querySelector(`[data-framer-name="${name}"]`)
+                el?.setAttribute("data-tutorial-target", id)
+                return el
+            })
+            return () =>
+                els.forEach((el) => el?.removeAttribute("data-tutorial-target"))
+        }, [])
+        return (
+            <>
+                <Component {...props} ref={ref} />
+                <span ref={marker} hidden />
+            </>
+        )
+    })
+}
+
 // What Skip taps to put a row in the wanted state (inside its tagged
 // field): null when it's already there.
 type Tap = (field: Element, wantOn: boolean) => HTMLElement | null
