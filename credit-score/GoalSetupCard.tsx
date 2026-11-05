@@ -91,10 +91,7 @@ export default function GoalSetupCard(props: Props) {
     )
 
     return (
-        <div
-            data-tutorial-target="goal-setup-card"
-            style={{ display: "flex", flexDirection: "column", gap: 48 }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
             {goal && (
                 <div style={{ ...props.titleFont, ...text }}>
                     {props.setTitle}
@@ -220,6 +217,7 @@ export default function GoalSetupCard(props: Props) {
                             {props.scoreQuestion}
                         </div>
                         <Slider
+                            target="goal-score-slider"
                             label={props.scoreQuestion}
                             value={score}
                             min={minGoal}
@@ -257,6 +255,7 @@ export default function GoalSetupCard(props: Props) {
                             {props.monthsQuestion}
                         </div>
                         <Slider
+                            target="goal-months-slider"
                             label={props.monthsQuestion}
                             value={months}
                             min={MONTHS[0]}
@@ -428,7 +427,10 @@ function Arrow(props: {
 
 // A drag slider: navy track, white handle; snaps to `step`. Arrow keys,
 // Home and End work once it has focus.
+// `target` tags the slider for TutorialOverlay (Credit Score tutorial),
+// and letting go of it fires `${target}-done` for that step.
 function Slider(props: {
+    target: string
     label: string
     value: number
     min: number
@@ -453,7 +455,10 @@ function Slider(props: {
     }
 
     return (
-        <div style={{ paddingTop: props.pill ? 72 : 0 }}>
+        <div
+            data-tutorial-target={props.target}
+            style={{ paddingTop: props.pill ? 72 : 0 }}
+        >
             <div
                 ref={trackRef}
                 role="slider"
@@ -469,6 +474,9 @@ function Slider(props: {
                 onPointerMove={(e) => {
                     if (e.currentTarget.hasPointerCapture(e.pointerId))
                         fromPointer(e)
+                }}
+                onPointerUp={() => {
+                    window.dispatchEvent(new Event(`${props.target}-done`))
                 }}
                 onKeyDown={(e) => {
                     const v = props.value

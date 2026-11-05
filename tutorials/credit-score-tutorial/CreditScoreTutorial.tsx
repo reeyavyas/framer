@@ -1,11 +1,7 @@
 import * as React from "react"
 import type { ComponentType } from "react"
 import { isOn, subscribe } from "../../Credit_Score/SimulatorStore.tsx"
-import {
-    getGoal,
-    setGoal,
-    subscribe as subscribeGoal,
-} from "../../Credit_Score/GoalStore.tsx"
+import { setGoal } from "../../Credit_Score/GoalStore.tsx"
 
 // Credit Score tutorial (/credit-score-tutorial/score). Overrides that tag
 // layers for TutorialOverlay and fire the events its Simulator steps wait
@@ -20,12 +16,9 @@ const PAY_DOWN_ID = "payDown"
 const ON_TIME_ID = "onTime"
 const MISSED_ID = "missedPayment"
 
-// Step 18 waits for this, fired once the goal form's Next saves a goal.
-const GOAL_SET_EVENT = "cs-tutorial-goal-set"
+// GoalSetupCard fires `${target}-done` when a slider is let go.
+const SLIDER_EVENTS = ["goal-score-slider-done", "goal-months-slider-done"]
 
-// These go on code components (the gauge, the Simulator rows), which don't
-// put a data-tutorial-target prop on the page. So a hidden marker tags the
-// Framer container it renders in, which has the component's size.
 // A tap with a position, for Skip. TutorialOverlay blocks clicks outside
 // the step's hole by their coordinates, and el.click() has none.
 function tapAt(el: HTMLElement) {
@@ -47,13 +40,20 @@ function tapAt(el: HTMLElement) {
     el.dispatchEvent(new MouseEvent("click", { ...init, buttons: 0 }))
 }
 
-function tagged(id: string, Component: ComponentType<any>) {
+// These go on code components (the gauge, the Simulator rows), which don't
+// put a data-tutorial-target prop on the page. So a hidden marker tags the
+// Framer container it renders in, or `pick` an element inside it (just
+// the field of a Simulator row, not its label).
+type Pick = (box: Element) => Element | null
+
+function tagged(id: string, Component: ComponentType<any>, pick?: Pick) {
     return React.forwardRef(function Tagged(props: any, ref: any) {
         const marker = React.useRef<HTMLSpanElement>(null)
         React.useLayoutEffect(() => {
             const box = marker.current?.parentElement
-            box?.setAttribute("data-tutorial-target", id)
-            return () => box?.removeAttribute("data-tutorial-target")
+            const el = box && (pick ? pick(box) : box)
+            el?.setAttribute("data-tutorial-target", id)
+            return () => el?.removeAttribute("data-tutorial-target")
         }, [])
         return (
             <>
@@ -64,10 +64,20 @@ function tagged(id: string, Component: ComponentType<any>) {
     })
 }
 
-// Steps 1–2 — the gauge. Also clears the goal when the tutorial opens (so
+// An amount row's field: the bordered box with the $0 and its steppers.
+const amountField: Pick = (box) =>
+    box.querySelector('[role="button"][aria-pressed]')?.parentElement ?? null
+
+// The missed payment row's months (its last radio group).
+const monthsField: Pick = (box) => {
+    const groups = box.querySelectorAll('[role="radiogroup"]')
+    return groups[groups.length - 1] ?? null
+}
+
+// The gauge (steps 1–2). Also clears the goal when the tutorial opens (so
 // a goal from free play doesn't skip the Goals steps) and when the page is
-// left (so the tutorial's goal doesn't show on the free-play page), and
-// fires step 18's event when a goal is set. Skip on step 18 taps Next.
+// left (so the tutorial's goal doesn't show on the free-play page). Skip on
+// a slider step just fires that step's event: the slider keeps its value.
 export function withCreditScoreTutorialStart(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -75,21 +85,14 @@ export function withCreditScoreTutorialStart(
     return React.forwardRef(function TutorialStart(props: any, ref: any) {
         React.useEffect(() => {
             setGoal(null)
-            const unsubscribe = subscribeGoal(() => {
-                if (getGoal()) window.dispatchEvent(new Event(GOAL_SET_EVENT))
-            })
             function onSkip(e: Event) {
-                if ((e as CustomEvent).detail?.event !== GOAL_SET_EVENT) return
-                const next = document.querySelector<HTMLElement>(
-                    '[data-tutorial-target="goal-setup-next"]'
-                )
-                if (!next) return
+                const event = (e as CustomEvent).detail?.event
+                if (!SLIDER_EVENTS.includes(event)) return
                 e.preventDefault()
-                tapAt(next)
+                window.dispatchEvent(new Event(event))
             }
             window.addEventListener(SKIP_EVENT, onSkip)
             return () => {
-                unsubscribe()
                 window.removeEventListener(SKIP_EVENT, onSkip)
                 setGoal(null)
             }
@@ -98,26 +101,36 @@ export function withCreditScoreTutorialStart(
     })
 }
 
-// What Skip taps to put a row in the wanted state: null when it's already
-// there.
-type Tap = (row: Element, wantOn: boolean) => HTMLElement | null
-
-const tapAmount: Tap = (row, wantOn) => {
-    const field = row.querySelector<HTMLElement>(
-        '[role="button"][aria-pressed]'
-    )
-    if (!field) return null
-    return (field.getAttribute("aria-pressed") === "true") === wantOn
-        ? null
-        : field
+// The Points Journey bar inside Score Rating.
+export function PointsJourneyTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return tagged("cs-points-journey", Component)
 }
 
-// The months are the row's last radio group; on picks "1 mo", off taps the
-// picked month again.
-const tapMonth: Tap = (row, wantOn) => {
-    const groups = row.querySelectorAll('[role="radiogroup"]')
-    const months = groups[groups.length - 1]
-    if (!months) return null
+// The Simulator's score header (current and simulated gauges).
+export function SimulatedScoreTarget(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return tagged("cs-simulated-score", Component)
+}
+
+// What Skip taps to put a row in the wanted state (inside its tagged
+// field): null when it's already there.
+type Tap = (field: Element, wantOn: boolean) => HTMLElement | null
+
+const tapAmount: Tap = (field, wantOn) => {
+    const button = field.querySelector<HTMLElement>(
+        '[role="button"][aria-pressed]'
+    )
+    if (!button) return null
+    return (button.getAttribute("aria-pressed") === "true") === wantOn
+        ? null
+        : button
+}
+
+// On picks "1 mo", off taps the picked month again.
+const tapMonth: Tap = (months, wantOn) => {
     const picked = months.querySelector<HTMLElement>('[aria-checked="true"]')
     if (wantOn) return picked ? null : months.querySelector("[role=radio]")
     return picked
@@ -128,12 +141,13 @@ const tapMonth: Tap = (row, wantOn) => {
 function withRowEvents(
     Component: ComponentType<any>,
     target: string,
+    pick: Pick,
     rowId: string,
     onEvent: string,
     offEvent: string,
     tap: Tap
 ): ComponentType<any> {
-    const Tagged = tagged(target, Component)
+    const Tagged = tagged(target, Component, pick)
     return React.forwardRef(function RowEvents(props: any, ref: any) {
         React.useEffect(() => {
             let was = isOn(rowId)
@@ -147,12 +161,12 @@ function withRowEvents(
             function onSkip(e: Event) {
                 const event = (e as CustomEvent).detail?.event
                 if (!event || (event !== onEvent && event !== offEvent)) return
-                const row = document.querySelector(
+                const field = document.querySelector(
                     `[data-tutorial-target="${target}"]`
                 )
-                if (!row) return
+                if (!field) return
                 e.preventDefault()
-                const el = tap(row, event === onEvent)
+                const el = tap(field, event === onEvent)
                 // Already in that state: the step only needs its event.
                 if (el) tapAt(el)
                 else window.dispatchEvent(new Event(event))
@@ -167,11 +181,12 @@ function withRowEvents(
     })
 }
 
-// Step 12 — the "Pay down" row.
+// The "Pay down" row: its field.
 export function PayDownRow(Component: ComponentType<any>): ComponentType<any> {
     return withRowEvents(
         Component,
         "cs-pay-down",
+        amountField,
         PAY_DOWN_ID,
         "cs-tutorial-paid-down",
         "",
@@ -179,11 +194,12 @@ export function PayDownRow(Component: ComponentType<any>): ComponentType<any> {
     )
 }
 
-// Step 13 — the on-time payments row.
+// The on-time payments row: its field.
 export function OnTimeRow(Component: ComponentType<any>): ComponentType<any> {
     return withRowEvents(
         Component,
         "cs-on-time",
+        amountField,
         ON_TIME_ID,
         "cs-tutorial-on-time",
         "",
@@ -191,13 +207,14 @@ export function OnTimeRow(Component: ComponentType<any>): ComponentType<any> {
     )
 }
 
-// Steps 14–15 — the missed payment row: picking a month, then undoing it.
+// The missed payment row: its months, picked and then undone.
 export function MissedPaymentRow(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withRowEvents(
         Component,
         "cs-missed-payment",
+        monthsField,
         MISSED_ID,
         "cs-tutorial-missed",
         "cs-tutorial-missed-undone",

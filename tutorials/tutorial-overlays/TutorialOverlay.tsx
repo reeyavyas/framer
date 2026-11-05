@@ -92,7 +92,6 @@ interface Props {
     active: boolean
 
     target: string
-    scrollIntoView?: boolean // when this step starts, scroll its target on screen (tall targets land a third of the way down, leaving room for a card above)
     revealDelaySeconds: number // dim shows at once, but the hole/glow/arrow/card wait this long — e.g. for a target inside an overlay that's still animating open when this step starts
     holeShape: HoleShape
     cornerRadius: number
@@ -106,7 +105,7 @@ interface Props {
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
-    freezeScrollWhileActive: boolean // stops scrollContainerTarget moving in EITHER direction for exactly as long as this step is active (VirtualScroll only) — resumes normally once the step ends
+    freezeScrollWhileActive: boolean // stops scrolling in EITHER direction for exactly as long as this step is active — a VirtualScroll container (scrollContainerTarget) holds still, and on a native page touch/wheel gestures are swallowed — resumes normally once the step ends
     advanceOnEvent: string // window event name that hands off to stepNumber + 1, fired by a component on the page. Blank = off. Skip asks the component to do the step's action (see skipStep).
     eventProgressSeconds: number // with advanceOnEvent, how long the progress bar takes to fill (the event, not the bar, still decides when the step moves on). 0 = no bar.
 
@@ -222,6 +221,30 @@ function buildHolePath(rect: DOMRect, shape: HoleShape, cornerRadius: number) {
 // Locate the real scrollable container under a point, ignoring our own
 // overlay nodes — lets wheel/touch pass through to the right element
 // even though the overlay sits visually on top of everything.
+// The part of el actually on screen: clipped to its nearest scrolling
+// ancestor, so a target partly scrolled under a fixed header (an open
+// accordion under the top nav) is highlighted only where it shows.
+function visiblePart(el: Element): DOMRect {
+    const r = el.getBoundingClientRect()
+    let box = el.parentElement
+    while (box && box !== document.body) {
+        const s = window.getComputedStyle(box)
+        if (
+            (s.overflowY === "auto" || s.overflowY === "scroll") &&
+            box.scrollHeight > box.clientHeight
+        ) {
+            const b = box.getBoundingClientRect()
+            const top = Math.max(r.top, b.top)
+            const bottom = Math.min(r.bottom, b.bottom)
+            return bottom > top
+                ? new DOMRect(r.left, top, r.width, bottom - top)
+                : r
+        }
+        box = box.parentElement
+    }
+    return r
+}
+
 function findScrollableAt(x: number, y: number): HTMLElement | Window {
     const stack = (document.elementsFromPoint(x, y) || []) as HTMLElement[]
     for (const hit of stack) {
@@ -481,7 +504,6 @@ export default function TutorialOverlay(props: Props) {
     const {
         active,
         target,
-        scrollIntoView,
         revealDelaySeconds,
         holeShape,
         cornerRadius,
@@ -636,7 +658,7 @@ export default function TutorialOverlay(props: Props) {
                 `[data-tutorial-target="${target}"]`
             )
             if (el) {
-                const next = el.getBoundingClientRect()
+                const next = visiblePart(el)
                 const prev = rectRef.current
                 if (
                     !prev ||
@@ -664,79 +686,6 @@ export default function TutorialOverlay(props: Props) {
             cancelAnimationFrame(rafId)
         }
     }, [isCanvas, active, isMyTurn, target])
-
-    // Scroll into view: brings the target on screen when this step
-    // starts, for targets below the fold (the Credit Score tutorial's
-    // accordions). A target that fits is centred, and left alone if it's
-    // already fully on screen; a tall one (an open accordion) gets its top
-    // a third of the way down. Scrolls whichever frame scrolls it.
-    React.useEffect(() => {
-        if (isCanvas || !active || !isMyTurn || !target || !scrollIntoView)
-            return
-        let cancelled = false
-        function place(again: boolean) {
-            if (cancelled) return
-            const el = document.querySelector(
-                `[data-tutorial-target="${target}"]`
-            )
-            if (!el) return
-            const r = el.getBoundingClientRect()
-            const h = window.innerHeight
-            // The nearest ancestor that scrolls, else the page.
-            let box: HTMLElement | null = el.parentElement
-            while (box && box !== document.body) {
-                const s = window.getComputedStyle(box)
-                if (
-                    (s.overflowY === "auto" || s.overflowY === "scroll") &&
-                    box.scrollHeight > box.clientHeight
-                )
-                    break
-                box = box.parentElement
-            }
-            const scroller: HTMLElement | Window =
-                box && box !== document.body ? box : window
-            // Place it within the part of that frame that's on screen (on
-            // the kiosk it starts below the fixed header and tabs).
-            const area =
-                scroller === window
-                    ? { top: 0, bottom: h }
-                    : (scroller as HTMLElement).getBoundingClientRect()
-            let visTop = Math.max(0, area.top)
-            // A sticky header pinned at the top of that frame (the
-            // Simulator's score card) covers what's under it.
-            let pinned = document
-                .elementsFromPoint(r.left + r.width / 2, visTop + 2)
-                .find((e) => !e.closest("[data-tutorial-overlay]")) as
-                | HTMLElement
-                | undefined
-            while (pinned && pinned !== scroller && pinned !== document.body) {
-                if (window.getComputedStyle(pinned).position === "sticky") {
-                    visTop = Math.max(
-                        visTop,
-                        pinned.getBoundingClientRect().bottom
-                    )
-                    break
-                }
-                pinned = pinned.parentElement ?? undefined
-            }
-            const visH = Math.min(h, area.bottom) - visTop
-            const tall = r.height > visH * 0.6
-            if (!tall && r.top >= visTop && r.bottom <= visTop + visH) return
-            const top = visTop + (tall ? visH / 3 : (visH - r.height) / 2)
-            scroller.scrollBy({ top: r.top - top, behavior: "smooth" })
-            // Again once that scroll ends: a sticky header only pins, and
-            // so only counts as covering, after the frame has scrolled.
-            if (again)
-                scroller.addEventListener("scrollend", () => place(false), {
-                    once: true,
-                })
-        }
-        const timer = setTimeout(() => place(true), 50)
-        return () => {
-            cancelled = true
-            clearTimeout(timer)
-        }
-    }, [isCanvas, active, isMyTurn, target, scrollIntoView])
 
     // Timer-driven reveal of everything that traces the target (hole,
     // glow, arrow, card). For a target inside something that's still
@@ -1238,9 +1187,10 @@ export default function TutorialOverlay(props: Props) {
     // with it (e.g. a toggle inside a scrollable list, where even
     // scrolling further down would slide the very thing they're being
     // asked to tap out from under their finger). Scoped to the step's
-    // own lifetime via the cleanup. VirtualScroll-only: freezing native
-    // scroll in real time needs the same wheel/touchmove veto that costs
-    // main-thread jank, which VirtualScroll exists specifically to avoid.
+    // own lifetime via the cleanup. A native container is frozen by the
+    // gesture listener further down instead: it already takes every
+    // touch/wheel gesture during a step and simply stops passing them on.
+    // (Momentum the browser started before the step can still finish.)
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn || !freezeScrollWhileActive) return
         return lookupVirtualScroll(scrollContainerTarget, (virtual) => {
@@ -1273,6 +1223,9 @@ export default function TutorialOverlay(props: Props) {
     // that was making an 8-step page's design-time canvas heavy.
     React.useEffect(() => {
         if (isCanvas || !active || !isMyTurn) return
+        // Freeze on a native container: swallow the gesture instead of
+        // passing it on (VirtualScroll containers are frozen below).
+        const frozen = freezeScrollWhileActive
         let scrollTarget: HTMLElement | Window = window
         let lastY = 0
         // A touch that starts on a drag handle (data-tutorial-drag, e.g.
@@ -1284,7 +1237,7 @@ export default function TutorialOverlay(props: Props) {
         // instead of redirecting them, so the page behind the "Are you
         // still there?" box stays put.
         function onWheel(e: WheelEvent) {
-            if (systemPausedRef.current) {
+            if (systemPausedRef.current || frozen) {
                 e.preventDefault()
                 return
             }
@@ -1304,7 +1257,7 @@ export default function TutorialOverlay(props: Props) {
         }
         function onTouchMove(e: TouchEvent) {
             if (dragging) return
-            if (systemPausedRef.current) {
+            if (systemPausedRef.current || frozen) {
                 e.preventDefault()
                 return
             }
@@ -1330,7 +1283,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("touchstart", onTouchStart, true)
             window.removeEventListener("touchmove", onTouchMove, true)
         }
-    }, [isCanvas, active, isMyTurn])
+    }, [isCanvas, active, isMyTurn, freezeScrollWhileActive])
 
     // isMyTurn only matters for the real runtime handoff between steps —
     // on the canvas nothing is actually advancing the shared pageGroup
@@ -1988,13 +1941,6 @@ addPropertyControls(TutorialOverlay, {
         title: "Target ID",
         defaultValue: "more-tab",
         placeholder: "data-tutorial-target value",
-    },
-    scrollIntoView: {
-        type: ControlType.Boolean,
-        title: "Scroll into view",
-        defaultValue: false,
-        enabledTitle: "On",
-        disabledTitle: "Off",
     },
     revealDelaySeconds: {
         type: ControlType.Number,
