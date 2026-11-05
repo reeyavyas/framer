@@ -1636,6 +1636,12 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   The file peaks at only 0.06 of full scale (the others reach about 0.84), so its level is ×8. No offset (it starts
   0.02 s in). A drag that springs back plays nothing, and a tap while a card is still flying is ignored, as before.
   The `SOUNDS` pin moved to commit `0917be9` (score-up and score-down unchanged there).
+  Live (5 Nov): all three files load from `0917be9`. Yes on card 1, No on card 2, a swipe right on card 3 and a
+  swipe left on card 4 each played one swipe in the same millisecond as the tap or release, then score-up about
+  340 ms later as the score moved; a short drag on card 4 that sprang back played nothing. The four right answers
+  reached 760 and the finale. The swipe's gain on the page was 1.28 (the placed layer's Volume × 8). No console
+  errors. Not run: a wrong answer (the swipe plays before right or wrong is known, so it's the same code), and how
+  it sounds by ear.
 - **Spot the Scam Delete (5 Nov, owner's file `crumple`, freesound_community crumple-03-40747, 0.9 s):** each tap on
   Delete that counts plays the crumple as the card falls away, from 0.17 s into the file (it's silent until 0.18 s),
   at the lesson's Volume (no extra level; it peaks at 0.84). The `SOUNDS` pin moved to commit `09cb797`, which still
