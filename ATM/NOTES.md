@@ -1652,6 +1652,11 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   since nothing needs to sync to a frame. The lesson's taps came first, so the browser allows it; if it's ever
   blocked (a fresh load straight onto /complete with no tap), the page stays silent. Not on the canvas, and not on
   the tutorials' Congrats pages, which use their own override.
+- **Victory with the confetti (5 Nov, owner):** the ATM Lesson Completion component's Confetti fires 1.2 s after the
+  page opens (its Delay in Seconds), and the chime played as the page opened, 1.2 s early (live: chime at 0.1-0.2 s,
+  confetti at 1.33-1.43 s on all five pages). The chime now starts the moment the confetti's canvas is added to the
+  page (canvas-confetti adds it as it fires), so it follows that delay if it's changed in Framer. It's loaded when the
+  page opens and starts 0.07 s in (silent until 0.077 s). If no confetti fires within 2.5 s, it plays anyway.
 - **Live test (5 Nov, crumple + victory):** Spot the Scam rounds 1-3, every clue found, then Delete: each played one
   crumple (0.17 s into the file) in the same millisecond as the tap; a double tap on round 2's Delete played it once.
   Round 3's Delete went to `/complete` 470 ms later, and the victory sound started (`play()` resolved, volume 0.8,
