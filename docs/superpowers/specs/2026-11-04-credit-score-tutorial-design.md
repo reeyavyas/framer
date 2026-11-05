@@ -47,41 +47,61 @@ tutorial copy only, set:
 These are all properties, so no code change is needed. The free-play page
 stays as it is (owner, 4 Nov).
 
-## Steps
+## Steps (rebuilt 5 Nov, following the owner's other kiosk tutorials)
 
-Every step is one `TutorialOverlay` in one page group. "Tap" steps move
-on when the target is tapped. "Event" steps move on when a component
-fires its event. "Timed" steps move on by themselves after the set time
-(`nextStepAfterSeconds`, with the progress bar showing). "Next" steps move on with the card's Next button. Skip
-does the step's action for the visitor so later numbers still add up.
+Step types, as in Account Controls, Card Controls, Log Off and PIN Reset:
+**scroll** (Teal card, no target or arrow, moves on at a scroll % of the
+page's Scrollable Content `cs-scroll`, not frozen); **read** (frozen, 7 s
+timer + progress bar + yellow Next); **tap** (frozen, moves on when the
+target is tapped or its event fires); **final** (no target, 4 s +
+progress bar + Next, to `/credit-score-tutorial/complete`). No
+auto-scroll. Card centred on its target (or aligned 40 px in from the
+edge when centring would push it off screen), kept inside the content
+area (287–1710 at 1080×1920). Arrow: bounce style, 300, straight in the
+gap between card and target, tip at the target (pointing down with the
+card above, rotated 180° with the card below). Highlights are tight:
+headers, fields, the months buttons, sliders, buttons.
 
-The figures are the Simulator's existing made-up values. None come from
-the owner's screenshots.
+Scroll % measured at 1080×1920 on the free-play page (same layout); each
+is scroll position over scrollable range at that point.
 
-| # | Target | Visitor does | Card text (draft) | Moves on |
+| # | Type | Target | Moves on | Card |
 |---|---|---|---|---|
-| 1 | Gauge | reads | "This is your credit score: **720, Good**. Scores run from 300 to 850." | Timed, 7 s |
-| 2 | Gauge | reads | "Lenders use it to decide whether to lend to you and at what rate." | Timed, 7 s |
-| 3 | Score Rating header | opens it | "Open **Score Rating** to see how close you are to the next level." | Tap |
-| 4 | Points Journey panel | reads | "You're **60 points** from Excellent. Let's see what moves your score." | Next |
-| 5 | Payment History header | opens it | "**Payment History** is the biggest part of your score (40%). Open it to see your grade." | Tap |
-| 6 | Payment History body | reads | "Paying every bill on time keeps this grade high. Even one late payment can stay on your report for years." | Next |
-| 7 | Credit Usage header | opens it | "**Credit Usage** is how much of your limits you're using (20%)." | Tap |
-| 8 | Credit Usage body | reads | "Try to keep your balances below 30% of your limits. Under 10% is best." | Next |
-| 9 | Credit Age header | opens it | "**Credit Age** is how long you've had credit (21%)." | Tap |
-| 10 | Credit Age body | reads | "Older accounts help. Think twice before closing your oldest card." | Next |
-| 11 | Simulator tab | taps it | "Now try it. Tap **Simulator** to see what changes your score." | Tap |
-| 12 | Pay down row ($1,200) | taps it | "Pay down $1,200 of your balances." Score → **735 ▲15** | Event |
-| 13 | On-time payments row | taps it | "Keep making payments on time." Score → **742 ▲22** | Event |
-| 14 | Missed payment, 1 mo | taps it | "Now see what one missed payment does." Score → **697 ▼23** | Event |
-| 15 | Missed payment, 1 mo | taps it again to undo | "One missed payment wiped out both good moves. Tap it again to undo it." Score → **742 ▲22** | Event |
-| 16 | Goals tab | taps it | "Set yourself a goal so you can track your progress." | Tap |
-| 17 | Set Up Your Goal | taps it | "Tap **Set Up Your Goal**." | Tap |
-| 18 | Goal form's Next | taps it (can drag the sliders first) | "Pick a score and a time frame, then tap **Next**." | Tap |
-| 19 | none | reads | "Your goal is set! You're ready to make informed credit decisions." | Timed, 4 s → `/credit-score-tutorial/complete` |
+| 1 | scroll ↓ 7% | — | scroll | Let's explore your credit score! / Please scroll down to see your score. |
+| 2 | read | `cs-gauge` | 7 s / Next | This is your credit score: / 720, Good. Scores run 300–850. |
+| 3 | read | `cs-gauge` | 7 s / Next | Lenders use it to decide / whether to lend and at what rate. |
+| 4 | scroll ↓ 30% | — | scroll | Let's see what shapes your score. / Please scroll down to continue. |
+| 5 | tap | `cs-score-rating` | tap | Tap Score Rating / to see your next level. |
+| 6 | scroll ↓ 35% | — | scroll | Please scroll down / to see your Points Journey. |
+| 7 | read | `cs-points-journey` | 7 s / Next | You're 60 points / from Excellent. |
+| 8 | scroll ↓ 48% | — | scroll | Please scroll down / to Payment History. |
+| 9 | tap | `cs-payment-history` | tap | Payment History is 40% / of your score. Tap to open it. |
+| 10 | read | `cs-payment-history-detail` | 7 s / Next | Paying every bill on time / keeps this grade high. |
+| 11 | scroll ↓ 62% | — | scroll | Please scroll down / to Credit Usage. |
+| 12 | tap | `cs-credit-usage` | tap | Credit Usage is 20% / of your score. Tap to open it. |
+| 13 | read | `cs-credit-usage-detail` | 7 s / Next | Keep balances below 30% / of your limits. Under 10% is best. |
+| 14 | scroll ↓ 72% | — | scroll | Please scroll down / to Credit Age. |
+| 15 | tap | `cs-credit-age` | tap | Credit Age is 21% / of your score. Tap to open it. |
+| 16 | read | `cs-credit-age-detail` | 7 s / Next | Older accounts help. / Think twice before closing one. |
+| 17 | scroll ↑ 11% | — | scroll | Now try it yourself! / Please scroll up to the tabs. |
+| 18 | tap | `cs-simulator-tab` | tap | Tap Simulator / to see what changes your score. |
+| 19 | scroll ↓ 71% | — | scroll | Please scroll down / to Manage Your Balances. |
+| 20 | tap | `cs-pay-down` (field) | `cs-tutorial-paid-down` | Tap to pay down $1,200 / of your balances. |
+| 21 | scroll ↓ 85% | — | scroll | Please scroll down / to Manage Payment Activity. |
+| 22 | tap | `cs-on-time` (field) | `cs-tutorial-on-time` | Tap to keep making / payments on time. |
+| 23 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed` | Now see what one missed / payment does. Tap 1 mo. |
+| 24 | read | `cs-simulated-score` | 7 s / Next | One missed payment wiped out / both good moves. |
+| 25 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed-undone` | Tap 1 mo again / to undo it. |
+| 26 | scroll ↑ 33% | — | scroll | Let's set a goal. / Please scroll up to the tabs. |
+| 27 | tap | `cs-goals-tab` | tap | Tap Goals / to set a score goal. |
+| 28 | scroll ↓ 95% | — | scroll | Please scroll down / to set up your goal. |
+| 29 | tap | `goal-setup-start` | tap | Tap Set Up Your Goal. |
+| 30 | tap | `goal-score-slider` | `goal-score-slider-done` | Drag to pick / your goal score. |
+| 31 | tap | `goal-months-slider` | `goal-months-slider-done` | Drag to pick / how many months. |
+| 32 | tap | `goal-setup-next` | tap | Tap Next / to save your goal. |
+| 33 | final | — | 4 s / Next → complete | Your goal is set! / You're ready to make informed credit decisions. |
 
-That's 19 steps (step 19 added in the build: a tap on the last step can't change page), about 3–4 minutes (owner kept all of them, 4 Nov; step 1
-split into two timed cards).
+Score path: 720 → 735 (pay down) → 742 (on-time) → 697 (1 mo) → 742.
 
 ## New code (smallest set)
 

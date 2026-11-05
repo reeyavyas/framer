@@ -405,7 +405,7 @@ export function CreditScoreScrollTarget(
 }
 
 // TARGET: inside the open Payment History accordion, the part its read
-// step talks about.
+// step talks about. All three sit on each accordion's Grade Section.
 export function PaymentHistoryDetailTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
@@ -419,7 +419,7 @@ export function CreditUsageDetailTarget(
     return withTutorialTarget("cs-credit-usage-detail")(Component)
 }
 
-// TARGET: inside the open Credit Age accordion (its Age Panel).
+// TARGET: inside the open Credit Age accordion.
 export function CreditAgeDetailTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {

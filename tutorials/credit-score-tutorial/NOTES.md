@@ -13,57 +13,48 @@ undoing it), decide (set a goal). The score starts at 720 and ends on
 742: 720 + 15 (pay down) + 7 (on-time) = 742, −45 for one missed month
 (697), back to 742 when it's undone.
 
-## Framer setup (4 Nov 2026)
+## Framer setup (rebuilt 5 Nov 2026)
 
-- **Section Tabs Tutorial**: a copy of Section Tabs (Components → Phone
-  Components → App UI → Credit Score, next to the original; Framer's
-  rename only renames inside the current folder, so it couldn't be moved
-  into Tutorials from Chrome). The tutorial page's instance was swapped
-  to it (right-click → Replace with) and kept its `withGoalsTab`
-  override. In the copy only: SimulatorScoreHeader Current Score 720,
-  on-time row Points 7. The original Section Tabs is untouched (742,
-  +11).
-- Overrides in the copy (`TutorialTargets`): `ScoreRatingTarget`,
-  `PaymentHistoryTarget`, `CreditUsageTarget`, `CreditAgeTarget` on the
-  accordion instances; `SimulatorTabTarget`, `GoalsTabTarget` on the
-  "Tab Simulator" / "Tab Goals" cells. From `CreditScoreTutorial.tsx`:
-  `PayDownRow` (Row ID payDown), `OnTimeRow` (onTime),
-  `MissedPaymentRow` (missedPayment).
-- On the page: gauge Score 720 and `withCreditScoreTutorialStart` (tags
-  `cs-gauge`, clears the goal on open and when the page is left).
-- GoalSetupCard tags its own buttons (`goal-setup-start`,
-  `goal-setup-next`), so no marker frames are needed.
-- `CreditScoreTutorial.tsx` lives in Code → Phone Components → Tutorials
-  → Credit Score Tutorial and imports `../../Credit_Score/…`.
-- 19 TutorialOverlay layers "Step 1"…"Step 19" in Screen Content, page
-  group `credit-score-tutorial`, copied from the Account Controls
-  tutorial's first step (same card look, arrow and Exit link
-  `/tutorials`). Card text uses title lines 1 and 2.
+Rebuilt to match the owner's other kiosk tutorials (read from all 22
+pages: Account Controls, Card Controls, Log Off, PIN Reset). The step
+table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-design.md`).
 
-| Step | Target | Moves on |
-|---|---|---|
-| 1–2 | `cs-gauge` | Next step after 7 s, progress bar |
-| 3 | `cs-score-rating` | Click |
-| 4 | `cs-score-rating` | Next button |
-| 5 / 6 | `cs-payment-history` | Click / Next |
-| 7 / 8 | `cs-credit-usage` | Click / Next |
-| 9 / 10 | `cs-credit-age` | Click / Next |
-| 11 | `cs-simulator-tab` | Click |
-| 12 | `cs-pay-down` | Event `cs-tutorial-paid-down` |
-| 13 | `cs-on-time` | Event `cs-tutorial-on-time` |
-| 14 | `cs-missed-payment` | Event `cs-tutorial-missed` |
-| 15 | `cs-missed-payment` | Event `cs-tutorial-missed-undone` |
-| 16 | `cs-goals-tab` | Click |
-| 17 | `goal-setup-start` | Click |
-| 18 | `goal-setup-next` | Click |
-| 19 | none | Auto-advance 4 s → `/credit-score-tutorial/complete` |
-
-Step 19 was added because a click on the last step can't change page
-(TutorialOverlay only links from the Next button or auto-advance).
-
-Skip on steps 12–15: the row override taps the row into the wanted
-state (pay down / on-time field; "1 mo", then the picked month again),
-so the score still reads 735 / 742 / 697 / 742.
+- **33 overlay layers** in Screen Content, named "01 Scroll to score" …
+  "33 Goal set", page group `credit-score-tutorial`. Scroll steps are
+  copies of Travel Notice's teal "Please scroll down" step; the others
+  are the earlier navy layers (Account Controls styling). 33 keeps the
+  old step 19's Auto-advance link to `/credit-score-tutorial/complete`.
+- **Step types:** scroll (no target, Teal, Scroll advances at a %, not
+  frozen); read (7 s + progress bar + Next, frozen); tap or event
+  (frozen); final (4 s + progress bar + Next). Every non-scroll step has
+  Freeze scroll on with Scroll container ID `cs-scroll`.
+- **No auto-scroll.** Scroll % were measured at 1080×1920 on the
+  free-play page (same layout); see the spec. Each % is position over
+  scrollable range at that point, so it depends on which accordions are
+  open: changing an accordion's content means re-measuring the later
+  steps.
+- **Cards and arrows:** card centred on the target (Goals, Set Up and
+  Next are aligned 40 px in from the screen edge instead), offset 144 px
+  from it; bounce arrow, size 300, in that gap with its tip at the
+  target (rotation 0, offset Y −14 above; rotation 180, offset Y
+  target height + 14 below). Scroll and final cards are centred in the
+  content area (offset Y 38).
+- **Targets:** `cs-scroll` (TutorialTargets `CreditScoreScrollTarget`)
+  on the page's Scrollable Content. `cs-points-journey`
+  (`PointsJourneyTarget`) on Score Rating Tabs' PointsJourneyBar;
+  `cs-payment-history-detail`, `cs-credit-usage-detail`,
+  `cs-credit-age-detail` on each accordion's Grade Section;
+  `cs-simulated-score` (`SimulatedScoreTarget`) on Section Tabs
+  Tutorial's SimulatorScoreHeader. These sit in shared components and
+  only add the attribute. Accordion tap steps keep the accordion-instance
+  targets (the hole is the header because they're tapped while closed).
+  Simulator rows tag only their field (the $0 box, the months buttons).
+  GoalSetupCard tags its sliders (`goal-score-slider`,
+  `goal-months-slider`) and fires `<target>-done` when one is let go.
+- **Code:** TutorialOverlay's Scroll into view is gone. Freeze now holds
+  a native page still (the overlay's gesture listener stops passing
+  touch/wheel on), and the hole is clipped to the target's visible part
+  of its scrolling frame.
 
 ## Live test 1 (4 Nov, first publish)
 
