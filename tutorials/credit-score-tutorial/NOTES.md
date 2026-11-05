@@ -70,6 +70,11 @@ edge; every card stays 40 px from the screen edges and inside 287–1710
 and 29 (mirrored). Wrapping splits "300–850" over two lines on step 2's
 card (copy is the owner's to edit).
 
+Owner found: **Next on step 33 ("Your goal is set!") went nowhere**, just
+closed the overlay. Only Auto-advance had the link; Next on the last
+step of a group needs its own **Next button link**, now
+`/credit-score-tutorial/complete` (needs the next publish).
+
 ## Live test 6 (5 Nov, rebuild's first publish)
 
 Built-in browser, 1080×1920, pane showing; real taps and drags, scroll
