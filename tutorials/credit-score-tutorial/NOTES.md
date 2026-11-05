@@ -82,6 +82,18 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   size checked against the Score page: 100%, 1080×1920). Worth a look by
   eye on the canvas.
 
+Live test 8 (after the publish, 1080×1920): Score page skipped to 33,
+then real input: Next on 33 → 34; wheel up to the top → 35 (curved arrow
+on the Alerts tab); real tap on Alerts → `/credit-score-tutorial/alerts`
+step 1; wheel down snaps at 10% → step 2 (card 348–735, arrow tail at its
+right side, tip 7 px above the Payment History alert); Next → 3; wheel
+down snaps at 56% → 4 (card 296–731, tip above the first monitoring
+alert); Next → 5; the 4 s timer and, in a second run, Next (left in
+under 0.8 s) both reach `/complete`. Free play unchanged: its Alerts tab
+still links to `./credit-score-alerts`, and its Alerts page has no
+targets or overlays. Step 35's card wraps "to see what has changed." onto
+two lines.
+
 ## Live test 7 (5 Nov, side arrows)
 
 Built-in browser, 1080×1920, all 33 steps by Skip, measured from the
