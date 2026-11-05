@@ -67,6 +67,10 @@ were built and passed a live test, then removed at the owner's request
 (they don't want visitors tapping the ⓘ). The three layers are deleted,
 steps are back to 1–35, and CreditScoreGauge.tsx no longer carries
 tutorial ids.
+Checked live after the publish: real wheel and Next taps on 1–3, step 3
+goes straight to "Let's see what shapes your score."; the gauge has no
+`cs-gauge-*` ids; Skip from 4 runs through every step in order to 35
+(Tap Alerts).
 
 ## Alerts overview (added 5 Nov)
 
