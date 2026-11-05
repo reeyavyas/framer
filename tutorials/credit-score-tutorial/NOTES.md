@@ -167,6 +167,13 @@ Same setup as test 2 (built-in browser, 1080×1920, pane showing).
   instead of a timer (it fired 184 ms after a short smooth scroll in the
   test browser). Saved in Framer; needs the next publish.
 
+## Live check 5 (5 Nov, fifth publish), passed
+
+`scrollend` version live. Step 12: pay-down row and its label at 1239,
+fully below the pinned header (bottom 929). Real taps on 12–15: 735 ▲15,
+742 ▲22 (on-time row at 1239), 1 mo → 697 (missed row at 1171), undo →
+742, then step 16. Steps 1–11 reached with Skip.
+
 ## Not tested
 
 - A second run straight after the first in the same session, and the
