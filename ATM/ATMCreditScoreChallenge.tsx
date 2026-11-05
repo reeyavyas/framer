@@ -25,7 +25,7 @@ const MIDNIGHT = "#11232d"
 const TEAL = "#059390"
 const YOLK = "#ffcc40"
 const MINT = "#bce2d7"
-const CORAL = "#D04848" // Cancel coral, for the chip of a score drop only (owner asked for red drop chips)
+const ORANGE = "#f6a11d" // the gauge's Fair orange, for the chip of a score drop only (owner asked for orange drop chips)
 const DARK_TEAL = "#046b68" // Done's timer strip: brand teal, deeper (no colour style)
 const DONE_SECONDS = 10 // with no tap, Done's strip fills over this long and then it goes (owner)
 const DONE_SHOWS = 1300 // ms after the finale starts that Done fades in
@@ -855,8 +855,8 @@ function Challenge(props: Props) {
                                     opacity: reduceMotion ? 1 : 0,
                                     padding: "1.2cqw 2.4cqw 1.4cqw",
                                     borderRadius: 999,
-                                    background: chip.up ? TEAL : CORAL,
-                                    color: "#ffffff",
+                                    background: chip.up ? TEAL : ORANGE,
+                                    color: chip.up ? "#ffffff" : MIDNIGHT, // white is too faint on orange
                                     fontFamily: black,
                                     fontSize: "3.4cqw",
                                     lineHeight: 1,
