@@ -1631,6 +1631,11 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   started within 7 ms of its chip. A short drag that springs back plays nothing. No console errors. Not run: the
   missed-payment −40 card (same code as −30) and the finale. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
+- **Credit Score Challenge swipe (5 Nov, owner's file `swipe`, u_nharq4usid swipe-255512, 0.14 s):** every answer
+  that counts (a drag past the line, or a Yes/No tap) plays it as the card starts to fly off, before score-up/down.
+  The file peaks at only 0.06 of full scale (the others reach about 0.84), so its level is ×8. No offset (it starts
+  0.02 s in). A drag that springs back plays nothing, and a tap while a card is still flying is ignored, as before.
+  The `SOUNDS` pin moved to commit `0917be9` (score-up and score-down unchanged there).
 - **Spot the Scam Delete (5 Nov, owner's file `crumple`, freesound_community crumple-03-40747, 0.9 s):** each tap on
   Delete that counts plays the crumple as the card falls away, from 0.17 s into the file (it's silent until 0.18 s),
   at the lesson's Volume (no extra level; it peaks at 0.84). The `SOUNDS` pin moved to commit `09cb797`, which still

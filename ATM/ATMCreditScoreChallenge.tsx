@@ -238,7 +238,7 @@ type View = "Start" | "Finale"
 // Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
 // loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
 const SOUNDS =
-    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@6d2c93c3f1b8992e2ab84c4866e2ed867b26f8de/ATM/sounds/"
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@0917be9e0da53f470e4839ac7c72177193408f20/ATM/sounds/"
 let audioCtx: AudioContext | null = null
 const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
 function loadSounds(...names: string[]) {
@@ -608,6 +608,8 @@ function Challenge(props: Props) {
         if (!card || !turn || busy.current || finished) return
         setTouched(true)
         busy.current = true
+        // the swipe as the card flies off, for a drag or a Yes/No tap (the file is very quiet, so ×8)
+        if (props.sounds) playSound("swipe.mp3", props.volume * 8)
         const ok = pick === card.go
         const settle = () => {
             busy.current = false
@@ -1220,4 +1222,4 @@ addPropertyControls(ATMCreditScoreChallenge, {
     },
 })
 
-loadSounds("score-up.mp3", "score-down.mp3")
+loadSounds("score-up.mp3", "score-down.mp3", "swipe.mp3")
