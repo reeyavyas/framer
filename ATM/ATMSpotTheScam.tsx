@@ -375,7 +375,7 @@ type CanvasRound = "Round 1" | "Round 2" | "Round 3"
 // Web Audio, so each starts on the frame its animation needs. They're loaded when the lesson opens; one still
 // loading is skipped, never played late. Every sound follows a tap, so the browser allows it. Silent on the canvas.
 const SOUNDS =
-    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@3eb8d38ec89fc3dabf40ec90ed156ba3bfe32c7e/ATM/sounds/"
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@09cb7979d96e5582c1789fc2626335d1ad1f3e84/ATM/sounds/"
 let audioCtx: AudioContext | null = null
 const buffers: Record<string, AudioBuffer | null | undefined> = {} // null: loading or failed
 function loadSounds(...names: string[]) {
@@ -577,7 +577,10 @@ function Lesson(props: Props) {
         return { x: s.w - cqw(31), y: cqw(8) } // top right, far enough in that the whole handle stays on the card (owner)
     }
 
-    React.useEffect(() => loadSounds("zoom-magnifying-glass.mp3"), [])
+    React.useEffect(
+        () => loadSounds("zoom-magnifying-glass.mp3", "crumple.mp3"),
+        []
+    )
     const markFound = (i: number) => {
         if (foundRef.current.includes(i)) return
         foundRef.current = [...foundRef.current, i]
@@ -866,6 +869,9 @@ function Lesson(props: Props) {
         )
             return
         setPhase("leaving")
+        // the crumple as the card falls away (the file is silent for its first 0.18 s)
+        if (props.sounds)
+            playSound("crumple.mp3", props.volume, { offset: 0.17 })
         const next = () => {
             if (round === ROUNDS.length - 1) return goDone()
             foundRef.current = []

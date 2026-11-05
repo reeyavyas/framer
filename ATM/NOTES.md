@@ -1631,6 +1631,10 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   started within 7 ms of its chip. A short drag that springs back plays nothing. No console errors. Not run: the
   missed-payment −40 card (same code as −30) and the finale. The looping lesson-card
   illustrations (hourglass, savings jar) stay silent.
+- **Spot the Scam Delete (5 Nov, owner's file `crumple`, freesound_community crumple-03-40747, 0.9 s):** each tap on
+  Delete that counts plays the crumple as the card falls away, from 0.17 s into the file (it's silent until 0.18 s),
+  at the lesson's Volume (no extra level; it peaks at 0.84). The `SOUNDS` pin moved to commit `09cb797`, which still
+  has the zoom file unchanged. On round 3 the page change doesn't cut it (Framer's router, same audio).
 - **Lesson complete pages (5 Nov, owner's file `victory`, eaglaxle gaming-victory-464016, 3.9 s, pinned to commit
   `fdac2b5`):** `ATMLessonCompleteRedirect` plays it as each `/atm-lessons/.../complete` page opens, at volume 0.8,
   then still goes to /atm-start after 5 s (which cuts the sound if it's still playing). A plain `Audio` element,
