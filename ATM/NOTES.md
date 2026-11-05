@@ -1657,6 +1657,11 @@ coin-multiple 0.11 s, the zoom is silent for its first 0.32 s, and the sand's st
   confetti at 1.33-1.43 s on all five pages). The chime now starts the moment the confetti's canvas is added to the
   page (canvas-confetti adds it as it fires), so it follows that delay if it's changed in Framer. It's loaded when the
   page opens and starts 0.07 s in (silent until 0.077 s). If no confetti fires within 2.5 s, it plays anyway.
+  Live (5 Nov): Credit Score Challenge's four right answers, then Done, through Framer's router to `/complete`: the
+  confetti's canvas went in 1.59 s after the page change and the chime's `play()` 1 ms later, playing 2 ms after
+  that, from 0.07 s; it played once (the 2.5 s backup didn't add a second), then the page went to /atm-start. No
+  console errors. The other four pages weren't run through their lessons (same component, same 1.2 s confetti,
+  measured on all five before the change), and it's not checked by ear.
 - **Live test (5 Nov, crumple + victory):** Spot the Scam rounds 1-3, every clue found, then Delete: each played one
   crumple (0.17 s into the file) in the same millisecond as the tap; a double tap on round 2's Delete played it once.
   Round 3's Delete went to `/complete` 470 ms later, and the victory sound started (`play()` resolved, volume 0.8,
