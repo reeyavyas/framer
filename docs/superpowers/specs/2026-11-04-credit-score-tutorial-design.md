@@ -71,41 +71,38 @@ is scroll position over scrollable range at that point.
 | 1 | scroll ↓ 5% | — | scroll | Let's explore your credit score! / Please scroll down to see your score. |
 | 2 | read | `cs-gauge` | 7 s / Next | This is your credit score: / 720, Good. Scores run 300–850. |
 | 3 | read | `cs-gauge` | 7 s / Next | Lenders use it to decide / whether to lend and at what rate. |
-| 4 | tap | `cs-gauge-info` (the ⓘ) | tap | Tap the i / to see the score ranges. |
-| 5 | read | `cs-gauge-ranges` (the pop-up) | 7 s / Next | Scores fall into five ranges. / 720 is Good: 660 to 779. |
-| 6 | tap | `cs-gauge-ranges-close` (its ✕) | tap | Tap ✕ / to close it. |
-| 7 | scroll ↓ 30% | — | scroll | Let's see what shapes your score. / Please scroll down to continue. |
-| 8 | tap | `cs-score-rating` | tap | Tap Score Rating / to see your next level. |
-| 9 | scroll ↓ 35% | — | scroll | Please scroll down / to see your Points Journey. |
-| 10 | read | `cs-points-journey` | 7 s / Next | You're 60 points / from Excellent. |
-| 11 | scroll ↓ 48% | — | scroll | Please scroll down / to Payment History. |
-| 12 | tap | `cs-payment-history` | tap | Payment History is 40% / of your score. Tap to open it. |
-| 13 | read | `cs-payment-history-detail` | 7 s / Next | Paying every bill on time / keeps this grade high. |
-| 14 | scroll ↓ 62% | — | scroll | Please scroll down / to Credit Usage. |
-| 15 | tap | `cs-credit-usage` | tap | Credit Usage is 20% / of your score. Tap to open it. |
-| 16 | read | `cs-credit-usage-detail` | 7 s / Next | Keep balances below 30% / of your limits. Under 10% is best. |
-| 17 | scroll ↓ 72% | — | scroll | Please scroll down / to Credit Age. |
-| 18 | tap | `cs-credit-age` | tap | Credit Age is 21% / of your score. Tap to open it. |
-| 19 | read | `cs-credit-age-detail` | 7 s / Next | Older accounts help. / Think twice before closing one. |
-| 20 | scroll ↑ 11% | — | scroll | Now try it yourself! / Please scroll up to the tabs. |
-| 21 | tap | `cs-simulator-tab` | tap | Tap Simulator / to see what changes your score. |
-| 22 | scroll ↓ 71% | — | scroll | Please scroll down / to Manage Your Balances. |
-| 23 | tap | `cs-pay-down` (field) | `cs-tutorial-paid-down` | Tap to pay down $1,200 / of your balances. |
-| 24 | scroll ↓ 85% | — | scroll | Please scroll down / to Manage Payment Activity. |
-| 25 | tap | `cs-on-time` (field) | `cs-tutorial-on-time` | Tap to keep making / payments on time. |
-| 26 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed` | Now see what one missed / payment does. Tap 1 mo. |
-| 27 | read | `cs-simulated-score` | 7 s / Next | One missed payment wiped out / both good moves. |
-| 28 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed-undone` | Tap 1 mo again / to undo it. |
-| 29 | scroll ↑ 33% | — | scroll | Let's set a goal. / Please scroll up to the tabs. |
-| 30 | tap | `cs-goals-tab` | tap | Tap Goals / to set a score goal. |
-| 31 | scroll ↓ 95% | — | scroll | Please scroll down / to set up your goal. |
-| 32 | tap | `goal-setup-start` | tap | Tap Set Up Your Goal. |
-| 33 | tap | `goal-score-slider` | `goal-score-slider-done` | Drag to pick / your goal score. |
-| 34 | tap | `goal-months-slider` | `goal-months-slider-done` | Drag to pick / how many months. |
-| 35 | tap | `goal-setup-next` | tap | Tap Next / to save your goal. |
-| 36 | read | — | 7 s / Next | Your goal is set! / You're ready to make informed credit decisions. |
-| 37 | scroll ↑ 0% | — | scroll | Now let's check your alerts. / Please scroll up to the top. |
-| 38 | tap | `cs-alerts-tab` | tap (links to `/credit-score-tutorial/alerts`) | Tap Alerts / to see what has changed. |
+| 4 | scroll ↓ 30% | — | scroll | Let's see what shapes your score. / Please scroll down to continue. |
+| 5 | tap | `cs-score-rating` | tap | Tap Score Rating / to see your next level. |
+| 6 | scroll ↓ 35% | — | scroll | Please scroll down / to see your Points Journey. |
+| 7 | read | `cs-points-journey` | 7 s / Next | You're 60 points / from Excellent. |
+| 8 | scroll ↓ 48% | — | scroll | Please scroll down / to Payment History. |
+| 9 | tap | `cs-payment-history` | tap | Payment History is 40% / of your score. Tap to open it. |
+| 10 | read | `cs-payment-history-detail` | 7 s / Next | Paying every bill on time / keeps this grade high. |
+| 11 | scroll ↓ 62% | — | scroll | Please scroll down / to Credit Usage. |
+| 12 | tap | `cs-credit-usage` | tap | Credit Usage is 20% / of your score. Tap to open it. |
+| 13 | read | `cs-credit-usage-detail` | 7 s / Next | Keep balances below 30% / of your limits. Under 10% is best. |
+| 14 | scroll ↓ 72% | — | scroll | Please scroll down / to Credit Age. |
+| 15 | tap | `cs-credit-age` | tap | Credit Age is 21% / of your score. Tap to open it. |
+| 16 | read | `cs-credit-age-detail` | 7 s / Next | Older accounts help. / Think twice before closing one. |
+| 17 | scroll ↑ 11% | — | scroll | Now try it yourself! / Please scroll up to the tabs. |
+| 18 | tap | `cs-simulator-tab` | tap | Tap Simulator / to see what changes your score. |
+| 19 | scroll ↓ 71% | — | scroll | Please scroll down / to Manage Your Balances. |
+| 20 | tap | `cs-pay-down` (field) | `cs-tutorial-paid-down` | Tap to pay down $1,200 / of your balances. |
+| 21 | scroll ↓ 85% | — | scroll | Please scroll down / to Manage Payment Activity. |
+| 22 | tap | `cs-on-time` (field) | `cs-tutorial-on-time` | Tap to keep making / payments on time. |
+| 23 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed` | Now see what one missed / payment does. Tap 1 mo. |
+| 24 | read | `cs-simulated-score` | 7 s / Next | One missed payment wiped out / both good moves. |
+| 25 | tap | `cs-missed-payment` (months) | `cs-tutorial-missed-undone` | Tap 1 mo again / to undo it. |
+| 26 | scroll ↑ 33% | — | scroll | Let's set a goal. / Please scroll up to the tabs. |
+| 27 | tap | `cs-goals-tab` | tap | Tap Goals / to set a score goal. |
+| 28 | scroll ↓ 95% | — | scroll | Please scroll down / to set up your goal. |
+| 29 | tap | `goal-setup-start` | tap | Tap Set Up Your Goal. |
+| 30 | tap | `goal-score-slider` | `goal-score-slider-done` | Drag to pick / your goal score. |
+| 31 | tap | `goal-months-slider` | `goal-months-slider-done` | Drag to pick / how many months. |
+| 32 | tap | `goal-setup-next` | tap | Tap Next / to save your goal. |
+| 33 | read | — | 7 s / Next | Your goal is set! / You're ready to make informed credit decisions. |
+| 34 | scroll ↑ 0% | — | scroll | Now let's check your alerts. / Please scroll up to the top. |
+| 35 | tap | `cs-alerts-tab` | tap (links to `/credit-score-tutorial/alerts`) | Tap Alerts / to see what has changed. |
 
 **Alerts page** (`/credit-score-tutorial/alerts`, page group
 `credit-score-tutorial-alerts`, added 5 Nov at the owner's request: an

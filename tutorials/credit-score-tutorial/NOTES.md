@@ -60,21 +60,13 @@ table is in the spec (`docs/superpowers/specs/2026-11-04-credit-score-tutorial-d
   touch/wheel on), and the hole is clipped to the target's visible part
   of its scrolling frame.
 
-## Score ranges info (added 5 Nov, owner: no step used the ⓘ)
+## Score ranges info (added and removed 5 Nov)
 
-New steps 4–6 after the gauge: tap the ⓘ (`cs-gauge-info`), read the
-ranges pop-up (`cs-gauge-ranges`, 7 s + Next), tap its ✕
-(`cs-gauge-ranges-close`). CreditScoreGauge.tsx carries those three ids
-itself (attributes only, as GoalSetupCard does). Old steps 4–38 are now
-7–38 (layer names and Step numbers both moved by 3; all 38 checked).
-Checked live (1080×1920, real taps): step 4's arrow lands on the ⓘ
-(card 1316–1496, over the gauge's score while it shows); tapping it
-opens the pop-up (886–1110) and moves on; step 5 reads above it; step 6
-points at the ✕ (904–976 × 910–982); tapping it closes the pop-up, the
-page scrolls again and step 7 snaps at 30%. Skip on 4 opens the pop-up
-and on 6 closes it. Fixed after the test (next publish): step 5's arrow
-tip sat next to the ✕, so it now lands on the pop-up's text (card offset
-X −368, arrow offset X 164).
+Steps for the gauge's ⓘ (tap it, read the ranges pop-up, tap its ✕)
+were built and passed a live test, then removed at the owner's request
+(they don't want visitors tapping the ⓘ). The three layers are deleted,
+steps are back to 1–35, and CreditScoreGauge.tsx no longer carries
+tutorial ids.
 
 ## Alerts overview (added 5 Nov)
 

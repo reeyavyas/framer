@@ -6,8 +6,6 @@ import { addPropertyControls, ControlType, RenderTarget } from "framer"
 // with a pointer at the score, the score with its change since last
 // time, today's "Updated" date, and an info button that opens the
 // ranges pop-up. Built for the 1080-wide kiosk; app styles (Inter).
-// The info button, pop-up and its close carry data-tutorial-target ids
-// for the Credit Score tutorial (attributes only).
 
 const MIN = 300
 const MAX = 850
@@ -214,7 +212,6 @@ export default function CreditScoreGauge(props: Props) {
                 <button
                     type="button"
                     aria-label="About credit score ranges"
-                    data-tutorial-target="cs-gauge-info"
                     onClick={() => setInfoOpen(true)}
                     style={{
                         width: 64,
@@ -350,7 +347,6 @@ function InfoPopup({
                 role="dialog"
                 aria-modal="true"
                 aria-label="Credit score ranges"
-                data-tutorial-target="cs-gauge-ranges"
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     position: "relative",
@@ -369,7 +365,6 @@ function InfoPopup({
                 <button
                     type="button"
                     aria-label="Close"
-                    data-tutorial-target="cs-gauge-ranges-close"
                     onClick={onClose}
                     style={{
                         position: "absolute",
