@@ -121,6 +121,10 @@ doesn't change them; change them only when it's asked for the ATM.
     The centring is held back so the ATM always covers the page (no
     grey background at the left or top while it slides); it still ends
     on the screen, centred, at the same zoom.
+    Live (6 Nov, 1080×1920): tapped /atm and read the ATM's box every
+    frame: 62 zoom frames, none with the page's edge showing; it held
+    still until the zoom started, ended at translate(-455.5, -1269.8)
+    scale 2.449 as before, then went to /atm-start.
   - Beeps (800 Hz pure tone, 60 ms, volume 0.5, matched to a reference
     keypad beep): one as the card goes in (0.9 s), one as the ripple
     ends (3.1 s).
