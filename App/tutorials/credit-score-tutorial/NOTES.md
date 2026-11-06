@@ -181,6 +181,12 @@ Real wheel scrolls (10-tick overshoots) and real taps:
 - 6 Nov: `cs-alerts-tab` marker enlarged 20 px each side: (561, 5)
   137×163.
 
+- 6 Nov: step 14 back to **72%**. At 71% step 16's Credit Age Grade
+  section ended at 1709, against the bottom nav (1710), and the freeze
+  stopped the visitor scrolling to it. The earlier step-15 overlap at 72%
+  was measured at 73% (Skip +1%, Snap off); at exactly 72% the card top
+  should be ~418 and the Grade section end ~1551 (to check live).
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
