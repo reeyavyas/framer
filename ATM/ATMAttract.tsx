@@ -20,7 +20,8 @@ import { useReducedMotion } from "framer-motion"
 // Everything is drawn in the 1080×1920 artwork's own pixels and scaled to the frame.
 
 // Framer's router, read from the module so a Framer version without it can't break the file.
-const useRouter: () => unknown = (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
+const useRouter: () => unknown =
+    (Framer as { useRouter?: () => unknown }).useRouter ?? (() => undefined)
 
 const W = 1080
 const H = 1920
@@ -41,8 +42,22 @@ const STRIPS = [
     { x: 285, y: 1158, w: 213, h: 7, delay: 1.5 }, // CASH
 ]
 // The hood's lit panel under the banner (a trapezoid, narrower at the bottom) and its lower edge.
-const HOOD = { top: 410, bottom: 625, topL: 29, topR: 1053, botL: 62, botR: 1019 }
-const KEYPAD = { top: 1331, bottom: 1455, topL: 322, topR: 665, botL: 287, botR: 700 } // the keypad's plate
+const HOOD = {
+    top: 410,
+    bottom: 625,
+    topL: 29,
+    topR: 1053,
+    botL: 62,
+    botR: 1019,
+}
+const KEYPAD = {
+    top: 1331,
+    bottom: 1455,
+    topL: 322,
+    topR: 665,
+    botL: 287,
+    botR: 700,
+} // the keypad's plate
 
 type Transition = "A" | "B" | "AB" | "E" | "EB" | "ABE"
 
@@ -87,8 +102,15 @@ const BEEP_MS = 60
 
 let audioCtx: AudioContext | null = null
 function playBeep(volume: number) {
-    if (typeof window === "undefined" || RenderTarget.current() === RenderTarget.canvas) return
-    const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (
+        typeof window === "undefined" ||
+        RenderTarget.current() === RenderTarget.canvas
+    )
+        return
+    const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext
     if (!AC) return
     audioCtx ??= new AC()
     const ac = audioCtx
@@ -112,7 +134,8 @@ function playBeep(volume: number) {
 // ---- timing helpers ----
 // cubic-bezier(x1, y1, x2, y2) as a function of 0..1
 const bezier = (x1: number, y1: number, x2: number, y2: number) => {
-    const at = (t: number, a: number, b: number) => 3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t
+    const at = (t: number, a: number, b: number) =>
+        3 * (1 - t) * (1 - t) * t * a + 3 * (1 - t) * t * t * b + t * t * t
     return (x: number) => {
         let lo = 0
         let hi = 1
@@ -159,9 +182,21 @@ const zoomAt = (c: number, zp: number) => {
     const z = lerp(1, Z, zp)
     const cx = SCREEN.x + SCREEN.w / 2
     const cy = SCREEN.y + SCREEN.h / 2
-    return { z, tx: W / 2 + z * (c * (W / 2 - cx) - W / 2), ty: H / 2 + z * (c * (H / 2 - cy) - H / 2) }
+    return {
+        z,
+        tx: W / 2 + z * (c * (W / 2 - cx) - W / 2),
+        ty: H / 2 + z * (c * (H / 2 - cy) - H / 2),
+    }
 }
-const screenRect = ({ z, tx, ty }: { z: number; tx: number; ty: number }): Rect => ({
+const screenRect = ({
+    z,
+    tx,
+    ty,
+}: {
+    z: number
+    tx: number
+    ty: number
+}): Rect => ({
     x: SCREEN.x * z + tx,
     y: SCREEN.y * z + ty,
     w: SCREEN.w * z,
@@ -169,7 +204,16 @@ const screenRect = ({ z, tx, ty }: { z: number; tx: number; ty: number }): Rect 
 })
 
 export default function ATMAttract(props: Props) {
-    const { transition, nextPage, nextColor, rippleColor, ringColor, slotColor, glowColor, hoodColor } = props
+    const {
+        transition,
+        nextPage,
+        nextColor,
+        rippleColor,
+        ringColor,
+        slotColor,
+        glowColor,
+        hoodColor,
+    } = props
     const reduceMotion = useReducedMotion()
     const uid = "atm" + React.useId().replace(/[^a-zA-Z0-9]/g, "")
 
@@ -192,7 +236,8 @@ export default function ATMAttract(props: Props) {
         alive.current = true
         const el = rootRef.current
         if (!el) return
-        const fit = () => setK(Math.min(el.clientWidth / W, el.clientHeight / H) || 1)
+        const fit = () =>
+            setK(Math.min(el.clientWidth / W, el.clientHeight / H) || 1)
         fit()
         const ro = new ResizeObserver(fit)
         ro.observe(el)
@@ -225,14 +270,21 @@ export default function ATMAttract(props: Props) {
         fxRef.current?.appendChild(c)
         return c
     }
-    const place = (c: SVGCircleElement, x: number, y: number, r: number, o: number) => {
+    const place = (
+        c: SVGCircleElement,
+        x: number,
+        y: number,
+        r: number,
+        o: number
+    ) => {
         c.setAttribute("cx", String(x))
         c.setAttribute("cy", String(y))
         c.setAttribute("r", String(Math.max(0, r)))
         c.setAttribute("opacity", String(o))
     }
     const setZoom = (zm: { z: number; tx: number; ty: number }) => {
-        if (atmRef.current) atmRef.current.style.transform = `translate(${zm.tx}px, ${zm.ty}px) scale(${zm.z})`
+        if (atmRef.current)
+            atmRef.current.style.transform = `translate(${zm.tx}px, ${zm.ty}px) scale(${zm.z})`
     }
     const showNext = () => {
         setRevealing(true)
@@ -260,7 +312,10 @@ export default function ATMAttract(props: Props) {
             const zm = zoomAt(seg(t, 0, 0.5, INOUT), seg(t, 0.5, 1.2, INOUT))
             setZoom(zm)
             nextStyle().opacity = String(seg(t, 0.85, 1.15))
-            nextStyle().clipPath = rectClip(screenRect(zm), seg(t, 1.05, 1.6, INOUT))
+            nextStyle().clipPath = rectClip(
+                screenRect(zm),
+                seg(t, 1.05, 1.6, INOUT)
+            )
         })
     }
 
@@ -274,7 +329,12 @@ export default function ATMAttract(props: Props) {
         const at = (share: number) => share * seconds // times below are shares of the whole ripple
         showNext()
         await play(seconds, (t) => {
-            setZoom(zoomAt(seg(t, 0, at(0.375), INOUT), seg(t, at(0.25), at(1), INOUT)))
+            setZoom(
+                zoomAt(
+                    seg(t, 0, at(0.375), INOUT),
+                    seg(t, at(0.25), at(1), INOUT)
+                )
+            )
             const r = seg(t, 0, at(1), INOUT) * R
             nextStyle().clipPath = `circle(${r}px at ${x}px ${y}px)`
             place(r1, x, y, r + 10, 1 - seg(t, at(0.78), at(1)))
@@ -311,9 +371,20 @@ export default function ATMAttract(props: Props) {
             const blinking = b > 0 && b < 1
             if (strip) {
                 strip.style.animation = blinking ? "none" : ""
-                strip.style.opacity = blinking ? (Math.floor(b * 6) % 2 === 0 ? "1" : "0.1") : ""
+                strip.style.opacity = blinking
+                    ? Math.floor(b * 6) % 2 === 0
+                        ? "1"
+                        : "0.1"
+                    : ""
             }
-            if (reading) reading.style.opacity = String(seg(t, readStart, readStart + Math.min(0.2, READING_SECONDS / 2)))
+            if (reading)
+                reading.style.opacity = String(
+                    seg(
+                        t,
+                        readStart,
+                        readStart + Math.min(0.2, READING_SECONDS / 2)
+                    )
+                )
         })
         card.style.opacity = "0"
     }
@@ -336,7 +407,9 @@ export default function ATMAttract(props: Props) {
         // With the card (E, E + B, A + B + E): one beep as the card goes in, another as the
         // ripple / zoom / fade ends and the next page takes over. Without the card, one beep
         // acknowledges the tap.
-        const withCard = !reduceMotion && (transition === "E" || transition === "EB" || transition === "ABE")
+        const withCard =
+            !reduceMotion &&
+            (transition === "E" || transition === "EB" || transition === "ABE")
         if (!withCard) beep()
         if (reduceMotion) await fadeIn()
         else if (transition === "A") await rippleFlood(x, y)
@@ -380,7 +453,7 @@ export default function ATMAttract(props: Props) {
 
     const onPointerDown = (e: React.PointerEvent) => {
         if (e.button !== 0) return // right/middle clicks aren't taps
-        const r =rootRef.current!.getBoundingClientRect()
+        const r = rootRef.current!.getBoundingClientRect()
         // the artwork is centred in the frame at scale k
         const left = r.left + (r.width - W * k) / 2
         const top = r.top + (r.height - H * k) / 2
@@ -389,7 +462,12 @@ export default function ATMAttract(props: Props) {
 
     // Framer's own page switch (no reload, so no blank flash); a plain page load if this
     // Framer version has no router to ask.
-    const router = useRouter() as { navigate?: (id: string, hash?: string) => void; routes?: Record<string, { path?: string }> } | undefined
+    const router = useRouter() as
+        | {
+              navigate?: (id: string, hash?: string) => void
+              routes?: Record<string, { path?: string }>
+          }
+        | undefined
     const go = (path: string) => {
         const routes = router?.routes ?? {}
         const id = Object.keys(routes).find((key) => routes[key]?.path === path)
@@ -397,14 +475,25 @@ export default function ATMAttract(props: Props) {
         else window.location.href = path
     }
 
-    const first = (node: React.ReactNode) => (Array.isArray(node) ? node[0] : node)
+    const first = (node: React.ReactNode) =>
+        Array.isArray(node) ? node[0] : node
     // A frame connected from the canvas, stretched to fill its slot.
     const fill = (node: React.ReactNode) => {
         const el = first(node)
         return React.isValidElement(el)
-            ? React.cloneElement(el as React.ReactElement<{ style?: React.CSSProperties }>, {
-                  style: { ...(el.props as { style?: React.CSSProperties }).style, position: "absolute", inset: 0, width: "100%", height: "100%" },
-              })
+            ? React.cloneElement(
+                  el as React.ReactElement<{ style?: React.CSSProperties }>,
+                  {
+                      style: {
+                          ...(el.props as { style?: React.CSSProperties })
+                              .style,
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                      },
+                  }
+              )
             : null
     }
     const screenEl = fill(props.screen)
@@ -421,7 +510,15 @@ export default function ATMAttract(props: Props) {
                 props.screenGlow,
                 "spill"
             )}${on(props.glare, "glare")}${on(props.hoodLight, "hood")}`}
-            style={{ ...props.style, position: "relative", width: "100%", height: "100%", overflow: "hidden", cursor: "pointer", background: "#9d9d9d" }}
+            style={{
+                ...props.style,
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
+                cursor: "pointer",
+                background: "#9d9d9d",
+            }}
         >
             <style>{css(uid, slotColor, glowColor, hoodColor)}</style>
             <div
@@ -439,10 +536,25 @@ export default function ATMAttract(props: Props) {
                     ref={(el) => {
                         atmRef.current = el
                     }}
-                    style={{ position: "absolute", inset: 0, transformOrigin: "0 0" }}
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        transformOrigin: "0 0",
+                    }}
                 >
                     {props.atmImage?.src && (
-                        <img src={props.atmImage.src} alt="" draggable={false} style={{ position: "absolute", inset: 0, width: W, height: H, display: "block" }} />
+                        <img
+                            src={props.atmImage.src}
+                            alt=""
+                            draggable={false}
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                width: W,
+                                height: H,
+                                display: "block",
+                            }}
+                        />
                     )}
                     <div className={`${c("abs")} ${c("hoodEl")}`}>
                         <i />
@@ -453,23 +565,52 @@ export default function ATMAttract(props: Props) {
                     <div className={`${c("abs")} ${c("hoodKeysEl")}`}>
                         <i />
                     </div>
-                    <div className={`${c("abs")} ${c("screen")} ${c("spillEl")}`} />
-                    <div className={`${c("abs")} ${c("screen")}`} style={{ overflow: "hidden" }}>
+                    <div
+                        className={`${c("abs")} ${c("screen")} ${c("spillEl")}`}
+                    />
+                    <div
+                        className={`${c("abs")} ${c("screen")}`}
+                        style={{ overflow: "hidden" }}
+                    >
                         {screenEl ?? (
-                            <div style={{ position: "absolute", inset: 0, background: "#002c44", color: "#fff", display: "grid", placeContent: "center", textAlign: "center", font: "500 22px system-ui", padding: 24 }}>
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    background: "#002c44",
+                                    color: "#fff",
+                                    display: "grid",
+                                    placeContent: "center",
+                                    textAlign: "center",
+                                    font: "500 22px system-ui",
+                                    padding: 24,
+                                }}
+                            >
                                 Connect the screen frame (Screen property)
                             </div>
                         )}
                     </div>
-                    <div className={`${c("abs")} ${c("screen")} ${c("glareEl")}`} />
+                    <div
+                        className={`${c("abs")} ${c("screen")} ${c("glareEl")}`}
+                    />
                     <div
                         ref={(el) => {
                             readingRef.current = el
                         }}
                         className={`${c("abs")} ${c("screen")}`}
-                        style={{ opacity: 0, background: props.readingBackground, display: "grid", placeContent: "center", gap: 18, textAlign: "center", color: props.readingColor }}
+                        style={{
+                            opacity: 0,
+                            background: props.readingBackground,
+                            display: "grid",
+                            placeContent: "center",
+                            gap: 18,
+                            textAlign: "center",
+                            color: props.readingColor,
+                        }}
                     >
-                        <span style={props.readingFont}>{props.readingText}</span>
+                        <span style={props.readingFont}>
+                            {props.readingText}
+                        </span>
                         <div className={c("dots")}>
                             <i />
                             <i />
@@ -487,20 +628,52 @@ export default function ATMAttract(props: Props) {
                                     : undefined
                             }
                             className={`${c("abs")} ${c("strip")}`}
-                            style={{ left: s.x, top: s.y, width: s.w, height: s.h, animationDelay: `${s.delay}s` }}
+                            style={{
+                                left: s.x,
+                                top: s.y,
+                                width: s.w,
+                                height: s.h,
+                                animationDelay: `${s.delay}s`,
+                            }}
                         />
                     ))}
-                    <svg className={`${c("abs")} ${c("chevEl")}`} viewBox="790 929 196 120" style={{ left: 790, top: 929, width: 196, height: 120 }}>
-                        <rect x={796} y={937} width={184} height={15} rx={2} style={{ fill: slotColor, opacity: 0.35 }} />
+                    <svg
+                        className={`${c("abs")} ${c("chevEl")}`}
+                        viewBox="790 929 196 120"
+                        style={{ left: 790, top: 929, width: 196, height: 120 }}
+                    >
+                        <rect
+                            x={796}
+                            y={937}
+                            width={184}
+                            height={15}
+                            rx={2}
+                            style={{ fill: slotColor, opacity: 0.35 }}
+                        />
                         <polyline points="858,990 884,975 911,990" />
                         <polyline points="858,999 884,984 911,999" />
                     </svg>
-                    <div style={{ position: "absolute", inset: 0, clipPath: `inset(${SLOT_Y}px 0 0 0)`, pointerEvents: "none" }}>
+                    <div
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            clipPath: `inset(${SLOT_Y}px 0 0 0)`,
+                            pointerEvents: "none",
+                        }}
+                    >
                         <div
                             ref={(el) => {
                                 cardRef.current = el
                             }}
-                            style={{ position: "absolute", left: 0, top: 0, width: CARD_W, height: CARD_H, transformOrigin: "50% 0", opacity: 0 }}
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                width: CARD_W,
+                                height: CARD_H,
+                                transformOrigin: "50% 0",
+                                opacity: 0,
+                            }}
                         >
                             {props.cardImage?.src && (
                                 // The card art is landscape; a quarter turn stands it upright, logo end first.
@@ -508,7 +681,15 @@ export default function ATMAttract(props: Props) {
                                     src={props.cardImage.src}
                                     alt=""
                                     draggable={false}
-                                    style={{ position: "absolute", left: "50%", top: "50%", width: CARD_H, height: CARD_W, transform: "translate(-50%, -50%) rotate(90deg)" }}
+                                    style={{
+                                        position: "absolute",
+                                        left: "50%",
+                                        top: "50%",
+                                        width: CARD_H,
+                                        height: CARD_W,
+                                        transform:
+                                            "translate(-50%, -50%) rotate(90deg)",
+                                    }}
                                 />
                             )}
                         </div>
@@ -518,7 +699,13 @@ export default function ATMAttract(props: Props) {
                     ref={(el) => {
                         nextRef.current = el
                     }}
-                    style={{ position: "absolute", inset: 0, background: nextColor, display: "none", overflow: "hidden" }}
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: nextColor,
+                        display: "none",
+                        overflow: "hidden",
+                    }}
                 >
                     {revealing && fill(props.nextLook)}
                 </div>
@@ -527,7 +714,14 @@ export default function ATMAttract(props: Props) {
                         fxRef.current = el
                     }}
                     viewBox={`0 0 ${W} ${H}`}
-                    style={{ position: "absolute", inset: 0, width: W, height: H, pointerEvents: "none", overflow: "visible" }}
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        width: W,
+                        height: H,
+                        pointerEvents: "none",
+                        overflow: "visible",
+                    }}
                 />
             </div>
         </div>
@@ -538,7 +732,8 @@ export default function ATMAttract(props: Props) {
 function css(uid: string, slot: string, glow: string, hood: string) {
     const c = (name: string) => `.${uid}-${name}`
     const k = (name: string) => `${uid}-${name}`
-    const mix = (color: string, pct: number) => `color-mix(in srgb, ${color} ${pct}%, transparent)`
+    const mix = (color: string, pct: number) =>
+        `color-mix(in srgb, ${color} ${pct}%, transparent)`
     // The band of the hood panel from y0 to y1 (px below its top edge), pulled in by d px on every
     // side, as a clip shape for an element whose top is at y0. Past the bottom edge the band
     // carries on along the panel's slanted sides, so the light below keeps its perspective.
@@ -546,8 +741,10 @@ function css(uid: string, slot: string, glow: string, hood: string) {
     const spillFade = `linear-gradient(90deg, transparent ${HOOD.botL}px, #000 ${HOOD.botL + 90}px, #000 ${HOOD.botR - 90}px, transparent ${HOOD.botR}px)`
     const KEYS_PAD = 60 // room around the keypad for its glow's blur
     const hoodShape = (d: number, y0: number, y1: number) => {
-        const l = (y: number) => HOOD.topL + ((HOOD.botL - HOOD.topL) * y) / hh + d
-        const r = (y: number) => HOOD.topR + ((HOOD.botR - HOOD.topR) * y) / hh - d
+        const l = (y: number) =>
+            HOOD.topL + ((HOOD.botL - HOOD.topL) * y) / hh + d
+        const r = (y: number) =>
+            HOOD.topR + ((HOOD.botR - HOOD.topR) * y) / hh - d
         const [a, b] = [y0 + d, y1 - d]
         return `polygon(${l(a)}px ${a - y0}px, ${r(a)}px ${a - y0}px, ${r(b)}px ${b - y0}px, ${l(b)}px ${b - y0}px)`
     }
@@ -636,19 +833,63 @@ addPropertyControls(ATMAttract, {
         type: ControlType.Enum,
         title: "Transition",
         options: ["ABE", "AB", "A", "B", "E", "EB"],
-        optionTitles: ["A + B + E: card, ripple, zoom", "A + B: ripple and zoom", "A: ripple", "B: zoom", "E: card, fade", "E + B: card, zoom"],
+        optionTitles: [
+            "A + B + E: card, ripple, zoom",
+            "A + B: ripple and zoom",
+            "A: ripple",
+            "B: zoom",
+            "E: card, fade",
+            "E + B: card, zoom",
+        ],
         defaultValue: "ABE",
     },
-    nextPage: { type: ControlType.String, title: "Next Page", placeholder: "/atm/start", defaultValue: "" },
+    nextPage: {
+        type: ControlType.String,
+        title: "Next Page",
+        placeholder: "/atm/start",
+        defaultValue: "",
+    },
     nextLook: { type: ControlType.ComponentInstance, title: "Next Page Look" },
-    nextColor: { type: ControlType.Color, title: "Next Page Color", defaultValue: "#ffffff" },
-    rippleColor: { type: ControlType.Color, title: "Ripple", defaultValue: "#ffcc40" },
-    ringColor: { type: ControlType.Color, title: "Inner Ring", defaultValue: "#3bbfc0" },
-    slotLights: { type: ControlType.Boolean, title: "Slot Lights", defaultValue: true },
-    cardSlotFlash: { type: ControlType.Boolean, title: "Card Slot Flash", defaultValue: true },
-    screenGlow: { type: ControlType.Boolean, title: "Screen Glow", defaultValue: true },
-    glare: { type: ControlType.Boolean, title: "Glass Glare", defaultValue: true },
-    hoodLight: { type: ControlType.Boolean, title: "Hood Light", defaultValue: true },
+    nextColor: {
+        type: ControlType.Color,
+        title: "Next Page Color",
+        defaultValue: "#ffffff",
+    },
+    rippleColor: {
+        type: ControlType.Color,
+        title: "Ripple",
+        defaultValue: "#ffcc40",
+    },
+    ringColor: {
+        type: ControlType.Color,
+        title: "Inner Ring",
+        defaultValue: "#3bbfc0",
+    },
+    slotLights: {
+        type: ControlType.Boolean,
+        title: "Slot Lights",
+        defaultValue: true,
+    },
+    cardSlotFlash: {
+        type: ControlType.Boolean,
+        title: "Card Slot Flash",
+        defaultValue: true,
+    },
+    screenGlow: {
+        type: ControlType.Boolean,
+        title: "Screen Glow",
+        defaultValue: true,
+    },
+    glare: {
+        type: ControlType.Boolean,
+        title: "Glass Glare",
+        defaultValue: true,
+    },
+    hoodLight: {
+        type: ControlType.Boolean,
+        title: "Hood Light",
+        defaultValue: true,
+    },
     sounds: { type: ControlType.Boolean, title: "Sounds", defaultValue: true },
     beepVolume: {
         type: ControlType.Number,
@@ -659,10 +900,27 @@ addPropertyControls(ATMAttract, {
         defaultValue: 0.5, // as loud as the reference's loudest beep; 1 is the browser's maximum
         hidden: (props: Partial<Props>) => !props.sounds,
     },
-    slotColor: { type: ControlType.Color, title: "Slot Light", defaultValue: "#7cf25e" },
-    glowColor: { type: ControlType.Color, title: "Glow", defaultValue: "#0079a9" },
-    hoodColor: { type: ControlType.Color, title: "Hood Light Color", defaultValue: "#ffffff", hidden: (props: Partial<Props>) => !props.hoodLight },
-    readingText: { type: ControlType.String, title: "Reading Text", defaultValue: "Reading your card" },
+    slotColor: {
+        type: ControlType.Color,
+        title: "Slot Light",
+        defaultValue: "#7cf25e",
+    },
+    glowColor: {
+        type: ControlType.Color,
+        title: "Glow",
+        defaultValue: "#0079a9",
+    },
+    hoodColor: {
+        type: ControlType.Color,
+        title: "Hood Light Color",
+        defaultValue: "#ffffff",
+        hidden: (props: Partial<Props>) => !props.hoodLight,
+    },
+    readingText: {
+        type: ControlType.String,
+        title: "Reading Text",
+        defaultValue: "Reading your card",
+    },
     readingFont: {
         type: ControlType.Font,
         title: "Reading Font",
@@ -670,6 +928,14 @@ addPropertyControls(ATMAttract, {
         defaultFontType: "sans-serif", // Inter; the control's default only takes size and variant
         defaultValue: { fontSize: 32, variant: "Semibold" },
     },
-    readingColor: { type: ControlType.Color, title: "Reading Color", defaultValue: "#ffffff" },
-    readingBackground: { type: ControlType.Color, title: "Reading Fill", defaultValue: "#002c44" },
+    readingColor: {
+        type: ControlType.Color,
+        title: "Reading Color",
+        defaultValue: "#ffffff",
+    },
+    readingBackground: {
+        type: ControlType.Color,
+        title: "Reading Fill",
+        defaultValue: "#002c44",
+    },
 })
