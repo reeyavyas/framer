@@ -72,10 +72,10 @@ goes straight to "Let's see what shapes your score."; the gauge has no
 `cs-gauge-*` ids; Skip from 4 runs through every step in order to 35
 (Tap Alerts).
 
-6 Nov: the ⓘ itself is now off on the tutorial page's gauge
-(CreditScoreGauge **Info Button: Hide** on `/credit-score-tutorial/score`),
-so visitors can't open the ranges pop-up there. `/base-pages/credit-score-score`
-keeps it on Show.
+6 Nov: the tutorial page's gauge keeps its ⓘ, but tapping it does nothing
+(CreditScoreGauge **Info Pop-up: Off** on `/credit-score-tutorial/score`).
+`/base-pages/credit-score-score` keeps it On; checked live there: ⓘ opens
+the pop-up, and ✕, a tap outside and Escape each close it.
 
 ## Alerts overview (added 5 Nov)
 

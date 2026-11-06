@@ -210,27 +210,25 @@ export default function CreditScoreGauge(props: Props) {
                     <b style={{ color: "#0e3a70" }}>VantageScore 3.0</b> from{" "}
                     <b>TransUnion</b>
                 </span>
-                {info && (
-                    <button
-                        type="button"
-                        aria-label="About credit score ranges"
-                        onClick={() => setInfoOpen(true)}
-                        style={{
-                            width: 64,
-                            height: 64,
-                            margin: -14,
-                            padding: 0,
-                            border: "none",
-                            background: "transparent",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                        }}
-                    >
-                        <InfoIcon size={36} />
-                    </button>
-                )}
+                <button
+                    type="button"
+                    aria-label="About credit score ranges"
+                    onClick={() => info && setInfoOpen(true)}
+                    style={{
+                        width: 64,
+                        height: 64,
+                        margin: -14,
+                        padding: 0,
+                        border: "none",
+                        background: "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: info ? "pointer" : "default",
+                    }}
+                >
+                    <InfoIcon size={36} />
+                </button>
             </div>
 
             {info && infoOpen && !isCanvas && rootRef.current && (
@@ -507,8 +505,8 @@ addPropertyControls(CreditScoreGauge, {
     },
     info: {
         type: ControlType.Boolean,
-        title: "Info Button",
-        enabledTitle: "Show",
-        disabledTitle: "Hide",
+        title: "Info Pop-up",
+        enabledTitle: "On",
+        disabledTitle: "Off",
     },
 })
