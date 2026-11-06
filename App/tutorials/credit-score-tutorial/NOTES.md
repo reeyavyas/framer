@@ -156,6 +156,25 @@ Built to match the owner's Card Alerts tutorial (read from Framer first).
 - Measured at the exact stops: step 23's 1 mo. row at 970 (header ends
   929); step 24's marker = the two gauges (77, 615) 926×264.
 
+### Live test (6 Nov, after the second round), 1080×1920
+
+Real wheel scrolls (10-tick overshoots) and real taps:
+- Score page steps 1–23 all pass; 24–35 are hidden by the owner, so the
+  run ends after the 1 mo. tap (simulated 697 shown).
+- Every scroll step snapped to exactly its threshold (5, 30, 35, 48, 62,
+  71, 11 up, 71, 85). Frozen steps ignored further scrolling.
+- Holes matched targets: gauge 40,971 1000×690; Points Journey bar with
+  32 px each side; Grade sections with 24 px each side; Pay down and
+  On-time on the $ box only (714×100); 1 mo. row at 1033, below the
+  pinned header (ends 929).
+- No card under either nav; step 15's card top at 576.
+- Alerts page: 10% and 56% exact; both cards' markers equal the cards;
+  ends on /complete. Skip on step 4 went straight to /complete (step 5's
+  card didn't pause) — not looked into.
+- Other VirtualScroll pages (card-controls-1, travel-notice,
+  card-alerts-1) have frame gap 0 and full-width children, so the layout
+  fix changes nothing there; card-controls-3 has no VirtualScroll.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
