@@ -72,6 +72,11 @@ goes straight to "Let's see what shapes your score."; the gauge has no
 `cs-gauge-*` ids; Skip from 4 runs through every step in order to 35
 (Tap Alerts).
 
+6 Nov: the ⓘ itself is now off on the tutorial page's gauge
+(CreditScoreGauge **Info Button: Hide** on `/credit-score-tutorial/score`),
+so visitors can't open the ranges pop-up there. `/base-pages/credit-score-score`
+keeps it on Show.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top

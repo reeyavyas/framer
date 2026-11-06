@@ -37,6 +37,7 @@ interface Props {
     score: number
     trend: "up" | "down"
     change: number
+    info: boolean
 }
 
 /**
@@ -46,7 +47,7 @@ interface Props {
  * @framerIntrinsicHeight 690
  */
 export default function CreditScoreGauge(props: Props) {
-    const { trend, change } = props
+    const { trend, change, info } = props
     const score = Math.round(Math.min(MAX, Math.max(MIN, props.score)))
     const isCanvas = RenderTarget.current() === RenderTarget.canvas
     const today = useToday()
@@ -209,28 +210,30 @@ export default function CreditScoreGauge(props: Props) {
                     <b style={{ color: "#0e3a70" }}>VantageScore 3.0</b> from{" "}
                     <b>TransUnion</b>
                 </span>
-                <button
-                    type="button"
-                    aria-label="About credit score ranges"
-                    onClick={() => setInfoOpen(true)}
-                    style={{
-                        width: 64,
-                        height: 64,
-                        margin: -14,
-                        padding: 0,
-                        border: "none",
-                        background: "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                    }}
-                >
-                    <InfoIcon size={36} />
-                </button>
+                {info && (
+                    <button
+                        type="button"
+                        aria-label="About credit score ranges"
+                        onClick={() => setInfoOpen(true)}
+                        style={{
+                            width: 64,
+                            height: 64,
+                            margin: -14,
+                            padding: 0,
+                            border: "none",
+                            background: "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                        }}
+                    >
+                        <InfoIcon size={36} />
+                    </button>
+                )}
             </div>
 
-            {infoOpen && !isCanvas && rootRef.current && (
+            {info && infoOpen && !isCanvas && rootRef.current && (
                 <InfoPopup
                     anchor={rootRef.current}
                     onClose={() => setInfoOpen(false)}
@@ -475,6 +478,7 @@ CreditScoreGauge.defaultProps = {
     score: 742,
     trend: "up" as "up" | "down",
     change: 1,
+    info: true,
 }
 
 addPropertyControls(CreditScoreGauge, {
@@ -500,5 +504,11 @@ addPropertyControls(CreditScoreGauge, {
         max: 550,
         step: 1,
         displayStepper: true,
+    },
+    info: {
+        type: ControlType.Boolean,
+        title: "Info Button",
+        enabledTitle: "Show",
+        disabledTitle: "Hide",
     },
 })

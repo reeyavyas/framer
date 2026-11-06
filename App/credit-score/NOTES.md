@@ -231,8 +231,9 @@ Return (Down once = New transition = tap → Set variant).
     with a 2.5px outline a shade darker than its colour (`outline` in
     `RANGES`); the pointer ring has the same darker edge inside and out;
     the ▲/▼ has softly rounded corners.
-  - **Properties:** Score (300–850), Change (Up = green ▲ / Down = red ▼)
-    and Amount.
+  - **Properties:** Score (300–850), Change (Up = green ▲ / Down = red ▼),
+    Amount, and Info Button (Show / Hide; Hide removes the ⓘ and its
+    pop-up, used on the tutorial page).
   - **Date:** "Updated:" shows today's date and rolls over just after
     midnight on a page left open. Hidden until mounted (fixed placeholder
     on the server render) so no wrong date flashes.
