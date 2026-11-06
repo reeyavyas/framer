@@ -104,7 +104,7 @@ interface Props {
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
-    snapToThreshold?: boolean // on a native scroll container, settle the page exactly at the threshold when it's crossed, so a fast swipe can't overshoot where the next step's target lands
+    snapToThreshold?: boolean // on a native or VirtualScroll container, settle the page exactly at the threshold when it's crossed, so a fast swipe can't overshoot where the next step's target lands
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     freezeScrollWhileActive: boolean // stops scrolling in EITHER direction for exactly as long as this step is active — a VirtualScroll container (scrollContainerTarget) holds still, and on a native page touch/wheel gestures are swallowed — resumes normally once the step ends
@@ -232,7 +232,9 @@ function visiblePart(el: Element): DOMRect {
     while (box && box !== document.body) {
         const s = window.getComputedStyle(box)
         if (
-            (s.overflowY === "auto" || s.overflowY === "scroll") &&
+            (s.overflowY === "auto" ||
+                s.overflowY === "scroll" ||
+                box.hasAttribute("data-virtual-scroll")) &&
             box.scrollHeight > box.clientHeight
         ) {
             const b = box.getBoundingClientRect()
@@ -1185,7 +1187,16 @@ export default function TutorialOverlay(props: Props) {
         }
         function watchVirtual(virtual: VirtualScrollHandle) {
             function checkVirtual() {
-                checkPercent(virtual.getPercent())
+                const percent = virtual.getPercent()
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                // Same as the native snap below: settle exactly on the
+                // threshold so a fast swipe can't overshoot.
+                if (crossed && snapToThreshold)
+                    virtual.setPercent(scrollThresholdPercent)
+                checkPercent(percent)
             }
             checkVirtual()
             return virtual.subscribe(checkVirtual)
