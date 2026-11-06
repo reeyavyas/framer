@@ -86,6 +86,43 @@ Checked live 6 Nov on the first two scroll steps: about 30 frames over
 6 Nov: TutorialOverlay has **Hole padding X** (px each side, default 0) to
 widen a hole past its target; for the Points Journey step (spec step 7).
 
+## VirtualScroll and markers rebuild (6 Nov)
+
+Spec: `docs/superpowers/specs/2026-11-06-credit-score-tutorial-virtual-scroll-design.md`.
+Built to match the owner's Card Alerts tutorial (read from Framer first).
+
+- **Scrolling:** both pages' Scrollable Content now has
+  `VirtualScrollGeneral` (was `CreditScoreScrollTarget`). Every step's
+  Scroll container ID is `scrollable-content`. Snap to threshold is Off on
+  every scroll step, as in Card Alerts (on a VirtualScroll page it would
+  pull the page back under a dragging finger).
+- **Sticky:** VirtualScroll moves content by transform, so CSS sticky
+  can't stick. It now pins Sticky layers by hand (the Simulator's Score
+  Header Card), within their parent, like native sticky.
+- **Markers** (copies of the Card Alerts Save marker: absolute, no fill,
+  `withTutorialMarker`), each named "<id> marker", pinned top-left:
+  - tutorial Score page, Scrollable Content: `cs-gauge` (40, 1061)
+    1000×690; `cs-alerts-tab` (581, 25) 97×123.
+  - Section Tabs Tutorial (shared by its variants): Score Header Card
+    `cs-simulated-score` (50, 328) 926×264; Manage Your Balances Card
+    `cs-pay-down` (50, 665) 926×104; Manage Payment Activity Card
+    `cs-missed-payment` (50, 375) 926×108 and `cs-on-time` (50, 590)
+    926×104; Goal Setup Card `goal-setup-start` (40, 876) 454×100,
+    `goal-score-slider` (40, 850) 946×124, `goal-months-slider`
+    (40, 1171) 946×52, `goal-setup-next` (40, 1589) 219×100.
+  - Score Rating Tabs (shared with free play; the marker is inert there),
+    Points Journey Content: `cs-points-journey` (0, 207) 840×290. Step 7
+    keeps Hole padding X 32.
+  - tutorial Alerts page, Scrollable Content: `cs-alert-payment-history`
+    (46, 811) 988×422; `cs-alert-monitoring` (46, 2146) 988×304.
+  Positions were measured on the published pages at 1080×1920.
+- **Code:** the old in-code tags are gone (CreditScoreTutorial.tsx keeps
+  only behaviour; GoalSetupCard.tsx no longer tags). `PointsJourneyTarget`,
+  `SimulatedScoreTarget`, `AlertsTabTarget`, `AlertsFeedTargets` are
+  pass-throughs still on their layers; safe to remove from the layers.
+- **Not yet checked live** (needs a publish): every step, the freeze,
+  the sticky header, each marker's alignment.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
