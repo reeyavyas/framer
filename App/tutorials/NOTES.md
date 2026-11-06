@@ -345,7 +345,18 @@ anywhere else on the page.
   is still the one it started on. It also plays the ATM lessons' victory
   sound (same pinned file, volume and 0.07 s start as
   `ATMLessonCompleteRedirect`) when the confetti adds its canvas, or
-  after 2.5 s if none does (added 6 Nov). Getting the user TO this page is the tutorial step's own
+  after 2.5 s if none does (added 6 Nov). Live (6 Nov): all five Congrats pages
+  (log-off, account-controls, card-controls, credit-score, pin-reset)
+  loaded directly fetch the chime, fire confetti at 1.4-1.8 s and go to
+  `/tutorials` at ~5.2 s. Log Off tapped through for real (Next on its
+  last step, a full `window.location.href` load): `play()` fired the
+  same ms as the confetti's canvas (1.31 s), from 0.07 s at volume 0.8,
+  and was playing 4 ms later, once. Chrome keeps the earlier tap across
+  that same-site reload, so the chime isn't blocked. Tapping the X at
+  ~2.6 s went to `/tutorials` client-side, the chime stopped 25 ms
+  later, and there was no second redirect. The other four weren't run
+  through their tutorials (same override and confetti); not checked by
+  ear. Getting the user TO this page is the tutorial step's own
   job, not this override's — a `TutorialOverlay.tsx` step already does
   real page navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
