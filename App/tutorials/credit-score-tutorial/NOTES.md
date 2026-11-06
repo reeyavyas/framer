@@ -77,6 +77,11 @@ goes straight to "Let's see what shapes your score."; the gauge has no
 `/base-pages/credit-score-score` keeps it On; checked live there: ⓘ opens
 the pop-up, and ✕, a tap outside and Escape each close it.
 
+6 Nov: Skip on a scroll step now glides (0.5 s, same as VirtualScroll's
+scrollToPercent) instead of jumping. With Snap to threshold it lands on the
+threshold's own pixel, so it can't overshoot (the 4 Nov reason for the jump).
+Needs a live check after publish.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top

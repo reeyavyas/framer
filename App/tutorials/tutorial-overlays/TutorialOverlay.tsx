@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import { motion } from "framer-motion"
+import { animate, motion } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { getVirtualScroll, type VirtualScrollHandle } from "./VirtualScroll.tsx"
 
@@ -892,11 +892,20 @@ export default function TutorialOverlay(props: Props) {
                         ? document.documentElement
                         : (el as HTMLElement)
                 const max = node.scrollHeight - node.clientHeight
-                // With Snap, jump: a smooth scroll would carry on past the
-                // spot the snap settles on.
-                el.scrollTo({
-                    top: (max * percent) / 100,
-                    behavior: snapToThreshold ? "auto" : "smooth",
+                // Glide like VirtualScroll's scrollToPercent (0.5 s). With
+                // Snap, land on the threshold's own pixel (rounded to the
+                // crossing side) so the glide can't carry on past it.
+                const exact = (max * scrollThresholdPercent) / 100
+                const top = snapToThreshold
+                    ? scrollDirection === "up"
+                        ? Math.floor(exact)
+                        : Math.ceil(exact)
+                    : (max * percent) / 100
+                animate(node.scrollTop, top, {
+                    duration: 0.5,
+                    onUpdate: (v) => {
+                        node.scrollTop = v
+                    },
                 })
             }
             // Backstop once the scroll has had time to finish: if it still
