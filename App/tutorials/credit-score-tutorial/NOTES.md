@@ -138,6 +138,24 @@ Built to match the owner's Card Alerts tutorial (read from Framer first).
   Notice, Card Controls 1 and 3): their content now gets their frame's
   gap and alignment, as on the canvas. Check those after the publish.
 
+### Owner's second round (6 Nov)
+
+- **Grade A read steps (10, 13, 16):** the Grade Section's text starts at
+  its left edge with ~34 px spare on the right, so the hole looked padded
+  only on the right. Hole padding X 24 on all three.
+- **Step 15's card overlapped the top nav** at 72% (card top 259, nav
+  ends 287). Step 14 now scrolls to 71%, about 170 px less.
+- **Stops varied run to run:** with Snap off, where a manual scroll stops
+  depends on the overshoot, so rows landed under the pinned Simulator
+  header (1 mo. hidden, highlight looking off). Snap to threshold is back
+  On for every scroll step on both pages. Here the next step freezes as
+  soon as Snap settles the page, so it doesn't fight the finger (the
+  reason I'd turned it off, which was wrong for this tutorial).
+- **Field-only markers:** `cs-pay-down` (52, 667) 714×100 and
+  `cs-on-time` (156, 592) 714×100, the $ box without the −/+ buttons.
+- Measured at the exact stops: step 23's 1 mo. row at 970 (header ends
+  929); step 24's marker = the two gauges (77, 615) 926×264.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
