@@ -120,8 +120,23 @@ Built to match the owner's Card Alerts tutorial (read from Framer first).
   only behaviour; GoalSetupCard.tsx no longer tags). `PointsJourneyTarget`,
   `SimulatedScoreTarget`, `AlertsTabTarget`, `AlertsFeedTargets` are
   pass-throughs still on their layers; safe to remove from the layers.
-- **Not yet checked live** (needs a publish): every step, the freeze,
-  the sticky header, each marker's alignment.
+- **First live check (6 Nov) found two VirtualScroll bugs, fixed:**
+  1. Framer sets a Stack's layout (gap, alignment) with a CSS class on
+     the published site, not `props.style`, so VirtualScroll's content
+     wrapper lost Scrollable Content's gap 50 and centring: the gauge sat
+     40 px left and 100 px up, out of its marker. The wrapper now copies
+     the frame's computed layout. Confirmed in-page: gauge 40,1348
+     1000×690 = marker.
+  2. The scroll range went stale after the Section Tabs switched from a
+     long tab (accordions open, ~18,700 px) to Simulator (~7,700 px):
+     the page scrolled into blank space and step 19's 70% was never
+     reached. VirtualScroll now reads the range fresh on every move.
+  Also the Points Journey marker's Top hadn't saved (was 1061); retyped
+  to 207 and re-read after reselecting. The other eight Section Tabs
+  markers were re-read and are right.
+  The layout fix applies to every VirtualScroll page (Card Alerts, Travel
+  Notice, Card Controls 1 and 3): their content now gets their frame's
+  gap and alignment, as on the canvas. Check those after the publish.
 
 ## Alerts overview (added 5 Nov)
 

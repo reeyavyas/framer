@@ -188,6 +188,10 @@ if (typeof window !== "undefined") {
     ;(window as any).__getVirtualScroll = getVirtualScroll
 }
 
+// useLayoutEffect warns during Framer's server render; the browser gets it.
+const useIsoLayoutEffect =
+    typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
+
 function withVirtualScroll(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
         return React.forwardRef(function VirtualScrollContainer(
@@ -223,6 +227,23 @@ function withVirtualScroll(id: string) {
             // top, never past the bottom of its own parent (what native
             // sticky does). The list is refreshed when the content changes
             // (a tab switch swaps what's inside).
+            // The frame's own Stack layout, read once it's on the page (see
+            // the content wrapper below for why).
+            const [layout, setLayout] = React.useState<React.CSSProperties>({})
+            useIsoLayoutEffect(() => {
+                const container = containerRef.current
+                if (!container) return
+                const s = getComputedStyle(container)
+                setLayout({
+                    display: s.display,
+                    flexDirection: s.flexDirection as any,
+                    alignItems: s.alignItems,
+                    justifyContent: s.justifyContent,
+                    gap: s.gap,
+                    flexWrap: s.flexWrap as any,
+                })
+            }, [])
+
             const stickyRef = React.useRef<HTMLElement[]>([])
             const pinSticky = React.useCallback((pos: number) => {
                 const content = contentRef.current
@@ -261,6 +282,22 @@ function withVirtualScroll(id: string) {
                 [y, pinSticky]
             )
 
+            // How far there is to scroll, read fresh from the page. A size
+            // change the ResizeObserver below misses (seen when the Section
+            // Tabs switch from a long tab to a short one) would otherwise
+            // leave a stale range, letting the content run past its end and
+            // making percentages wrong.
+            const readMax = () => {
+                const content = contentRef.current
+                const container = containerRef.current
+                if (content && container)
+                    maxRef.current = Math.max(
+                        0,
+                        content.scrollHeight - container.clientHeight
+                    )
+                return maxRef.current
+            }
+
             const setPos = React.useCallback(
                 (v: number) => {
                     // Frozen means frozen — not clamped to a range, not
@@ -270,7 +307,7 @@ function withVirtualScroll(id: string) {
                     if (frozenRef.current) return
                     const clamped = Math.min(
                         Math.max(v, -EDGE_TOLERANCE_PX),
-                        maxRef.current
+                        readMax()
                     )
                     if (clamped === posRef.current) return
                     paint(clamped)
@@ -340,10 +377,10 @@ function withVirtualScroll(id: string) {
                     })
                 }
                 const handle: VirtualScrollHandle = {
-                    getPercent: () =>
-                        maxRef.current > 0
-                            ? (posRef.current / maxRef.current) * 100
-                            : 100,
+                    getPercent: () => {
+                        const max = readMax()
+                        return max > 0 ? (posRef.current / max) * 100 : 100
+                    },
                     freezeHere: () => {
                         frozenRef.current = true
                     },
@@ -354,13 +391,13 @@ function withVirtualScroll(id: string) {
                     scrollToPercent: (percent) =>
                         animateTo(
                             (Math.min(Math.max(percent, 0), 100) / 100) *
-                                maxRef.current
+                                readMax()
                         ),
                     setPercent: (percent) => {
                         stopAnimation()
                         setPos(
                             (Math.min(Math.max(percent, 0), 100) / 100) *
-                                maxRef.current
+                                readMax()
                         )
                     },
                     subscribe: (fn) => {
@@ -512,11 +549,21 @@ function withVirtualScroll(id: string) {
                             // sizing context intact instead of just
                             // adding an invisible non-flex layer between
                             // them and their real parent.
-                            display: props.style?.display,
-                            flexDirection: props.style?.flexDirection,
-                            alignItems: props.style?.alignItems,
-                            justifyContent: props.style?.justifyContent,
-                            gap: props.style?.gap,
+                            // On the published site Framer sets a Stack's
+                            // layout with a CSS class, not props.style, so
+                            // `layout` (read from the frame's computed
+                            // style) fills in whatever props.style lacks.
+                            display: props.style?.display ?? layout.display,
+                            flexDirection:
+                                props.style?.flexDirection ??
+                                layout.flexDirection,
+                            alignItems:
+                                props.style?.alignItems ?? layout.alignItems,
+                            justifyContent:
+                                props.style?.justifyContent ??
+                                layout.justifyContent,
+                            gap: props.style?.gap ?? layout.gap,
+                            flexWrap: layout.flexWrap,
                             width: "100%",
                             y,
                         }}
