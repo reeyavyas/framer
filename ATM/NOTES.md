@@ -138,7 +138,7 @@ doesn't change them; change them only when it's asked for the ATM.
   options that were shown, and the designer's original artwork. See
   "The ATM image" below; it records every decision on the image.
 - `ATMInactivityOverlay.tsx` — the ATM's copy of
-  `main/AppInactivityOverlay.tsx`. After 3 minutes untouched it shows
+  `App/AppInactivityOverlay.tsx`. After 3 minutes untouched it shows
   "Are you still there?" with a 30 s countdown, then returns to `/atm`
   (the "Tap anywhere to begin" screen), so the next person starts
   fresh. **Return Home** goes there at once; **Yes, I'm Here** closes
