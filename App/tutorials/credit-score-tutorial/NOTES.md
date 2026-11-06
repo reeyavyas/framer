@@ -175,6 +175,12 @@ Real wheel scrolls (10-tick overshoots) and real taps:
   card-alerts-1) have frame gap 0 and full-width children, so the layout
   fix changes nothing there; card-controls-3 has no VirtualScroll.
 
+- 6 Nov: SimulatorScoreHeader has **Reset Tap** (On / Off, default On);
+  Section Tabs Tutorial's header is Off, so Reset shows but does nothing
+  in the tutorial. Free play keeps On.
+- 6 Nov: `cs-alerts-tab` marker enlarged 20 px each side: (561, 5)
+  137×163.
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top
