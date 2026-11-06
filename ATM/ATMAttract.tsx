@@ -13,7 +13,7 @@ import { useReducedMotion } from "framer-motion"
 // Transitions (Transition property; A + B + E is the chosen one, the rest are kept to swap):
 //   A      egg-yolk ripple floods the page from the tap point
 //   B      the ATM slides so the screen is centred, zooms in, the screen opens out
-//   A + B  A's ripple from the middle of the page while the ATM centres and zooms in
+//   A + B  A's ripple from the ATM's screen while the ATM centres and zooms in
 //   E      the card goes into the slot, the card light blinks, "Reading your card", fade
 //   E + B  E, then B
 //   A + B + E  E, then A + B
@@ -323,22 +323,24 @@ export default function ATMAttract(props: Props) {
         })
     }
 
-    // A's ripple from the middle of the page, slowed so the ATM can be seen centring and
+    // A's ripple from the ATM's screen, slowed so the ATM can be seen centring and
     // zooming in behind it before the ripple covers the page.
     const rippleZoom = async (seconds = 1.6) => {
-        const [x, y] = [W / 2, H / 2]
-        const R = farthest(x, y, PAGE) + 40
+        const cx = SCREEN.x + SCREEN.w / 2
+        const cy = SCREEN.y + SCREEN.h / 2
+        const R = farthest(cx, cy, PAGE) + 40 // from the start point, the farthest it's ever from a corner
         const r1 = ring(rippleColor, 26)
         const r2 = ring(ringColor, 10)
         const at = (share: number) => share * seconds // times below are shares of the whole ripple
         showNext()
         await play(seconds, (t) => {
-            setZoom(
-                zoomAt(
-                    seg(t, 0, at(0.375), INOUT),
-                    seg(t, at(0.25), at(1), INOUT)
-                )
+            const zm = zoomAt(
+                seg(t, 0, at(0.375), INOUT),
+                seg(t, at(0.25), at(1), INOUT)
             )
+            setZoom(zm)
+            const x = cx * zm.z + zm.tx
+            const y = cy * zm.z + zm.ty
             const r = seg(t, 0, at(1), INOUT) * R
             nextStyle().clipPath = `circle(${r}px at ${x}px ${y}px)`
             place(r1, x, y, r + 10, 1 - seg(t, at(0.78), at(1)))

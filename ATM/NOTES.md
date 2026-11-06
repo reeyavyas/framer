@@ -117,7 +117,8 @@ doesn't change them; change them only when it's asked for the ATM.
     the CARD light blinks three times, and the screen shows "Reading
     your card" for 0.5 s.
   - 1.9 to 3.1 s: the egg-yolk ripple spreads from the middle of the
-    page (540, 960) while the ATM centres and zooms in.
+    ATM's screen (406.5, 910.5 in the artwork), following it while the
+    ATM centres and zooms in (6 Nov, owner; it was the page's middle).
     The centring is held back so the ATM always covers the page (no
     grey background at the left or top while it slides); it still ends
     on the screen, centred, at the same zoom.
@@ -327,7 +328,7 @@ near the top of the file.
 | Glare timing | the `glare` animation in `css()`: every 6 s, the sweep is the first 33% (about 2 s) |
 | Glow strength / speed | the `spill` box-shadow and keyframes in `css()` (6 s loop, 8% to 100%) |
 | Ripple colours | **Ripple**, **Inner Ring** properties |
-| Ripple start point | `rippleZoom` (middle of the page) and `rippleFlood` (the tap point, A only) |
+| Ripple start point | `rippleZoom` (middle of the ATM's screen, following it as it zooms) and `rippleFlood` (the tap point, A only) |
 | Ripple / zoom speed | A + B + E: `ABE_RIPPLE_SECONDS` (1.2 s). A + B: `rippleZoom`'s default (1.6 s). Others: the `play(…)` lengths and `seg` times in `zoomIn`, `rippleFlood` |
 | Card size, tilt, perspective | `CARD_W`, `CARD_H`, `CARD_TILT`, `PERSPECTIVE`; how big it is when it first shows up: `from.s` in `cardIn` (1.3) |
 | Card speed | `CARD_SECONDS` (2.5; scales the rise, slide-in and light blinks together) |
