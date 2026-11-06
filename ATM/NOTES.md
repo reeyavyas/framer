@@ -118,6 +118,9 @@ doesn't change them; change them only when it's asked for the ATM.
     your card" for 0.5 s.
   - 1.9 to 3.1 s: the egg-yolk ripple spreads from the middle of the
     page (540, 960) while the ATM centres and zooms in.
+    The centring is held back so the ATM always covers the page (no
+    grey background at the left or top while it slides); it still ends
+    on the screen, centred, at the same zoom.
   - Beeps (800 Hz pure tone, 60 ms, volume 0.5, matched to a reference
     keypad beep): one as the card goes in (0.9 s), one as the ripple
     ends (3.1 s).

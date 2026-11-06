@@ -177,15 +177,19 @@ const rectClip = (r: Rect, open = 0) => {
     return `polygon(${x0}px ${y0}px, ${x1}px ${y0}px, ${x1}px ${y1}px, ${x0}px ${y1}px)`
 }
 // c = 0..1 slides the ATM so the screen sits in the middle of the page, then
-// zp = 0..1 zooms straight in on the middle of the page.
+// zp = 0..1 zooms straight in on the middle of the page. The slide is held back
+// so the ATM's edges never come inside the page's (no background at the sides
+// or top); by the end of the zoom it's free, so it still ends on the screen.
 const zoomAt = (c: number, zp: number) => {
     const z = lerp(1, Z, zp)
     const cx = SCREEN.x + SCREEN.w / 2
     const cy = SCREEN.y + SCREEN.h / 2
+    const cover = (v: number, size: number) =>
+        Math.min(0, Math.max(size - size * z, v))
     return {
         z,
-        tx: W / 2 + z * (c * (W / 2 - cx) - W / 2),
-        ty: H / 2 + z * (c * (H / 2 - cy) - H / 2),
+        tx: cover(W / 2 + z * (c * (W / 2 - cx) - W / 2), W),
+        ty: cover(H / 2 + z * (c * (H / 2 - cy) - H / 2), H),
     }
 }
 const screenRect = ({
