@@ -119,6 +119,10 @@ doesn't change them; change them only when it's asked for the ATM.
   - 1.9 to 3.1 s: the egg-yolk ripple spreads from the middle of the
     ATM's screen (406.5, 910.5 in the artwork), following it while the
     ATM centres and zooms in (6 Nov, owner; it was the page's middle).
+    Live (6 Nov): over all 55 ripple frames the ring's centre sat on
+    the screen's centre (0 px off), from (406.5, 910.5) to (540, 960) as
+    the ATM centred; it ended at radius 1263 (page corners are 1101
+    away), no frame showed the page's edge, then /atm-start.
     The centring is held back so the ATM always covers the page (no
     grey background at the left or top while it slides); it still ends
     on the screen, centred, at the same zoom.
