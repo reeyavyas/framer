@@ -3,6 +3,12 @@ import { useEffect } from "react"
 
 const AUTO_REDIRECT_SECONDS = 5
 const EXIT_LINK = "/tutorials"
+// The same victory sound as the ATM lesson completion pages, pinned to one commit
+const VICTORY_SOUND =
+    "https://cdn.jsdelivr.net/gh/reeyavyas/framer@fdac2b59a5b5fc1554e8961e52527001de84edc1/ATM/sounds/victory.mp3"
+const VICTORY_VOLUME = 0.8
+const VICTORY_OFFSET = 0.07 // s; the file is silent until 0.077 s
+const NO_CONFETTI_SECONDS = 2.5 // plays anyway if no confetti has fired by then
 
 /**
  * TutorialCongratsAutoRedirect
@@ -38,18 +44,49 @@ const EXIT_LINK = "/tutorials"
  * the timer also only redirects if the page is still the one it started
  * on, so a timer that outlives the Congrats page (e.g. after the "X"
  * Link navigates client-side) can't reload wherever the user is now.
+ *
+ * It also plays the victory sound (as ATMLessonCompleteRedirect does)
+ * the moment the confetti adds its canvas to the page, or after
+ * NO_CONFETTI_SECONDS if none does. If the browser blocks it (no tap
+ * since the page last loaded), the page stays silent.
  */
 export function TutorialCongratsAutoRedirect(): Override {
     useEffect(() => {
         if (RenderTarget.current() === RenderTarget.canvas) return
         const startPath = window.location.pathname
+        const sound = new Audio(VICTORY_SOUND) // loads now, so it's ready when the confetti fires
+        sound.volume = VICTORY_VOLUME
+        let played = false
+        const play = () => {
+            if (played) return
+            played = true
+            confetti.disconnect()
+            clearTimeout(fallback)
+            sound.currentTime = VICTORY_OFFSET
+            sound.play().catch(() => {})
+        }
+        const confetti = new MutationObserver((changes) => {
+            if (
+                changes.some((c) =>
+                    [...c.addedNodes].some((n) => n.nodeName === "CANVAS")
+                )
+            )
+                play()
+        })
+        confetti.observe(document.body, { childList: true })
+        const fallback = setTimeout(play, NO_CONFETTI_SECONDS * 1000)
         const t = setTimeout(() => {
             // Left already (e.g. by the "X"): don't reload wherever the
             // user is now.
             if (window.location.pathname !== startPath) return
             window.location.href = EXIT_LINK
         }, AUTO_REDIRECT_SECONDS * 1000)
-        return () => clearTimeout(t)
+        return () => {
+            clearTimeout(t)
+            clearTimeout(fallback)
+            confetti.disconnect()
+            sound.pause()
+        }
     }, [])
 
     return {}

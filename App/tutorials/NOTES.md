@@ -342,7 +342,10 @@ anywhere else on the page.
   redirect override on a layer inside the congrats component caused a
   double redirect, so tapping the "X" reached `/tutorials` and then
   reloaded it. As a safeguard, the timer also only redirects if the page
-  is still the one it started on. Getting the user TO this page is the tutorial step's own
+  is still the one it started on. It also plays the ATM lessons' victory
+  sound (same pinned file, volume and 0.07 s start as
+  `ATMLessonCompleteRedirect`) when the confetti adds its canvas, or
+  after 2.5 s if none does (added 6 Nov). Getting the user TO this page is the tutorial step's own
   job, not this override's — a `TutorialOverlay.tsx` step already does
   real page navigation (a tap on its real target, or its own
   `autoAdvanceAfterSeconds` + `autoAdvanceLink` for a no-tap "watch
