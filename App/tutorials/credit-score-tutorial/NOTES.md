@@ -80,7 +80,11 @@ the pop-up, and ✕, a tap outside and Escape each close it.
 6 Nov: Skip on a scroll step now glides (0.5 s, same as VirtualScroll's
 scrollToPercent) instead of jumping. With Snap to threshold it lands on the
 threshold's own pixel, so it can't overshoot (the 4 Nov reason for the jump).
-Needs a live check after publish.
+Checked live 6 Nov on the first two scroll steps: about 30 frames over
+0.48 s, landing at 5.01% and 30.01% (thresholds 5 and 30).
+
+6 Nov: TutorialOverlay has **Hole padding X** (px each side, default 0) to
+widen a hole past its target; for the Points Journey step (spec step 7).
 
 ## Alerts overview (added 5 Nov)
 

@@ -95,6 +95,7 @@ interface Props {
     revealDelaySeconds: number // dim shows at once, but the hole/glow/arrow/card wait this long — e.g. for a target inside an overlay that's still animating open when this step starts
     holeShape: HoleShape
     cornerRadius: number
+    holePaddingX?: number // widens the hole this far past the target on each side (px)
 
     pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
     stepNumber: number // 1-based position within pageGroup
@@ -523,6 +524,7 @@ export default function TutorialOverlay(props: Props) {
         revealDelaySeconds,
         holeShape,
         cornerRadius,
+        holePaddingX = 0,
         pageGroup,
         stepNumber,
         clickAdvancesStep,
@@ -675,7 +677,13 @@ export default function TutorialOverlay(props: Props) {
                 `[data-tutorial-target="${target}"]`
             )
             if (el) {
-                const next = visiblePart(el)
+                const seen = visiblePart(el)
+                const next = new DOMRect(
+                    seen.left - holePaddingX,
+                    seen.top,
+                    seen.width + holePaddingX * 2,
+                    seen.height
+                )
                 const prev = rectRef.current
                 if (
                     !prev ||
@@ -702,7 +710,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             cancelAnimationFrame(rafId)
         }
-    }, [isCanvas, active, isMyTurn, target])
+    }, [isCanvas, active, isMyTurn, target, holePaddingX])
 
     // Timer-driven reveal of everything that traces the target (hole,
     // glow, arrow, card). For a target inside something that's still
@@ -2003,6 +2011,15 @@ addPropertyControls(TutorialOverlay, {
         max: 999,
         defaultValue: 0,
         hidden: (props: Partial<Props>) => props.holeShape !== "rectangle",
+    },
+    holePaddingX: {
+        type: ControlType.Number,
+        title: "Hole padding X",
+        min: 0,
+        max: 200,
+        step: 1,
+        unit: "px",
+        defaultValue: 0,
     },
     pageGroup: {
         type: ControlType.String,
