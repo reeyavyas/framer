@@ -15,53 +15,53 @@ Each group has its own `NOTES.md` with detail; `NOTES.md` at the repo
 root is the map across all of them.
 
 ```
-card-controls/          Card-level account actions (settings)
-  travel-notice/           "Set a travel notice on your card"
-    SetTravelNotice.tsx      The form
-    TravelNoticeSection.tsx  Where an active notice is displayed
-  card-alerts/             "Set card alerts"
-    CardAlertsToggleReport.tsx  Per-toggle overrides: is any alert on?
-    CardAlertsSave.tsx          Save button, Saving overlay, scroll to top
-  CardControlsToasts.tsx   Confirmation toasts on save (travel notice + card alerts)
-  NOTES.md
-
-reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
-                        because it has its own tutorial (see its NOTES.md)
-  ResetPinConfirm.tsx      Confirm button: sets the toast flag
-  ResetPinToast.tsx        Toast on Card Controls, with countdown bar + ×
-  NOTES.md
-
-account-controls/       Account-level preferences (settings)
-  AccountPreferencesList.tsx     Drag-to-reorder list, eye to hide
-  AccountPreferencesEditMode.tsx Edit/Done, header variants, Saving overlay
-  AccountOrder.tsx               Saved order + Accounts page overrides
-  NOTES.md
-
-money-management/       Budgeting UI
-  CircleOverrides.tsx      Draggable "Budget Circles" spending categories
-  NOTES.md
-
-main/                    Site-wide, page-agnostic pieces
+App/                     The mobile app: site-wide pieces, plus its feature folders
   AppInactivityOverlay.tsx  Idle-timeout kiosk redirect to /app
   LockScreen.tsx            Phone lock screen: clock, notifications, swipe up
   SplashProgressBar.tsx     Gradient-fill progress bar on the splash
   SplashTimedRedirect.tsx   Override: splash redirects to login after a delay
   NOTES.md
 
-tutorials/               The tutorial system
-  tutorials-main-page/      Builds the Tutorials landing page
-    CurvedCarouselV2.tsx      Curved card carousel (flip-card stack)
-  tutorial-overlays/        Droppable on top of any page to turn it into a tutorial
-    TutorialOverlay.tsx        Per-step instruction card + hole + glow
-    TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
-    TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
-    VirtualScroll.tsx          Transform-based scroll container a tutorial can freeze and drive
-  account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
-    AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
-    AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
-  card-controls-tutorial/   Notes only: the Card Controls tutorial uses the base
-                            travel notice components with "Tutorial copy" on
-  NOTES.md
+  card-controls/          Card-level account actions (settings)
+    travel-notice/           "Set a travel notice on your card"
+      SetTravelNotice.tsx      The form
+      TravelNoticeSection.tsx  Where an active notice is displayed
+    card-alerts/             "Set card alerts"
+      CardAlertsToggleReport.tsx  Per-toggle overrides: is any alert on?
+      CardAlertsSave.tsx          Save button, Saving overlay, scroll to top
+    CardControlsToasts.tsx   Confirmation toasts on save (travel notice + card alerts)
+    NOTES.md
+
+  reset-pin/              "Reset PIN" — a card-controls sub-feature, own folder
+                          because it has its own tutorial (see its NOTES.md)
+    ResetPinConfirm.tsx      Confirm button: sets the toast flag
+    ResetPinToast.tsx        Toast on Card Controls, with countdown bar + ×
+    NOTES.md
+
+  account-controls/       Account-level preferences (settings)
+    AccountPreferencesList.tsx     Drag-to-reorder list, eye to hide
+    AccountPreferencesEditMode.tsx Edit/Done, header variants, Saving overlay
+    AccountOrder.tsx               Saved order + Accounts page overrides
+    NOTES.md
+
+  money-management/       Budgeting UI
+    CircleOverrides.tsx      Draggable "Budget Circles" spending categories
+    NOTES.md
+
+  tutorials/               The tutorial system
+    tutorials-main-page/      Builds the Tutorials landing page
+      CurvedCarouselV2.tsx      Curved card carousel (flip-card stack)
+    tutorial-overlays/        Droppable on top of any page to turn it into a tutorial
+      TutorialOverlay.tsx        Per-step instruction card + hole + glow
+      TutorialTargets.tsx        Override that tags a layer so TutorialOverlay can find/measure it
+      TutorialCongratsAutoRedirect.tsx  Classic Override: auto-redirects a custom-built congrats Frame after a delay
+      VirtualScroll.tsx          Transform-based scroll container a tutorial can freeze and drive
+    account-controls-tutorial/  Tutorial-only copies for the Account Controls tutorial
+      AccountPreferencesListTutorial.tsx  Types the new name; only the taught actions work
+      AccountControlsTutorialReset.tsx    Clears the tutorial's saved order at its start
+    card-controls-tutorial/   Notes only: the Card Controls tutorial uses the base
+                              travel notice components with "Tutorial copy" on
+    NOTES.md
 
 ATM/                     The ATM kiosk portion (separate from the mobile-app kiosk)
   ATMAttract.tsx           The ATM page: waiting lights and the tap transition (A+B+E; others selectable)
@@ -71,7 +71,7 @@ ATM/                     The ATM kiosk portion (separate from the mobile-app kio
   NOTES.md
 
 archived/                Superseded/unused code, kept for reference — see NOTES.md before reusing
-  circle-physics-experiments/  Earlier attempts superseded by money-management/CircleOverrides.tsx
+  circle-physics-experiments/  Earlier attempts superseded by App/money-management/CircleOverrides.tsx
   tutorials-main-page/      CurvedCarousel.tsx (V1, superseded by CurvedCarouselV2.tsx above)
   tutorial-overlays/        FocusGuide.tsx / SpotlightOverlay.tsx (not currently used by any page)
   NOTES.md
@@ -111,11 +111,11 @@ generating the exports themselves from a factory.
   developed, then reorganized into the group structure above. Full
   iteration history (bug fixes, dead ends, session handoff notes) lives
   on those original branches, not in `main`'s history.
-- `tutorials/tutorial-overlays/TutorialOverlay.tsx` is the merged/current
+- `App/tutorials/tutorial-overlays/TutorialOverlay.tsx` is the merged/current
   tutorial-card component (previously iterated on as
   `TutorialsOverlay090126.tsx`); it supersedes an earlier
   `TutorialOverlay.tsx` draft.
-- `money-management/CircleOverrides.tsx` is the confirmed-good version
+- `App/money-management/CircleOverrides.tsx` is the confirmed-good version
   from `claude/framer-circle-physics-0jt0rf` (drag-collision iteration
   fix, the Budget Circles 1/2 variant split, and the success-toast
   bridge). Other physics-related branches

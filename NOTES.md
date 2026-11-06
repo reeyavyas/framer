@@ -6,43 +6,44 @@ with the detail on what's in it; this file is just the map.
 
 ## Groups
 
-- **`card-controls/`** — Account-level card actions a user manages from
-  settings (travel notice and card alerts). See
-  `card-controls/NOTES.md`.
-- **`reset-pin/`** — "Reset PIN" for the debit card, plus the toast
-  with a countdown bar that it shows on Card Controls. **A card-controls
-  sub-feature, but deliberately its own top-level folder**, because it
-  has a tutorial of its own. Its files never go under `card-controls/`,
-  and any tutorial duplicates go in `tutorials/reset-pin-tutorial/`.
-  Branches use `card-controls/<feature>`. See `reset-pin/NOTES.md`.
-- **`account-controls/`** — Account-level preferences a user manages
-  from settings (Account Preferences: drag to reorder accounts, hide
-  accounts from the Accounts page). See `account-controls/NOTES.md`.
-- **`money-management/`** — Budgeting UI, currently the draggable "Budget
-  Circles" spending categories. See `money-management/NOTES.md`.
-- **`main/`** — Site-wide, page-agnostic pieces not owned by any one
-  feature (the lock screen and splash, the kiosk inactivity redirect). See
-  `main/NOTES.md`.
-- **`tutorials/`** — The tutorial system, in two independent subgroups:
-  - `tutorials-main-page/` — builds the Tutorials landing page itself
-    (the arc carousel of flip cards).
-  - `tutorial-overlays/` — the guided-walkthrough layer that drops on
-    top of any existing page to turn it into a tutorial: the real UI
-    underneath is untouched, and these components spotlight one target
-    at a time instead of letting the user tap anywhere.
-  See `tutorials/NOTES.md`.
+- **`App/`** — The mobile app. Its own files are the site-wide,
+  page-agnostic pieces not owned by any one feature (the lock screen and
+  splash, the kiosk inactivity redirect); see `App/NOTES.md`. Each app
+  feature has its own folder inside it:
+  - **`App/card-controls/`** — Account-level card actions a user manages from
+    settings (travel notice and card alerts). See
+    `App/card-controls/NOTES.md`.
+  - **`App/reset-pin/`** — "Reset PIN" for the debit card, plus the toast
+    with a countdown bar that it shows on Card Controls. **A card-controls
+    sub-feature, but deliberately its own folder**, because it
+    has a tutorial of its own. Its files never go under `App/card-controls/`,
+    and any tutorial duplicates go in `App/tutorials/reset-pin-tutorial/`.
+    Branches use `card-controls/<feature>`. See `App/reset-pin/NOTES.md`.
+  - **`App/account-controls/`** — Account-level preferences a user manages
+    from settings (Account Preferences: drag to reorder accounts, hide
+    accounts from the Accounts page). See `App/account-controls/NOTES.md`.
+  - **`App/money-management/`** — Budgeting UI, currently the draggable "Budget
+    Circles" spending categories. See `App/money-management/NOTES.md`.
+  - **`App/tutorials/`** — The tutorial system, in two independent subgroups:
+    - `tutorials-main-page/` — builds the Tutorials landing page itself
+      (the arc carousel of flip cards).
+    - `tutorial-overlays/` — the guided-walkthrough layer that drops on
+      top of any existing page to turn it into a tutorial: the real UI
+      underneath is untouched, and these components spotlight one target
+      at a time instead of letting the user tap anywhere.
+    See `App/tutorials/NOTES.md`.
+  - **`App/credit-score/`** — The app's Credit Score pages
+    (`/base-pages/credit-score-*`): the Score tab's sliders, sections and
+    tabs. Offers, Alerts and Resources are separate pages. Code lives in
+    the Framer project's Phone Components → App UI → Credit Score folders
+    (under Components and Code).
+    See `App/credit-score/NOTES.md`.
 - **`ATM/`** — The second kiosk portion: an ATM that teaches Gen Alpha
   users to use an ATM, plus money tips and lessons. Currently holds the
   animated wing background for the ATM screen, its "Tap anywhere
   to begin" icon, and the ATM page itself (lights on the machine, the
   tap transition and its beeps). `ATM/artwork/` holds the ATM image,
   the scripts that draw it and every option shown. See `ATM/NOTES.md`.
-- **`credit-score/`** — The app's Credit Score pages
-  (`/base-pages/credit-score-*`): the Score tab's sliders, sections and
-  tabs. Offers, Alerts and Resources are separate pages. Code lives in
-  the Framer project's Phone Components → App UI → Credit Score folders
-  (under Components and Code).
-  See `credit-score/NOTES.md`.
 - **`archived/`** — code that isn't live anywhere but is kept for
   reference (e.g. superseded experiments) rather than only living on a
   branch. See `archived/NOTES.md`.
@@ -71,7 +72,7 @@ ATM.
 
 - **Account Controls: test that the Accounts page starts fresh for
   each new session, once the tutorials page gets its free exploration
-  button.** Account Controls (`account-controls/`) keeps the Accounts
+  button.** Account Controls (`App/account-controls/`) keeps the Accounts
   page's settings (account order, names and hidden accounts, changed
   from the Account Preferences page) in memory only, so they reset
   whenever the page reloads: on a refresh, and on
@@ -83,7 +84,7 @@ ATM.
   and open Accounts. It should show the default order. If that route
   is all native Framer Links with no reload, the previous person's
   settings carry over, and the Log Off or free exploration button will
-  need an override that resets them. See `account-controls/NOTES.md`.
+  need an override that resets them. See `App/account-controls/NOTES.md`.
 
 ## Branch naming
 
@@ -96,7 +97,7 @@ folder the work lands in:
 card-controls/<feature>
 account-controls/<feature>
 money-management/<feature>
-main/<feature>
+App/<feature>
 tutorials-main-page/<feature>
 tutorial-overlays/<feature>
 credit-score/<feature>
@@ -106,6 +107,6 @@ atm
 
 `reset-pin/` work uses `card-controls/<feature>`
 (e.g. `card-controls/reset-pin`), because Reset PIN is a card-controls
-sub-feature, even though its files live in `reset-pin/`.
+sub-feature, even though its files live in `App/reset-pin/`.
 
 Never use any other branch name.
