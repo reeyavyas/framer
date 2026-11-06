@@ -72,6 +72,121 @@ goes straight to "Let's see what shapes your score."; the gauge has no
 `cs-gauge-*` ids; Skip from 4 runs through every step in order to 35
 (Tap Alerts).
 
+6 Nov: the tutorial page's gauge keeps its ⓘ, but tapping it does nothing
+(CreditScoreGauge **Info Pop-up: Off** on `/credit-score-tutorial/score`).
+`/base-pages/credit-score-score` keeps it On; checked live there: ⓘ opens
+the pop-up, and ✕, a tap outside and Escape each close it.
+
+6 Nov: Skip on a scroll step now glides (0.5 s, same as VirtualScroll's
+scrollToPercent) instead of jumping. With Snap to threshold it lands on the
+threshold's own pixel, so it can't overshoot (the 4 Nov reason for the jump).
+Checked live 6 Nov on the first two scroll steps: about 30 frames over
+0.48 s, landing at 5.01% and 30.01% (thresholds 5 and 30).
+
+6 Nov: TutorialOverlay has **Hole padding X** (px each side, default 0) to
+widen a hole past its target; for the Points Journey step (spec step 7).
+
+## VirtualScroll and markers rebuild (6 Nov)
+
+Spec: `docs/superpowers/specs/2026-11-06-credit-score-tutorial-virtual-scroll-design.md`.
+Built to match the owner's Card Alerts tutorial (read from Framer first).
+
+- **Scrolling:** both pages' Scrollable Content now has
+  `VirtualScrollGeneral` (was `CreditScoreScrollTarget`). Every step's
+  Scroll container ID is `scrollable-content`. Snap to threshold is Off on
+  every scroll step, as in Card Alerts (on a VirtualScroll page it would
+  pull the page back under a dragging finger).
+- **Sticky:** VirtualScroll moves content by transform, so CSS sticky
+  can't stick. It now pins Sticky layers by hand (the Simulator's Score
+  Header Card), within their parent, like native sticky.
+- **Markers** (copies of the Card Alerts Save marker: absolute, no fill,
+  `withTutorialMarker`), each named "<id> marker", pinned top-left:
+  - tutorial Score page, Scrollable Content: `cs-gauge` (40, 1061)
+    1000×690; `cs-alerts-tab` (581, 25) 97×123.
+  - Section Tabs Tutorial (shared by its variants): Score Header Card
+    `cs-simulated-score` (50, 328) 926×264; Manage Your Balances Card
+    `cs-pay-down` (50, 665) 926×104; Manage Payment Activity Card
+    `cs-missed-payment` (50, 375) 926×108 and `cs-on-time` (50, 590)
+    926×104; Goal Setup Card `goal-setup-start` (40, 876) 454×100,
+    `goal-score-slider` (40, 850) 946×124, `goal-months-slider`
+    (40, 1171) 946×52, `goal-setup-next` (40, 1589) 219×100.
+  - Score Rating Tabs (shared with free play; the marker is inert there),
+    Points Journey Content: `cs-points-journey` (0, 207) 840×290. Step 7
+    keeps Hole padding X 32.
+  - tutorial Alerts page, Scrollable Content: `cs-alert-payment-history`
+    (46, 811) 988×422; `cs-alert-monitoring` (46, 2146) 988×304.
+  Positions were measured on the published pages at 1080×1920.
+- **Code:** the old in-code tags are gone (CreditScoreTutorial.tsx keeps
+  only behaviour; GoalSetupCard.tsx no longer tags). `PointsJourneyTarget`,
+  `SimulatedScoreTarget`, `AlertsTabTarget`, `AlertsFeedTargets` are
+  pass-throughs still on their layers; safe to remove from the layers.
+- **First live check (6 Nov) found two VirtualScroll bugs, fixed:**
+  1. Framer sets a Stack's layout (gap, alignment) with a CSS class on
+     the published site, not `props.style`, so VirtualScroll's content
+     wrapper lost Scrollable Content's gap 50 and centring: the gauge sat
+     40 px left and 100 px up, out of its marker. The wrapper now copies
+     the frame's computed layout. Confirmed in-page: gauge 40,1348
+     1000×690 = marker.
+  2. The scroll range went stale after the Section Tabs switched from a
+     long tab (accordions open, ~18,700 px) to Simulator (~7,700 px):
+     the page scrolled into blank space and step 19's 70% was never
+     reached. VirtualScroll now reads the range fresh on every move.
+  Also the Points Journey marker's Top hadn't saved (was 1061); retyped
+  to 207 and re-read after reselecting. The other eight Section Tabs
+  markers were re-read and are right.
+  The layout fix applies to every VirtualScroll page (Card Alerts, Travel
+  Notice, Card Controls 1 and 3): their content now gets their frame's
+  gap and alignment, as on the canvas. Check those after the publish.
+
+### Owner's second round (6 Nov)
+
+- **Grade A read steps (10, 13, 16):** the Grade Section's text starts at
+  its left edge with ~34 px spare on the right, so the hole looked padded
+  only on the right. Hole padding X 24 on all three.
+- **Step 15's card overlapped the top nav** at 72% (card top 259, nav
+  ends 287). Step 14 now scrolls to 71%, about 170 px less.
+- **Stops varied run to run:** with Snap off, where a manual scroll stops
+  depends on the overshoot, so rows landed under the pinned Simulator
+  header (1 mo. hidden, highlight looking off). Snap to threshold is back
+  On for every scroll step on both pages. Here the next step freezes as
+  soon as Snap settles the page, so it doesn't fight the finger (the
+  reason I'd turned it off, which was wrong for this tutorial).
+- **Field-only markers:** `cs-pay-down` (52, 667) 714×100 and
+  `cs-on-time` (156, 592) 714×100, the $ box without the −/+ buttons.
+- Measured at the exact stops: step 23's 1 mo. row at 970 (header ends
+  929); step 24's marker = the two gauges (77, 615) 926×264.
+
+### Live test (6 Nov, after the second round), 1080×1920
+
+Real wheel scrolls (10-tick overshoots) and real taps:
+- Score page steps 1–23 all pass; 24–35 are hidden by the owner, so the
+  run ends after the 1 mo. tap (simulated 697 shown).
+- Every scroll step snapped to exactly its threshold (5, 30, 35, 48, 62,
+  71, 11 up, 71, 85). Frozen steps ignored further scrolling.
+- Holes matched targets: gauge 40,971 1000×690; Points Journey bar with
+  32 px each side; Grade sections with 24 px each side; Pay down and
+  On-time on the $ box only (714×100); 1 mo. row at 1033, below the
+  pinned header (ends 929).
+- No card under either nav; step 15's card top at 576.
+- Alerts page: 10% and 56% exact; both cards' markers equal the cards;
+  ends on /complete. Skip on step 4 went straight to /complete (step 5's
+  card didn't pause) — not looked into.
+- Other VirtualScroll pages (card-controls-1, travel-notice,
+  card-alerts-1) have frame gap 0 and full-width children, so the layout
+  fix changes nothing there; card-controls-3 has no VirtualScroll.
+
+- 6 Nov: SimulatorScoreHeader has **Reset Tap** (On / Off, default On);
+  Section Tabs Tutorial's header is Off, so Reset shows but does nothing
+  in the tutorial. Free play keeps On.
+- 6 Nov: `cs-alerts-tab` marker enlarged 20 px each side: (561, 5)
+  137×163.
+
+- 6 Nov: step 14 back to **72%**. At 71% step 16's Credit Age Grade
+  section ended at 1709, against the bottom nav (1710), and the freeze
+  stopped the visitor scrolling to it. The earlier step-15 overlap at 72%
+  was measured at 73% (Skip +1%, Snap off); at exactly 72% the card top
+  should be ~418 and the Grade section end ~1551 (to check live).
+
 ## Alerts overview (added 5 Nov)
 
 - **Score page:** step 33 is now a 7 s read; 34 scrolls up to the top

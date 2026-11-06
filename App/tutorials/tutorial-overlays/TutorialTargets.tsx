@@ -380,32 +380,53 @@ export function AccountsUpdated(
 }
 
 // ═══ Credit Score Tutorial ════════════════════════════════════════════
-// /credit-score-tutorial/score. Everything below the gauge sits inside
-// the Section Tabs Tutorial component (a copy of Section Tabs), so these
-// go on layers in that copy and never reach the free-play page. The
-// accordions' inner targets (…DetailTarget) sit on layers inside the
-// shared accordion components: they only add the attribute.
-//   CreditScoreScrollTarget: the page's Scrollable Content, for the
-//     scroll steps' Scroll container ID ("cs-scroll")
-//   gauge, Points Journey bar, simulated score, Simulator rows:
-//     CreditScoreTutorial.tsx (code components)
-//   accordion headers (tapped while closed): ScoreRatingTarget …
-//     CreditAgeTarget; their read steps: …DetailTarget
-//   SimulatorTabTarget, GoalsTabTarget: the section tab cells
-//   GoalSetupCard tags its own buttons and sliders ("goal-setup-start",
-//     "goal-score-slider", "goal-months-slider", "goal-setup-next")
-//   AlertsTabTarget (CreditScoreTutorial.tsx): the top nav's Alerts tab
-// /credit-score-tutorial/alerts: CreditScoreScrollTarget again on its
-//   Scrollable Content; the alert cards are tagged by AlertsFeedTargets
-//   (CreditScoreTutorial.tsx) on the Alerts Feed instance
-//   the last step has no target: a timed card to the complete page
+// /credit-score-tutorial/score and /alerts. Both pages' Scrollable
+// Content use VirtualScrollGeneral, so every step's Scroll container ID
+// is "scrollable-content". Everything below the gauge sits inside the
+// Section Tabs Tutorial component (a copy of Section Tabs), so its layers
+// never reach the free-play page. The accordions' inner targets
+// (…DetailTarget) sit on layers inside the shared accordion components:
+// they only add the attribute.
+// TARGETS go on native layers; MARKERS are absolute frames placed over
+// a code component (or a layer inside a component instance), pinned in
+// the same parent so they move with it.
+//   CreditScoreGaugeMarker                over the gauge
+//   ScoreRatingTarget                     Score Rating (tapped closed)
+//   PointsJourneyMarker                   over the Points Journey bar
+//   PaymentHistoryTarget … CreditAgeTarget  the accordions (tapped closed)
+//   …DetailTarget                         each open accordion's Grade Section
+//   SimulatorTabTarget, GoalsTabTarget    the section tab cells
+//   PayDownMarker, OnTimeMarker           over each Simulator row's field
+//   MissedPaymentMarker                   over the missed payment months
+//   SimulatedScoreMarker                  over the Simulator score header
+//   GoalSetupStartMarker … GoalSetupNextMarker  over GoalSetupCard's
+//                                         button, two sliders and Next
+//   AlertsTabMarker                       over the top nav's Alerts tab
+//   AlertPaymentHistoryMarker, AlertMonitoringMarker  (Alerts page) over
+//                                         the two alert cards
+//   the last step on each page has no target (a timed card)
+// CreditScoreScrollTarget is no longer used (VirtualScroll replaced it);
+// kept so a layer still carrying it doesn't break.
 
-// TARGET: the page's Scrollable Content frame (native scrolling; the
-// Simulator's sticky header needs it), for the scroll steps.
+// TARGET (unused, see above): the old native Scrollable Content tag.
 export function CreditScoreScrollTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("cs-scroll")(Component)
+}
+
+// MARKER: over the credit score gauge.
+export function CreditScoreGaugeMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-gauge")(Component)
+}
+
+// MARKER: over the Points Journey bar inside Score Rating.
+export function PointsJourneyMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-points-journey")(Component)
 }
 
 // TARGET: inside the open Payment History accordion, the part its read
@@ -471,4 +492,81 @@ export function GoalsTabTarget(
     Component: ComponentType<any>
 ): ComponentType<any> {
     return withTutorialTarget("cs-goals-tab")(Component)
+}
+
+// MARKER: over the Pay down row's field (the $ box and its steppers).
+export function PayDownMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-pay-down")(Component)
+}
+
+// MARKER: over the on-time payments row's field.
+export function OnTimeMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-on-time")(Component)
+}
+
+// MARKER: over the missed payment row's months buttons.
+export function MissedPaymentMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-missed-payment")(Component)
+}
+
+// MARKER: over the Simulator's score header (current and simulated).
+export function SimulatedScoreMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-simulated-score")(Component)
+}
+
+// MARKER: over GoalSetupCard's "Set Up Your Goal" button.
+export function GoalSetupStartMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("goal-setup-start")(Component)
+}
+
+// MARKER: over GoalSetupCard's goal score slider.
+export function GoalScoreSliderMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("goal-score-slider")(Component)
+}
+
+// MARKER: over GoalSetupCard's months slider.
+export function GoalMonthsSliderMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("goal-months-slider")(Component)
+}
+
+// MARKER: over GoalSetupCard's Next button.
+export function GoalSetupNextMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("goal-setup-next")(Component)
+}
+
+// MARKER: over the Alerts tab in the Credit Score Top Nav instance.
+export function AlertsTabMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-alerts-tab")(Component)
+}
+
+// MARKER (Alerts page): over the "Alert Payment History" card.
+export function AlertPaymentHistoryMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-alert-payment-history")(Component)
+}
+
+// MARKER (Alerts page): over the first credit monitoring card.
+export function AlertMonitoringMarker(
+    Component: ComponentType<any>
+): ComponentType<any> {
+    return withTutorialMarker("cs-alert-monitoring")(Component)
 }

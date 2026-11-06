@@ -111,6 +111,10 @@ export interface VirtualScrollHandle {
     // scrollToTop does — a scroll step and a freeze step are never
     // active at the same time.
     scrollToPercent(percent: number): void
+    // Jumps straight to `percent` (0-100), no animation, stopping any
+    // running one. Used by TutorialOverlay's Snap to threshold, so a fast
+    // swipe settles exactly on a scroll step's threshold. Respects freeze.
+    setPercent(percent: number): void
     // Fires whenever position changes, so TutorialOverlay can
     // re-check its own thresholds without polling.
     subscribe(fn: () => void): () => void
@@ -156,9 +160,7 @@ function scopedKey(id: string): string {
     return `${window.location.pathname}::${id}`
 }
 
-export function getVirtualScroll(
-    id: string
-): VirtualScrollHandle | undefined {
+export function getVirtualScroll(id: string): VirtualScrollHandle | undefined {
     return id ? registry.get(scopedKey(id)) : undefined
 }
 
@@ -185,6 +187,10 @@ export function getVirtualScroll(
 if (typeof window !== "undefined") {
     ;(window as any).__getVirtualScroll = getVirtualScroll
 }
+
+// useLayoutEffect warns during Framer's server render; the browser gets it.
+const useIsoLayoutEffect =
+    typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect
 
 function withVirtualScroll(id: string) {
     return function (Component: ComponentType<any>): ComponentType<any> {
@@ -214,6 +220,84 @@ function withVirtualScroll(id: string) {
                 animationRef.current = null
             }
 
+            // Layers set to Sticky in Framer (CSS position: sticky) can't
+            // stick here: the container never scrolls natively, the content
+            // just moves by transform. So each one is pinned by hand: moved
+            // down by however far the content has scrolled past its sticky
+            // top, never past the bottom of its own parent (what native
+            // sticky does). The list is refreshed when the content changes
+            // (a tab switch swaps what's inside).
+            // The frame's own Stack layout, read once it's on the page (see
+            // the content wrapper below for why).
+            const [layout, setLayout] = React.useState<React.CSSProperties>({})
+            useIsoLayoutEffect(() => {
+                const container = containerRef.current
+                if (!container) return
+                const s = getComputedStyle(container)
+                setLayout({
+                    display: s.display,
+                    flexDirection: s.flexDirection as any,
+                    alignItems: s.alignItems,
+                    justifyContent: s.justifyContent,
+                    gap: s.gap,
+                    flexWrap: s.flexWrap as any,
+                })
+            }, [])
+
+            const stickyRef = React.useRef<HTMLElement[]>([])
+            const pinSticky = React.useCallback((pos: number) => {
+                const content = contentRef.current
+                if (!content) return
+                const top = content.getBoundingClientRect().top
+                for (const el of stickyRef.current) {
+                    const parent = el.parentElement
+                    if (!parent) continue
+                    const shift = parseFloat(el.dataset.vsShift || "0")
+                    const r = el.getBoundingClientRect()
+                    const natural = r.top - top - shift
+                    const stickTop = parseFloat(getComputedStyle(el).top) || 0
+                    const room =
+                        parent.getBoundingClientRect().bottom -
+                        top -
+                        (natural + r.height)
+                    const next = Math.max(
+                        0,
+                        Math.min(pos + stickTop - natural, room)
+                    )
+                    if (next === shift) continue
+                    el.dataset.vsShift = String(next)
+                    el.style.transform = next ? `translateY(${next}px)` : ""
+                }
+            }, [])
+
+            // Moves the content to `v` and tells everyone: the one place
+            // both setPos and the animations paint a position.
+            const paint = React.useCallback(
+                (v: number) => {
+                    posRef.current = v
+                    y.set(-v)
+                    pinSticky(v)
+                    listenersRef.current.forEach((fn) => fn())
+                },
+                [y, pinSticky]
+            )
+
+            // How far there is to scroll, read fresh from the page. A size
+            // change the ResizeObserver below misses (seen when the Section
+            // Tabs switch from a long tab to a short one) would otherwise
+            // leave a stale range, letting the content run past its end and
+            // making percentages wrong.
+            const readMax = () => {
+                const content = contentRef.current
+                const container = containerRef.current
+                if (content && container)
+                    maxRef.current = Math.max(
+                        0,
+                        content.scrollHeight - container.clientHeight
+                    )
+                return maxRef.current
+            }
+
             const setPos = React.useCallback(
                 (v: number) => {
                     // Frozen means frozen — not clamped to a range, not
@@ -223,14 +307,12 @@ function withVirtualScroll(id: string) {
                     if (frozenRef.current) return
                     const clamped = Math.min(
                         Math.max(v, -EDGE_TOLERANCE_PX),
-                        maxRef.current
+                        readMax()
                     )
                     if (clamped === posRef.current) return
-                    posRef.current = clamped
-                    y.set(-clamped)
-                    listenersRef.current.forEach((fn) => fn())
+                    paint(clamped)
                 },
-                [y]
+                [paint]
             )
 
             // Re-measures how far there is to scroll whenever either the
@@ -241,19 +323,31 @@ function withVirtualScroll(id: string) {
                 const container = containerRef.current
                 const content = contentRef.current
                 if (!container || !content) return
+                function findSticky() {
+                    stickyRef.current = Array.from(
+                        content!.querySelectorAll<HTMLElement>("*")
+                    ).filter((el) => getComputedStyle(el).position === "sticky")
+                    pinSticky(posRef.current)
+                }
                 function measure() {
                     maxRef.current = Math.max(
                         0,
                         content!.scrollHeight - container!.clientHeight
                     )
                     setPos(posRef.current)
+                    findSticky()
                 }
                 measure()
                 const ro = new ResizeObserver(measure)
                 ro.observe(container)
                 ro.observe(content)
-                return () => ro.disconnect()
-            }, [setPos])
+                const mo = new MutationObserver(findSticky)
+                mo.observe(content, { childList: true, subtree: true })
+                return () => {
+                    ro.disconnect()
+                    mo.disconnect()
+                }
+            }, [setPos, pinSticky])
 
             React.useEffect(() => {
                 // Computed once per mount and reused for both the set
@@ -278,17 +372,15 @@ function withVirtualScroll(id: string) {
                                 Math.max(v, -EDGE_TOLERANCE_PX),
                                 maxRef.current
                             )
-                            posRef.current = v
-                            y.set(-v)
-                            listenersRef.current.forEach((fn) => fn())
+                            paint(v)
                         },
                     })
                 }
                 const handle: VirtualScrollHandle = {
-                    getPercent: () =>
-                        maxRef.current > 0
-                            ? (posRef.current / maxRef.current) * 100
-                            : 100,
+                    getPercent: () => {
+                        const max = readMax()
+                        return max > 0 ? (posRef.current / max) * 100 : 100
+                    },
                     freezeHere: () => {
                         frozenRef.current = true
                     },
@@ -299,8 +391,15 @@ function withVirtualScroll(id: string) {
                     scrollToPercent: (percent) =>
                         animateTo(
                             (Math.min(Math.max(percent, 0), 100) / 100) *
-                                maxRef.current
+                                readMax()
                         ),
+                    setPercent: (percent) => {
+                        stopAnimation()
+                        setPos(
+                            (Math.min(Math.max(percent, 0), 100) / 100) *
+                                readMax()
+                        )
+                    },
                     subscribe: (fn) => {
                         listenersRef.current.add(fn)
                         // Block body, not an implicit-return arrow — a
@@ -406,10 +505,7 @@ function withVirtualScroll(id: string) {
                 })
                 return () => {
                     container.removeEventListener("wheel", onWheel)
-                    container.removeEventListener(
-                        "touchstart",
-                        onTouchStart
-                    )
+                    container.removeEventListener("touchstart", onTouchStart)
                     container.removeEventListener("touchmove", onTouchMove)
                     container.removeEventListener("touchend", endDrag)
                     container.removeEventListener("touchcancel", endDrag)
@@ -419,6 +515,9 @@ function withVirtualScroll(id: string) {
             return (
                 <Component
                     {...props}
+                    // Lets TutorialOverlay clip a hole to this frame, as it
+                    // does for a natively scrolling one.
+                    data-virtual-scroll={id}
                     ref={(node: HTMLDivElement | null) => {
                         containerRef.current = node
                         if (typeof ref === "function") ref(node)
@@ -450,11 +549,21 @@ function withVirtualScroll(id: string) {
                             // sizing context intact instead of just
                             // adding an invisible non-flex layer between
                             // them and their real parent.
-                            display: props.style?.display,
-                            flexDirection: props.style?.flexDirection,
-                            alignItems: props.style?.alignItems,
-                            justifyContent: props.style?.justifyContent,
-                            gap: props.style?.gap,
+                            // On the published site Framer sets a Stack's
+                            // layout with a CSS class, not props.style, so
+                            // `layout` (read from the frame's computed
+                            // style) fills in whatever props.style lacks.
+                            display: props.style?.display ?? layout.display,
+                            flexDirection:
+                                props.style?.flexDirection ??
+                                layout.flexDirection,
+                            alignItems:
+                                props.style?.alignItems ?? layout.alignItems,
+                            justifyContent:
+                                props.style?.justifyContent ??
+                                layout.justifyContent,
+                            gap: props.style?.gap ?? layout.gap,
+                            flexWrap: layout.flexWrap,
                             width: "100%",
                             y,
                         }}
@@ -508,4 +617,3 @@ export function VirtualScrollCardAlertsContent(
 ): ComponentType<any> {
     return withVirtualScroll("card-alerts-scroll")(Component)
 }
-
