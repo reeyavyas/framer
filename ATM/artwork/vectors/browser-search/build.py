@@ -300,6 +300,24 @@ STYLES = {  # no-outline 3D styles: corner radius, slab and line depth, contact-
     "glass": dict(R=190, depth=DEPTH, pdepth=PILL_DEPTH, ground=.6),
     "gloss": dict(R=220, depth=(-96, 112), pdepth=(-58, 72), ground=.5),  # designer: softer shadows
 }
+SMOOTH = True  # owner (10 Nov): the gauge's soft edges
+SOFT = set()
+def soften(x, D, K=6, grow=3.2):
+    """Every lit-edge stroke (rim()) in x drawn soft: the shape without it, then the stroke stacked K times, wider
+    and fainter outward, so the edge glows and fades instead of ending in a hard line (the gauge's look)."""
+    def one(m):
+        el = m.group(0); g, w = re.search(r' stroke="(url\(#[^)]+\))" stroke-width="([\d.]+)"', el).groups()
+        if g not in SOFT: return el
+        base = re.sub(r' stroke="url\(#[^)]+\)" stroke-width="[\d.]+" stroke-linejoin="round"', "", el)
+        bare = re.sub(r' fill="[^"]*"', ' fill="none"', base).replace(' data-k="', ' data-x="')
+        ease = lambda x: 1 - (lambda t: t * t * (3 - 2 * t))(min(1, max(0, x)))
+        cid = D.new("sc"); D.items.append(f'<clipPath id="{cid}">{re.sub(r' (?:fill|mask|clip-path|data-k|opacity)="[^"]*"', "", base)}</clipPath>')
+        out, strokes = base, ""
+        for k in range(K, 0, -1):
+            o = 1 - (1 - ease((k - 1) / K)) / (1 - ease(k / K)) if ease(k / K) < 1 else 0
+            if o > .001: strokes += bare.replace("/>", f' stroke="{g}" stroke-opacity="{o:.3f}" stroke-width="{float(w) * grow * k / K:.1f}" stroke-linejoin="round"/>', 1)
+        return out + f'<g clip-path="url(#{cid})">{strokes}</g>'
+    return re.sub(r'<(?:path|circle|ellipse|rect)\b[^>]*? stroke="url\(#[^)]+\)" stroke-width="[\d.]+" stroke-linejoin="round"[^>]*/>', one, x)
 def build_soft(key, style, anim=False):
     """No ink outline, three looks sharing one layout:
     clay  - puffy radial fills (lit top-left, core shade bottom-right), soft light + crisp specular spot, thin darker same-hue rims;
@@ -318,6 +336,7 @@ def build_soft(key, style, anim=False):
         if clay: return f' stroke="{r[-1]}" stroke-width="{EW}" stroke-linejoin="round"'
         light = r[0] if glassy else WHITE  # lit edge top-left, fading out, then a darker same-hue band bottom-right
         g = D.lin([light, light, r[-1], r[-1]], [(.85 if glassy else .95) if lit else 0, 0, 0, .9], x1=0, y1=0, x2=.6, y2=1)
+        if SMOOTH and gloss: SOFT.add(g)
         return f' stroke="{g}" stroke-width="{EW * (1.1 if glassy else 1.8):.1f}" stroke-linejoin="round"'
     tag = lambda k, inner: f'<g data-k="{k}">{inner}</g>' if anim else inner  # moving parts get their own named group
     spec = lambda x, y, rx, ry, a=-35: f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rx}" ry="{ry}" transform="rotate({a} {x:.0f} {y:.0f})" fill="{WHITE}" opacity=".95"/>'
@@ -376,7 +395,7 @@ def build_soft(key, style, anim=False):
         o.append(f'<path d="{d}" fill="{D.lin(top, x1=0, y1=0, x2=.05, y2=1)}"{rim(r)}/>')
         o.append(f'<path d="M{x0 + h * .8:.0f},{y0 + 30} H{min(x1 - h, x0 + h + 380):.0f}" stroke="{WHITE}" stroke-width="{SW * 1.1:.0f}" stroke-linecap="round" opacity="{.95 if gloss else .7}"/>')
         if gloss:  # polished sheen over the top half of the line
-            o.append(f'<path d="{pill((x0 + h * .3, y0 + 6, x1 - h * .3, y0 + h * .95))[0]}" fill="{D.lin([WHITE, WHITE], [.7, .12], x2=0)}"/>')
+            o.append(f'<path d="{pill((x0 + h * .3, y0 + 6, x1 - h * .3, y0 + h * .95))[0]}" fill="{D.lin([WHITE, WHITE, WHITE], [.7, .25, 0] if SMOOTH else [.7, .12], x2=0) if SMOOTH else D.lin([WHITE, WHITE], [.7, .12], x2=0)}"/>')
         o.append(spec(x0 + h * .62, y0 + 30, 11, 7, -20))
         if anim and n == HIT:  # the hit line's glow, hidden at rest; the loop pulses it while the lens pauses over it
             o.append(f'<g data-k="hitGlow" opacity="0">{soft((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2 + 140, h + 120, YOLK_T, .8)}'
@@ -423,6 +442,7 @@ def build_soft(key, style, anim=False):
             extra.append((hx_ - 300 + dx, hy_ + 30 + dy, hx_ + 340 + dx, hy_ + 200 + dy))
     vb, artw = crop(ssp + [(x + DEP[0], y + DEP[1]) for x, y in ssp] + mag_pts, extra)
     name = "browser-search-anim.svg" if anim else f"browser-search-{key}-{style}.svg"
+    if SOFT: o = [soften(x, D) for x in o]
     if anim:  # lean: path data to 1 decimal
         r1 = lambda m: re.sub(r"\d+\.\d{2,}", lambda n: f"{float(n.group()):.1f}", m.group())
         o = [re.sub(r' d="[^"]+"', r1, x) for x in o]

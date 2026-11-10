@@ -7,6 +7,7 @@ import re, sys, os, colorsys
 SRC = sys.argv[1] if len(sys.argv) > 1 else "p2.svg"
 OUT = os.path.dirname(os.path.abspath(__file__))
 SLUG = "savings-jar"
+SMOOTH = True  # owner (10 Nov): the gauge's soft edges
 src = open(SRC).read()
 PATHS = re.findall(r'<path[^>]*fill="rgb\(([^)]*)\)"[^>]*d="([^"]*)"', src)
 assert len(PATHS) == 672, len(PATHS)
@@ -383,6 +384,17 @@ def build_gloss(key, anim=False):
         return o == "jar" and (r in ("gold", "goldGlass", "goldNeck") or (r == "line" and (small or not 150 <= h <= 190)))
 
     # ---- one coin, drawn in its own frame: face ellipse at 0,0, thickness down the local y axis ----
+    def feather(r, ry, rr, paint, K=10):
+        """An ellipse of the coin's face; with SMOOTH its edge eases in from rr[1] to rr[0] (stacked ellipses, each a
+        little stronger), so the raised rim rolls into the face like the gauge's bevels instead of a hard ring."""
+        if not SMOOTH: return [f'<ellipse rx="{r * rr[0]:.1f}" ry="{ry * rr[0]:.1f}" fill="{paint}"/>']
+        ease = lambda x: (lambda t: t * t * (3 - 2 * t))(min(1, max(0, x)))
+        out, prev = [], 0
+        for j in range(1, K + 1):
+            a = ease(j / K); o = (a - prev) / (1 - prev); prev = a
+            f = rr[1] + (rr[0] - rr[1]) * j / K
+            out.append(f'<ellipse rx="{r * f:.1f}" ry="{ry * f:.1f}" fill="{paint}"' + ("" if o > .999 else f' fill-opacity="{o:.3f}"') + "/>")
+        return out
     def coin(cx, cy, r, k, rot, shadow=None):
         ry, th = r * k, r * COIN_TH
         band = f"M {-r},0 L {-r},{th:.1f} A {r},{ry:.1f} 0 0 0 {r},{th:.1f} L {r},0 A {r},{ry:.1f} 0 0 1 {-r},0 Z"
@@ -393,8 +405,8 @@ def build_gloss(key, anim=False):
         out += [f'<path d="{band}" fill="{lin([(0, AMBER, 1), (.1, YOLK_T, 1), (.25, ORANGE, 1), (.42, YOLK_TT, 1), (.55, ORANGE, 1), (.8, AMBER, 1), (1, DEEP_GOLD, 1)], 0, 0, 1, 0)}"/>',
                 f'<path d="{band}" fill="{lin([(0, WHITE, 0), (.15, WHITE, .35), (.3, WHITE, 0), (1, WHITE, 0)], 0, 0, 0, 1)}"/>',
                 f'<ellipse rx="{r}" ry="{ry:.1f}" fill="{lin([(0, YOLK_TT, 1), (.35, YOLK, 1), (.7, ORANGE, 1), (1, AMBER, 1)])}"/>',
-                f'<ellipse rx="{r * .84:.1f}" ry="{ry * .84:.1f}" fill="{lin([(0, AMBER, 1), (.4, ORANGE, 1), (.75, YOLK, 1), (1, YOLK_TT, 1)])}"/>',
-                f'<ellipse rx="{r * .78:.1f}" ry="{ry * .78:.1f}" fill="{rad([(0, YOLK_T, 1), (.6, YOLK, 1), (1, ORANGE, 1)], cx=.4, cy=.35, r=.8)}"/>']
+                *feather(r, ry, (.84, .9), lin([(0, AMBER, 1), (.4, ORANGE, 1), (.75, YOLK, 1), (1, YOLK_TT, 1)])),
+                *feather(r, ry, (.78, .84), rad([(0, YOLK_T, 1), (.6, YOLK, 1), (1, ORANGE, 1)], cx=.4, cy=.35, r=.8))]
         # the $: one clean drawn path, squashed with the face; raised (a deep copy down-right, the light glyph, a white lip)
         out.append(f'<g transform="scale(1 {k}) scale({r * .75:.1f})" fill="none" stroke-linecap="round" stroke-linejoin="round">'
                    f'<path d="{DOLLAR}" stroke="{DEEP_GOLD}" stroke-width=".13" transform="translate(.035 .045)"/>'
@@ -541,6 +553,7 @@ def build_gloss(key, anim=False):
         (x0, y0), (x1, y1) = q[0], q[1]; L = math.hypot(x1 - x0, y1 - y0)
         nx, ny = (y1 - y0) / L, -(x1 - x0) / L  # outward for a clockwise polygon (screen coordinates)
         lit = -.25 * nx - .97 * ny  # light mostly from above: the head's top-left face bright, the shaft's side darker
+        if SMOOTH and lit > .5: return lin([(0, WHITE, 1), (.35, MINT_T, 1), (1, MINT_S, 1)], 0, 0, 1, 1)  # the lit side rolls into shade
         return (lin([(0, MINT_T, 1), (1, MINT, 1)], 0, 0, 1, 1) if lit > .5 else
                 lin([(0, LTEAL, 1), (1, TEAL, 1)], 0, 0, 1, 1) if lit > -.2 else lin([(0, TEAL, 1), (1, DTEAL, 1)], 0, 0, 0, 1))
     fid = nid("c"); defs.append(f'<clipPath id="{fid}"><path d="{pts(FRONT)}"/></clipPath>')

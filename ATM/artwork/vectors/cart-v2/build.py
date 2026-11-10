@@ -14,6 +14,7 @@ import numpy as np
 SRC = sys.argv[1]
 OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(os.path.abspath(__file__))
 SLUG = "cart-v2"
+SMOOTH = True  # owner (10 Nov): the gauge's soft bevels on the glossy cart
 s = open(SRC).read()
 els = re.findall(r'<path\b[^>]*?/>', s)
 assert len(els) == 87, len(els)
@@ -28,10 +29,11 @@ D = [closed(re.search(r'\sd="([^"]+)"', e).group(1)) for e in els]
 ROLE = {}
 def put(r, *ix):
     for i in ix: assert i not in ROLE, i; ROLE[i] = r
-put("basket", 1); put("basketSide", 2); put("basketIn", 50); put("rim", 13, 47, 54, 57); put("inShade", 56, 62, 63, 64)
+put("basket", 1); put("basketSide", 2); put("basketIn", 50); put("rim", 13, 47, 54); put("inShade", 56, 62, 63, 64)
 put("slotSeen", 82, 79, 76); put("slotBox", 74); put("slotBack", 73); put("slotWall", 83, 80, 77, 72); put("slotLip", 84, 81, 78, 75)
 put("slotRing", 66, 67, 68, 69)
-put("frameTop", 7, 27, 16, 51); put("frameLight", 36, 43, 49, 55, 18, 9, 59); put("frameDark", 39, 33, 38, 34); put("frameHi", 58)
+# owner (10 Nov): the posts' caps under the grip are frame, yolk: 57 (front, was rim blue) and 58 (back, was near-white frameHi)
+put("frameTop", 7, 27, 16, 51, 57, 58); put("frameLight", 36, 43, 49, 55, 18, 9, 59); put("frameDark", 39, 33, 38, 34)
 put("grip", 8, 25); put("gripEnd", 48)
 put("flatTop", 5); put("flatStrip", 37, 44, 61); put("flatFront", 14, 15, 29); put("flatSide", 23, 40, 53)
 put("yTop", 6); put("yLidL", 12); put("yLidF", 4); put("ySideBand", 28, 52, 45); put("ySideLight", 35, 46)
@@ -374,6 +376,24 @@ def build(key, style, anim=False):
                 spots[op] = gid = nid("s")
                 defs.append(f'<radialGradient id="{gid}"><stop offset="0" stop-color="#fff" stop-opacity="{op}"/><stop offset=".5" stop-color="#fff" stop-opacity="{op * .85:.2f}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>')
             return f"url(#{spots[op]})"
+        soft_ids = {}
+        def soft_light(rim_col, dark_col):  # lit top-left, fading out, then the dark shade toward the bottom-right
+            k = (rim_col, dark_col)
+            if k not in soft_ids:
+                soft_ids[k] = gid = nid("b")
+                defs.append(f'<linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{rim_col}" stop-opacity="{S["rimOp"]}"/>'
+                            f'<stop offset=".4" stop-color="{rim_col}" stop-opacity="0"/><stop offset=".6" stop-color="{dark_col}" stop-opacity="0"/>'
+                            f'<stop offset="1" stop-color="{dark_col}" stop-opacity=".95"/></linearGradient>')
+            return f"url(#{soft_ids[k]})"
+        def soft_bevel(el, body_paint, rim_col, w=26, K=6):
+            """The gauge's look: the body, then its edge lit top-left and shaded bottom-right by stacked strokes clipped
+            inside it, each a little stronger toward the edge, so the bevel fades into the face (no hard inner line)."""
+            ease = lambda x: 1 - (lambda t: t * t * (3 - 2 * t))(min(1, max(0, (x - .25) / .75)))
+            out = el(0, 0, f'fill="{body_paint}"')
+            for k in range(K, 0, -1):
+                o = 1 - (1 - ease((k - 1) / K)) / (1 - ease(k / K)) if ease(k / K) < 1 else 0
+                if o > .001: out += el(0, 0, f'fill="none" stroke="{soft_light(rim_col, band_col)}" stroke-opacity="{o:.3f}" stroke-width="{w * k / K:.1f}"')
+            return f'<g clip-path="url(#{clip([el])})">{out}</g>'
         def bevel(el, body_paint, rim_col):
             """Crisp edges from light: a bright rim along the top-left edges and a darker band along the bottom-right."""
             (rx, ry), (bx, by) = S["rim"], S["band"]
@@ -442,7 +462,7 @@ def build(key, style, anim=False):
                     if area > 2500: parts.append(spot(e, c, tl, size, .6))   # matte clay: a gentle spot
                 else:
                     rim = WHITE if style == "gloss" else (LTEAL_T if last(vs) in (TEAL, LTEAL, DTEAL, MINT_SS, MINT_S) else WHITE)
-                    parts.append(bevel(e, p, rim).replace(f'fill="{rim}"', f'fill="{rim}" fill-opacity="{S["rimOp"]}"', 1))
+                    parts.append(soft_bevel(e, p, rim) if SMOOTH and style == "gloss" else bevel(e, p, rim).replace(f'fill="{rim}"', f'fill="{rim}" fill-opacity="{S["rimOp"]}"', 1))
                     parts.append(e(0, 0, f'fill="{core(band_col, .55 if style == "gloss" else .35)}"'))
                     if style == "gloss":   # polished plastic: a broad glossy sheen top-left and a crisp specular spot
                         parts.append(e(0, 0, f'fill="{white_radial(*(c + 0.6 * (tl - c)), max(size * 0.75, 30), ((0, .75), (.4, .3), (1, 0)) if anim else ((0, .75), (.35, .4), (.6, .08), (1, 0)))}"'))

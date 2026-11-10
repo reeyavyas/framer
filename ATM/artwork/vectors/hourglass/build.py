@@ -9,6 +9,7 @@
 import math, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SMOOTH = True  # owner (10 Nov): the gauge's soft edges
 SRC = sys.argv[1]
 SCRATCH = sys.argv[2] if len(sys.argv) > 2 else None
 src = open(SRC).read()
@@ -185,6 +186,11 @@ def build(key, style, anim=False):
                                for k, a in ((3.2, .1), (2.2, .13), (1.3, .17), (.6, .22))) + "</g>")
 
     def line(d, color, w, op):  # an edge drawn by light (bright rim) or by shade (dark band), inset inside the part
+        if SMOOTH:  # preview, the gauge's look: a soft glow round a thin core, fading out to both sides
+            out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{round(w * 2.6, 1)}" stroke-opacity="{op * .18:.3f}" stroke-linecap="round"/>'
+                       f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{round(w * 1.6, 1)}" stroke-opacity="{op * .3:.3f}" stroke-linecap="round"/>'
+                       f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{round(w * .7, 1)}" stroke-opacity="{op * .75:.3f}" stroke-linecap="round"/>')
+            return
         out.append(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{round(w, 1)}" stroke-opacity="{op}" stroke-linecap="round"/>')
 
     def shape(tag, geo, fill, edge, lit=True, deep=None):

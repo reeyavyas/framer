@@ -78,6 +78,11 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Cart version 2, second round: the base rail's front-right corner is finished as a box corner (the stock art cut it
   off where the wheel hid it); it runs on under the right wheel.
 - Browser, second round: no white lit edge on the nav bar, the window's side face or the screen face (`rim(..., lit=False)`).
+- Smoothing (owner, 10 Nov, approved from previews): the gauge's soft bevel look on the other four, `SMOOTH = True`
+  in each build. Cart: `soft_bevel` (the lit/dark edge as stacked strokes fading into each face). Browser: `soften`
+  (each lit-edge stroke as a clipped stack, wider and fainter inward). Hourglass: `line()` as a soft glow round a thin
+  core. Jar: `feather` (coin rims ease into the face) and a shaded lit arrow side. The cart's post caps under the grip
+  (57, 58) are frame yolk. Files grew: browser ~2.7x, jar ~1.4x, cart and hourglass ~1.1x.
 - Savings jar (owner, 10 Nov): no light mint curved lines across the lid's threads (`LID_HI_DROP`: traced highlights
   283 and 309). Its `ATMSavingsJar.template.tsx` is older than `ATM/ATMSavingsJar.tsx` (the arrow's foot and other
   edits were made in the component), so `export_anim` now replaces only the component's `const ART` line, and applies
