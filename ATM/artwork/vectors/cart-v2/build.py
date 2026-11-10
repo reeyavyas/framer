@@ -163,8 +163,8 @@ PIECES = [
     ("slots", (73, 74, 75, 72, 76, 77, 78, 79, 80, 81, 82, 83, 84), (0, 0)),
     ("basket", (13, 47, 57, 2, 1), (0, 0)),
     ("frame", (43, 36, 39, 49, 18, 27, 9, 16, 55, 7, 34, 59, 58), (0, 0)),
-    ("grip", (48, 8, 25), tuple(np.round(GU * np.dot((-36, -36), GU), 1))),  # owner: along the bar, so its edges line up with the frame's
-    ("front", None, (0, 36)), ("right", None, (34, 30)),
+    ("grip", (48, 8, 25), (0, 0)),  # owner: on the frame, no gap at either end (its edges line up with the frame's)
+    ("front", None, (0, 0)), ("right", None, (34, 30)),  # owner: the front wheel back over the frame's corner, so no gap shows there
 ]
 SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60, 63}   # the lower slabs and the big box's underside, hidden once complete;
 # 63: a traced scrap of shade in the rim's inner back-right corner, a white blob once glossed (owner)
