@@ -55,7 +55,7 @@ OPTIONS = {
     "B": dict(GOLD,  # sky wood, mint glass, teal and orange clocks
               frameTop=[SKY_TT, SKY_T], frameSide=[SKY_T, SKY_TT, SKY_T, SKY, SKY_S], frameHi=GLACIER, frameEdge=LBLUE, frameDeep=SKY_SS,
               post=[SKY_TT, SKY_T, SKY], glass=[WHITE, MINT_T, MINT, MINT_S], glassEdge=MINT_SS, glassDeep=MINT_SSS, glassHi=WHITE, glassTint=[MINT_T, LTEAL_T], glassRim=LTEAL_T,
-              L=dict(bezel=[LTEAL_T, LTEAL, TEAL], hi=MINT_T, face=[WHITE, MINT_T, MINT], tick=MINT_SS, edge=DTEAL, deep=DTEAL, hub=YOLK),
+              L=dict(bezel=[LTEAL_T, LTEAL, TEAL], hi=MINT_T, face=[MINT, MINT], tick=DTEAL, edge=DTEAL, deep=DTEAL, hub=YOLK, flat=True),  # flat mint face, dark teal hour marks (owner, 10 Nov)
               R=dict(bezel=[YOLK, ORANGE, AMBER], hi=YOLK_T, face=[WHITE, YOLK_TT], tick=ORANGE, edge=AMBER, deep=AMBER_S, hub=WHITE)),
 }
 
@@ -255,8 +255,8 @@ def build(key, style, anim=False):
             hi(arc(cx, cy, (cr + fr) / 2, (cr + fr) / 2, 195, 255), c["hi"], round(W * .65))
             if not line_art: occ(arc(cx, cy, fr + 8, fr + 8, -60, 150), c["deep"])  # the face sits recessed in the bezel
             shape("circle", f'cx="{cx}" cy="{cy}" r="{fr}"', grad(f"face{side}", c["face"]), c["edge"])
-            if crisp:  # set in: shaded inside its top-left edge, lit inside its bottom-right
-                line(arc(cx, cy, fr - W * .45, fr - W * .45, 140, 310), c["deep"], W * .9, .4)
+            if crisp:  # set in: shaded inside its top-left edge (not on a flat face), lit inside its bottom-right
+                if not c.get("flat"): line(arc(cx, cy, fr - W * .45, fr - W * .45, 140, 310), c["deep"], W * .9, .4)
                 line(arc(cx, cy, fr - e * .6, fr - e * .6, -30, 120), WHITE, e, .9)
             for a in range(0, 360, 30):
                 r0, r1 = (fr - 62 * k, fr - 34 * k) if a % 90 == 0 else (fr - 48 * k, fr - 34 * k)

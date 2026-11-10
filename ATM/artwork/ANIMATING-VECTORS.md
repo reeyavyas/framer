@@ -31,7 +31,7 @@ options):
 |---|---|
 | Gauge | `gauge-B-gloss.svg`, segments left to right: orange, egg yolk, mint, light teal, sky |
 | Browser with magnifier | `browser-search-AB-gloss.svg`: Glossy A window with Glossy B's magnifier |
-| Hourglass and coins | `hourglass-B-gloss.svg`: one clock, centred on the left post in front; coin stacks of 3 and 8 |
+| Hourglass and coins | `hourglass-B-gloss.svg`: one clock, centred on the left post in front, flat mint face with dark teal hour marks; coin stacks of 3 and 8 |
 | Cart version 2 | `cart-v2-B-gloss.svg` (a separate cart; the first cart and its code are untouched) |
 | Savings jar | `savings-jar-B-gloss.svg`: full jar of big, wide coins, with Glossy A's sky arrow |
 
