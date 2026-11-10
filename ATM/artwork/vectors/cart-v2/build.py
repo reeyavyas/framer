@@ -127,7 +127,7 @@ SCHEMES = {
     edge=None),
  "B": dict(  # sky basket, egg-yolk frame, light-teal grip and wheels, glacier stack, mint box, orange box
     basket=[SKY_TT, SKY_T, SKY], basketSide=[SKY, SKY_S], basketIn=SKY_S, rim=[GL_T, SKY_TT], inShade=LBLUE,
-    slotSeen=[YOLK_T, YOLK], slotBox=[YOLK, ORANGE], slotBack=SKY_S, slotWall=[SKY_S, LBLUE], slotLip=SKY_TT, slotRing=NAVY,
+    slotSeen=[YOLK_T, YOLK], slotBox=[YOLK, ORANGE], slotBack=[YOLK_T, YOLK], slotWall=[SKY_S, LBLUE], slotLip=SKY_TT, slotRing=NAVY,  # slotBack: yolk like the other slots (owner)
     frameTop=[YOLK_T, YOLK], frameLight=[YOLK_TT, YOLK_T], frameDark=[ORANGE, AMBER], frameHi=YOLK_TT,
     grip=[LTEAL_T, LTEAL], gripEnd=[LTEAL, TEAL], gripHi=MINT_T,
     flatTop=[WHITE, GL_T], flatStrip=GL_T, flatFront=[GL, GL_S], flatSide=[GL_S, GL_SS],
