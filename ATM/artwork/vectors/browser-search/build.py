@@ -353,7 +353,7 @@ def build_soft(key, style, anim=False):
     o.append(f'<g clip-path="url(#{clip})">{"".join(sh)}</g>')
     if clay: o.append(soft(LEFT(800) + 520, 820, 520, 300, WHITE, .55))  # soft light top-left of the screen (gloss: crisp sheens only)
     if gloss:  # a polished reflection across the screen's top-left
-        o.append(f'<g clip-path="url(#{clip})"><path d="M{LEFT(BAR)-50:.0f},{BAR} H1500 L{LEFT(1500)-50:.0f},1500 Z" fill="{D.lin([WHITE, WHITE], [.7, .04], x1=0, y1=0, x2=.7, y2=.7)}"/></g>')
+        o.append(f'<g clip-path="url(#{clip})"><path d="M{LEFT(BAR)-50:.0f},{BAR} H1500 L{LEFT(1500)-50:.0f},1500 Z" fill="{D.lin([WHITE, WHITE, WHITE], [.7, .22, 0], x1=0, y1=0, x2=.5, y2=.5)}"/></g>')  # fades out right at its diagonal edge (owner: it ended in a harsh line at 23%)
     o.append(f'<path d="{fd}" fill="none"{rim(pal["body"], lit=False)}/>')  # owner: no white edge (it showed round the bar's top-left)
     # top bar, its glossy lip, the dots each with a tiny shadow, a highlight and a specular spot
     o.append(f'<path d="{bd}" fill="{puff(pal["bar"], cx=.3, cy=.1, r=1.1, fx=.25, fy=0)}"{rim(pal["bar"], lit=False)}/>')
