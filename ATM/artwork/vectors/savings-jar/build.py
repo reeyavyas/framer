@@ -206,8 +206,8 @@ GLOSS_ARROW = dict(arrow=[(0.30, SKY_S), (0.40, SKY), (0.50, SKY_T)])  # both sc
 COIN_TH = .32  # coin thickness x radius, as flat as the outlined art's coins
 STACK = dict(cx=2865,  # moved right with the taller arrow (was 2665)
               bottom=2459, r=245, k=.36, n=19, jitter=(0, 14, -10, 18, 4, -12, 12, -4))  # base on the jar's base line (y 2459), top level with the lid
-# ATMSavingsJar.tsx then lifts the stack 12 to the jar's lowest point, y 2446, and drops the arrow 56 (ARROW_FOOT too) so its
-# back (right) bottom corner meets the stack's bottom, shape unchanged; redo that after a rebuild
+# export_anim then lifts the stack 12 to the jar's lowest point, y 2446, and drops the arrow 56 (the component's ARROW_FOOT
+# matches) so its back (right) bottom corner meets the stack's bottom, shape unchanged
 R_JAR = 190
 # The jar's coins, back to front. Stacks: cx, bottom, coins. Loose coins: cx, cy, rotation, tilt (ry / r).
 JAR_BACK = [(1230, 2235, 4), (1640, 2235, 5), (2040, 2235, 3)]
@@ -668,12 +668,20 @@ def export_anim():
     ids = re.findall(r'id="([^"]+)"', svg); assert len(ids) == len(set(ids))
     assert all(f"#{u}" in svg or u in ids for u in re.findall(r'url\(#([^)]+)\)', svg))
     open(os.path.join(OUT, f"{SLUG}-anim.svg"), "w").write(svg)
-    # the component: the template with the art pasted in (ATM/ATMSavingsJar.tsx)
+    # the component (ATM/ATMSavingsJar.tsx): only its art line is replaced. The component was edited after its template
+    # (the arrow's foot and more), so the rest of it stays. The art gets the owner's two moves: the coin stack (and its
+    # glint) lifted 12 to the jar's lowest point (y 2446), and the arrow (and its shadow) dropped 56, so the arrow's back
+    # bottom corner sits level with the stack's and the jar's bottom (owner: never move these).
     inner = svg[svg.index(">") + 1:svg.rindex("</svg>")]
     assert "`" not in inner and "${" not in inner and "\\" not in inner  # safe inside a template literal
-    tsx = (open(os.path.join(OUT, "ATMSavingsJar.template.tsx")).read()
-           .replace("__VIEWBOX__", re.search(r'viewBox="([^"]+)"', svg).group(1)).replace("__ART__", inner))
-    open(os.path.join(OUT, "..", "..", "..", "ATMSavingsJar.tsx"), "w").write(tsx)
+    stack0, shadow0 = '<g transform="translate(2865.0 2292.4)', '<g data-k="arrowShadow">'
+    assert inner.count(stack0) == 1 and inner.count(shadow0) == 1 and inner.count("translate(2478.5 2459)") == 2
+    inner = (inner.replace(stack0, '<g transform="translate(0 -12)">' + stack0).replace(shadow0, "</g>" + shadow0)
+             .replace("translate(2478.5 2459)", "translate(2478.5 2515)"))
+    comp = os.path.join(OUT, "..", "..", "..", "ATMSavingsJar.tsx"); tsx = open(comp).read()
+    assert tsx.count("const ART = `") == 1 and f'const VIEWBOX = "{re.search(chr(118) + "iewBox=" + chr(34) + "([^" + chr(34) + "]+)", svg).group(1)}"' in tsx
+    tsx = re.sub(r"const ART = `[^`]*`", lambda m: "const ART = `" + inner + "`", tsx)
+    open(comp, "w").write(tsx)
     return f"{SLUG}-anim.svg", len(svg)
 
 if __name__ == "__main__":

@@ -80,8 +80,9 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Browser, second round: no white lit edge on the nav bar, the window's side face or the screen face (`rim(..., lit=False)`).
 - Savings jar (owner, 10 Nov): no light mint curved lines across the lid's threads (`LID_HI_DROP`: traced highlights
   283 and 309). Its `ATMSavingsJar.template.tsx` is older than `ATM/ATMSavingsJar.tsx` (the arrow's foot and other
-  edits were made in the component), so after a rebuild copy only the new `const ART` line into the committed
-  component and restore the rest; the source is `pdf2svg.py Vectors.ai 1`, which rebuilds the art byte for byte.
+  edits were made in the component), so `export_anim` now replaces only the component's `const ART` line, and applies
+  the owner's two moves to it: the coin stack lifted 12, the arrow dropped 56 so its back bottom corner is level with
+  the stack's and the jar's bottom. Never move the arrow. The source is `pdf2svg.py Vectors.ai 1` (byte for byte).
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
