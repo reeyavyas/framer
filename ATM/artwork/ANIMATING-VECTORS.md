@@ -64,6 +64,10 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Gauge (owner, 10 Nov): no harsh lines in the bevels. The bevel bands fade out toward the face (`soft_stroke` in
   `gauge/build.py`, stacked strokes, no blur) instead of ending in a hard edge that met itself in a V at each corner.
   The Credit Score Challenge's `ART` is a copy of `gauge-anim.svg`'s inside, so paste it there too after a rebuild.
+- Browser (owner, 10 Nov): the text lines centred as a group between the bar and the window's bottom edge (side faces
+  included; the scan poses moved up with them), no mint line along the top of the bar, the bar's sheen fades right out
+  (it stopped in a hard line), and the lens's hole mask sits on a plain group: on the rotated rim ellipses it turned
+  with them, 54 degrees off the glass, which cut a gap in the rim and wall at the top-right.
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
@@ -261,6 +265,12 @@ cp Art.ai src.eps && gs -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sDEVICE=pdfwrite
 sh ATM/artwork/cart/preview/build.sh <stock dir> <tools dir>
 python3 ATM/artwork/cart/preview/outlines.py <stock dir>/measure.png
 ```
+
+On the Mac (no poppler), `pdf2svg.py` numbers the shapes differently from pdftocairo and drifts up to a unit, so the
+browser's build (which reads positions off the source) gets its source from `browser-search/make_p5.py`:
+`python3 make_p5.py p4.svg p5.svg` (p4.svg = `pdf2svg.py Vectors.ai 4`); it rebuilds the committed art byte for byte.
+The hourglass build only checks its source, so any file with 225 `<path` and its viewBox will do. The builds need
+Python 3.12+ (and numpy for the browser).
 
 On Claude's cloud machine, Chromium is at
 `/opt/pw-browsers/chromium-1194/chrome-linux/chrome` (the default in

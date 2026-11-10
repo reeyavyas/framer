@@ -260,8 +260,9 @@ def build(key):
     o.append(f'<g {HAND()}><rect x="{-HL - 280}" y="-62" width="300" height="124" fill="{D.lin(pal["neck"], x2=0)}"{ln()}/>'
              f'<path d="M{-HL - 270},-24 H{-HL}" stroke="{WHITE}" stroke-width="{SW * .9:.0f}" stroke-linecap="round" opacity=".9"/></g>')
     h = hole(D)
-    o.append(f'{LENS()} fill="{D.lin(pal["ring"])}" mask="{h}"/>')
-    o.append(f'<ellipse cx="{LCX - 4}" cy="{LCY - 8}" rx="{LA - 112}" ry="{LB - 92}" transform="rotate({LANG} {LCX} {LCY})" fill="{D.lin(pal["wall"], x1=1, y1=1, x2=0, y2=0)}" mask="{h}"/>')
+    # the mask on a plain group: on the rotated ellipses it turned with them, so the hole sat 54 deg off the glass (a gap)
+    o.append(f'<g mask="{h}">{LENS()} fill="{D.lin(pal["ring"])}"/>'
+             f'<ellipse cx="{LCX - 4}" cy="{LCY - 8}" rx="{LA - 112}" ry="{LB - 92}" transform="rotate({LANG} {LCX} {LCY})" fill="{D.lin(pal["wall"], x1=1, y1=1, x2=0, y2=0)}"/></g>')
     glass(D, o, *pal["glass"])
     o.append(f'<path d="M{LCX - LA + 50},{LCY} A{LA - 50},{LB - 50} 0 0 1 {LCX},{LCY - LB + 50}" transform="rotate({LANG} {LCX} {LCY})" fill="none" stroke="{pal["ringHi"]}" stroke-width="{SW * 1.3:.0f}" stroke-linecap="round" opacity=".9"/>')
     o.append(f'{OPEN()} fill="none"{ln()}/>'); o.append(f'{LENS()} fill="none"{ln()}/>')
@@ -327,9 +328,10 @@ def build_soft(key, style, anim=False):
     # spaced out so every piece reads as its own form: dots smaller and further apart, thinner lines with more room
     # between them, and the magnifier lifted up-right off the window (MAG) so it floats over its own shadow
     dots, dot_r = [(DOTS[0][0] + k * 175, DOTS[0][1]) for k in range(3)], 44
-    pills = [(x0 + 10, y - 50, x1, y + 50) for (x0, _, x1, _), y in zip(PILLS, [BAR + 230 + k * 320 for k in range(5)])]
-    MAG = (50, -70)
     DEP, PDEP = st["depth"], st["pdepth"]
+    top = BAR + 50 + (BOT - BAR - 4 * 320 - 100 - PDEP[1]) / 2  # owner: even room above and below the lines
+    pills = [(x0 + 10, y - 50, x1, y + 50) for (x0, _, x1, _), y in zip(PILLS, [top + k * 320 for k in range(5)])]
+    MAG = (50, -70)
     fd, bd, sd, ssp = window(st["R"], DEP)
     o = []
     # contact shadow under the whole object (and the handle's end), dark navy fading out, so it shows on the teal card
@@ -355,10 +357,9 @@ def build_soft(key, style, anim=False):
     o.append(f'<path d="{fd}" fill="none"{rim(pal["body"])}/>')
     # top bar, its glossy lip, the dots each with a tiny shadow, a highlight and a specular spot
     o.append(f'<path d="{bd}" fill="{puff(pal["bar"], cx=.3, cy=.1, r=1.1, fx=.25, fy=0)}"{rim(pal["bar"])}/>')
-    o.append(f'<path d="M{LEFT(TOP + 70) + 140:.0f},{TOP + 58} H{RIGHT(TOP) - 300:.0f}" stroke="{pal["bar"][0]}" stroke-width="{SW * 1.3:.0f}" stroke-linecap="round" opacity=".75"/>')
     if clay: o.append(soft(LEFT(TOP) + 420, TOP + 90, 340, 70, WHITE, .5))
     if gloss:  # polished sheen over the bar's upper half
-        o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE], [.55, .08], x2=0)}"/></g>')
+        o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE, WHITE], [.55, .15, 0], x2=0)}"/></g>')
     for i, ((cx, cy), r) in enumerate(zip(dots, pal["dots"])):
         o.append(soft(cx + 12, cy + 26, dot_r * 1.15, dot_r * .7, pal["bar"][4], .45 if gloss else .7))
         o.append(tag(f"dot{i}", f'<circle cx="{cx:.0f}" cy="{cy}" r="{dot_r}" fill="{puff(r)}"{rim(r)}/>' + spec(cx - 15, cy - 17, 12, 8)))
@@ -384,8 +385,9 @@ def build_soft(key, style, anim=False):
              f'<rect x="{-HL - 280}" y="-62" width="300" height="124" fill="{D.lin([pal["neck"][4]] * 4, [.75, 0, 0, .75])}" />'
              f'<path d="M{-HL - 250},-26 H{-HL - 20}" stroke="{WHITE}" stroke-width="{SW:.0f}" stroke-linecap="round" opacity=".9"/></g>')
     h = hole(D)
-    o.append(f'{LENS()} fill="{puff(pal["ring"], cx=.28, cy=.22, r=.9, fx=.22, fy=.15)}" mask="{h}"/>')
-    o.append(f'<ellipse cx="{LCX - 4}" cy="{LCY - 8}" rx="{LA - 112}" ry="{LB - 92}" transform="rotate({LANG} {LCX} {LCY})" fill="{D.lin(pal["wall"], x1=1, y1=1, x2=0, y2=0)}" mask="{h}"/>')
+    # the mask on a plain group: on the rotated ellipses it turned with them, so the hole sat 54 deg off the glass (a gap)
+    o.append(f'<g mask="{h}">{LENS()} fill="{puff(pal["ring"], cx=.28, cy=.22, r=.9, fx=.22, fy=.15)}"/>'
+             f'<ellipse cx="{LCX - 4}" cy="{LCY - 8}" rx="{LA - 112}" ry="{LB - 92}" transform="rotate({LANG} {LCX} {LCY})" fill="{D.lin(pal["wall"], x1=1, y1=1, x2=0, y2=0)}"/></g>')
     # occlusion where the glass tucks into the rim: a dark ring just outside the opening, deepest top-left (in shadow of the rim's lip)
     o.append(f'<ellipse cx="{OCX}" cy="{OCY}" rx="{OA + 14}" ry="{OB + 14}" transform="rotate({OANG} {OCX} {OCY})" fill="none" '
              f'stroke="{D.lin([pal["wall"][1], pal["wall"][1]], [.85, .15])}" stroke-width="30"/>')
@@ -429,7 +431,7 @@ def build_soft(key, style, anim=False):
 # The magnifier scans: it starts over the upper lines, drifts down and settles over the egg-yolk hit line, pauses
 # there with a small pop, then glides back. POSES: (time s, x, y offset from the drawing's rest pose, ground-shadow
 # opacity). Its ground shadow only shows while the handle is off the window, below it.
-POSES = [(0, -420, -300, 0), (1.1, -90, -190, .3), (2.0, -230, 160, 1), (3.0, -230, 160, 1), (3.9, 60, -60, .6), (4.8, -420, -300, 0)]
+POSES = [(0, -420, -342, 0), (1.1, -90, -232, .3), (2.0, -230, 118, 1), (3.0, -230, 118, 1), (3.9, 60, -102, .6), (4.8, -420, -342, 0)]  # 42 up with the centred lines
 POP = 1.06
 def hand_pts_mag(): return [(x + 50, y - 70) for x, y in hand_pts()]  # the handle at the rest pose (MAG)
 def export_anim():
@@ -442,7 +444,7 @@ def export_anim():
     tsx = (tpl.replace("__VIEWBOX__", " ".join(map(str, vb))).replace("__ORIGIN__", f"{LCX + 50} {LCY - 70}")
            .replace("__POSES__", ", ".join(f"[{t}, {x}, {y}, {g}]" for t, x, y, g in POSES)).replace("__POP__", str(POP))
            .replace("__DOTS__", ", ".join(f'"{x:g} {y:g}"' for x, y in dots)).replace("__ART__", inner))
-    assert "__" not in re.sub(r"__html", "", tsx)
+    assert "__" not in re.sub(r"__html|__systemOverlayOpen", "", tsx)
     open(f"{OUT}/../../../ATMBrowserSearch.tsx", "w").write(tsx)
     return name, vb
 
