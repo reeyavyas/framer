@@ -263,7 +263,7 @@ def build(key, style, anim=False):
             hi(arc(cx, cy, (cr + fr) / 2, (cr + fr) / 2, 195, 255), c["hi"], round(W * .65))
             if flat: faded(fr + 8, -60, 150, [(c["deep"], W * k, a) for k, a in ((3.2, .1), (2.2, .13), (1.3, .17), (.6, .22))])  # the face sits recessed in the bezel
             elif not line_art: occ(arc(cx, cy, fr + 8, fr + 8, -60, 150), c["deep"])  # the face sits recessed in the bezel
-            shape("circle", f'cx="{cx}" cy="{cy}" r="{fr}"', grad(f"face{side}", c["face"]), c["edge"])
+            shape("circle", f'cx="{cx}" cy="{cy}" r="{fr}"', grad(f"face{side}", c["face"]), c["edge"], lit=not flat)  # owner: the mint face is plain mint, no light/shade overlay
             if crisp:  # set in: shaded inside its top-left edge (not on a flat face), lit inside its bottom-right
                 if not flat: line(arc(cx, cy, fr - W * .45, fr - W * .45, 140, 310), c["deep"], W * .9, .4)
                 if not flat: line(arc(cx, cy, fr - e * .6, fr - e * .6, -30, 120), WHITE, e, .9)  # owner: no white on the mint face
