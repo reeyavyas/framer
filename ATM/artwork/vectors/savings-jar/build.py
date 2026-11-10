@@ -469,6 +469,7 @@ def build_gloss(key, anim=False):
         f = paint(i)
         if r != "line": fills[i] = f
         el = f'<path d="{closed(d)}" fill="{f}"/>'
+        if i == LID_GLOW: continue  # redrawn as a band round the lid, in lid_side under the ticks
         (arrow if o == "arrow" else lid if o == "lid" else body).append(el)
         if o not in ("arrow", "lid"): body_ix.append(i)
     gs = NAVY
@@ -510,10 +511,20 @@ def build_gloss(key, anim=False):
     defs.append(f'<clipPath id="{zone}"><rect x="1100" y="300" width="1100" height="500"/></clipPath>'
                 f'<clipPath id="{above}"><path d="M {_lcx - 800:.1f},300 L {_lcx - 800:.1f},{cy} L {_lcx - rx:.1f},{cy} A {rx},{ry} 0 0 0 '
                 f'{_lcx + rx:.1f},{cy} L {_lcx + 800:.1f},{cy} L {_lcx + 800:.1f},300 Z"/></clipPath>')
+    # owner: the cap band's light wraps round the whole lid, not one traced patch (212) in the middle: a band between two
+    # arcs that follow the first groove, lightest across the middle and fading out at both sides, under every tick
+    grx, gcy, gry = LID_GROOVES[0]; gc = colour(LID_GLOW, sc)
+    glow_band = (f"M {_lcx - grx:.1f},{gcy - 118:.1f} A {grx},{gry} 0 0 0 {_lcx + grx:.1f},{gcy - 118:.1f} "
+                 f"L {_lcx + grx:.1f},{gcy - 30:.1f} A {grx},{gry} 0 0 1 {_lcx - grx:.1f},{gcy - 30:.1f} Z")
+    glow = lin([(0, gc, 0), (.15, gc, .8), (.5, gc, 1), (.85, gc, .8), (1, gc, 0)], f"{_lcx - grx:.1f}", 0, f"{_lcx + grx:.1f}", 0, units=True)
+    notch_mask = (f'<rect x="0" y="0" width="4200" height="3000" fill="#fff"/><g clip-path="url(#{zone})"><g clip-path="url(#{above})">'
+                  f'<path d="{closed(PATHS[2][1])}" fill="#000"/><path d="{closed(PATHS[209][1])}" fill="#fff"/></g></g>')
     lid_side = (f'<path d="{LID_CLEAN}" fill="{side_fill(209)}"/>'
                 + "".join(f'<path d="{below(*g_)}" fill="{side_fill(i)}"/>' for g_, i in zip(LID_GROOVES, (209, 211, 213)))
                 + f'<g clip-path="url(#{zone})"><g clip-path="url(#{above})"><path d="{closed(PATHS[2][1])}" fill="{edge_of(2, sc)}"/>'
                 f'<path d="{closed(PATHS[209][1])}" fill="{side_fill(209)}"/></g></g>'
+                # the band, masked off the notch ticks just drawn (outline 2 showing through face 209's notches)
+                + f'<path d="{glow_band}" fill="{glow}" mask="{full_mask(notch_mask)}"/>'
                 + "".join(f'<path d="M {_lcx - rx:.1f},{cy} A {rx},{ry} 0 0 0 {_lcx + rx:.1f},{cy}" fill="none" stroke="{edge_of(2, sc)}" '
                           f'stroke-width="11"/>' for rx, cy, ry in LID_GROOVES))
     lid_top = (ell((LID_E[0], LID_E[1], LID_R, LID_E[3]), fill=fills[210]) + ell(RIM_E, fill=fills[210]) + ell(WALL_E, fill=fills[222], stroke=edge_of(224, sc), stroke_width=f"{10 * K:.1f}")
@@ -605,6 +616,7 @@ _lcx, _lcy, _lry = LID_E[0], LID_E[1], LID_E[3]
 LID_R, LID_CAP, LID_BULGE, LID_LOW = 628.8, 705.8, (654.0, 762.5), 921.5  # side half-width, cap side's foot, bulge, lowest point
 LID_GROOVES = ((643.0, 656.8, 128.2), (643.0, 704.5, 134.8), (655.0, 716.6, 168.0))  # (rx, cy, ry) about the lid's axis
 LID_SIDE = {2, 209, 211, 213}
+LID_GLOW = 212  # the cap band's traced light patch, redrawn as a band round the whole lid (see the assemble loop)
 LID_HI_DROP = {283, 309}  # owner (10 Nov): no light mint curved lines across the lid's threads (two traced highlights)
 assert abs(LID_BULGE[0] - (bbox(PATHS[2][1])[2] - bbox(PATHS[2][1])[0]) / 2) < 6 and abs(LID_LOW - bbox(PATHS[2][1])[3]) < 6
 _p = lambda dx, y: f"{_lcx + dx:.1f},{y:.1f}"
