@@ -73,7 +73,11 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
   off along its own bar so its edges line up with the frame's, the third slot's yolk/wall edge is straight, and the
   rim's back-right corner is one shape drawn twice (behind the items, and in front cut at the corner's mitre, its
   dark under-layers stopping 3 short of the cut so no hairline shows), with the traced shade scrap 63 dropped.
-- Hourglass (owner, 10 Nov): no white stroke round the mint clock's bezel edge.
+- Hourglass (owner, 10 Nov): no white stroke round the mint clock's bezel edge, no white on its face (the lit arc and
+  the gloss spot), and the bezel's two shade arcs fade out at their ends (`faded` in `clocks()`) instead of stopping hard.
+- Cart version 2, second round: the base rail's front-right corner is finished as a box corner (the stock art cut it
+  off where the wheel hid it); it runs on under the right wheel.
+- Browser, second round: no white lit edge on the nav bar, the window's side face or the screen face (`rim(..., lit=False)`).
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without

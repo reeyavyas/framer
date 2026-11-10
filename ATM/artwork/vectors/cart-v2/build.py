@@ -201,7 +201,17 @@ _OFF = np.array((24, 32)) + 9 * _N   # its gloss extrusion and edge, so the cut 
 _P = [(2708.679688, 1771.273438), (2772.644531, 1753.789062), (2590.664062, 1656.722656), (2659.761719, 1637.121094), (2840.664062, 1731.671875)]
 _c3, _c4 = _cut(_P[1], _P[2], _B0 + _OFF, _B1 + _OFF), _cut(_P[4], _P[3], _B0 + _OFF, _B1 + _OFF)
 SPACED_D[16] = D[16].replace("L 2590.664062 1656.722656 L 2659.761719 1637.121094", f"L {_c3[0]:.1f} {_c3[1]:.1f} L {_c4[0]:.1f} {_c4[1]:.1f}")
-assert SPACED_D[16] != D[16]; GEOM[16] = shape_geom(SPACED_D[16])
+# owner: the rail's front-right corner (16's top, 9's front) was cut off in a curve where the stock wheel covered it;
+# spaced apart, the wheel no longer hides it, so it's finished as a box corner: the top face's outer edges meet, and
+# the front face ends in an upright edge under that corner
+_Q = _cut((2659.761719, 1637.121094), (2840.664062, 1731.671875), (2001.957031, 1970.828125), (2792.058594, 1780.496094))
+SPACED_D[16] = SPACED_D[16].replace("C 2821.644531 1746.175781 2805.816406 1760.003906 2792.058594 1780.496094", f"L {_Q[0]:.1f} {_Q[1]:.1f}")
+_at = lambda a_, b_, x: a_[1] + (b_[1] - a_[1]) * (x - a_[0]) / (b_[0] - a_[0])   # a line's height at x
+_T = _at((2010.9375, 1975.476562), (2783.605469, 1790.132812), _Q[0]); _Bt = _at((2108.664062, 2020.453125), (2757.269531, 1864.886719), _Q[0])
+SPACED_D[9] = D[9].replace("L 2783.605469 1790.132812 C 2773.535156 1815.3125 2761.167969 1836.648438 2757.269531 1864.886719",
+                           f"L {_Q[0]:.1f} {_T:.1f} L {_Q[0]:.1f} {_Bt:.1f}")
+assert SPACED_D[16] != D[16] and SPACED_D[9] != D[9] and "C 2821" not in SPACED_D[16]
+GEOM[16] = shape_geom(SPACED_D[16]); GEOM[9] = shape_geom(SPACED_D[9])
 # owner: the rim's back-right corner showed two light blues and a notch where the front rim (13, with a traced hook
 # round the corner) met the right side (102). The whole rim, front and right side, is now one shape (one gradient and
 # bevel), drawn twice: behind the items (102) and in front of them (13) cut along the corner's mitre, so the right side

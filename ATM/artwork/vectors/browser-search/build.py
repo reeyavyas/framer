@@ -314,10 +314,10 @@ def build_soft(key, style, anim=False):
         if clay: return D.rad(ramp[:5], **({"cx": .34, "cy": .28, "r": .95, "fx": .26, "fy": .18} | at))
         if glassy: return D.lin(ramp[:3], x1=.1, y1=0, x2=.35, y2=1)
         return D.lin(ramp[1:5], x1=.1, y1=0, x2=.35, y2=1)
-    def rim(r):
+    def rim(r, lit=True):
         if clay: return f' stroke="{r[-1]}" stroke-width="{EW}" stroke-linejoin="round"'
         light = r[0] if glassy else WHITE  # lit edge top-left, fading out, then a darker same-hue band bottom-right
-        g = D.lin([light, light, r[-1], r[-1]], [.85 if glassy else .95, 0, 0, .9], x1=0, y1=0, x2=.6, y2=1)
+        g = D.lin([light, light, r[-1], r[-1]], [(.85 if glassy else .95) if lit else 0, 0, 0, .9], x1=0, y1=0, x2=.6, y2=1)
         return f' stroke="{g}" stroke-width="{EW * (1.1 if glassy else 1.8):.1f}" stroke-linejoin="round"'
     tag = lambda k, inner: f'<g data-k="{k}">{inner}</g>' if anim else inner  # moving parts get their own named group
     spec = lambda x, y, rx, ry, a=-35: f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rx}" ry="{ry}" transform="rotate({a} {x:.0f} {y:.0f})" fill="{WHITE}" opacity=".95"/>'
@@ -341,7 +341,7 @@ def build_soft(key, style, anim=False):
     hx_, hy_ = HCX + HL * math.cos(math.radians(HANG)), HCY + HL * math.sin(math.radians(HANG))
     o.append(tag("magGround", soft(hx_ - 10, hy_ + 110, 330, 90, pal["ground"], st["ground"])))
     # slab: deep side faces, then the puffy front face
-    o.append(f'<path d="{sd}" fill="{D.lin(pal["side"], x1=.2, y1=0, x2=.5, y2=1)}"{rim(pal["side"])}/>')
+    o.append(f'<path d="{sd}" fill="{D.lin(pal["side"], x1=.2, y1=0, x2=.5, y2=1)}"{rim(pal["side"], lit=False)}/>')  # owner: no white edge round the top-left
     o.append(f'<path d="{fd}" fill="{puff(pal["body"], cx=.3, cy=.22, r=1.05, fx=.2, fy=.12)}"/>')
     clip = D.new("screen"); D.items.append(f'<clipPath id="{clip}"><path d="{fd}"/></clipPath>')
     sh = []  # shadows and occlusion on the screen, clipped to it
@@ -354,9 +354,9 @@ def build_soft(key, style, anim=False):
     if clay: o.append(soft(LEFT(800) + 520, 820, 520, 300, WHITE, .55))  # soft light top-left of the screen (gloss: crisp sheens only)
     if gloss:  # a polished reflection across the screen's top-left
         o.append(f'<g clip-path="url(#{clip})"><path d="M{LEFT(BAR)-50:.0f},{BAR} H1500 L{LEFT(1500)-50:.0f},1500 Z" fill="{D.lin([WHITE, WHITE], [.7, .04], x1=0, y1=0, x2=.7, y2=.7)}"/></g>')
-    o.append(f'<path d="{fd}" fill="none"{rim(pal["body"])}/>')
+    o.append(f'<path d="{fd}" fill="none"{rim(pal["body"], lit=False)}/>')  # owner: no white edge (it showed round the bar's top-left)
     # top bar, its glossy lip, the dots each with a tiny shadow, a highlight and a specular spot
-    o.append(f'<path d="{bd}" fill="{puff(pal["bar"], cx=.3, cy=.1, r=1.1, fx=.25, fy=0)}"{rim(pal["bar"])}/>')
+    o.append(f'<path d="{bd}" fill="{puff(pal["bar"], cx=.3, cy=.1, r=1.1, fx=.25, fy=0)}"{rim(pal["bar"], lit=False)}/>')
     if clay: o.append(soft(LEFT(TOP) + 420, TOP + 90, 340, 70, WHITE, .5))
     if gloss:  # polished sheen over the bar's upper half
         o.append(f'<g clip-path="url(#{clip})"><rect x="0" y="{TOP}" width="4200" height="{(BAR - TOP) * .5:.0f}" fill="{D.lin([WHITE, WHITE, WHITE], [.55, .15, 0], x2=0)}"/></g>')

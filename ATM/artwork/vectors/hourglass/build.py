@@ -249,15 +249,24 @@ def build(key, style, anim=False):
             G("clock")
             if not line_art: soft("drop", NAVY, .5 if style == "clay" else .6, cx + 46 * k, cy + 62 * k, cr + 34 * k, cr + 34 * k)  # its own shadow, cast on the card
             shape("circle", f'cx="{cx}" cy="{cy}" r="{cr}"', grad(f"bezel{side}", c["bezel"]), c["edge"], deep=c["deep"])
+            flat = c.get("flat")
+            def faded(r, a0, a1, strokes, n=8):  # an arc that fades out toward both ends (owner: no harsh ends on the mint clock)
+                for j in range(n):
+                    t = .45 * (a1 - a0) / 2 * j / n
+                    for col, w_, a_ in strokes:
+                        out.append(f'<path d="{arc(cx, cy, r, r, a0 + t, a1 - t)}" fill="none" stroke="{col}" stroke-width="{round(w_, 1)}" '
+                                   f'stroke-opacity="{1 - (1 - a_) ** (1 / n):.3f}" stroke-linecap="round"/>')
             if crisp:
-                if not c.get("flat"): line(arc(cx, cy, cr - e * .7, cr - e * .7, 150, 300), WHITE, e, .9)  # owner (10 Nov): no white stroke on the mint clock's edge
-                line(arc(cx, cy, cr - W * .3, cr - W * .3, -20, 115), c["deep"], W * .6, .55)
+                if not flat: line(arc(cx, cy, cr - e * .7, cr - e * .7, 150, 300), WHITE, e, .9)  # owner (10 Nov): no white stroke on the mint clock's edge
+                if flat: faded(cr - W * .3, -20, 115, [(c["deep"], W * .6, .55)])
+                else: line(arc(cx, cy, cr - W * .3, cr - W * .3, -20, 115), c["deep"], W * .6, .55)
             hi(arc(cx, cy, (cr + fr) / 2, (cr + fr) / 2, 195, 255), c["hi"], round(W * .65))
-            if not line_art: occ(arc(cx, cy, fr + 8, fr + 8, -60, 150), c["deep"])  # the face sits recessed in the bezel
+            if flat: faded(fr + 8, -60, 150, [(c["deep"], W * k, a) for k, a in ((3.2, .1), (2.2, .13), (1.3, .17), (.6, .22))])  # the face sits recessed in the bezel
+            elif not line_art: occ(arc(cx, cy, fr + 8, fr + 8, -60, 150), c["deep"])  # the face sits recessed in the bezel
             shape("circle", f'cx="{cx}" cy="{cy}" r="{fr}"', grad(f"face{side}", c["face"]), c["edge"])
             if crisp:  # set in: shaded inside its top-left edge (not on a flat face), lit inside its bottom-right
-                if not c.get("flat"): line(arc(cx, cy, fr - W * .45, fr - W * .45, 140, 310), c["deep"], W * .9, .4)
-                line(arc(cx, cy, fr - e * .6, fr - e * .6, -30, 120), WHITE, e, .9)
+                if not flat: line(arc(cx, cy, fr - W * .45, fr - W * .45, 140, 310), c["deep"], W * .9, .4)
+                if not flat: line(arc(cx, cy, fr - e * .6, fr - e * .6, -30, 120), WHITE, e, .9)  # owner: no white on the mint face
             for a in range(0, 360, 30):
                 r0, r1 = (fr - 62 * k, fr - 34 * k) if a % 90 == 0 else (fr - 48 * k, fr - 34 * k)
                 ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
@@ -271,7 +280,8 @@ def build(key, style, anim=False):
                 out.append(f'<path d="M{cx},{n(cy - 150 * k)} V{cy} H{n(cx + 112 * k)}" {hw_}/>')
             out.append(f'<circle cx="{cx}" cy="{cy}" r="{round(W * 1.15)}" fill="{hand}"/><circle cx="{cx}" cy="{cy}" r="{round(W * .45)}" fill="{c["hub"]}"/>')
             if not line_art:
-                spec(cx - 168 * k, cy - 168 * k, 30, 15, -45); spec(cx - 105 * k, cy - 120 * k, 22, 11, -40)
+                spec(cx - 168 * k, cy - 168 * k, 30, 15, -45)
+                if not flat: spec(cx - 105 * k, cy - 120 * k, 22, 11, -40)  # the face's gloss spot (owner: none on the mint face)
             END()
 
     # base, posts, plinth
