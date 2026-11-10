@@ -102,6 +102,7 @@ def grip_streak():
     b = m + ax * (proj.max() - 0.25 * (proj.max() - proj.min())) + nr * half * 0.42
     return a, b, half
 GA, GB, GHALF = grip_streak()
+GU = (GB - GA) / np.linalg.norm(GB - GA)   # the grip bar's direction
 
 # ---- palettes ----
 NAVY, MID = "#002c44", "#11232d"
@@ -154,7 +155,7 @@ T_WHEEL = 22           # wheel outlines, centred on the line, so they also cover
 # the no-outline styles space the parts apart (back to front): name, shapes (None for a wheel), offset
 PIECES = [
     ("mid", None, (0, 34)), ("left", None, (-30, 26)),
-    ("basketBack", (50, 100, 54, 101, 102, 56, 62, 63, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
+    ("basketBack", (50, 100, 54, 101, 102, 56, 62, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
     ("tallBox", (17, 3, 42), (-55, -30)),  # inside the basket's right side, not past it
     ("bigBox", (45, 52, 46, 28, 35, 26, 21, 24, 19, 22, 12, 4, 6), (40, -62)),
     # the three slabs are one slab (the top one, the only one the art draws whole) repeated 122.5 apart, plus spacing
@@ -162,10 +163,11 @@ PIECES = [
     ("slots", (73, 74, 75, 72, 76, 77, 78, 79, 80, 81, 82, 83, 84), (0, 0)),
     ("basket", (13, 47, 57, 2, 1), (0, 0)),
     ("frame", (43, 36, 39, 49, 18, 27, 9, 16, 55, 7, 34, 59, 58), (0, 0)),
-    ("grip", (48, 8, 25), (-36, -36)),
+    ("grip", (48, 8, 25), tuple(np.round(GU * np.dot((-36, -36), GU), 1))),  # owner: along the bar, so its edges line up with the frame's
     ("front", None, (0, 36)), ("right", None, (34, 30)),
 ]
-SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60}   # the lower slabs and the big box's underside, hidden once complete
+SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60, 63}   # the lower slabs and the big box's underside, hidden once complete;
+# 63: a traced scrap of shade in the rim's inner back-right corner, a white blob once glossed (owner)
 assert {i for _, ix, _ in PIECES if ix for i in ix} | SPACED_DROP == {i for i in ROLE if ROLE[i] != "slotRing"} | {100, 101, 102}  # + the completed back rim and inside (EXTRA)
 # The big box's left face was cut where the stack hid it; spaced apart, it needs to be whole: five bands parallel
 # to its top edge (slope 0.526), from x 1961 to its corner at x 2298.5, boundaries read off the source at the corner.
@@ -188,6 +190,37 @@ EXTRA = {100: ("basketIn", "M 1446 845 L 2625 590 L 3011 816 L 1776 1111 L 1452 
 # its top edge (2790,290)->(3060,447) and right edge (3060,447)->(2846,848), so it reads as a box when it hops.
 SPACED_D[3] = "M 2790 290 L 3060.3 447.3 L 2846.1 848 L 2575.8 690.7 Z"
 GEOM[3] = shape_geom(SPACED_D[3]); BBOX[3] = (2575.8, 290, 3060.3, 848)
+# owner: the base rail's back end (shape 16) poked up over the basket; it now stops at the basket's visible bottom edge
+def _cut(a, b, p, q):  # where line a-b crosses line p-q
+    a, b, p, q = map(np.array, (a, b, p, q)); r, s_ = b - a, q - p
+    x = lambda u, v: u[0] * v[1] - u[1] * v[0]
+    return a + r * x(p - a, s_) / x(r, s_)
+_B0, _B1 = np.array((2019.6, 1793.1)), np.array((2883.5, 1573.5))   # the basket's bottom edge (shape 1)
+_N = np.array((219.9, 863.9)) / np.hypot(219.9, 863.9)
+_OFF = np.array((24, 32)) + 9 * _N   # its gloss extrusion and edge, so the cut meets the bottom you see
+_P = [(2708.679688, 1771.273438), (2772.644531, 1753.789062), (2590.664062, 1656.722656), (2659.761719, 1637.121094), (2840.664062, 1731.671875)]
+_c3, _c4 = _cut(_P[1], _P[2], _B0 + _OFF, _B1 + _OFF), _cut(_P[4], _P[3], _B0 + _OFF, _B1 + _OFF)
+SPACED_D[16] = D[16].replace("L 2590.664062 1656.722656 L 2659.761719 1637.121094", f"L {_c3[0]:.1f} {_c3[1]:.1f} L {_c4[0]:.1f} {_c4[1]:.1f}")
+assert SPACED_D[16] != D[16]; GEOM[16] = shape_geom(SPACED_D[16])
+# owner: the rim's back-right corner showed two light blues and a notch where the front rim (13, with a traced hook
+# round the corner) met the right side (102). The whole rim, front and right side, is now one shape (one gradient and
+# bevel), drawn twice: behind the items (102) and in front of them (13) cut along the corner's mitre, so the right side
+# still sits behind the items and the front in front, with no seam you can see.
+_X = _cut((1776.429688, 1110.746094), (3011.34375, 816.128906), (2625, 590), (2982, 795))   # the inner corner
+_C = np.array((3107.472656, 820.953125))                                                     # the outer corner
+RIM = (f"M 1776.429688 1110.746094 L {_X[0]:.1f} {_X[1]:.1f} L 2625 590 L 2631 563 L 3107.472656 820.953125 "
+       "L 1785.707031 1135.996094 C 1781.484375 1128.039062 1777.703125 1121.101562 1776.429688 1110.746094 Z")
+_m = (_C - _X) / np.linalg.norm(_C - _X)
+_k = lambda t: _X + _m * t
+FRONT_CLIP = {13: f"M {_k(-2500)[0]:.0f} {_k(-2500)[1]:.0f} L {_k(600)[0]:.0f} {_k(600)[1]:.0f} L 3700 2700 L 1000 2700 Z"}  # below the mitre line
+EXTRA[102] = ("rim", RIM)
+SPACED_D[13] = RIM; GEOM[13] = shape_geom(RIM)
+# owner: the third slot's yolk (76) and inner wall (77) met in a wobble near its bottom (traced); straightened
+SPACED_D[76] = D[76].replace("C 2563.980469 1446.777344 2567.296875 1467.460938 2557.730469 1487.535156", "C 2563.9 1449 2562.3 1472 2557.730469 1487.535156")
+SPACED_D[77] = D[77].replace("C 2547.546875 1525.378906 2566.496094 1500.949219 2569.941406 1469.128906 C 2571.714844 1452.738281 2567.105469 1436.167969 2572.625 1420.53125",
+                             "C 2547.546875 1525.378906 2568.6 1500.9 2569.941406 1469.128906 L 2571.6 1420.53125")
+assert SPACED_D[76] != D[76] and SPACED_D[77] != D[77]
+GEOM.update({i: shape_geom(SPACED_D[i]) for i in (76, 77)})
 for i, (r_, d_) in EXTRA.items():
     ROLE[i] = r_; SPACED_D[i] = d_; GEOM[i] = shape_geom(d_)
     BBOX[i] = (lambda n: (n[0::2].min(), n[1::2].min(), n[0::2].max(), n[1::2].max()))(np.array(re.findall(r'-?\d+\.?\d*', d_), float))
@@ -255,8 +288,17 @@ def build(key, style, anim=False):
     else:
         S = STYLE[style]
         # every shape is an element function: el(dx, dy, attrs) draws it moved by its piece's offset plus (dx, dy)
+        kclip = {}
+        def fixed_clip(i, ox, oy):   # the front copy of the rim stops at the corner's mitre, held still under every offset copy
+            if (i, ox, oy) not in kclip:
+                kclip[(i, ox, oy)] = nid("k")
+                defs.append(f'<clipPath id="{kclip[(i, ox, oy)]}"><path d="{FRONT_CLIP[i]}" transform="translate({-ox:g} {-oy:g})"/></clipPath>')
+            return f' clip-path="url(#{kclip[(i, ox, oy)]})"'
         def use_el(i, T):
-            return lambda dx, dy, a: f'<use href="#{pre}-p{i}" transform="translate({T[0] + dx} {T[1] + dy})" {a}/>'
+            # the dark layers under the face (stroked: crease, extrusion, cast shadow) stop 3 units short of the mitre, so
+            # the edge's anti-aliasing shows only the matching rim behind it (no hairline)
+            cp = lambda dx, dy, a: fixed_clip(i, T[0] + dx, T[1] + dy - (3 if "stroke=" in a else 0)) if i in FRONT_CLIP else ""
+            return lambda dx, dy, a: f'<use href="#{pre}-p{i}"{cp(dx, dy, a)} transform="translate({T[0] + dx} {T[1] + dy})" {a}/>'
         def ell_el(c, a_, b_):
             return lambda dx, dy, a: (f'<ellipse cx="{c[0]:.1f}" cy="{c[1]:.1f}" rx="{a_:.2f}" ry="{b_:.2f}" '
                                       f'transform="translate({dx} {dy}) rotate({WANG} {c[0]:.1f} {c[1]:.1f})" {a}/>')
@@ -339,11 +381,11 @@ def build(key, style, anim=False):
                 roles = [ROLE[i] for i in ix]
             if not item and not (anim and ix is None): body.append(cast(els_, recv=recent if anim else None))   # an item that hops casts no fixed shadow and receives none
             if style == "gloss":  # extrusion: the piece's silhouette stacked toward the bottom-right in its deep shades
-                # (the animated export uses every other step, each copy a little wider, to stay lean)
-                for k in ((8, 5, 2) if anim else range(S["depth"], 0, -1)):
+                # every step, in the animated export too (owner: three wider steps showed as stairs on the front post's foot)
+                for k in range(S["depth"], 0, -1):
                     for (e, v, _), r in zip(faces, roles):
                         col = DARKER[DARKER[last(v)]] if k > 2 else DARKER[last(v)]
-                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"] + (11 if anim else 0)}" stroke-linejoin="round"'))
+                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"]}" stroke-linejoin="round"'))
             if style == "clay":  # soft darker edge of each part's own hue, under the whole piece
                 for (e, v, _), r in zip(faces, roles):
                     col = dark(colours(r) if r else v)

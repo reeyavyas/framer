@@ -68,6 +68,12 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
   included; the scan poses moved up with them), no mint line along the top of the bar, the bar's sheen fades right out
   (it stopped in a hard line), and the lens's hole mask sits on a plain group: on the rotated rim ellipses it turned
   with them, 54 degrees off the glass, which cut a gap in the rim and wall at the top-right.
+- Cart version 2 (owner, 10 Nov): the animated export draws every extrusion step (three wider steps showed as stairs
+  on the front post's foot), the base rail's back end stops at the basket's visible bottom edge, the grip is spaced
+  off along its own bar so its edges line up with the frame's, the third slot's yolk/wall edge is straight, and the
+  rim's back-right corner is one shape drawn twice (behind the items, and in front cut at the corner's mitre, its
+  dark under-layers stopping 3 short of the cut so no hairline shows), with the traced shade scrap 63 dropped.
+- Hourglass (owner, 10 Nov): no white stroke round the mint clock's bezel edge.
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
@@ -269,7 +275,8 @@ python3 ATM/artwork/cart/preview/outlines.py <stock dir>/measure.png
 On the Mac (no poppler), `pdf2svg.py` numbers the shapes differently from pdftocairo and drifts up to a unit, so the
 browser's build (which reads positions off the source) gets its source from `browser-search/make_p5.py`:
 `python3 make_p5.py p4.svg p5.svg` (p4.svg = `pdf2svg.py Vectors.ai 4`); it rebuilds the committed art byte for byte.
-The hourglass build only checks its source, so any file with 225 `<path` and its viewBox will do. The builds need
+Cart version 2's build copies the stock shapes, so it needs pdftocairo's exact text: `cart-v2/cart_src.py` rebuilds
+that source from `cart-v2-A.svg` (which keeps every shape it reads), byte for byte. The hourglass build only checks its source, so any file with 225 `<path` and its viewBox will do. The builds need
 Python 3.12+ (and numpy for the browser).
 
 On Claude's cloud machine, Chromium is at
