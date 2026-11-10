@@ -250,7 +250,7 @@ def build(key, style, anim=False):
             if not line_art: soft("drop", NAVY, .5 if style == "clay" else .6, cx + 46 * k, cy + 62 * k, cr + 34 * k, cr + 34 * k)  # its own shadow, cast on the card
             shape("circle", f'cx="{cx}" cy="{cy}" r="{cr}"', grad(f"bezel{side}", c["bezel"]), c["edge"], deep=c["deep"])
             if crisp:
-                line(arc(cx, cy, cr - e * .7, cr - e * .7, 150, 300), WHITE, e, .9)
+                if not c.get("flat"): line(arc(cx, cy, cr - e * .7, cr - e * .7, 150, 300), WHITE, e, .9)  # owner (10 Nov): no white stroke on the mint clock's edge
                 line(arc(cx, cy, cr - W * .3, cr - W * .3, -20, 115), c["deep"], W * .6, .55)
             hi(arc(cx, cy, (cr + fr) / 2, (cr + fr) / 2, 195, 255), c["hi"], round(W * .65))
             if not line_art: occ(arc(cx, cy, fr + 8, fr + 8, -60, 150), c["deep"])  # the face sits recessed in the bezel
