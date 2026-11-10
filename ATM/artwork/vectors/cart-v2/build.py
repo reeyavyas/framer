@@ -222,9 +222,29 @@ RIM = (f"M 1776.429688 1110.746094 L {_X[0]:.1f} {_X[1]:.1f} L 2625 590 L 2631 5
        "L 1785.707031 1135.996094 C 1781.484375 1128.039062 1777.703125 1121.101562 1776.429688 1110.746094 Z")
 _m = (_C - _X) / np.linalg.norm(_C - _X)
 _k = lambda t: _X + _m * t
-_e0, _e1 = _B0 + _OFF + (_B0 - _B1) * 2, _B1 + _OFF + (_B1 - _B0) * 2   # the basket's visible bottom edge, extended
+# the basket as drawn: its front face (shape 1's outline) and that pushed back by the gloss extrusion (24, 32), grown
+# by 2.5 of the extrusion's 3.5 round edge, so the rail tucks a hair under it (no seam, no gap: owner)
+def _hull(P):
+    P = sorted(set(P)); cr = lambda o, a, b: (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); lo, up = [], []
+    for q in P:
+        while len(lo) > 1 and cr(lo[-2], lo[-1], q) <= 0: lo.pop()
+        lo.append(q)
+    for q in reversed(P):
+        while len(up) > 1 and cr(up[-2], up[-1], q) <= 0: up.pop()
+        up.append(q)
+    return lo[:-1] + up[:-1]
+def _grow(H, d):  # a convex polygon (counter-clockwise in y-down screen space as _hull gives it) pushed out by d
+    n = len(H); L = []
+    for i in range(n):
+        a, b = np.array(H[i]), np.array(H[(i + 1) % n]); t = (b - a) / np.linalg.norm(b - a); nr = np.array((t[1], -t[0]))
+        L.append((a + nr * d, b + nr * d))
+    return [_cut(*L[i - 1], *L[i]) for i in range(n)]
+_T = [(2883.542969, 1573.457031), (2019.625, 1793.125), (1787.515625, 1143.414062), (3112.144531, 827.152344)]
+_BK = _grow(_hull(_T + [(x + 24, y + 32) for x, y in _T]), 2.5)
+assert all(np.hypot(*(np.array(q) - np.mean(_BK, 0))) > 300 for q in _BK)  # grown outward, not in
 FRONT_CLIP = {13: f"M {_k(-2500)[0]:.0f} {_k(-2500)[1]:.0f} L {_k(600)[0]:.0f} {_k(600)[1]:.0f} L 3700 2700 L 1000 2700 Z",  # below the mitre line
-              16: f"M {_e0[0]:.0f} {_e0[1]:.0f} L {_e1[0]:.0f} {_e1[1]:.0f} L {_e1[0]:.0f} 2800 L {_e0[0]:.0f} 2800 Z"}  # below the basket
+              16: "M 0 -1000 L 5000 -1000 L 5000 4000 L 0 4000 Z M " + " L ".join(f"{x:.1f} {y:.1f}" for x, y in _BK) + " Z"}  # all but the basket
+HOLD = {13: 3}   # the rim's dark under-layers stop this far short of its cut (see use_el)
 EXTRA[102] = ("rim", RIM)
 SPACED_D[13] = RIM; GEOM[13] = shape_geom(RIM)
 # owner: the third slot's yolk (76) and inner wall (77) met in a wobble near its bottom (traced); straightened
@@ -304,12 +324,12 @@ def build(key, style, anim=False):
         def fixed_clip(i, ox, oy):   # the front copy of the rim stops at the corner's mitre, held still under every offset copy
             if (i, ox, oy) not in kclip:
                 kclip[(i, ox, oy)] = nid("k")
-                defs.append(f'<clipPath id="{kclip[(i, ox, oy)]}"><path d="{FRONT_CLIP[i]}" transform="translate({-ox:g} {-oy:g})"/></clipPath>')
+                defs.append(f'<clipPath id="{kclip[(i, ox, oy)]}"><path d="{FRONT_CLIP[i]}" clip-rule="evenodd" transform="translate({-ox:g} {-oy:g})"/></clipPath>')
             return f' clip-path="url(#{kclip[(i, ox, oy)]})"'
         def use_el(i, T):
             # the dark layers under the face (stroked: crease, extrusion, cast shadow) stop 3 units short of the mitre, so
             # the edge's anti-aliasing shows only the matching rim behind it (no hairline)
-            cp = lambda dx, dy, a: fixed_clip(i, T[0] + dx, T[1] + dy - (3 if "stroke=" in a else 0)) if i in FRONT_CLIP else ""
+            cp = lambda dx, dy, a: fixed_clip(i, T[0] + dx, T[1] + dy - (HOLD.get(i, 0) if "stroke=" in a else 0)) if i in FRONT_CLIP else ""
             return lambda dx, dy, a: f'<use href="#{pre}-p{i}"{cp(dx, dy, a)} transform="translate({T[0] + dx} {T[1] + dy})" {a}/>'
         def ell_el(c, a_, b_):
             return lambda dx, dy, a: (f'<ellipse cx="{c[0]:.1f}" cy="{c[1]:.1f}" rx="{a_:.2f}" ry="{b_:.2f}" '
