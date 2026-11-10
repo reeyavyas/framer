@@ -465,7 +465,7 @@ def build_gloss(key, anim=False):
     body, lid, arrow, fills, body_ix = [], [], [], {}, []
     for i, (c, d) in enumerate(PATHS):
         o, r = ROLES[i]
-        if o in ("stack", "coin") or jar_coin_path(i) or i in GLASS_DROP | NECK_DROP | LID_SIDE: continue  # the lid's sides: redrawn clean
+        if o in ("stack", "coin") or jar_coin_path(i) or i in GLASS_DROP | NECK_DROP | LID_SIDE | LID_HI_DROP: continue  # the lid's sides: redrawn clean
         f = paint(i)
         if r != "line": fills[i] = f
         el = f'<path d="{closed(d)}" fill="{f}"/>'
@@ -605,6 +605,7 @@ _lcx, _lcy, _lry = LID_E[0], LID_E[1], LID_E[3]
 LID_R, LID_CAP, LID_BULGE, LID_LOW = 628.8, 705.8, (654.0, 762.5), 921.5  # side half-width, cap side's foot, bulge, lowest point
 LID_GROOVES = ((643.0, 656.8, 128.2), (643.0, 704.5, 134.8), (655.0, 716.6, 168.0))  # (rx, cy, ry) about the lid's axis
 LID_SIDE = {2, 209, 211, 213}
+LID_HI_DROP = {283, 309}  # owner (10 Nov): no light mint curved lines across the lid's threads (two traced highlights)
 assert abs(LID_BULGE[0] - (bbox(PATHS[2][1])[2] - bbox(PATHS[2][1])[0]) / 2) < 6 and abs(LID_LOW - bbox(PATHS[2][1])[3]) < 6
 _p = lambda dx, y: f"{_lcx + dx:.1f},{y:.1f}"
 _hx, _hy = LID_BULGE

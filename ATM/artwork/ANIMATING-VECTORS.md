@@ -78,6 +78,10 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
 - Cart version 2, second round: the base rail's front-right corner is finished as a box corner (the stock art cut it
   off where the wheel hid it); it runs on under the right wheel.
 - Browser, second round: no white lit edge on the nav bar, the window's side face or the screen face (`rim(..., lit=False)`).
+- Savings jar (owner, 10 Nov): no light mint curved lines across the lid's threads (`LID_HI_DROP`: traced highlights
+  283 and 309). Its `ATMSavingsJar.template.tsx` is older than `ATM/ATMSavingsJar.tsx` (the arrow's foot and other
+  edits were made in the component), so after a rebuild copy only the new `const ART` line into the committed
+  component and restore the rest; the source is `pdf2svg.py Vectors.ai 1`, which rebuilds the art byte for byte.
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
