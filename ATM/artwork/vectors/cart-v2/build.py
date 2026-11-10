@@ -419,7 +419,8 @@ def build(key, style, anim=False):
                 for k in range(S["depth"], 0, -1):
                     for (e, v, _), r in zip(faces, roles):
                         col = DARKER[DARKER[last(v)]] if k > 2 else DARKER[last(v)]
-                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"]}" stroke-linejoin="round"'))
+                        # animated: as wide as the old three steps (11 more), which closes the boxes' ends (owner)
+                        body.append(e(3 * k, 4 * k, f'fill="{col}" stroke="{col}" stroke-width="{S["grow"] + (11 if anim else 0)}" stroke-linejoin="round"'))
             if style == "clay":  # soft darker edge of each part's own hue, under the whole piece
                 for (e, v, _), r in zip(faces, roles):
                     col = dark(colours(r) if r else v)
