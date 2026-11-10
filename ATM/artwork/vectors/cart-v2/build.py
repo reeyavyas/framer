@@ -197,10 +197,10 @@ def _cut(a, b, p, q):  # where line a-b crosses line p-q
     return a + r * x(p - a, s_) / x(r, s_)
 _B0, _B1 = np.array((2019.6, 1793.1)), np.array((2883.5, 1573.5))   # the basket's bottom edge (shape 1)
 _N = np.array((219.9, 863.9)) / np.hypot(219.9, 863.9)
-_OFF = np.array((24, 32)) + 9 * _N   # its gloss extrusion and edge, so the cut meets the bottom you see
-_P = [(2708.679688, 1771.273438), (2772.644531, 1753.789062), (2590.664062, 1656.722656), (2659.761719, 1637.121094), (2840.664062, 1731.671875)]
-_c3, _c4 = _cut(_P[1], _P[2], _B0 + _OFF, _B1 + _OFF), _cut(_P[4], _P[3], _B0 + _OFF, _B1 + _OFF)
-SPACED_D[16] = D[16].replace("L 2590.664062 1656.722656 L 2659.761719 1637.121094", f"L {_c3[0]:.1f} {_c3[1]:.1f} L {_c4[0]:.1f} {_c4[1]:.1f}")
+_OFF = np.array((24, 32)) + 9 * _N   # its gloss extrusion and edge, so the rail is hidden right at the bottom you see
+# the rail stays whole and is hidden past that edge (FRONT_CLIP below), so it reads as running under the basket: a cut
+# shape had its own lit edge there, a harsh line (owner)
+SPACED_D[16] = D[16]
 # owner: the rail's front-right corner (16's top, 9's front) was cut off in a curve where the stock wheel covered it;
 # spaced apart, the wheel no longer hides it, so it's finished as a box corner: the top face's outer edges meet, and
 # the front face ends in an upright edge under that corner
@@ -222,7 +222,9 @@ RIM = (f"M 1776.429688 1110.746094 L {_X[0]:.1f} {_X[1]:.1f} L 2625 590 L 2631 5
        "L 1785.707031 1135.996094 C 1781.484375 1128.039062 1777.703125 1121.101562 1776.429688 1110.746094 Z")
 _m = (_C - _X) / np.linalg.norm(_C - _X)
 _k = lambda t: _X + _m * t
-FRONT_CLIP = {13: f"M {_k(-2500)[0]:.0f} {_k(-2500)[1]:.0f} L {_k(600)[0]:.0f} {_k(600)[1]:.0f} L 3700 2700 L 1000 2700 Z"}  # below the mitre line
+_e0, _e1 = _B0 + _OFF + (_B0 - _B1) * 2, _B1 + _OFF + (_B1 - _B0) * 2   # the basket's visible bottom edge, extended
+FRONT_CLIP = {13: f"M {_k(-2500)[0]:.0f} {_k(-2500)[1]:.0f} L {_k(600)[0]:.0f} {_k(600)[1]:.0f} L 3700 2700 L 1000 2700 Z",  # below the mitre line
+              16: f"M {_e0[0]:.0f} {_e0[1]:.0f} L {_e1[0]:.0f} {_e1[1]:.0f} L {_e1[0]:.0f} 2800 L {_e0[0]:.0f} 2800 Z"}  # below the basket
 EXTRA[102] = ("rim", RIM)
 SPACED_D[13] = RIM; GEOM[13] = shape_geom(RIM)
 # owner: the third slot's yolk (76) and inner wall (77) met in a wobble near its bottom (traced); straightened
