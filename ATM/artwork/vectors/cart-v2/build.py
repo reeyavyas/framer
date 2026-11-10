@@ -155,7 +155,7 @@ T_WHEEL = 22           # wheel outlines, centred on the line, so they also cover
 # the no-outline styles space the parts apart (back to front): name, shapes (None for a wheel), offset
 PIECES = [
     ("mid", None, (0, 34)), ("left", None, (-30, 26)),
-    ("basketBack", (50, 100, 54, 101, 102, 56, 62, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
+    ("basketBack", (50, 100, 101, 102, 56, 62, 64), (0, 0)), ("frameBack", (33, 51, 38), (0, 0)),
     ("tallBox", (17, 3, 42), (-55, -30)),  # inside the basket's right side, not past it
     ("bigBox", (45, 52, 46, 28, 35, 26, 21, 24, 19, 22, 12, 4, 6), (40, -62)),
     # the three slabs are one slab (the top one, the only one the art draws whole) repeated 122.5 apart, plus spacing
@@ -166,7 +166,7 @@ PIECES = [
     ("grip", (48, 8, 25), (0, 0)),  # owner: on the frame, no gap at either end (its edges line up with the frame's)
     ("front", None, (0, 0)), ("right", None, (34, 30)),  # owner: the front wheel back over the frame's corner, so no gap shows there
 ]
-SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60, 63}   # the lower slabs and the big box's underside, hidden once complete;
+SPACED_DROP = {29, 53, 44, 15, 40, 37, 61, 60, 63, 54}   # the lower slabs and the big box's underside, hidden once complete;
 # 63: a traced scrap of shade in the rim's inner back-right corner, a white blob once glossed (owner)
 assert {i for _, ix, _ in PIECES if ix for i in ix} | SPACED_DROP == {i for i in ROLE if ROLE[i] != "slotRing"} | {100, 101, 102}  # + the completed back rim and inside (EXTRA)
 # The big box's left face was cut where the stack hid it; spaced apart, it needs to be whole: five bands parallel
@@ -184,7 +184,9 @@ BBOX.update({i: (1961.4, 492, 2298.5, 977.9) for i in SPACED_D})
 # The right side runs back along the same direction as the left side (and the art's own short right corner piece,
 # (3107,821) -> (2999,762)) to a back-right corner at (2631,563); the back edge then runs to the left rim piece.
 EXTRA = {100: ("basketIn", "M 1446 845 L 2625 590 L 3011 816 L 1776 1111 L 1452 912 Z"),
-         101: ("rim", "M 1440 818.5 L 2631 563 L 2625 590 L 1446 845 Z"),            # back edge
+         # back edge, run on over the stock's left back-rim piece (54, dropped) so the rim is one shape: where they met,
+         # its own lit edge drew a white tick behind the blue stack (owner)
+         101: ("rim", "M 1309.5 878.1 C 1304.1 870.3 1301.9 863.1 1299.6 853.2 L 1450.4 817.1 L 2631 563 L 2625 590 L 1446 845 Z"),
          102: ("rim", "M 2631 563 L 2999.5 762 L 2982 795 L 2625 590 Z")}            # right side, back to the corner
 # The tall box's front face zig-zagged on its left where the big box cut it: redrawn as the true parallelogram of
 # its top edge (2790,290)->(3060,447) and right edge (3060,447)->(2846,848), so it reads as a box when it hops.
