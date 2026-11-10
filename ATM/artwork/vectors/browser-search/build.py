@@ -329,7 +329,9 @@ def build_soft(key, style, anim=False):
     # between them, and the magnifier lifted up-right off the window (MAG) so it floats over its own shadow
     dots, dot_r = [(DOTS[0][0] + k * 175, DOTS[0][1]) for k in range(3)], 44
     DEP, PDEP = st["depth"], st["pdepth"]
-    top = BAR + 50 + (BOT - BAR - 4 * 320 - 100 - PDEP[1]) / 2  # owner: even room above and below the lines
+    # owner: even room above and below the lines, between the bar and where the screen is seen to end: its inner rim
+    # band starts 44 above the slab's edge (measured on the render)
+    top = BAR + 50 + (BOT - 44 - BAR - 4 * 320 - 100 - PDEP[1]) / 2
     pills = [(x0 + 10, y - 50, x1, y + 50) for (x0, _, x1, _), y in zip(PILLS, [top + k * 320 for k in range(5)])]
     MAG = (50, -70)
     fd, bd, sd, ssp = window(st["R"], DEP)
@@ -431,7 +433,7 @@ def build_soft(key, style, anim=False):
 # The magnifier scans: it starts over the upper lines, drifts down and settles over the egg-yolk hit line, pauses
 # there with a small pop, then glides back. POSES: (time s, x, y offset from the drawing's rest pose, ground-shadow
 # opacity). Its ground shadow only shows while the handle is off the window, below it.
-POSES = [(0, -420, -342, 0), (1.1, -90, -232, .3), (2.0, -230, 118, 1), (3.0, -230, 118, 1), (3.9, 60, -102, .6), (4.8, -420, -342, 0)]  # 42 up with the centred lines
+POSES = [(0, -420, -364, 0), (1.1, -90, -254, .3), (2.0, -230, 96, 1), (3.0, -230, 96, 1), (3.9, 60, -124, .6), (4.8, -420, -364, 0)]  # 64 up with the centred lines
 POP = 1.06
 def hand_pts_mag(): return [(x + 50, y - 70) for x, y in hand_pts()]  # the handle at the rest pose (MAG)
 def export_anim():
