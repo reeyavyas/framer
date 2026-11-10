@@ -130,6 +130,16 @@ SHADOW_RX, SHADOW_RY = R + 150, 100   # solid styles' contact shadow, wider than
 VB_SOLID = viewbox(-SHADOW_RX, SHADOW_RX, -R, STYLE["clay"]["D"] + 10 + SHADOW_RY)
 BELL = ((0, 1), (.25, .8), (.45, .47), (.6, .25), (.72, .12), (.83, .045), (.92, .012), (1, 0))  # soft fade, no rim
 
+def soft_stroke(d, paint, width, K=12):
+    """A stroke clipped to its own shape (so only the inner half shows) whose inner edge fades out smoothly: K strokes,
+    widest first, each a little stronger, full near the edge and easing to nothing at width/2 in (no blur)."""
+    ease = lambda x: 1 - (lambda t: t * t * (3 - 2 * t))(min(1, max(0, (x - .3) / .7)))  # 1 near the edge, 0 at the inner end
+    out = []
+    for k in range(K, 0, -1):  # the stroke k/K as wide covers depths below k/K; stacked, they reach ease() there
+        o = 1 - (1 - ease((k - 1) / K)) / (1 - ease(k / K)) if ease(k / K) < 1 else 0
+        if o > 0.001: out.append(f'<path d="{d}" fill="none" stroke="{paint}" stroke-opacity="{f(o)}" stroke-width="{f(width * k / K)}"/>')
+    return "".join(out)
+
 def layered(paths, opacity, widths, extra=""):
     """A soft shadow without blur: the shapes stacked at low opacity with growing round strokes."""
     # fill-opacity/stroke-opacity, not opacity: group opacity makes Chromium composite each copy in its own layer,
@@ -211,9 +221,11 @@ def build(key, style, anim=False):
                 defs.append(rad(f"{pre}-blob{i}", [(o, "#ffffff", 0.55 * a) for o, a in BELL], 0.5, 0.5, 0.5, user=False))
                 fronts.append(f'<path d="{d}" fill="url(#{fid})"/>')
                 ab = a1 - 36 * 0.4; bx, by = P(800, ab)
-                inner = (f'<path d="{d}" fill="none" stroke="url(#{pre}-chamD{i})" stroke-width="60"/>'
-                         f'<path d="{d}" fill="none" stroke="url(#{pre}-chamL{i})" stroke-width="48"/>'
-                         f'<path d="{band(R - 62, R + 10)}" fill="url(#{pre}-bev{i})" opacity=".55"/>'
+                # owner (10 Nov): no harsh lines, so the bevel bands fade out toward the face instead of ending in a hard
+                # edge (that edge met itself in a sharp V at each corner); the top band fades with a radial gradient
+                defs.append(rad(f"{pre}-bevR{i}", [((R - 62) / R, c["hi"], 0), (1, c["hi"], 0.55)]))
+                inner = (soft_stroke(d, f"url(#{pre}-chamD{i})", 60) + soft_stroke(d, f"url(#{pre}-chamL{i})", 48)
+                         + f'<path d="{band(R - 62, R + 10)}" fill="url(#{pre}-bevR{i})"/>'
                          f'<ellipse cx="{f(bx)}" cy="{f(by)}" rx="170" ry="70" transform="rotate({f(90 - ab)} {f(bx)} {f(by)})" fill="url(#{pre}-blob{i})"/>')
                 spec_w, spec_o = 16, 0.95
             sa, sb = a1 - 36 * 0.16, a1 - 36 * 0.5

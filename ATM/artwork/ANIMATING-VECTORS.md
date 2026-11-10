@@ -61,6 +61,9 @@ writes `<slug>-anim.svg` and the component from its `.template.tsx`.
   20% larger.
 - Gauge: white pointer, bright blue pivot, no streak in the pointer, wider gaps, pops on the way back too.
 - Browser: the magnifier in light teal and mint.
+- Gauge (owner, 10 Nov): no harsh lines in the bevels. The bevel bands fade out toward the face (`soft_stroke` in
+  `gauge/build.py`, stacked strokes, no blur) instead of ending in a hard edge that met itself in a V at each corner.
+  The Credit Score Challenge's `ART` is a copy of `gauge-anim.svg`'s inside, so paste it there too after a rebuild.
 
 **Working rule (designer):** sub-agents were used only to make the first
 drafts in parallel. From here on, make every revision directly, without
