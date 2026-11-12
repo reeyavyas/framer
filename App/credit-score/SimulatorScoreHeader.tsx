@@ -35,6 +35,7 @@ interface Props {
     currentLabel: string
     simulatedLabel: string
     resetText: string
+    resetTappable: boolean
     iconSize: number
     showIconWhenEmpty: boolean
     showArrow: boolean
@@ -312,12 +313,18 @@ function Gauge(
                 </div>
                 {props.reset && (
                     <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={resetAll}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") resetAll()
-                        }}
+                        // Off (the Credit Score tutorial): shown, but inert.
+                        {...(props.resetTappable
+                            ? {
+                                  role: "button",
+                                  tabIndex: 0,
+                                  onClick: resetAll,
+                                  onKeyDown: (e: React.KeyboardEvent) => {
+                                      if (e.key === "Enter" || e.key === " ")
+                                          resetAll()
+                                  },
+                              }
+                            : {})}
                         style={{
                             position: "absolute",
                             left: CX - 90,
@@ -327,7 +334,7 @@ function Gauge(
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            cursor: "pointer",
+                            cursor: props.resetTappable ? "pointer" : "default",
                             color: props.resetColor,
                             ...props.resetFont,
                         }}
@@ -386,6 +393,7 @@ SimulatorScoreHeader.defaultProps = {
     currentLabel: "Current Score",
     simulatedLabel: "Simulated Score",
     resetText: "Reset",
+    resetTappable: true,
     showIconWhenEmpty: true,
     iconSize: 110,
     showArrow: true,
@@ -435,6 +443,13 @@ addPropertyControls(SimulatorScoreHeader, {
         type: ControlType.String,
         title: "Reset Text",
         defaultValue: SimulatorScoreHeader.defaultProps.resetText,
+    },
+    resetTappable: {
+        type: ControlType.Boolean,
+        title: "Reset Tap",
+        enabledTitle: "On",
+        disabledTitle: "Off",
+        defaultValue: SimulatorScoreHeader.defaultProps.resetTappable,
     },
     showIconWhenEmpty: {
         type: ControlType.Boolean,

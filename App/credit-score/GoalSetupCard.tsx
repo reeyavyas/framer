@@ -68,11 +68,11 @@ export default function GoalSetupCard(props: Props) {
     const shownGoal = goal ? goal.score : phase === "form" ? score : null
     const text = { color: props.textColor }
 
-    // `target` tags the button for TutorialOverlay (Credit Score tutorial).
+    // `target` names the button; the Credit Score tutorial highlights it
+    // with a marker frame (TutorialTargets.tsx).
     const button = (label: string, target: string, onTap: () => void) => (
         <motion.button
             type="button"
-            data-tutorial-target={target}
             onClick={onTap}
             whileTap={{ scale: 0.97 }}
             style={{
@@ -427,8 +427,8 @@ function Arrow(props: {
 
 // A drag slider: navy track, white handle; snaps to `step`. Arrow keys,
 // Home and End work once it has focus.
-// `target` tags the slider for TutorialOverlay (Credit Score tutorial),
-// and letting go of it fires `${target}-done` for that step.
+// Letting go of it fires `${target}-done`, which the Credit Score
+// tutorial's slider steps wait for (a marker frame highlights it).
 function Slider(props: {
     target: string
     label: string
@@ -455,10 +455,7 @@ function Slider(props: {
     }
 
     return (
-        <div
-            data-tutorial-target={props.target}
-            style={{ paddingTop: props.pill ? 72 : 0 }}
-        >
+        <div style={{ paddingTop: props.pill ? 72 : 0 }}>
             <div
                 ref={trackRef}
                 role="slider"

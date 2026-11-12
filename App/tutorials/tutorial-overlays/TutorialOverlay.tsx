@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import { motion } from "framer-motion"
+import { animate, motion } from "framer-motion"
 import { addPropertyControls, ControlType, RenderTarget } from "framer"
 import { getVirtualScroll, type VirtualScrollHandle } from "./VirtualScroll.tsx"
 
@@ -95,6 +95,7 @@ interface Props {
     revealDelaySeconds: number // dim shows at once, but the hole/glow/arrow/card wait this long — e.g. for a target inside an overlay that's still animating open when this step starts
     holeShape: HoleShape
     cornerRadius: number
+    holePaddingX?: number // widens the hole this far past the target on each side (px)
 
     pageGroup: string // shared by every step on THIS page. Blank = single-step page, no coordination.
     stepNumber: number // 1-based position within pageGroup
@@ -103,7 +104,7 @@ interface Props {
     nextStepAfterSeconds: number // 0 = off. Hands off to stepNumber + 1 with no click needed.
     scrollAdvancesStep: boolean // scrolling past scrollThresholdPercent hands off to stepNumber + 1
     scrollDirection: "down" | "up" // "down": advance once scrolled past the threshold. "up": advance once scrolled back below it (e.g. a target pinned at the top that a prior step scrolled away from).
-    snapToThreshold?: boolean // on a native scroll container, settle the page exactly at the threshold when it's crossed, so a fast swipe can't overshoot where the next step's target lands
+    snapToThreshold?: boolean // on a native or VirtualScroll container, settle the page exactly at the threshold when it's crossed, so a fast swipe can't overshoot where the next step's target lands
     scrollThresholdPercent: number // 0-100. With scrollDirection "down", how far down before it counts as "scrolled"; with "up", how far back up before it does.
     scrollContainerTarget: string // data-tutorial-target of the real scrollable element. Blank = the whole page.
     freezeScrollWhileActive: boolean // stops scrolling in EITHER direction for exactly as long as this step is active — a VirtualScroll container (scrollContainerTarget) holds still, and on a native page touch/wheel gestures are swallowed — resumes normally once the step ends
@@ -231,7 +232,9 @@ function visiblePart(el: Element): DOMRect {
     while (box && box !== document.body) {
         const s = window.getComputedStyle(box)
         if (
-            (s.overflowY === "auto" || s.overflowY === "scroll") &&
+            (s.overflowY === "auto" ||
+                s.overflowY === "scroll" ||
+                box.hasAttribute("data-virtual-scroll")) &&
             box.scrollHeight > box.clientHeight
         ) {
             const b = box.getBoundingClientRect()
@@ -523,6 +526,7 @@ export default function TutorialOverlay(props: Props) {
         revealDelaySeconds,
         holeShape,
         cornerRadius,
+        holePaddingX = 0,
         pageGroup,
         stepNumber,
         clickAdvancesStep,
@@ -675,7 +679,13 @@ export default function TutorialOverlay(props: Props) {
                 `[data-tutorial-target="${target}"]`
             )
             if (el) {
-                const next = visiblePart(el)
+                const seen = visiblePart(el)
+                const next = new DOMRect(
+                    seen.left - holePaddingX,
+                    seen.top,
+                    seen.width + holePaddingX * 2,
+                    seen.height
+                )
                 const prev = rectRef.current
                 if (
                     !prev ||
@@ -702,7 +712,7 @@ export default function TutorialOverlay(props: Props) {
             window.removeEventListener("resize", measure)
             cancelAnimationFrame(rafId)
         }
-    }, [isCanvas, active, isMyTurn, target])
+    }, [isCanvas, active, isMyTurn, target, holePaddingX])
 
     // Timer-driven reveal of everything that traces the target (hole,
     // glow, arrow, card). For a target inside something that's still
@@ -892,11 +902,20 @@ export default function TutorialOverlay(props: Props) {
                         ? document.documentElement
                         : (el as HTMLElement)
                 const max = node.scrollHeight - node.clientHeight
-                // With Snap, jump: a smooth scroll would carry on past the
-                // spot the snap settles on.
-                el.scrollTo({
-                    top: (max * percent) / 100,
-                    behavior: snapToThreshold ? "auto" : "smooth",
+                // Glide like VirtualScroll's scrollToPercent (0.5 s). With
+                // Snap, land on the threshold's own pixel (rounded to the
+                // crossing side) so the glide can't carry on past it.
+                const exact = (max * scrollThresholdPercent) / 100
+                const top = snapToThreshold
+                    ? scrollDirection === "up"
+                        ? Math.floor(exact)
+                        : Math.ceil(exact)
+                    : (max * percent) / 100
+                animate(node.scrollTop, top, {
+                    duration: 0.5,
+                    onUpdate: (v) => {
+                        node.scrollTop = v
+                    },
                 })
             }
             // Backstop once the scroll has had time to finish: if it still
@@ -1168,7 +1187,16 @@ export default function TutorialOverlay(props: Props) {
         }
         function watchVirtual(virtual: VirtualScrollHandle) {
             function checkVirtual() {
-                checkPercent(virtual.getPercent())
+                const percent = virtual.getPercent()
+                const crossed =
+                    scrollDirection === "up"
+                        ? percent <= scrollThresholdPercent
+                        : percent >= scrollThresholdPercent
+                // Same as the native snap below: settle exactly on the
+                // threshold so a fast swipe can't overshoot.
+                if (crossed && snapToThreshold)
+                    virtual.setPercent(scrollThresholdPercent)
+                checkPercent(percent)
             }
             checkVirtual()
             return virtual.subscribe(checkVirtual)
@@ -1994,6 +2022,15 @@ addPropertyControls(TutorialOverlay, {
         max: 999,
         defaultValue: 0,
         hidden: (props: Partial<Props>) => props.holeShape !== "rectangle",
+    },
+    holePaddingX: {
+        type: ControlType.Number,
+        title: "Hole padding X",
+        min: 0,
+        max: 200,
+        step: 1,
+        unit: "px",
+        defaultValue: 0,
     },
     pageGroup: {
         type: ControlType.String,
